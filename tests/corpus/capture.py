@@ -8,11 +8,15 @@ lines saying where it came from, then the message in hex. Only the Python
 standard library is used.
 
     python3 tests/corpus/capture.py            # (re)capture everything
-    python3 tests/corpus/capture.py bind-      # only labels starting so
+    python3 tests/corpus/capture.py bind- pdns # only labels starting so
 
 Responses change over time (TTLs, signatures, addresses), so re-capturing
-rewrites the files; `tests/corpus.rs` only checks properties that hold for
-any valid message, so a fresh capture never needs test changes.
+rewrites the files, and dig's rendering of each (tests/data/dig/, through
+dig_reference.py; needs dig). `tests/corpus.rs` and `tests/dig_display.rs`
+only check properties that hold for any valid message, but
+`tests/dnssec_corpus.rs` validates the DNSSEC captures at a fixed time and
+expects their denial-of-existence modes: re-capturing those means updating
+it too. See README.md for where every corpus file comes from.
 """
 
 import datetime
@@ -20,15 +24,19 @@ import os
 import random
 import socket
 import struct
+import subprocess
 import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
+sys.dont_write_bytecode = True
+import dig_reference  # noqa: E402 (dig's rendering, for tests/dig_display.rs)
 
 # (label, server, server software as identified by CHAOS TXT queries,
 #  qname, qtype, options). Options: "rd" recursion desired, "do" DNSSEC OK,
 #  "nsid" request NSID (RFC 5001), "cookie" send a client cookie (RFC 7873),
 #  "noedns" plain RFC 1035 query, "tc" keep the truncated UDP response,
-#  "ch" CHAOS class.
+#  "ch" CHAOS class, "ecs" send a Client Subnet option for 1.2.3.0/24
+#  (RFC 7871).
 ENTRIES = [
     # BIND 9 (authoritative), DNSSEC-signed isc.org.
     ("bind-isc-soa-dnssec", "ns1.isc.org", "BIND 9.20", "isc.org", "SOA", "do nsid cookie"),
@@ -90,11 +98,43 @@ ENTRIES = [
     ("quad9-ptr", "9.9.9.9", "Quad9", "8.8.8.8.in-addr.arpa", "PTR", "rd"),
     ("quad9-aaaa-ptr", "9.9.9.9", "Quad9",
      "1.1.1.1.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.7.4.0.0.7.4.6.0.6.2.ip6.arpa", "PTR", "rd"),
+    # Record types and protocol features across the public resolvers
+    # (October 2026 additions).
+    ("cloudflare-svcb-ddr", "1.1.1.1", "Cloudflare", "_dns.resolver.arpa", "SVCB", "rd"),
+    ("google-svcb-ddr", "8.8.8.8", "Google Public DNS", "_dns.resolver.arpa", "SVCB", "rd"),
+    ("quad9-svcb-ddr", "9.9.9.9", "Quad9", "_dns.resolver.arpa", "SVCB", "rd"),
+    ("quad9-svcb-dohpath", "9.9.9.9", "Quad9", "_dns.dns.quad9.net", "SVCB", "rd do"),
+    ("cloudflare-https-one", "1.1.1.1", "Cloudflare", "one.one.one.one", "HTTPS", "rd do"),
+    ("google-https", "8.8.8.8", "Google Public DNS", "www.google.com", "HTTPS", "rd"),
+    ("cloudflare-caa", "1.1.1.1", "Cloudflare", "cloudflare.com", "CAA", "rd do"),
+    ("cloudflare-tlsa-smtp", "1.1.1.1", "Cloudflare", "_25._tcp.mail.ietf.org", "TLSA", "rd do"),
+    ("cloudflare-uri", "1.1.1.1", "Cloudflare", "_kerberos.fedoraproject.org", "URI", "rd do"),
+    ("cloudflare-nsec3param-com", "1.1.1.1", "Cloudflare", "com", "NSEC3PARAM", "rd do"),
+    ("cloudflare-nxdomain-com-optout", "1.1.1.1", "Cloudflare",
+     "no-such-name-dnsbox-1234.com", "A", "rd do"),
+    ("cloudflare-zonemd-se", "1.1.1.1", "Cloudflare", "se", "ZONEMD", "rd do"),
+    ("cloudflare-ede-dnssec-failed", "1.1.1.1", "Cloudflare", "dnssec-failed.org", "A", "rd do"),
+    ("google-zonemd-root", "8.8.8.8", "Google Public DNS", ".", "ZONEMD", "rd do"),
+    ("google-cds", "8.8.8.8", "Google Public DNS", "isc.org", "CDS", "rd do"),
+    ("google-cdnskey", "8.8.8.8", "Google Public DNS", "isc.org", "CDNSKEY", "rd do"),
+    ("google-srv", "8.8.8.8", "Google Public DNS", "_sip._udp.sip.voice.google.com", "SRV", "rd"),
+    ("google-ecs", "8.8.8.8", "Google Public DNS", "www.google.com", "A", "rd ecs"),
+    ("quad9-dnskey-com", "9.9.9.9", "Quad9", "com", "DNSKEY", "rd do"),
+    ("quad9-ds-com", "9.9.9.9", "Quad9", "com", "DS", "rd do"),
+    ("quad9-dnskey-de", "9.9.9.9", "Quad9", "de", "DNSKEY", "rd do"),
+    ("quad9-dnskey-nlnetlabs", "9.9.9.9", "Quad9", "nlnetlabs.nl", "DNSKEY", "rd do"),
+    ("quad9-ede-dnssec-failed", "9.9.9.9", "Quad9", "dnssec-failed.org", "A", "rd do nsid"),
+    # Compact denial of existence (RFC 9824) from Cloudflare's servers.
+    ("cloudflare-auth-compact-denial", "ns3.cloudflare.com", "Cloudflare authoritative",
+     "no-such-name-dnsbox.cloudflare.com", "A", "do"),
+    ("cloudflare-auth-dnskey", "ns3.cloudflare.com", "Cloudflare authoritative",
+     "cloudflare.com", "DNSKEY", "do"),
 ]
 
 TYPES = {"A": 1, "NS": 2, "SOA": 6, "PTR": 12, "MX": 15, "TXT": 16, "AAAA": 28,
          "LOC": 29, "SRV": 33, "NAPTR": 35, "DS": 43, "SSHFP": 44, "DNSKEY": 48,
-         "TLSA": 52, "ZONEMD": 63, "HTTPS": 65, "ANY": 255, "CAA": 257}
+         "NSEC3PARAM": 51, "TLSA": 52, "CDS": 59, "CDNSKEY": 60, "ZONEMD": 63,
+         "SVCB": 64, "HTTPS": 65, "ANY": 255, "URI": 256, "CAA": 257}
 
 
 def encode_name(name):
@@ -118,6 +158,8 @@ def query(qname, qtype, opts):
             options += struct.pack(">HH", 3, 0)
         if "cookie" in opts:
             options += struct.pack(">HH", 10, 8) + random.randbytes(8)
+        if "ecs" in opts:
+            options += struct.pack(">HHHBB", 8, 7, 1, 24, 0) + bytes([1, 2, 3])
         ttl = 0x8000 if "do" in opts else 0
         msg += b"\0" + struct.pack(">HHIH", 41, 1232, ttl, len(options)) + options
     return qid, msg
@@ -150,10 +192,10 @@ def exchange(server, msg, qid, opts):
 
 
 def main():
-    prefix = sys.argv[1] if len(sys.argv) > 1 else ""
+    prefixes = sys.argv[1:] or [""]
     today = datetime.date.today().isoformat()
     for label, server, software, qname, qtype, opts in ENTRIES:
-        if not label.startswith(prefix):
+        if not any(label.startswith(p) for p in prefixes):
             continue
         opts = opts.split()
         qid, msg = query(qname, qtype, opts)
@@ -167,7 +209,7 @@ def main():
         lines = [
             "# dnsbox interop corpus: a real DNS response, unmodified.",
             f"# server:   {server} ({software})",
-            f"# query:    {qname}. {qclass} {qtype} (options: {flags})",
+            f"# query:    {qname.rstrip('.')}. {qclass} {qtype} (options: {flags})",
             f"# captured: {today} over {transport}, {len(resp)} bytes",
         ]
         hexed = resp.hex()
@@ -177,6 +219,10 @@ def main():
         rcode = resp[3] & 0x0F
         an = struct.unpack(">H", resp[6:8])[0]
         print(f"{label}: {len(resp)} bytes, rcode {rcode}, {an} answers, {transport}")
+        try:
+            dig_reference.render(label)
+        except (OSError, subprocess.CalledProcessError, StopIteration) as e:
+            print(f"{label}: no dig reference ({e})", file=sys.stderr)
 
 
 if __name__ == "__main__":

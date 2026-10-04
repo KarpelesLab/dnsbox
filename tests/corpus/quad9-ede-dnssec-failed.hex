@@ -1,0 +1,7 @@
+# dnsbox interop corpus: a real DNS response, unmodified.
+# server:   9.9.9.9 (Quad9)
+# query:    dnssec-failed.org. IN A (options: RD DO NSID)
+# captured: 2026-10-04 over UDP, 68 bytes
+cc7c818200010000000000010d646e737365632d6661696c6564036f72670000
+01000100002904d00000800000160003000c7265733730322e71686e6432000f
+00020006

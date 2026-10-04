@@ -1,0 +1,11 @@
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 54394
+;; flags: qr rd ra ad; QUERY: 1, ANSWER: 2, AUTHORITY: 0, ADDITIONAL: 1
+
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags: do; udp: 1232
+;; QUESTION SECTION:
+;_kerberos.fedoraproject.org.	IN	URI
+
+;; ANSWER SECTION:
+_kerberos.fedoraproject.org. 300 IN	URI	10 1 "krb5srv:m:kkdcp:https://id.fedoraproject.org/KdcProxy/"
+_kerberos.fedoraproject.org. 300 IN	RRSIG	URI 14 3 300 20261031220518 20261001220518 60624 fedoraproject.org. CQaM2pwQ6pNVsMj+SVPrciH7AiIpr7aV6b1IzdsCP3Gn7TRSfcsuihhl y5v8fAlv5y8YjUnUPwbujLMZGKoXQdZ6hO4+rDx0ZdvQO9mbSBWAKH+s eECG/jSH6+DOk0Lb

@@ -1,0 +1,7 @@
+# dnsbox interop corpus: a real DNS response, unmodified.
+# server:   8.8.8.8 (Google Public DNS)
+# query:    www.google.com. IN HTTPS (options: RD)
+# captured: 2026-10-04 over UDP, 68 bytes
+5fc9818000010001000000010377777706676f6f676c6503636f6d0000410001
+c00c0041000100003624000d0001000001000602683202683300002902000000
+00000000

@@ -1,0 +1,15 @@
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 21930
+;; flags: qr aa rd ra; QUERY: 1, ANSWER: 2, AUTHORITY: 0, ADDITIONAL: 4
+
+;; QUESTION SECTION:
+;_dns.resolver.arpa.		IN	SVCB
+
+;; ANSWER SECTION:
+_dns.resolver.arpa.	86400	IN	SVCB	1 dns.google. alpn="dot"
+_dns.resolver.arpa.	86400	IN	SVCB	2 dns.google. alpn="h2,h3" key7="/dns-query{?dns}"
+
+;; ADDITIONAL SECTION:
+dns.google.		86400	IN	A	8.8.8.8
+dns.google.		86400	IN	A	8.8.4.4
+dns.google.		86400	IN	AAAA	2001:4860:4860::8888
+dns.google.		86400	IN	AAAA	2001:4860:4860::8844

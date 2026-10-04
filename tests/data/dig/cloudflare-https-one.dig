@@ -1,0 +1,11 @@
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 56536
+;; flags: qr rd ra ad; QUERY: 1, ANSWER: 2, AUTHORITY: 0, ADDITIONAL: 1
+
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags: do; udp: 1232
+;; QUESTION SECTION:
+;one.one.one.one.		IN	HTTPS
+
+;; ANSWER SECTION:
+one.one.one.one.	82599	IN	HTTPS	1 . alpn="h3,h2" ipv4hint=1.1.1.1,1.0.0.1 ipv6hint=2606:4700:4700::1111,2606:4700:4700::1001
+one.one.one.one.	82599	IN	RRSIG	HTTPS 13 4 86400 20261005135745 20261003115745 34505 one.one.one. BfPYKOUodLVSSpAjzVF91i4/71PwJ6JtJTwflmCaDoxjeflDym9sAu1C lpDRIerGsY1Y+eSgBG1t3tZDHy5K1A==

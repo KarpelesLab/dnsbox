@@ -1,0 +1,13 @@
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 30399
+;; flags: qr rd ra; QUERY: 1, ANSWER: 4, AUTHORITY: 0, ADDITIONAL: 1
+
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags: do; udp: 512
+;; QUESTION SECTION:
+;_dns.dns.quad9.net.		IN	SVCB
+
+;; ANSWER SECTION:
+_dns.dns.quad9.net.	1200	IN	SVCB	3 dns.quad9.net. alpn="doq"
+_dns.dns.quad9.net.	1200	IN	SVCB	1 dns.quad9.net. alpn="h3,h2" key7="/dns-query{?dns}"
+_dns.dns.quad9.net.	1200	IN	SVCB	2 dns.quad9.net. alpn="dot"
+_dns.dns.quad9.net.	1200	IN	RRSIG	SVCB 8 4 1200 20261015010000 20260928010000 51906 quad9.net. Uk1Tdpr/Or1nzhYFblxYaBrMAzd8Nkyl69ZUtTbJTRohQ5/2KJmEZ1Jb m2GnqrOkVMDIw1DnKo2rb8R9JapKwPLeEIx/vAW+Hu8MYxniJjyyu76r lzCxwSUWPdU1Zgj4ZznGbBvLlO1+EYRnBvNTn6NPxpQHncax061RGA9u QQfbF/rzd3g1kLIXR12U8DbSfZsl+irYNKiqAQuXvpiJjXL3/rneRRDn Jf60JD4cwK4L/V1yyR1/kBj5n/tjqtbLkm8l2J91IqZ5mDPbm+gULrPe 3dU/5IpB+HoWIY6R6ApYxA7TyoxeRdkUW58BZtyL15WtR5VhL/9exNBf JVahsQ==

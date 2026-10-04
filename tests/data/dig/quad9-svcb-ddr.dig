@@ -1,0 +1,22 @@
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 56076
+;; flags: qr rd; QUERY: 1, ANSWER: 3, AUTHORITY: 0, ADDITIONAL: 8
+;; WARNING: recursion requested but not available
+
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags:; udp: 1232
+;; QUESTION SECTION:
+;_dns.resolver.arpa.		IN	SVCB
+
+;; ANSWER SECTION:
+_dns.resolver.arpa.	60	IN	SVCB	1 dns.quad9.net. alpn="dot" ipv4hint=9.9.9.9,149.112.112.9,149.112.112.112,149.112.149.112 ipv6hint=2620:fe::9,2620:fe::fe,2620:fe::fe:9
+_dns.resolver.arpa.	60	IN	SVCB	2 dns.quad9.net. alpn="h3,h2" ipv4hint=9.9.9.9,149.112.112.9,149.112.112.112,149.112.149.112 ipv6hint=2620:fe::9,2620:fe::fe,2620:fe::fe:9 key7="/dns-query{?dns}"
+_dns.resolver.arpa.	60	IN	SVCB	3 dns.quad9.net. alpn="doq" ipv4hint=9.9.9.9,149.112.112.9,149.112.112.112,149.112.149.112 ipv6hint=2620:fe::9,2620:fe::fe,2620:fe::fe:9
+
+;; ADDITIONAL SECTION:
+dns.quad9.net.		60	IN	A	9.9.9.9
+dns.quad9.net.		60	IN	A	149.112.112.9
+dns.quad9.net.		60	IN	A	149.112.112.112
+dns.quad9.net.		60	IN	A	149.112.149.112
+dns.quad9.net.		60	IN	AAAA	2620:fe::9
+dns.quad9.net.		60	IN	AAAA	2620:fe::fe
+dns.quad9.net.		60	IN	AAAA	2620:fe::fe:9

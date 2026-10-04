@@ -1,0 +1,18 @@
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 6997
+;; flags: qr rd ra; QUERY: 1, ANSWER: 8, AUTHORITY: 0, ADDITIONAL: 1
+
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags:; udp: 512
+; CLIENT-SUBNET: 1.2.3.0/24/24
+;; QUESTION SECTION:
+;www.google.com.			IN	A
+
+;; ANSWER SECTION:
+www.google.com.		300	IN	A	142.251.150.119
+www.google.com.		300	IN	A	142.251.153.119
+www.google.com.		300	IN	A	142.251.155.119
+www.google.com.		300	IN	A	142.251.154.119
+www.google.com.		300	IN	A	142.251.152.119
+www.google.com.		300	IN	A	142.251.157.119
+www.google.com.		300	IN	A	142.251.156.119
+www.google.com.		300	IN	A	142.251.151.119

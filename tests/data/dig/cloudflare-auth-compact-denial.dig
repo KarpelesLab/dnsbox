@@ -1,0 +1,13 @@
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 20942
+;; flags: qr aa; QUERY: 1, ANSWER: 0, AUTHORITY: 4, ADDITIONAL: 1
+
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags: do; udp: 1232
+;; QUESTION SECTION:
+;no-such-name-dnsbox.cloudflare.com. IN	A
+
+;; AUTHORITY SECTION:
+cloudflare.com.		300	IN	SOA	ns3.cloudflare.com. dns.cloudflare.com. 2416455460 10000 2400 604800 300
+no-such-name-dnsbox.cloudflare.com. 300	IN NSEC	\000.no-such-name-dnsbox.cloudflare.com. RRSIG NSEC TYPE128
+cloudflare.com.		300	IN	RRSIG	SOA 13 2 300 20261005150108 20261003130108 34505 cloudflare.com. vf0RrHW50e9gqi45rNxW/uybvlk826/sKk1w10SYe9Ab/GKVt11LoLZS 3l8R4eHgcxvYGkj7ATjudCY1rjyN1w==
+no-such-name-dnsbox.cloudflare.com. 300	IN RRSIG NSEC 13 3 300 20261005150108 20261003130108 34505 cloudflare.com. kio3YGD8PMbUMxLIc4jZHZ1wZTitEdy9cYMfY2FZOlyZIGbWfNdHkPpA wUqjYQHcD2KkEO2HEVry5aF/99v75g==

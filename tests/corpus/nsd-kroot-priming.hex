@@ -1,6 +1,6 @@
 # dnsbox interop corpus: a real DNS response, unmodified.
 # server:   k.root-servers.net (NSD)
-# query:    .. IN NS (options: none)
+# query:    . IN NS (options: none)
 # captured: 2026-10-04 over UDP, 811 bytes
 dbad84000001000d0000001b000002000100000200010007e9000014016d0c72
 6f6f742d73657276657273036e65740000000200010007e90000040167c01e00

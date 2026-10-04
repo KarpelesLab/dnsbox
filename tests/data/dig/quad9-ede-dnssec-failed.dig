@@ -1,0 +1,9 @@
+;; ->>HEADER<<- opcode: QUERY, status: SERVFAIL, id: 52348
+;; flags: qr rd ra; QUERY: 1, ANSWER: 0, AUTHORITY: 0, ADDITIONAL: 1
+
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags: do; udp: 1232
+; NSID: 72 65 73 37 30 32 2e 71 68 6e 64 32 ("res702.qhnd2")
+; EDE: 6 (DNSSEC Bogus)
+;; QUESTION SECTION:
+;dnssec-failed.org.		IN	A

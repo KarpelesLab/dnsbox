@@ -1,0 +1,12 @@
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 23687
+;; flags: qr aa; QUERY: 1, ANSWER: 3, AUTHORITY: 0, ADDITIONAL: 1
+
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags: do; udp: 1232
+;; QUESTION SECTION:
+;cloudflare.com.			IN	DNSKEY
+
+;; ANSWER SECTION:
+cloudflare.com.		3600	IN	DNSKEY	257 3 13 mdsswUyr3DPW132mOi8V9xESWE8jTo0dxCjjnopKl+GqJxpVXckHAeF+ KkxLbxILfDLUT0rAK9iUzy1L53eKGQ==
+cloudflare.com.		3600	IN	DNSKEY	256 3 13 oJMRESz5E4gYzS/q6XDrvU1qMPYIjCWzJaOau8XNEZeqCYKD5ar0IRd8 KqXXFJkqmVfRvMGPmM1x8fGAa2XhSA==
+cloudflare.com.		3600	IN	RRSIG	DNSKEY 13 2 3600 20261119045537 20260919045537 2371 cloudflare.com. eTwC82FHugWYk63MQ1QB3dpCVFHJbPdeIprRCQWNwo5KXlodLaUjFaXo phamKjv6V2njITPvh30/J+YsDNvW+Q==

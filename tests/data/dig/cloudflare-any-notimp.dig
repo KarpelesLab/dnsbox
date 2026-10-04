@@ -1,0 +1,8 @@
+;; ->>HEADER<<- opcode: QUERY, status: NOTIMP, id: 17944
+;; flags: qr rd ra; QUERY: 1, ANSWER: 0, AUTHORITY: 0, ADDITIONAL: 1
+
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags:; udp: 1232
+; EDE: 21 (Not Supported)
+;; QUESTION SECTION:
+;cloudflare.com.			IN	ANY
