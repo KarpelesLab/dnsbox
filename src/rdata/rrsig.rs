@@ -45,13 +45,20 @@ macro_rules! rrsig_like {
             /// `<type covered> <algorithm> <labels> <original TTL>
             /// <expiration> <inception> <key tag> <signer's name>
             /// <signature>` (RFC 4034 §3.2, RFC 2535 §7.2): the type as a
-            /// mnemonic (or `TYPEnnn`), the algorithm as a number or a
-            /// mnemonic, the original TTL with optional units (as BIND
-            /// accepts), the times as `YYYYMMDDHHmmSS` or seconds since
-            /// the epoch, the signature in base64, possibly split into
-            /// several tokens.
+            /// mnemonic, `TYPEnnn` or a bare number (BIND 9 writes
+            /// `SIG 0 ...` for SIG(0) records and reads numbers here), the
+            /// algorithm as a number or a mnemonic, the original TTL with
+            /// optional units (as BIND accepts), the times as
+            /// `YYYYMMDDHHmmSS` or seconds since the epoch, the signature
+            /// in base64, possibly split into several tokens.
             fn parse_text<B: OutBuf + ?Sized>(s: &mut Scanner<'_>, out: &mut B) -> Result<()> {
-                out.put_u16(s.parse::<Rtype>()?.get())?;
+                let covered = s.word()?;
+                let covered = if covered.as_bytes().iter().all(u8::is_ascii_digit) {
+                    covered.u16()?
+                } else {
+                    covered.as_str()?.parse::<Rtype>()?.get()
+                };
+                out.put_u16(covered)?;
                 out.put_u8(s.parse::<Algorithm>()?.get())?;
                 out.put_u8(s.u8()?)?;
                 out.put_u32(s.ttl()?)?;
@@ -294,6 +301,13 @@ mod tests {
         // The SIG(0) capture of `sig0_capture_round_trip`: type 0, labels
         // and TTL 0.
         text_round_trip(Rtype::SIG, SIG0_TEXT, &hex(ED25519_SIG0), SIG0_TEXT);
+        // BIND 9 writes the type covered of SIG as a bare number when it
+        // has no mnemonic (`named-checkzone -D` prints "SIG 0 15 0 0 ..."),
+        // and reads numbers for RRSIG too.
+        let bind = SIG0_TEXT.replacen("TYPE0 ", "0 ", 1);
+        text_round_trip(Rtype::SIG, &bind, &hex(ED25519_SIG0), SIG0_TEXT);
+        let numeric = RFC4034_RRSIG_TEXT.replacen("A ", "1 ", 1);
+        text_round_trip(Rtype::RRSIG, &numeric, &wire, RFC4034_RRSIG_TEXT);
         // No signature (a template), a timestamp past 2038.
         let mut tmpl = hex("0030 0f 02 00000e10 ffffffff 00000000 0001");
         tmpl.push(0);
@@ -316,6 +330,8 @@ mod tests {
             for (from, to, err) in [
                 ("A ", "NOSUCHTYPE ", Error::UnknownMnemonic),
                 ("A ", "TYPE65536 ", Error::InvalidText),
+                ("A ", "65536 ", Error::InvalidText),
+                ("A ", "-1 ", Error::UnknownMnemonic),
                 (" 5 ", " 256 ", Error::InvalidText),
                 (" 3 ", " 256 ", Error::InvalidText),
                 (" 86400 ", " 1x ", Error::InvalidText),
