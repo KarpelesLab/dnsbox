@@ -42,6 +42,24 @@ macro_rules! algorithm_list_option {
             }
         }
 
+        impl<'a> IntoIterator for $ty<'a> {
+            type Item = u8;
+            type IntoIter = core::iter::Copied<core::slice::Iter<'a, u8>>;
+            #[inline]
+            fn into_iter(self) -> Self::IntoIter {
+                self.iter()
+            }
+        }
+
+        impl<'a> IntoIterator for &$ty<'a> {
+            type Item = u8;
+            type IntoIter = core::iter::Copied<core::slice::Iter<'a, u8>>;
+            #[inline]
+            fn into_iter(self) -> Self::IntoIter {
+                self.iter()
+            }
+        }
+
         impl<'a> ParseOption<'a> for $ty<'a> {
             const CODE: OptionCode = OptionCode::$code;
 

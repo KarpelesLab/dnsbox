@@ -155,7 +155,7 @@ pub enum XfrEvent<'a> {
 }
 
 /// How the server answers, once known.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub enum XfrStyle {
     /// A full zone (AXFR, or AXFR-style IXFR).
     Full,

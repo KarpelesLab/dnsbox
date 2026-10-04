@@ -119,6 +119,15 @@ impl<'a> IntoIterator for TypeBitmap<'a> {
     }
 }
 
+impl<'a> IntoIterator for &TypeBitmap<'a> {
+    type Item = Rtype;
+    type IntoIter = TypeBitmapIter<'a>;
+    #[inline]
+    fn into_iter(self) -> TypeBitmapIter<'a> {
+        self.iter()
+    }
+}
+
 impl fmt::Display for TypeBitmap<'_> {
     /// Space-separated type mnemonics.
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {

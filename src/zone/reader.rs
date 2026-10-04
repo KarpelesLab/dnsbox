@@ -125,7 +125,10 @@ pub enum Entry<'a, 'b> {
 /// The column counts characters (not bytes) from 1; it points at the
 /// offending token where there is one, otherwise at the start of the
 /// entry.
-#[derive(Clone, Debug, PartialEq, Eq)]
+///
+/// It converts into the plain [`Error`] (dropping the position) with `?`,
+/// and reports that error as its [`source`](core::error::Error::source).
+#[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub struct ZoneError {
     error: Error,
     line: u32,
@@ -194,9 +197,8 @@ impl fmt::Display for ZoneError {
     }
 }
 
-#[cfg(feature = "std")]
-impl std::error::Error for ZoneError {
-    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
+impl core::error::Error for ZoneError {
+    fn source(&self) -> Option<&(dyn core::error::Error + 'static)> {
         Some(&self.error)
     }
 }

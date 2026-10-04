@@ -116,6 +116,15 @@ impl<'a> IntoIterator for CharStrs<'a> {
     }
 }
 
+impl<'a> IntoIterator for &CharStrs<'a> {
+    type Item = CharStr<'a>;
+    type IntoIter = CharStrIter<'a>;
+    #[inline]
+    fn into_iter(self) -> CharStrIter<'a> {
+        self.iter()
+    }
+}
+
 impl fmt::Display for CharStrs<'_> {
     /// Space-separated quoted strings.
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {

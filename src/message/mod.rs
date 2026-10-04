@@ -57,6 +57,19 @@ impl Section {
     }
 }
 
+impl fmt::Display for Section {
+    /// The section name as `dig` prints it: `QUESTION`, `ANSWER`,
+    /// `AUTHORITY` or `ADDITIONAL`.
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_str(match self {
+            Section::Question => "QUESTION",
+            Section::Answer => "ANSWER",
+            Section::Authority => "AUTHORITY",
+            Section::Additional => "ADDITIONAL",
+        })
+    }
+}
+
 /// A parsed DNS message: a view over the caller's buffer.
 ///
 /// ```

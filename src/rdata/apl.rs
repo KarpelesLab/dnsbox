@@ -160,6 +160,24 @@ impl<'a> Apl<'a> {
     }
 }
 
+impl<'a> IntoIterator for Apl<'a> {
+    type Item = AplItem<'a>;
+    type IntoIter = AplIter<'a>;
+    #[inline]
+    fn into_iter(self) -> AplIter<'a> {
+        self.items()
+    }
+}
+
+impl<'a> IntoIterator for &Apl<'a> {
+    type Item = AplItem<'a>;
+    type IntoIter = AplIter<'a>;
+    #[inline]
+    fn into_iter(self) -> AplIter<'a> {
+        self.items()
+    }
+}
+
 /// Splits one item off the front of `wire`.
 fn split_item(wire: &[u8]) -> Result<(AplItem<'_>, &[u8])> {
     let [f0, f1, prefix, n, rest @ ..] = wire else {

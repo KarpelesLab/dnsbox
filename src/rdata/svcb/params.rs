@@ -294,6 +294,15 @@ impl<'a> IntoIterator for SvcParams<'a> {
     }
 }
 
+impl<'a> IntoIterator for &SvcParams<'a> {
+    type Item = SvcParam<'a>;
+    type IntoIter = SvcParamIter<'a>;
+    #[inline]
+    fn into_iter(self) -> SvcParamIter<'a> {
+        self.iter()
+    }
+}
+
 impl fmt::Display for SvcParams<'_> {
     /// Space-separated SvcParams in presentation format (RFC 9460 §2.1).
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {

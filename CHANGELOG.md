@@ -37,6 +37,13 @@ Every change that can break a caller is listed here:
 
 ### Added
 
+- API review (Rust API Guidelines): `IntoIterator` for references to the
+  collection-like views (`&CharStrs`, `&TypeBitmap`, `&HipServers`,
+  `&SvcParams`, `Apl`/`&Apl`, `Dau`/`Dhu`/`N3u` and references);
+  `Display` for `Section` (`ANSWER`, ...); `Hash` for `XfrStyle`,
+  `sig0::Validity` and `ZoneError`; `ZoneError` implements
+  `core::error::Error` without `std`; `tests/api.rs` checks that the
+  public types are `Send + Sync` and implement the common traits.
 - Initial scaffold: DNS header parsing and encoding (`Header`, `Flags`,
   `Opcode`, `Rcode`).
 - Foundation (RFC 1035, 3596, 3597, 4343): bounds-checked `WireReader` /

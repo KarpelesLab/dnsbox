@@ -144,7 +144,7 @@ impl<'a> SignedData<'a> {
 }
 
 /// Validity window of a SIG(0) being generated.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub struct Validity {
     /// Signature inception (seconds since the epoch, mod 2³²).
     pub inception: u32,

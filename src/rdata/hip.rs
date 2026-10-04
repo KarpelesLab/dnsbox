@@ -71,6 +71,15 @@ impl<'a> IntoIterator for HipServers<'a> {
     }
 }
 
+impl<'a> IntoIterator for &HipServers<'a> {
+    type Item = Name<'a>;
+    type IntoIter = HipServerIter<'a>;
+    #[inline]
+    fn into_iter(self) -> HipServerIter<'a> {
+        self.iter()
+    }
+}
+
 /// Iterator over [`HipServers`].
 #[derive(Clone, Debug)]
 pub struct HipServerIter<'a>(WireReader<'a>);
