@@ -37,7 +37,15 @@ src/
                   (no_std, allocation-free decoders)
   message/
     mod.rs        Message<'a>, Section, Question, Record, iterators, validate
+    dig.rs        dig-style Display of whole messages (BIND 9 layout; shared
+                  with OwnedMessage through the DigMessage/DigRecord traits)
     tests.rs
+  owned/          (alloc) OwnedMessage, OwnedQuestion, OwnedRecord, OwnedRData:
+    mod.rs        conversions from the views and into the builder
+    serde_impl.rs serde for the owned types (serde + alloc)
+    tests.rs
+  serde_impls.rs  (serde) helpers for open_enum!, Name/NameBuf, Flags,
+                  Opcode, Rcode
   rdata/
     mod.rs        ParseRdata / ComposeRdata traits, rdata_modules!,
                   rdata_registry! -> RData<'a>
@@ -90,6 +98,8 @@ tests/
   corpus.rs, corpus/   interop corpus (BIND, NSD, Knot, PowerDNS, ...)
   fuzz_regressions.rs  fuzz seeds/regressions replayed on stable
   proptest_roundtrip.rs, no_alloc.rs   property tests, allocation check
+  dig_display.rs  Message Display vs BIND dig 9.18 output (tests/data/dig/)
+  serde.rs        serde forms and corpus round trips (serde_json, serde_test)
 fuzz/             cargo-fuzz targets (own workspace, nightly)
 benches/          criterion benchmarks (own package; see BENCH.md)
 ```
@@ -588,8 +598,10 @@ open_enum! {
 This generates the struct (derives `Clone, Copy, PartialEq, Eq, Hash,
 PartialOrd, Ord, Default`), one constant per line, `new`, `get`,
 `mnemonic`, `from_mnemonic` (case-insensitive, aliases included), `all`,
-`From` conversions, `Display`/`Debug` (mnemonic or `<generic><number>`) and
-`FromStr` (mnemonic, alias or generic form). Use an empty generic prefix
+`From` conversions, `Display`/`Debug` (mnemonic or `<generic><number>`),
+`FromStr` (mnemonic, alias or generic form) and, with the `serde` feature,
+`Serialize`/`Deserialize` (the `Display` string in human-readable formats,
+the integer otherwise). Use an empty generic prefix
 (`generic ""`) for registries whose presentation format is the bare number
 (e.g. DNSSEC algorithms); use `generic "key"` for SvcParamKeys (`key65535`,
 RFC 9460 §2.1). Add extra inherent methods in a separate `impl` block.
@@ -887,6 +899,39 @@ src/dnssec/
   because DSO messages carry TLVs instead of RRs. New DSO TLVs follow the
   EDNS-option shape: `ParseDsoTlv<'a>` / `ComposeDsoTlv`.
 
+## Owned data, `dig` display and serde (Milestone 7)
+
+- **`dig` display** (`message/dig.rs`): `Display for Message` prints the
+  whole message as BIND 9's `dig` does — header and flags lines (with
+  `dig`'s warnings), the OPT pseudosection (EDNS header, one line per
+  option in `dig`'s own format; options `dig` 9.18 does not decode but
+  dnsbox does show their presentation value), the sections in BIND's tab
+  columns, and TSIG / SIG(0) pseudosections. No allocation; a malformed
+  message is shown up to the first error (`;; ERROR: ...`). The only
+  intended difference from `dig` is that long base64/hex RDATA fields are
+  not split into 56-character chunks. `tests/dig_display.rs` compares
+  against real `dig` output for the whole corpus.
+- **Owned types** (`owned/`, `alloc`): `OwnedMessage` (ID, flags, four
+  `Vec` sections; counts are the lengths), `OwnedQuestion`, `OwnedRecord`
+  (`NameBuf` owner, raw class/TTL, `OwnedRData`). `OwnedRData` is the
+  record type plus the RDATA in **uncompressed wire form** in one boxed
+  slice: the typed `RData<'_>` view is decoded on demand (`parse(class)` /
+  `as_rdata()`), so every registered type (and unknown ones) is covered
+  without a parallel owned type per format. As `ComposeRdata` it re-encodes
+  through the typed view, so the builder recompresses exactly the names
+  RFC 3597 §4 allows and `Canonical` lowercases the right ones.
+  Conversions: `from_*` / `TryFrom` / `to_owned_*` from the views (typed
+  RDATA must be valid), `push_to` / `write_to` / `to_vec` into a builder.
+- **serde** (feature `serde`, `serde` with `default-features = false`, so
+  `no_std`; `alloc` enables `serde/alloc`): protocol numbers as mnemonics or
+  RFC 3597 generic forms in human-readable formats (numbers accepted on
+  input) and integers otherwise; names as presentation strings; `Flags` as
+  a struct of bits (raw word when compact); owned types as structs with
+  RDATA in the RFC 3597 §5 generic form (`\# 4 C0000201`) or as bytes, so
+  every type round-trips exactly. Deserialized RDATA is validated like
+  `OwnedRData::from_wire`. Once the zone-file parser lands, presentation
+  RDATA can be accepted as an alternative input.
+
 ## Decisions and limitations to know
 
 - `Name` equality/hash are case-insensitive; use `eq_exact` for byte
@@ -915,8 +960,5 @@ src/dnssec/
   `$GENERATE` follows BIND's syntax and yields at most `MAX_GENERATE`
   records. The owner field is "present" only when the line starts with a
   non-blank character (RFC 1035 §5.1).
-- Not yet implemented (Milestone 7): owned message types, `dig`-style
-  message display, serde; text parsing for the record types that still
-  have a `ParseRdataText` stub.
 - Do not edit `ROADMAP.md` or `CHANGELOG.md` on feature branches; the
   integrator does.

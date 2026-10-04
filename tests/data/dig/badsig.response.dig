@@ -1,0 +1,9 @@
+;; ->>HEADER<<- opcode: QUERY, status: NOTAUTH, id: 35965
+;; flags: qr rd; QUERY: 1, ANSWER: 0, AUTHORITY: 0, ADDITIONAL: 1
+;; WARNING: recursion requested but not available
+
+;; QUESTION SECTION:
+;example.com.			IN	SOA
+
+;; TSIG PSEUDOSECTION:
+tsig-key.		0	ANY	TSIG	hmac-sha256. 1791104316 300 0 35965 BADSIG 0 

@@ -13,6 +13,12 @@ cargo-fuzz = true
 libfuzzer-sys = "0.4"
 dnsbox = { path = ".." }
 
+# `src/lib.rs` is also compiled into dnsbox's own tests, where `alloc` means
+# dnsbox's feature; here it is always on (dnsbox's default features).
+[features]
+default = ["alloc"]
+alloc = []
+
 # Not part of any other workspace: this crate needs nightly and libFuzzer.
 [workspace]
 members = ["."]

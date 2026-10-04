@@ -1,0 +1,12 @@
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 57798
+;; flags: qr rd ra; QUERY: 1, ANSWER: 3, AUTHORITY: 0, ADDITIONAL: 1
+
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags:; udp: 512
+;; QUESTION SECTION:
+;www.microsoft.com.		IN	A
+
+;; ANSWER SECTION:
+www.microsoft.com.	734	IN	CNAME	www.microsoft.com-c-3.edgekey.net.
+www.microsoft.com-c-3.edgekey.net. 261 IN CNAME	e13678.dscb.akamaiedge.net.
+e13678.dscb.akamaiedge.net. 20	IN	A	23.35.101.225

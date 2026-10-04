@@ -1,0 +1,15 @@
+;; ->>HEADER<<- opcode: QUERY, status: NXDOMAIN, id: 63002
+;; flags: qr aa; QUERY: 1, ANSWER: 0, AUTHORITY: 6, ADDITIONAL: 1
+
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags: do; udp: 1232
+;; QUESTION SECTION:
+;no-such-name.powerdns.com.	IN	A
+
+;; AUTHORITY SECTION:
+powerdns.com.		3600	IN	SOA	pdns-public-ns1.powerdns.com. peter\.van\.dijk.powerdns.com. 2026100101 10800 3600 604800 3600
+powerdns.com.		3600	IN	RRSIG	SOA 8 2 3600 20261015000000 20260924000000 36021 powerdns.com. MTOlTE9ZwpztV8EhttuPiVS+s5MpNZVEgHRnfMtgThUfbX4tba/3Z++o cPVTZj0npQycJtOln3FFXy+Aj1Au1+gZy2Ry7shLKl0jtJmoFGOfc0No V32UJWxsz7Z33XmcztT8T/mOV8+swKttw8d0uji2VohR9/OHWj0xUa2H 4Rs=
+monitoring.powerdns.com. 3600	IN	NSEC	pdns-public-ns1.powerdns.com. CNAME RRSIG NSEC
+monitoring.powerdns.com. 3600	IN	RRSIG	NSEC 8 3 3600 20261015000000 20260924000000 36021 powerdns.com. sy1YmnhvCW4QML8yOio/vzfEmL53MfrgLEB3/xvyaYhrc/nSVKfM3ya2 U53PfSYvo93DTEuwreZv3DZjhc88aG9Uay3OMBov64iS66HaLcSI4oPQ yKglqApRT98CmhspqIoRqVRHMR6IztWM2rlZB6Hy8Bo3/TXQ2HjutZjo UKU=
+powerdns.com.		3600	IN	NSEC	_30b17b259ca4de8e5858d9165102cf3c.powerdns.com. A NS SOA MX TXT RRSIG NSEC DNSKEY
+powerdns.com.		3600	IN	RRSIG	NSEC 8 2 3600 20261015000000 20260924000000 36021 powerdns.com. gYRramsvKdvRZk0JoByqE/WKu6OhSyk0k4b0tK2hKG1fHa1Rtw4oYEG3 /Bf00AG7ib3+CxbsB1AYHHFLoOjK/49FRF7ELEFZ4PwWKl6vWKqhBTHg vE4Jx3lgGgDdH/ncBhC/gHgBezc3+E8FtwN4ZjVcCqScL2UuEzuEsek3 32I=

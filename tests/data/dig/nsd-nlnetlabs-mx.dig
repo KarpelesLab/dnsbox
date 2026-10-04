@@ -1,0 +1,23 @@
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 23272
+;; flags: qr aa; QUERY: 1, ANSWER: 4, AUTHORITY: 4, ADDITIONAL: 3
+
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags:; udp: 1232
+;; QUESTION SECTION:
+;nlnetlabs.nl.			IN	MX
+
+;; ANSWER SECTION:
+nlnetlabs.nl.		240	IN	MX	10 mxext1.mailbox.org.
+nlnetlabs.nl.		240	IN	MX	10 mxext2.mailbox.org.
+nlnetlabs.nl.		240	IN	MX	10 mxext3.mailbox.org.
+nlnetlabs.nl.		240	IN	MX	10 mxext4.mailbox.org.
+
+;; AUTHORITY SECTION:
+nlnetlabs.nl.		240	IN	NS	ns.nlnetlabs.nl.
+nlnetlabs.nl.		240	IN	NS	ns1.sidn.nl.
+nlnetlabs.nl.		240	IN	NS	ns2.sidn.nl.
+nlnetlabs.nl.		240	IN	NS	anyns.pch.net.
+
+;; ADDITIONAL SECTION:
+ns.nlnetlabs.nl.	240	IN	A	185.49.140.60
+ns.nlnetlabs.nl.	240	IN	AAAA	2a04:b900::8:0:0:60

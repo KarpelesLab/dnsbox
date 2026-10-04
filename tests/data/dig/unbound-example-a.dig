@@ -1,0 +1,11 @@
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 11615
+;; flags: qr rd ra; QUERY: 1, ANSWER: 2, AUTHORITY: 0, ADDITIONAL: 1
+
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags:; udp: 4096
+;; QUESTION SECTION:
+;example.com.			IN	A
+
+;; ANSWER SECTION:
+example.com.		117	IN	A	8.6.112.0
+example.com.		117	IN	A	8.47.69.0

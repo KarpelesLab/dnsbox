@@ -1,0 +1,10 @@
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 40298
+;; flags: qr rd ra; QUERY: 1, ANSWER: 1, AUTHORITY: 0, ADDITIONAL: 1
+
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags:; udp: 4096
+;; QUESTION SECTION:
+;_xmpp-server._tcp.jabber.org.	IN	SRV
+
+;; ANSWER SECTION:
+_xmpp-server._tcp.jabber.org. 60 IN	SRV	30 30 5269 scarlet.jabber.org.

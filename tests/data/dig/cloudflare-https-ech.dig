@@ -1,0 +1,12 @@
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 33572
+;; flags: qr rd ra ad; QUERY: 1, ANSWER: 2, AUTHORITY: 0, ADDITIONAL: 1
+
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags: do; udp: 1232
+; NSID: 6e 72 74 30 39 ("nrt09")
+;; QUESTION SECTION:
+;crypto.cloudflare.com.		IN	HTTPS
+
+;; ANSWER SECTION:
+crypto.cloudflare.com.	300	IN	HTTPS	1 . alpn="h2" ipv4hint=162.159.135.79,162.159.136.79 ech=AEX+DQBBYwAgACA6PkuRPS6xF3vzAy7bdYZAugj4np19oXE54qofM/VcSQAEAAEAAQASY2xvdWRmbGFyZS1lY2guY29tAAA= ipv6hint=2606:4700:7::a29f:874f,2606:4700:7::a29f:884f
+crypto.cloudflare.com.	300	IN	RRSIG	HTTPS 13 3 300 20261005100901 20261003080901 34505 crypto.cloudflare.com. DLDBkDrVcbXRcvckROo94KmEJU0fbIZZvVTT2hEV66mmM2pwhvylUsYQ xuyq3Ra0hQGJegPjTO1x0R1kMV6wrw==

@@ -1,0 +1,11 @@
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 3997
+;; flags: qr aa; QUERY: 1, ANSWER: 2, AUTHORITY: 0, ADDITIONAL: 1
+
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags:; udp: 1232
+;; QUESTION SECTION:
+;powerdns.com.			IN	MX
+
+;; ANSWER SECTION:
+powerdns.com.		300	IN	MX	25 mx1.open-xchange.com.
+powerdns.com.		300	IN	MX	75 mx2.open-xchange.com.

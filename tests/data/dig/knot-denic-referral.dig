@@ -1,0 +1,23 @@
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 31093
+;; flags: qr; QUERY: 1, ANSWER: 0, AUTHORITY: 6, ADDITIONAL: 7
+
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags: do; udp: 1452
+;; QUESTION SECTION:
+;denic.de.			IN	NS
+
+;; AUTHORITY SECTION:
+denic.de.		86400	IN	NS	ns1.denic.de.
+denic.de.		86400	IN	NS	ns2.denic.de.
+denic.de.		86400	IN	NS	ns3.denic.de.
+denic.de.		86400	IN	NS	ns4.denic.net.
+denic.de.		86400	IN	DS	26155 8 2 078547BF937A225C9EFB2CAF7FAC11BD88671FCEDFAEEB55C9B19CB0 320BEFC9
+denic.de.		86400	IN	RRSIG	DS 8 2 86400 20261012071644 20260928054644 32911 de. WeXyKGVOufM7COuN0LagBxnA4uDlzYvxK6qj5IkCxNtimBWp0N2r+330 6Nzz4trNO4eE23yZiMDkMSNpeNHFwkbRx71/2wp7kz6URxmPUjdj7vsK ZBrz0RXNHJ5NCNV3EQfe9IstrHwm9JuQGQFNvwjwjAAV+Pst0WGEmFwO apc=
+
+;; ADDITIONAL SECTION:
+ns1.denic.de.		86400	IN	A	77.67.63.106
+ns1.denic.de.		86400	IN	AAAA	2001:668:1f:11::106
+ns2.denic.de.		86400	IN	A	81.91.164.6
+ns2.denic.de.		86400	IN	AAAA	2a02:568:0:2::54
+ns3.denic.de.		86400	IN	A	195.243.137.27
+ns3.denic.de.		86400	IN	AAAA	2003:8:14::106

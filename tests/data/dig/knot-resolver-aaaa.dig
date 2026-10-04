@@ -1,0 +1,10 @@
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 21187
+;; flags: qr rd ra; QUERY: 1, ANSWER: 1, AUTHORITY: 0, ADDITIONAL: 1
+
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags:; udp: 1232
+;; QUESTION SECTION:
+;www.nic.cz.			IN	AAAA
+
+;; ANSWER SECTION:
+www.nic.cz.		931	IN	AAAA	2001:1488:0:3::2

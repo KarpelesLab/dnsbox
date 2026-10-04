@@ -1,0 +1,12 @@
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 24534
+;; flags: qr rd ra; QUERY: 1, ANSWER: 3, AUTHORITY: 0, ADDITIONAL: 1
+
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags:; udp: 1232
+;; QUESTION SECTION:
+;sip2sip.info.			IN	NAPTR
+
+;; ANSWER SECTION:
+sip2sip.info.		3600	IN	NAPTR	10 100 "s" "SIP+D2T" "" _sip._tcp.sip2sip.info.
+sip2sip.info.		300	IN	NAPTR	20 100 "s" "SIP+D2U" "" _sip._udp.sip2sip.info.
+sip2sip.info.		3600	IN	NAPTR	25 100 "s" "SIPS+D2T" "" _sips._tcp.sip2sip.info.

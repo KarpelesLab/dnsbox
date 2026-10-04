@@ -55,6 +55,20 @@
 //! # Ok::<(), dnsbox::Error>(())
 //! ```
 //!
+//! ## Text, owned data and serde
+//!
+//! A [`Message`] displays in `dig` style (BIND 9's layout, no allocation).
+//! With `alloc`, [`OwnedMessage`] and friends ([`owned`]) copy a message
+//! out of its buffer and write it back through the builder. Text parses
+//! back too: [`ParseRdataText`] and [`RData::parse_text`] read a record's
+//! presentation format, and [`zone::ZoneReader`] reads RFC 1035 master
+//! files, both without allocating. The `serde`
+//! feature (`no_std`) serializes protocol numbers ([`Rtype`], [`Class`],
+//! [`Opcode`], [`Rcode`], every registry newtype) as mnemonics such as
+//! `"MX"` or `"TYPE65534"` in human-readable formats and as integers
+//! otherwise, names as presentation strings, [`Flags`] as a struct of
+//! bits, and, with `alloc`, the owned types.
+//!
 //! See `ARCHITECTURE.md` in the repository for the module layout and the
 //! extension recipes (adding record types, EDNS options, ...).
 
@@ -80,8 +94,12 @@ pub mod header;
 pub mod message;
 pub mod name;
 pub mod notify;
+#[cfg(feature = "alloc")]
+pub mod owned;
 pub mod rdata;
 pub mod rtype;
+#[cfg(feature = "serde")]
+mod serde_impls;
 pub mod sig0;
 pub mod tcp;
 pub mod text;
@@ -99,6 +117,8 @@ pub use error::{Error, Result};
 pub use header::{Flags, Header, Opcode, Rcode};
 pub use message::{Message, Question, Record, Section};
 pub use name::{Label, Name, NameBuf, ToName};
+#[cfg(feature = "alloc")]
+pub use owned::{OwnedMessage, OwnedQuestion, OwnedRData, OwnedRecord};
 pub use rdata::{ComposeRdata, ParseRdata, ParseRdataText, RData};
 pub use rtype::Rtype;
 pub use wire::{Composer, NameEncoding, OutBuf, WireReader, WireWriter};

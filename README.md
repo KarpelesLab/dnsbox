@@ -10,8 +10,8 @@ DNSSEC, SVCB/HTTPS, TSIG, and more).
 
 > **Status:** pre-1.0. Wire formats, EDNS(0), DNSSEC, SVCB/HTTPS, TSIG and
 > the long tail of record types are implemented; the API may still change.
-> See the [roadmap](ROADMAP.md) for what is left (zone-file parsing, owned
-> types, serde, 1.0 API review).
+> See the [roadmap](ROADMAP.md) for what is left (zone-file parsing, 1.0
+> API review).
 
 ## Goals
 
@@ -152,17 +152,21 @@ www  300  CNAME @
 - **Transactions and zone transfer**: TSIG (RFC 8945), SIG(0) (RFC 2931),
   dynamic UPDATE (RFC 2136), NOTIFY (RFC 1996), AXFR/IXFR (RFC 5936,
   RFC 1995) stream processing, DNS Stateful Operations (RFC 8490).
+- **Text and owned data**: `dig`-style `Display` of whole messages (no
+  allocation, matches BIND's `dig` line for line), owned `OwnedMessage` /
+  `OwnedRecord` / `OwnedRData` types (`alloc`) and `serde` support.
 
 ## Features
 
 | Feature          | Default | What it adds |
 |------------------|---------|--------------|
 | `std`            | yes     | `std::error::Error`, `std::io` TCP helpers (implies `alloc`) |
-| `alloc`          |         | `Vec`-backed builders, owned helpers |
+| `alloc`          |         | `Vec`-backed builders, owned message types (`OwnedMessage`, ...) |
 | `dnssec-digest`  |         | DS digests and NSEC3 hashing (no `alloc`) |
 | `dnssec`         |         | DNSSEC and SIG(0) signature verification and signing (implies `alloc`, `dnssec-digest`) |
 | `tsig`           |         | TSIG HMAC backend (HMAC-MD5/SHA-1/SHA-2) |
 | `cookie-siphash` |         | RFC 9018 server cookie generation and verification |
+| `serde`          |         | `Serialize`/`Deserialize` (`no_std`): protocol numbers as mnemonics, names as text, owned types with `alloc` |
 
 dnsbox never implements cryptography itself: the crypto features pull in
 the optional, `no_std`-capable [`purecrypto`](https://crates.io/crates/purecrypto)

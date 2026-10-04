@@ -1,0 +1,13 @@
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 26422
+;; flags: qr aa; QUERY: 1, ANSWER: 4, AUTHORITY: 0, ADDITIONAL: 1
+
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags:; udp: 1232
+;; QUESTION SECTION:
+;powerdns.com.			IN	TXT
+
+;; ANSWER SECTION:
+powerdns.com.		3600	IN	TXT	"v=spf1 ip4:87.191.39.187 ip4:87.191.57.183 ip4:87.191.57.184 ip4:89.163.165.128/26 include:20334960.spf10.hubspotemail.net ~all"
+powerdns.com.		3600	IN	TXT	"google-site-verification=xvAvhh-7Dy_lJxWuLq70I35N7UBjC_Q_BWrBorCTtPM"
+powerdns.com.		3600	IN	TXT	"google-site-verification=KJy5UEMW-V_lZLf5muO5no0ZyMS5trIXClX78GZS9iM"
+powerdns.com.		3600	IN	TXT	"Brevo-code:ae847031589088f7ecd6be2a99eb4eb5"

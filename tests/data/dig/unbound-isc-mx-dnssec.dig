@@ -1,0 +1,12 @@
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 16732
+;; flags: qr rd ra ad; QUERY: 1, ANSWER: 3, AUTHORITY: 0, ADDITIONAL: 1
+
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags: do; udp: 4096
+;; QUESTION SECTION:
+;isc.org.			IN	MX
+
+;; ANSWER SECTION:
+isc.org.		300	IN	MX	10 mx.ams1.isc.org.
+isc.org.		300	IN	MX	5 mx.pao1.isc.org.
+isc.org.		300	IN	RRSIG	MX 13 2 300 20261017160117 20261003155013 27566 isc.org. 6QDDl8ngu71WPqDg1fIUTBiYCPk8j7ONkXcDgXph1HRVCi/a5XdRGTXh OetEYOk7cbLYAFQa6D6AcIsL+e1EEw==

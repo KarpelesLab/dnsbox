@@ -123,6 +123,54 @@ fn parse_iterate_display() {
 }
 
 #[test]
+fn dig_display() {
+    // A SERVFAIL with EDNS (EDE with text, NSID, cookie, padding), then the
+    // SOA response: the whole `dig` form is written without allocating.
+    const EDNS_RESPONSE: &[u8] = b"\x00\x07\x81\x02\x00\x01\x00\x00\x00\x00\x00\x01\
+        \x07example\x03com\x00\x00\x01\x00\x01\
+        \x00\x00\x29\x04\xd0\x00\x00\x80\x00\x00\x30\
+        \x00\x0f\x00\x08\x00\x09no SEP\
+        \x00\x03\x00\x03ns1\
+        \x00\x0a\x00\x08\x01\x02\x03\x04\x05\x06\x07\x08\
+        \x00\x0c\x00\x02\x00\x00\
+        \x00\x08\x00\x07\x00\x01\x18\x00\xc6\x33\x64";
+    no_alloc("dig display", || {
+        let mut text = StackText::new();
+        write!(text, "{}", Message::parse(EDNS_RESPONSE).unwrap()).unwrap();
+        assert_eq!(
+            text.as_str(),
+            ";; ->>HEADER<<- opcode: QUERY, status: SERVFAIL, id: 7\n\
+             ;; flags: qr rd; QUERY: 1, ANSWER: 0, AUTHORITY: 0, ADDITIONAL: 1\n\
+             ;; WARNING: recursion requested but not available\n\
+             \n\
+             ;; OPT PSEUDOSECTION:\n\
+             ; EDNS: version: 0, flags: do; udp: 1232\n\
+             ; EDE: 9 (DNSKEY Missing): (no SEP)\n\
+             ; NSID: 6e 73 31 (\"ns1\")\n\
+             ; COOKIE: 0102030405060708\n\
+             ; PAD: (2 bytes)\n\
+             ; CLIENT-SUBNET: 198.51.100.0/24/0\n\
+             ;; QUESTION SECTION:\n\
+             ;example.com.\t\t\tIN\tA\n\
+             \n"
+        );
+        text.clear();
+        write!(text, "{}", Message::parse(SOA_RESPONSE).unwrap()).unwrap();
+        assert!(text.as_str().ends_with(
+            ";; ANSWER SECTION:\n\
+             example.com.\t\t877\tIN\tSOA\telliott.ns.cloudflare.com. dns.cloudflare.com. \
+             2416374680 10000 2400 604800 1800\n\n"
+        ));
+        // Truncated input: shown up to the error.
+        for end in 12..EDNS_RESPONSE.len() {
+            text.clear();
+            write!(text, "{}", Message::parse(&EDNS_RESPONSE[..end]).unwrap()).unwrap();
+            assert!(text.as_str().contains(";; ERROR: "));
+        }
+    });
+}
+
+#[test]
 fn malformed_input() {
     no_alloc("rejecting malformed input", || {
         for end in 0..SOA_RESPONSE.len() {

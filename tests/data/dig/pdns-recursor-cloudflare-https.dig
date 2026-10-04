@@ -1,0 +1,10 @@
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 38101
+;; flags: qr rd ra; QUERY: 1, ANSWER: 1, AUTHORITY: 0, ADDITIONAL: 1
+
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags:; udp: 512
+;; QUESTION SECTION:
+;cloudflare.com.			IN	HTTPS
+
+;; ANSWER SECTION:
+cloudflare.com.		300	IN	HTTPS	1 . alpn="h3,h2" ipv4hint=104.16.132.229,104.16.133.229 ipv6hint=2606:4700::6810:84e5,2606:4700::6810:85e5

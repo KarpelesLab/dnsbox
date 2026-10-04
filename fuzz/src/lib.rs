@@ -24,7 +24,8 @@
 //! AXFR/IXFR processing and DSO.
 //!
 //! Only the `&mut [u8]` builder is used, so the checks also run against a
-//! crate built without the `alloc` feature.
+//! crate built without the `alloc` feature; the owned-type checks
+//! ([`check_owned`]) are compiled only with `alloc`.
 
 use std::collections::hash_map::DefaultHasher;
 use std::hash::{Hash, Hasher};
@@ -579,6 +580,34 @@ pub fn assert_same_message(a: &Message<'_>, b: &Message<'_>) {
     }
 }
 
+/// The owned copy of a validated message (feature `alloc`): it displays
+/// like the view (`shown`), re-encodes to a valid message that copies back
+/// to the same value, and its record data re-encodes to itself.
+#[cfg(feature = "alloc")]
+pub fn check_owned(msg: &Message<'_>, shown: &str) {
+    let owned = dnsbox::OwnedMessage::from_message(msg)
+        .unwrap_or_else(|e| panic!("validated message does not copy: {e}"));
+    assert_eq!(owned.header(), Ok(msg.header()));
+    assert_eq!(owned.to_string(), shown);
+    for (_, rr) in owned.records() {
+        let _ = rr.to_string();
+        assert_eq!(
+            dnsbox::OwnedRData::new(&rr.rdata).as_ref(),
+            Ok(&rr.rdata),
+            "{rr}"
+        );
+    }
+    match owned.to_vec() {
+        Ok(wire) => {
+            let again = dnsbox::OwnedMessage::from_wire(&wire)
+                .unwrap_or_else(|e| panic!("re-encoded owned message invalid: {e}"));
+            assert_eq!(again, owned);
+        }
+        // Recompression may need more room than the original used.
+        Err(e) => assert_eq!(e, Error::BufferTooSmall),
+    }
+}
+
 /// Parse → build → parse identity for a validated message, with and
 /// without compression; re-building the rebuilt message is a fixed point.
 pub fn check_reencode(msg: &Message<'_>) {
@@ -700,9 +729,18 @@ pub fn message(data: &[u8]) {
     assert_eq!(msg.questions().count(), q_ok + usize::from(q_err));
     assert_eq!(msg.section(Section::Question).count(), 0);
 
+    // The `dig` form reports every iteration error, and only errors.
+    let shown = msg.to_string();
+    if q_err || all_err {
+        assert!(shown.contains(";; ERROR: "), "{shown}");
+    }
+
     // Validation agrees with what the iterators saw.
     match msg.validate() {
         Ok(()) => {
+            assert!(!shown.contains(";; ERROR: "), "{shown}");
+            #[cfg(feature = "alloc")]
+            check_owned(&msg, &shown);
             assert!(!q_err && !all_err && typed_ok);
             assert_eq!(q_ok, h.qdcount as usize);
             let total = h.ancount as usize + h.nscount as usize + h.arcount as usize;

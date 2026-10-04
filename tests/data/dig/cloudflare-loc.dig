@@ -1,0 +1,10 @@
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 54563
+;; flags: qr rd ra; QUERY: 1, ANSWER: 1, AUTHORITY: 0, ADDITIONAL: 1
+
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags:; udp: 1232
+;; QUESTION SECTION:
+;ckdhr.com.			IN	LOC
+
+;; ANSWER SECTION:
+ckdhr.com.		21600	IN	LOC	42 21 43.528 N 71 5 6.284 W -25.00m 1m 3000m 10m

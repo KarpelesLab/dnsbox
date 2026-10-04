@@ -10,7 +10,9 @@
 /// - `Display` / `Debug` printing the mnemonic, or `<generic><number>` for
 ///   unregistered values (e.g. `TYPE65534`, `CLASS42`, `key65535`; use an
 ///   empty generic prefix to print bare numbers);
-/// - `FromStr` accepting a mnemonic, an alias, or the generic form.
+/// - `FromStr` accepting a mnemonic, an alias, or the generic form;
+/// - with the `serde` feature, `Serialize` / `Deserialize` (the mnemonic or
+///   generic form in human-readable formats, the number otherwise).
 ///
 /// ```ignore
 /// open_enum! {
@@ -128,6 +130,29 @@ macro_rules! open_enum {
         impl core::fmt::Debug for $name {
             fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
                 core::fmt::Display::fmt(self, f)
+            }
+        }
+
+        #[cfg(feature = "serde")]
+        impl serde::Serialize for $name {
+            /// The mnemonic or generic form in human-readable formats, the
+            /// number otherwise.
+            fn serialize<S: serde::Serializer>(&self, s: S) -> core::result::Result<S::Ok, S::Error> {
+                $crate::serde_impls::serialize_open(s, self, self.0)
+            }
+        }
+
+        #[cfg(feature = "serde")]
+        impl<'de> serde::Deserialize<'de> for $name {
+            /// A mnemonic, an alias, the generic form or a number in
+            /// human-readable formats; the number otherwise.
+            fn deserialize<D: serde::Deserializer<'de>>(d: D) -> core::result::Result<Self, D::Error> {
+                $crate::serde_impls::deserialize_open::<D, $name, $int>(
+                    d,
+                    concat!("a ", stringify!($name), " mnemonic or number"),
+                    $crate::serde_impls::parse_from_str,
+                    |v| <$int>::try_from(v).ok().map($name),
+                )
             }
         }
     };

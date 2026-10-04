@@ -1,0 +1,12 @@
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 3471
+;; flags: qr rd ra ad; QUERY: 1, ANSWER: 3, AUTHORITY: 0, ADDITIONAL: 1
+
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags: do; udp: 4096
+;; QUESTION SECTION:
+;www.ietf.org.			IN	AAAA
+
+;; ANSWER SECTION:
+www.ietf.org.		60	IN	AAAA	2606:4700::6810:2c63
+www.ietf.org.		60	IN	AAAA	2606:4700::6810:2d63
+www.ietf.org.		60	IN	RRSIG	AAAA 13 3 300 20261005100431 20261003080431 34505 ietf.org. Uh0ex5affH4sAP5XJ3QjuYQngocjSCrtdRytJoxnjxLwnG5GJHhKDjY+ QlAwHlznCIoQHXmkjyIsRiku3J0bNg==

@@ -607,5 +607,6 @@ impl<'a> Iterator for AllRecords<'a> {
 
 impl core::iter::FusedIterator for AllRecords<'_> {}
 
+pub(crate) mod dig;
 #[cfg(test)]
 mod tests;

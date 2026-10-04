@@ -1,0 +1,12 @@
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 55226
+;; flags: qr aa; QUERY: 1, ANSWER: 2, AUTHORITY: 0, ADDITIONAL: 1
+
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags: do; udp: 4096
+; NSID: 6c 61 78 2e 61 73 65 72 76 65 72 73 2e 64 6e 73 2e 69 63 61 6e 6e 2e 6f 72 67 ("lax.aservers.dns.icann.org")
+;; QUESTION SECTION:
+;example.com.			IN	SOA
+
+;; ANSWER SECTION:
+example.com.		3600	IN	SOA	ns.icann.org. noc.dns.icann.org. 2026100101 7200 3600 1209600 3600
+example.com.		3600	IN	RRSIG	SOA 13 2 3600 20261022122138 20261001160927 21566 example.com. Y9mpHy9ogB1vr0vJiyvs6ydVC4jPUbYWpT604lZudE8THZbObC9XSMKU qufAWK8jmQ3yD+pqMZJGxYfpNOkmFQ==

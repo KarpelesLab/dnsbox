@@ -1,0 +1,25 @@
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 51752
+;; flags: qr aa; QUERY: 1, ANSWER: 2, AUTHORITY: 5, ADDITIONAL: 5
+
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags: do; udp: 1232
+; NSID: 6e 73 2e 6e 6c 6e 65 74 6c 61 62 73 2e 6e 6c ("ns.nlnetlabs.nl")
+;; QUESTION SECTION:
+;nlnetlabs.nl.			IN	SOA
+
+;; ANSWER SECTION:
+nlnetlabs.nl.		240	IN	SOA	ns.nlnetlabs.nl. hostmaster.nlnetlabs.nl. 2026100100 28800 7200 604800 240
+nlnetlabs.nl.		240	IN	RRSIG	SOA 8 2 240 20261029005008 20261001005008 42393 nlnetlabs.nl. sgp+d3AwMy6Edwae92B+9/IF6h7QqV2Yyo27kNuSj2bu9stwvYRkr2UV 91GU5Wn9iyBRUUEch8ZhHihd7VngY+1DduOKI4oNMm5GAQyoU9bTHM64 FqjAcXCbdKRyuiI3R1TEu9ltMQkxzOkP7bHlUIG0mbP83KXud8gOpZgx cfU=
+
+;; AUTHORITY SECTION:
+nlnetlabs.nl.		240	IN	NS	ns.nlnetlabs.nl.
+nlnetlabs.nl.		240	IN	NS	ns1.sidn.nl.
+nlnetlabs.nl.		240	IN	NS	ns2.sidn.nl.
+nlnetlabs.nl.		240	IN	NS	anyns.pch.net.
+nlnetlabs.nl.		240	IN	RRSIG	NS 8 2 240 20261029005008 20261001005008 42393 nlnetlabs.nl. Qzx1YvalI86Nq87np59l7BIdL/j0JScZW0MSO/m1YsI24ZcHxrd/emPa zXmABZ7+s+wGNrrX29z6nePOSaovNoM7GmIq+ZlfFqaW2411wRQMg7+G jB8YPpxkNOwV0ndZcgaZmJCc8IQawBCdEW7xzXHQ/XLH951YysHSq60a rRQ=
+
+;; ADDITIONAL SECTION:
+ns.nlnetlabs.nl.	240	IN	A	185.49.140.60
+ns.nlnetlabs.nl.	240	IN	RRSIG	A 8 3 240 20261029005008 20261001005008 42393 nlnetlabs.nl. sfdRUiab4t1KvPaWyNh0XTCzu5EEKTo8dd2SK+VbsgWOlHUjFQc6Ekud WnLSVnTOgx5fi9TZ9HRL1We1wELdOSwzifYAdIP/QgA09S+lJKMdVGS8 FgXHhAsIDXVLrV/ZiLFBKRfxHeA7jPDh/GSvzAITglKsw8k7F3zt3Crq oEI=
+ns.nlnetlabs.nl.	240	IN	AAAA	2a04:b900::8:0:0:60
+ns.nlnetlabs.nl.	240	IN	RRSIG	AAAA 8 3 240 20261029005008 20261001005008 42393 nlnetlabs.nl. fy688a+r/47jHGiOyUwbHocB8+5Gbjac/6T/8Awy01SfuyNc3DBRXH89 JxZBSO+OIQPXzrdm3Ajlht7a8i+XYD8IIrisBLRVPxFSCpCmWJwU71Nn VVUPcnwOhkMf2yDfwt6ZLdPouGsgOWIFkmr5piD3HkBycVpeVV7d2/Rh 2iY=

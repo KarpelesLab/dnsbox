@@ -1,0 +1,12 @@
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 33433
+;; flags: qr aa; QUERY: 1, ANSWER: 2, AUTHORITY: 0, ADDITIONAL: 1
+
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags: do; udp: 1232
+; NSID: 70 64 6e 73 2d 70 75 62 6c 69 63 2d 6e 73 31 2e 70 6f 77 65 72 64 6e 73 2e 63 6f 6d ("pdns-public-ns1.powerdns.com")
+;; QUESTION SECTION:
+;powerdns.com.			IN	SOA
+
+;; ANSWER SECTION:
+powerdns.com.		3600	IN	RRSIG	SOA 8 2 3600 20261015000000 20260924000000 36021 powerdns.com. MTOlTE9ZwpztV8EhttuPiVS+s5MpNZVEgHRnfMtgThUfbX4tba/3Z++o cPVTZj0npQycJtOln3FFXy+Aj1Au1+gZy2Ry7shLKl0jtJmoFGOfc0No V32UJWxsz7Z33XmcztT8T/mOV8+swKttw8d0uji2VohR9/OHWj0xUa2H 4Rs=
+powerdns.com.		3600	IN	SOA	pdns-public-ns1.powerdns.com. peter\.van\.dijk.powerdns.com. 2026100101 10800 3600 604800 3600

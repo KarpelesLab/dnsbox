@@ -18,7 +18,7 @@ rustdoc-args = ["--cfg", "docsrs"]
 [features]
 default = ["std"]
 # Heap-backed conveniences: owned record types, growable message builders.
-alloc = []
+alloc = ["serde?/alloc"]
 # `std::error::Error` impls and `std::io` integration. Pulls in `alloc`.
 std   = ["alloc"]
 # DNSSEC digests (DS digests, NSEC3 hashing) through purecrypto; no_std, no alloc.
@@ -32,6 +32,9 @@ cookie-siphash = ["dep:purecrypto", "purecrypto/mac"]
 # from purecrypto. The TSIG wire format, MAC input construction and the
 # pluggable `TsigKey`/`TsigMac` traits work without it.
 tsig = ["dep:purecrypto", "purecrypto/hash"]
+# serde Serialize/Deserialize (no_std) for the protocol-number newtypes, names,
+# header flags and, with `alloc`, the owned message types.
+serde = ["dep:serde"]
 
 [lints.rust]
 unsafe_code = "forbid"
@@ -43,6 +46,8 @@ missing_docs = "warn"
 # logic works without it. Features that need it enable the purecrypto
 # sub-features they use (e.g. `purecrypto/hash`).
 purecrypto = { version = "0.9", default-features = false, optional = true }
+# Optional serde support (feature `serde`); no_std, `alloc` enabled with ours.
+serde = { version = "1.0.200", default-features = false, features = ["derive"], optional = true }
 
 [dev-dependencies]
 # Signature verification of real SIG(0) captures in tests (Ed25519, ECDSA
@@ -54,3 +59,7 @@ proptest = { version = "1.5", default-features = false, features = ["std"] }
 # Allocation-free hot path check (tests/no_alloc.rs): a global allocator that
 # counts allocations made while a closure runs.
 assert_no_alloc = { version = "1.1", default-features = false, features = ["warn_debug", "warn_release"] }
+# serde round-trip tests of the `serde` feature (JSON is human-readable).
+serde_json = "1"
+# Token-level checks of both serde forms (readable and compact).
+serde_test = "1"

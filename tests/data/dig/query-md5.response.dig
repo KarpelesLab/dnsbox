@@ -1,0 +1,12 @@
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 5179
+;; flags: qr aa rd; QUERY: 1, ANSWER: 1, AUTHORITY: 0, ADDITIONAL: 1
+;; WARNING: recursion requested but not available
+
+;; QUESTION SECTION:
+;example.com.			IN	SOA
+
+;; ANSWER SECTION:
+example.com.		3600	IN	SOA	ns1.example.com. hostmaster.example.com. 1 7200 3600 1209600 300
+
+;; TSIG PSEUDOSECTION:
+md5-key.		0	ANY	TSIG	hmac-md5.sig-alg.reg.int. 1791104299 300 16 NMZUXw9dtzh7MtcVF99tqA== 5179 NOERROR 0 

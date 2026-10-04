@@ -1,0 +1,31 @@
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 1680
+;; flags: qr aa; QUERY: 1, ANSWER: 7, AUTHORITY: 5, ADDITIONAL: 7
+
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags:; udp: 1232
+;; QUESTION SECTION:
+;isc.org.			IN	TXT
+
+;; ANSWER SECTION:
+isc.org.		7200	IN	TXT	"_globalsign-domain-verification=ckxXdoIq27XGYE4ATbBYQOBeV7PTJWRxYe-PXDyzMX"
+isc.org.		7200	IN	TXT	"google-site-verification=6v652rgkk_kI6Ky32iGdxqXjQ4_BAd5DYKsrnRXKUiE"
+isc.org.		7200	IN	TXT	"google-site-verification=grXE1SbXWNed6C5yQgI8fwxgucE0DppnbICbhZr9qG0"
+isc.org.		7200	IN	TXT	"google-site-verification=wg4m8dWi3XVPRYmtBoy6xSKp3juhxIWa6UdxjZkNQCg"
+isc.org.		7200	IN	TXT	"F8C4EB9011"
+isc.org.		7200	IN	TXT	"v=spf1 a mx ip4:149.20.0.0/20 ip6:2001:04F8::0/32 ip6:2001:500:60::65/128 ip4:199.6.1.0/24 ip6:2001:500:6b:2::0/64 " "include:shops.shopify.com include:servers.mcsv.net include:_spf.salesforce.com " "include:spf-a.customercenter.net include:spf-b.customercenter.net include:spf-c.customercenter.net ~all"
+isc.org.		7200	IN	TXT	"MS=2583E0E0DCCBF33EC6DAFF0B4BFBAF78FFCF7AD0"
+
+;; AUTHORITY SECTION:
+isc.org.		7200	IN	NS	ns2.isc.org.
+isc.org.		7200	IN	NS	ns.isc.afilias-nst.info.
+isc.org.		7200	IN	NS	nsp.dnsnode.net.
+isc.org.		7200	IN	NS	ns1.isc.org.
+isc.org.		7200	IN	NS	ns3.isc.org.
+
+;; ADDITIONAL SECTION:
+ns1.isc.org.		7200	IN	A	149.20.2.26
+ns2.isc.org.		7200	IN	A	199.6.1.52
+ns3.isc.org.		7200	IN	A	51.75.79.143
+ns1.isc.org.		7200	IN	AAAA	2001:500:6b:2::26
+ns2.isc.org.		7200	IN	AAAA	2001:500:60:d::52
+ns3.isc.org.		7200	IN	AAAA	2001:41d0:701:1100::2c92
