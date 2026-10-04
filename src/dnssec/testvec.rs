@@ -19,19 +19,9 @@ pub(crate) const RFC4034_DSKEY: &str = "
 
 /// Decodes base64 (whitespace ignored), for RFC presentation-format vectors.
 pub(crate) fn b64(s: &str) -> std::vec::Vec<u8> {
-    const ALPHABET: &[u8] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
-    let mut out = std::vec::Vec::new();
-    let (mut acc, mut bits) = (0u32, 0);
-    for c in s.bytes().filter(|c| !c.is_ascii_whitespace() && *c != b'=') {
-        let v = ALPHABET.iter().position(|&a| a == c).expect("base64 digit") as u32;
-        acc = (acc << 6) | v;
-        bits += 6;
-        if bits >= 8 {
-            bits -= 8;
-            out.push((acc >> bits) as u8);
-            acc &= (1 << bits) - 1;
-        }
-    }
+    let mut out = std::vec![0u8; crate::util::base64::max_decoded_len(s.len())];
+    let n = crate::util::base64::decode(s.as_bytes(), &mut out).expect("base64");
+    out.truncate(n);
     out
 }
 

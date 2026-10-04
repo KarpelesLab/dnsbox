@@ -46,7 +46,7 @@ impl Nsec3Hash {
     pub fn from_owner(owner: Name<'_>) -> Result<Self> {
         let label = owner.first_label().ok_or(Error::InvalidRdata)?;
         let mut bytes = [0u8; MAX_HASH_LEN];
-        let len = decode_base32hex(label.as_bytes(), &mut bytes)?;
+        let len = crate::util::base32hex::decode(label.as_bytes(), &mut bytes)?;
         if len == 0 {
             return Err(Error::InvalidText);
         }
@@ -111,38 +111,6 @@ impl fmt::Write for SliceWriter<'_> {
     }
 }
 
-/// Decodes unpadded base32hex (RFC 4648 §7), case-insensitively, into
-/// `out`, returning the decoded length. Rejects non-canonical input
-/// (impossible lengths or non-zero trailing bits).
-fn decode_base32hex(input: &[u8], out: &mut [u8]) -> Result<usize> {
-    if matches!(input.len() % 8, 1 | 3 | 6) {
-        return Err(Error::InvalidText);
-    }
-    let mut acc: u64 = 0;
-    let mut bits = 0u32;
-    let mut len = 0usize;
-    for &c in input {
-        let v = match c {
-            b'0'..=b'9' => c - b'0',
-            b'a'..=b'v' => c - b'a' + 10,
-            b'A'..=b'V' => c - b'A' + 10,
-            _ => return Err(Error::InvalidText),
-        };
-        acc = (acc << 5) | u64::from(v);
-        bits += 5;
-        if bits >= 8 {
-            bits -= 8;
-            *out.get_mut(len).ok_or(Error::InvalidText)? = (acc >> bits) as u8;
-            len += 1;
-            acc &= (1 << bits) - 1;
-        }
-    }
-    if acc != 0 {
-        return Err(Error::InvalidText);
-    }
-    Ok(len)
-}
-
 /// Computes the NSEC3 hash of `name` (RFC 5155 §5):
 /// `IH(salt, x, 0) = H(x || salt)`, `IH(salt, x, k) = H(IH(salt, x, k-1)
 /// || salt)`, with `x` the canonical (lowercase, uncompressed) wire form
@@ -195,34 +163,6 @@ pub fn nsec3_hash(
 mod tests {
     use super::*;
     use std::string::ToString;
-
-    #[test]
-    fn base32hex() {
-        let mut out = [0u8; 40];
-        assert_eq!(decode_base32hex(b"", &mut out), Ok(0));
-        for (enc, dec) in [
-            ("CO", "f"),
-            ("CPNG", "fo"),
-            ("cpnmu", "foo"),
-            ("CPNMUOG", "foob"),
-            ("CPNMUOJ1", "fooba"),
-            ("CPNMUOJ1E8", "foobar"),
-        ] {
-            let n = decode_base32hex(enc.as_bytes(), &mut out).unwrap();
-            assert_eq!(&out[..n], dec.as_bytes(), "{enc}");
-        }
-        for bad in ["C", "CPN", "CPNMUO", "CP", "W0", "C=", "CPNMUOJ1E9"] {
-            assert_eq!(
-                decode_base32hex(bad.as_bytes(), &mut out),
-                Err(Error::InvalidText),
-                "{bad}"
-            );
-        }
-        assert_eq!(
-            decode_base32hex(b"00", &mut [0u8; 0]),
-            Err(Error::InvalidText)
-        );
-    }
 
     #[test]
     fn hashes() {

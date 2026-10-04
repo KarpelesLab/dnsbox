@@ -99,14 +99,14 @@ use crate::{Error, Rcode};
 /// | error | RCODE | TSIG error |
 /// |---|---|---|
 /// | [`Error::BadKey`] | NOTAUTH | BADKEY |
-/// | [`Error::BadSig`] | NOTAUTH | BADSIG |
+/// | [`Error::BadSignature`] | NOTAUTH | BADSIG |
 /// | [`Error::BadTime`] | NOTAUTH | BADTIME |
 /// | [`Error::BadTrunc`] | NOTAUTH | BADTRUNC |
 /// | anything else ([`Error::MisplacedSignature`], [`Error::BadMacSize`], parse errors) | FORMERR | NOERROR |
 pub const fn response_codes(error: Error) -> (Rcode, TsigRcode) {
     match error {
         Error::BadKey => (Rcode::NOTAUTH, TsigRcode::BADKEY),
-        Error::BadSig => (Rcode::NOTAUTH, TsigRcode::BADSIG),
+        Error::BadSignature => (Rcode::NOTAUTH, TsigRcode::BADSIG),
         Error::BadTime => (Rcode::NOTAUTH, TsigRcode::BADTIME),
         Error::BadTrunc => (Rcode::NOTAUTH, TsigRcode::BADTRUNC),
         _ => (Rcode::FORMERR, TsigRcode::NOERROR),

@@ -49,7 +49,9 @@ pub enum Error {
     /// A DNSSEC public or private key is malformed for its algorithm
     /// (e.g. RFC 3110 §2, RFC 6605 §4, RFC 8080 §3).
     InvalidKey,
-    /// A DNSSEC signature or digest does not verify (RFC 4035 §5.3.3).
+    /// A signature, digest or MAC does not verify: DNSSEC RRSIG or DS
+    /// (RFC 4035 §5.3.3), TSIG (error BADSIG, RFC 8945 §5.2.2) or SIG(0)
+    /// (RFC 2931 §3.1).
     BadSignature,
     /// An RRSIG's validity period has ended (RFC 4035 §5.3.1).
     SignatureExpired,
@@ -96,9 +98,6 @@ pub enum Error {
     /// The TSIG key or algorithm is unknown (TSIG error BADKEY, RFC 8945
     /// §5.2.1).
     BadKey,
-    /// A TSIG MAC or SIG(0) signature does not verify (TSIG error BADSIG,
-    /// RFC 8945 §5.2.2; RFC 2931 §3.1).
-    BadSig,
     /// The signature time is outside the allowed window (TSIG error
     /// BADTIME, RFC 8945 §5.2.3; SIG(0) validity period, RFC 2931 §3.1).
     BadTime,
@@ -147,7 +146,7 @@ impl fmt::Display for Error {
             Error::WrongType => "record type mismatch",
             Error::UnsupportedAlgorithm => "unsupported DNSSEC algorithm",
             Error::InvalidKey => "malformed DNSSEC key",
-            Error::BadSignature => "DNSSEC signature verification failed",
+            Error::BadSignature => "signature verification failed",
             Error::SignatureExpired => "DNSSEC signature expired",
             Error::SignatureNotYetValid => "DNSSEC signature not yet valid",
             Error::KeyMismatch => "DNSSEC key does not match the signature",
@@ -164,7 +163,6 @@ impl fmt::Display for Error {
             Error::MisplacedSignature => "TSIG/SIG(0) record is not last in the message",
             Error::BadMacSize => "invalid TSIG MAC size",
             Error::BadKey => "unknown TSIG key or algorithm",
-            Error::BadSig => "signature verification failed",
             Error::BadTime => "signature time outside the allowed window",
             Error::BadTrunc => "TSIG MAC truncated below policy",
             Error::Unsigned => "message is not signed",

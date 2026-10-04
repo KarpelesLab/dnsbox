@@ -64,7 +64,7 @@ pub trait Sig0Verifier {
     /// Verifies `sig.signature` over the concatenation of `data`, with the
     /// key identified by `sig.signer_name`, `sig.algorithm` and `sig.key_tag`.
     /// Returns [`Error::BadKey`] if the key is unknown and
-    /// [`Error::BadSig`] if the signature does not verify.
+    /// [`Error::BadSignature`] if the signature does not verify.
     fn verify(&self, sig: &Sig<'_>, data: &[&[u8]]) -> Result<()>;
 }
 
@@ -158,8 +158,7 @@ impl Validity {
     /// Whether `now` lies within the window (RFC 1982 serial arithmetic,
     /// as for RRSIG in RFC 4034 §3.1.5).
     pub const fn contains(&self, now: u32) -> bool {
-        (now.wrapping_sub(self.inception) as i32) >= 0
-            && (self.expiration.wrapping_sub(now) as i32) >= 0
+        crate::dnssec::check_validity(self.inception, self.expiration, now).is_ok()
     }
 }
 
@@ -330,7 +329,7 @@ mod tests {
             if out[..n] == *sig.signature {
                 Ok(())
             } else {
-                Err(Error::BadSig)
+                Err(Error::BadSignature)
             }
         }
     }
@@ -389,7 +388,7 @@ mod tests {
         bad[rec.start - 1] ^= 1;
         assert_eq!(
             verify(&Message::parse(&bad).unwrap(), &s, 1000, None),
-            Err(Error::BadSig)
+            Err(Error::BadSignature)
         );
         // Unsigned.
         assert_eq!(
@@ -422,7 +421,7 @@ mod tests {
         let data = SignedData::new(&rec.data, &response, Some(rec.start), Some(&request)).unwrap();
         assert_eq!(data.parts()[1], &request[..]);
         // Without the request, the data differs.
-        assert_eq!(verify(&msg, &s, 5, None), Err(Error::BadSig));
+        assert_eq!(verify(&msg, &s, 5, None), Err(Error::BadSignature));
     }
 
     #[test]

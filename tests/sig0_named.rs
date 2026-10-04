@@ -89,14 +89,14 @@ impl Sig0Verifier for Key {
         let ok = match self.algorithm {
             15 => {
                 let pk = Ed25519PublicKey::from_bytes(self.public[..].try_into().unwrap());
-                let s: [u8; 64] = sig.signature.try_into().map_err(|_| Error::BadSig)?;
+                let s: [u8; 64] = sig.signature.try_into().map_err(|_| Error::BadSignature)?;
                 pk.verify(&msg, &Ed25519Signature::from_bytes(s)).is_ok()
             }
             13 => {
                 let mut sec1 = vec![4];
                 sec1.extend_from_slice(&self.public);
                 let pk = EcdsaPublicKey::from_sec1(&sec1).unwrap();
-                let s: [u8; 64] = sig.signature.try_into().map_err(|_| Error::BadSig)?;
+                let s: [u8; 64] = sig.signature.try_into().map_err(|_| Error::BadSignature)?;
                 pk.verify::<Sha256>(&msg, &EcdsaSignature::from_bytes(&s))
                     .is_ok()
             }
@@ -108,7 +108,7 @@ impl Sig0Verifier for Key {
             }
             _ => return Err(Error::BadKey),
         };
-        if ok { Ok(()) } else { Err(Error::BadSig) }
+        if ok { Ok(()) } else { Err(Error::BadSignature) }
     }
 }
 

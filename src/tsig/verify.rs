@@ -140,7 +140,7 @@ fn verify_mac<K: TsigKey>(
     if mac.verify(record.data.mac) {
         Ok(())
     } else {
-        Err(Error::BadSig)
+        Err(Error::BadSignature)
     }
 }
 
@@ -188,7 +188,7 @@ impl<K: TsigKey> fmt::Debug for Verified<'_, '_, K> {
 /// how the server must answer (RFC 8945 §5.2, §5.3.2).
 pub struct Rejected<'a, 'k, K: TsigKey> {
     /// Why: [`Error::MisplacedSignature`], [`Error::BadMacSize`] or any
-    /// parse error (FORMERR), or [`Error::BadKey`], [`Error::BadSig`],
+    /// parse error (FORMERR), or [`Error::BadKey`], [`Error::BadSignature`],
     /// [`Error::BadTime`], [`Error::BadTrunc`] (NOTAUTH).
     pub error: Error,
     /// The TSIG record, if one could be located.
@@ -422,8 +422,8 @@ impl<'k, K: TsigKey> TsigVerifier<'k, K> {
     /// - [`Error::BadKey`]: signed with another key or algorithm;
     /// - [`Error::TsigErrorResponse`]: an unsigned TSIG error response
     ///   (BADKEY/BADSIG from the server, which cannot be authenticated);
-    /// - [`Error::BadMacSize`] / [`Error::BadSig`]: the MAC is invalid;
-    /// - [`Error::BadTime`], [`Error::BadTrunc`], [`Error::BadSig`],
+    /// - [`Error::BadMacSize`] / [`Error::BadSignature`]: the MAC is invalid;
+    /// - [`Error::BadTime`], [`Error::BadTrunc`], [`Error::BadSignature`],
     ///   [`Error::BadKey`]: an authenticated response carrying that TSIG
     ///   error (for BADTIME, the server's clock is in the record's other
     ///   data; use [`find`] to read it), or a local time / truncation
@@ -456,7 +456,7 @@ impl<'k, K: TsigKey> TsigVerifier<'k, K> {
             TsigRcode::NOERROR => {}
             TsigRcode::BADTIME => return Err(Error::BadTime),
             TsigRcode::BADTRUNC => return Err(Error::BadTrunc),
-            TsigRcode::BADSIG => return Err(Error::BadSig),
+            TsigRcode::BADSIG => return Err(Error::BadSignature),
             TsigRcode::BADKEY => return Err(Error::BadKey),
             _ => return Err(Error::TsigErrorResponse),
         }

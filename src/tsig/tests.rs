@@ -213,7 +213,7 @@ fn request_response_round_trip() {
     let mut cv = TsigVerifier::new(&key, &[0; 32]).unwrap();
     assert_eq!(
         cv.verify(&Message::parse(&resp).unwrap(), NOW),
-        Err(Error::BadSig)
+        Err(Error::BadSignature)
     );
     // Unsigned response.
     let mut cv = TsigVerifier::new(&key, req_mac.as_slice()).unwrap();
@@ -254,7 +254,7 @@ fn server_rejections() {
     let wrong = TestKey::new("k", 8);
     assert_eq!(
         verify_request(&msg, &wrong, NOW).error(),
-        Some(Error::BadSig)
+        Some(Error::BadSignature)
     );
     // Out of the time window, either way.
     assert_eq!(
@@ -345,7 +345,7 @@ fn response_codes_table() {
         (Rcode::NOTAUTH, TsigRcode::BADKEY)
     );
     assert_eq!(
-        response_codes(Error::BadSig),
+        response_codes(Error::BadSignature),
         (Rcode::NOTAUTH, TsigRcode::BADSIG)
     );
     assert_eq!(
@@ -444,7 +444,7 @@ fn stream_with_unsigned_messages() {
     for i in [0, 1, 3] {
         let res = v.verify(&Message::parse(&stream[i]).unwrap(), NOW);
         if i == 3 {
-            assert_eq!(res, Err(Error::BadSig));
+            assert_eq!(res, Err(Error::BadSignature));
         } else {
             res.unwrap();
         }

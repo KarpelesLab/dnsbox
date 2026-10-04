@@ -98,7 +98,10 @@ pub fn build_ixfr_query<B: OutBuf>(
 
 /// Whether serial `a` is newer than serial `b` (RFC 1982 §3.2).
 pub const fn serial_newer(a: u32, b: u32) -> bool {
-    (a.wrapping_sub(b) as i32) > 0
+    matches!(
+        crate::dnssec::serial_cmp(a, b),
+        Some(core::cmp::Ordering::Greater)
+    )
 }
 
 /// One step of a zone transfer, borrowing from the current message.

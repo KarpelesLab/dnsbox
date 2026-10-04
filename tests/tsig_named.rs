@@ -130,7 +130,7 @@ fn wrong_key_or_algorithm() {
     // Right name and algorithm, wrong secret: BADSIG.
     let bad = HmacKey::new(keys[1].name(), TsigAlgorithm::HmacSha256, b"wrong");
     let rej = tsig::verify_request(&q, &bad, now).rejected().unwrap();
-    assert_eq!(rej.error, Error::BadSig);
+    assert_eq!(rej.error, Error::BadSignature);
 }
 
 #[test]
@@ -312,7 +312,7 @@ fn axfr_stream() {
     v.verify(&Message::parse(&parts[0]).unwrap(), now).unwrap();
     assert_eq!(
         v.verify(&Message::parse(&parts[2]).unwrap(), now),
-        Err(Error::BadSig)
+        Err(Error::BadSignature)
     );
 
     // Re-sign the whole stream: identical bytes, message after message.
