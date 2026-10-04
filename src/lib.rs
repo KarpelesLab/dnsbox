@@ -81,6 +81,7 @@ pub mod rdata;
 pub mod rtype;
 pub mod tcp;
 pub mod text;
+mod util;
 pub mod wire;
 
 pub use builder::{Checkpoint, MessageBuilder};
