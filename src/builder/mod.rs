@@ -16,13 +16,35 @@
 //! - every push is atomic: if an entry does not fit (buffer or
 //!   [size limit](MessageBuilder::set_limit)), the message is rolled back to
 //!   its state before the push and the error returned. [`checkpoint`] /
-//!   [`rollback`] expose the same mechanism for multi-record units (e.g.
-//!   truncating at RRset boundaries, RFC 2181 §9).
+//!   [`rollback`] expose the same mechanism for multi-record units;
+//! - RRset-level pushes ([`push_rrset`], [`copy_section`],
+//!   [`copy_message`]) implement truncation (RFC 2181 §9): an RRset that
+//!   does not fit is removed entirely and, depending on the
+//!   [`Truncation`] policy, the TC bit is set or an error returned. Space
+//!   can be [reserved](MessageBuilder::set_reserve) for records that must
+//!   still go in afterwards (OPT, TSIG);
+//! - [`query`](MessageBuilder::query) and
+//!   [`response`](MessageBuilder::response) start the common message
+//!   shapes; [`push_raw_records`] appends pre-encoded records;
+//! - [`new_tcp`](MessageBuilder::new_tcp) writes the 2-byte TCP length
+//!   prefix (RFC 1035 §4.2.2) in front of the message; see also
+//!   [`crate::tcp`].
 //!
 //! [`checkpoint`]: MessageBuilder::checkpoint
 //! [`rollback`]: MessageBuilder::rollback
+//! [`push_rrset`]: MessageBuilder::push_rrset
+//! [`copy_section`]: MessageBuilder::copy_section
+//! [`copy_message`]: MessageBuilder::copy_message
+//! [`push_raw_records`]: MessageBuilder::push_raw_records
 
 pub mod compress;
+mod framing;
+mod query;
+mod raw;
+mod truncate;
+
+pub use self::query::response_flags;
+pub use self::truncate::{Outcome, Truncation};
 
 use core::fmt;
 
@@ -80,6 +102,14 @@ pub struct MessageBuilder<B: OutBuf> {
     section: Section,
     compress: bool,
     table: CompressionTable,
+    /// Bytes kept free below `limit` for records added later.
+    reserve: usize,
+    /// What RRset-level pushes do when an RRset does not fit.
+    policy: Truncation,
+    /// Set once an RRset-level push truncated the message.
+    truncated: bool,
+    /// Whether a 2-byte TCP length prefix precedes the message.
+    framed: bool,
 }
 
 impl<'b> MessageBuilder<WireWriter<'b>> {
@@ -103,7 +133,22 @@ impl MessageBuilder<alloc::vec::Vec<u8>> {
             section: Section::Question,
             compress: true,
             table: CompressionTable::new(),
+            reserve: 0,
+            policy: Truncation::Error,
+            truncated: false,
+            framed: false,
         }
+    }
+
+    /// Like [`new_vec`](Self::new_vec), preallocating `capacity` bytes
+    /// (e.g. the expected response size) so typical messages never
+    /// reallocate.
+    pub fn new_vec_with_capacity(capacity: usize) -> Self {
+        let mut buf = alloc::vec::Vec::with_capacity(capacity.max(Header::LEN));
+        buf.resize(Header::LEN, 0);
+        let mut b = Self::new_vec();
+        b.buf = buf;
+        b
     }
 }
 
@@ -129,6 +174,10 @@ impl<B: OutBuf> MessageBuilder<B> {
             section: Section::Question,
             compress: true,
             table: CompressionTable::new(),
+            reserve: 0,
+            policy: Truncation::Error,
+            truncated: false,
+            framed: false,
         })
     }
 
@@ -179,6 +228,34 @@ impl<B: OutBuf> MessageBuilder<B> {
     #[inline]
     pub const fn limit(&self) -> usize {
         self.limit
+    }
+
+    /// Keeps `bytes` free below the [limit](Self::limit): pushes fail (or
+    /// truncate) as if the limit were `limit - bytes`. Use it to guarantee
+    /// room for records that must be added last even when the message is
+    /// truncated — the OPT record (RFC 6891 §7) or a TSIG / SIG(0) record
+    /// (RFC 8945 §5.3) — then set it back to 0 before adding them.
+    #[inline]
+    pub fn set_reserve(&mut self, bytes: usize) {
+        self.reserve = bytes;
+    }
+
+    /// The number of reserved bytes; see [`set_reserve`](Self::set_reserve).
+    #[inline]
+    pub const fn reserve(&self) -> usize {
+        self.reserve
+    }
+
+    /// How many more bytes can be written before hitting the limit (minus
+    /// the reserve).
+    #[inline]
+    pub fn remaining(&self) -> usize {
+        self.effective_limit().saturating_sub(self.len())
+    }
+
+    #[inline]
+    fn effective_limit(&self) -> usize {
+        self.limit.saturating_sub(self.reserve)
     }
 
     /// The message written so far.
@@ -317,9 +394,12 @@ impl<B: OutBuf> MessageBuilder<B> {
     }
 
     /// Finishes the message, returning the buffer's output (the written
-    /// slice for a `&mut [u8]`, the `Vec` itself with `alloc`).
+    /// slice for a `&mut [u8]`, the `Vec` itself with `alloc`). For a
+    /// builder started with [`new_tcp`](Self::new_tcp) the output includes
+    /// the 2-byte length prefix.
     #[inline]
-    pub fn finish(self) -> B::Output {
+    pub fn finish(mut self) -> B::Output {
+        self.sync_header();
         self.buf.into_output()
     }
 
@@ -356,13 +436,25 @@ impl<B: OutBuf> MessageBuilder<B> {
         {
             dst.copy_from_slice(&bytes);
         }
+        if self.framed {
+            // The limit keeps the message within 65535 bytes.
+            let len = u16::try_from(self.len()).unwrap_or(u16::MAX).to_be_bytes();
+            if let Some(dst) = self
+                .base
+                .checked_sub(2)
+                .and_then(|at| self.buf.as_bytes_mut().get_mut(at..at + 2))
+            {
+                dst.copy_from_slice(&len);
+            }
+        }
     }
 
     fn writer(&mut self) -> MsgWriter<'_, B> {
+        let limit = self.effective_limit();
         MsgWriter {
             buf: &mut self.buf,
             base: self.base,
-            limit: self.limit,
+            limit,
             table: if self.compress {
                 Some(&mut self.table)
             } else {
@@ -415,7 +507,11 @@ impl<B: OutBuf> fmt::Debug for MessageBuilder<B> {
             .field("section", &self.section)
             .field("len", &self.len())
             .field("limit", &self.limit)
+            .field("reserve", &self.reserve)
             .field("compression", &self.compress)
+            .field("truncation", &self.policy)
+            .field("truncated", &self.truncated)
+            .field("framed", &self.framed)
             .finish()
     }
 }

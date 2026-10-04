@@ -55,6 +55,9 @@ pub enum Error {
     SectionOrder,
     /// A section would hold more than 65535 entries.
     CountOverflow,
+    /// A message exceeds 65535 octets, the most the TCP length prefix can
+    /// describe (RFC 1035 §4.2.2).
+    MessageTooLong,
 }
 
 /// Shorthand for `core::result::Result<T, dnsbox::Error>`.
@@ -80,6 +83,7 @@ impl fmt::Display for Error {
             Error::CharStringTooLong => "character-string longer than 255 octets",
             Error::SectionOrder => "message section written out of order",
             Error::CountOverflow => "section count overflow",
+            Error::MessageTooLong => "message longer than 65535 octets",
         })
     }
 }

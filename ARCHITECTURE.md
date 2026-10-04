@@ -29,6 +29,8 @@ src/
     buf.rs        NameBuf (inline 255-byte owned name), text parsing
     tests.rs
   charstr.rs      CharStr, CharStrs (<character-string>, RFC 1035 §3.3)
+  tcp.rs          TCP framing (RFC 1035 §4.2.2 / RFC 7766): length prefix,
+                  frame splitting, FrameReassembler, std::io helpers
   text.rs         presentation-format helpers: escaping, Hex, Base64,
                   Base32Hex, RFC 3597 generic RDATA
   message/
@@ -44,9 +46,15 @@ src/
   builder/
     mod.rs        MessageBuilder, Checkpoint
     compress.rs   fixed-size suffix table for name compression
+    truncate.rs   Truncation policy, Outcome, push_rrset(_with),
+                  copy_section, copy_message, reserve (RFC 2181 §9)
+    query.rs      start_query / start_response, response_flags
+    raw.rs        push_raw_records (pre-encoded records)
+    framing.rs    new_tcp / from_buf_tcp (length-prefixed messages)
     tests.rs
 tests/
   captures.rs     real wire captures, truncation and mutation tests
+  builder_truncation.rs  truncation / TCP stream tests on captures
 ```
 
 Everything public is re-exported at the crate root when it is used often
@@ -455,6 +463,26 @@ b.copy_question(&q)?; b.copy_record(section, &rr)?; // re-encodes RDATA
 let cp = b.checkpoint(); ...; b.rollback(cp);
 b.header(); b.as_bytes(); b.len(); b.section();
 let wire = b.finish();          // &mut [u8] (written part) or Vec<u8>
+
+// Convenience constructors (also query_vec / response_vec with alloc,
+// and start_query / start_response on any empty builder):
+let mut b = MessageBuilder::query(&mut buf, id, name, Rtype::A, Class::IN)?; // QUERY + RD
+let mut b = MessageBuilder::response(&mut buf, &parsed_query)?; // ID, opcode,
+                                // RD, CD, question copied; QR set
+b.set_rcode(Rcode::NXDOMAIN);
+
+// RRset-level pushes with truncation (RFC 2181 §9):
+b.set_truncation(Truncation::SetTc);           // default: Truncation::Error
+b.set_reserve(11);                             // keep room for OPT/TSIG
+let out = b.push_rrset(Section::Answer, name, class, ttl, &rdatas)?;
+let out = b.push_rrset_with(Section::Answer, |b| { b.push_answer(..)?; Ok(()) })?;
+let out = b.copy_section(&msg, Section::Answer)?; // RRset by RRset (+RRSIGs)
+let out = b.copy_message(&msg)?; // whole message, keeps the OPT record
+b.push_raw_records(Section::Answer, wire_records)?; // re-encoded, atomic
+
+// DNS over TCP: the 2-byte length prefix is kept in front of the message.
+let mut b = MessageBuilder::new_tcp(&mut buf)?; // or new_tcp_vec / from_buf_tcp
+let frame = b.finish();                         // prefix + message
 ```
 
 - Sections are runtime-ordered; going back is `Error::SectionOrder`.
@@ -464,8 +492,20 @@ let wire = b.finish();          // &mut [u8] (written part) or Vec<u8>
 - **Every push is atomic**: on any error (`BufferTooSmall`, a composer
   error, ...) the buffer, counts, section and compression table are rolled
   back to their state before the push. `checkpoint`/`rollback` give the
-  same guarantee for larger units; the truncation work (RRset rollback + TC,
-  RFC 2181 §9) builds on them. The builder does **not** set TC itself.
+  same guarantee for larger units.
+- **Truncation** happens only in the RRset-level pushes (`push_rrset`,
+  `push_rrset_with`, `copy_section`, `copy_message`): a unit that does not
+  fit is removed whole; with `Truncation::Error` the call fails with
+  `BufferTooSmall`, with `Truncation::SetTc` TC is set, `Outcome::Truncated`
+  returned and later RRset-level pushes become no-ops. Additional-section
+  units are optional: they are dropped (`Outcome::Dropped`) without TC;
+  call `b.truncate()` yourself if they were required (e.g. in-domain glue).
+  Record-level pushes are never affected, so OPT/TSIG can be appended after
+  truncation; `set_reserve(n)` keeps `n` bytes free for them.
+- **EDNS hook:** `start_response` does not echo EDNS (no OPT types in the
+  builder). The EDNS module should add the echo on top of it: reserve the
+  OPT size, then append the OPT record last with `push_additional`.
+  `copy_message` already reserves room for and preserves the source OPT.
 - `from_buf` with a non-empty buffer leaves the prefix alone (e.g. a TCP
   length placeholder); compression offsets are relative to the message.
 
@@ -562,9 +602,8 @@ dnssec-verify = ["dep:purecrypto", "purecrypto/hash", "purecrypto/rsa", "purecry
   pass.
 - The builder never compresses against differently-cased names, and does
   not compress names beyond offset 0x3fff (not addressable by pointers).
-- Not yet implemented (owned by later milestones): TC/RRset truncation,
-  query/response convenience constructors, TCP framing helpers, EDNS,
-  owned message types, zone-file parsing (presentation-format *parsing*
+- Not yet implemented (owned by later milestones): EDNS, owned message
+  types, zone-file parsing (presentation-format *parsing*
   hooks for RDATA will be added as a separate trait plus one more arm in
   `rdata_registry!`).
 - Do not edit `ROADMAP.md` or `CHANGELOG.md` on feature branches; the
