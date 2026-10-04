@@ -1,0 +1,14 @@
+;; ->>HEADER<<- opcode: QUERY, status: SERVFAIL, id: 3590
+;; flags: qr rd; QUERY: 1, ANSWER: 0, AUTHORITY: 0, ADDITIONAL: 1
+;; WARNING: recursion requested but not available
+
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags:; udp: 4096
+; CLIENT-SUBNET: 2001:db8:1234::/48/0
+; EDE: 6 (DNSSEC Bogus): (RRSIG A expired)
+; OPT=5: 08 0d 0f ("...")
+; OPT=6: 01 02 04 ("...")
+; OPT=7: 01 (".")
+; OPT=13: 07 65 78 61 6d 70 6c 65 03 63 6f 6d 00 (".example.com.")
+;; QUESTION SECTION:
+;www.example.com.		IN	AAAA
