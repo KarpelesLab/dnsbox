@@ -375,6 +375,10 @@ impl<R: IncludeResolver> core::iter::FusedIterator for Records<'_, R> {}
 /// Parses a whole master file (no `$INCLUDE`), stopping at the first
 /// error.
 ///
+/// Every record is collected, and `$GENERATE` lets a short text yield many
+/// records: for untrusted text, iterate [`ZoneReader::records`] and stop
+/// at a limit of your own instead (see the [module docs](super)).
+///
 /// ```
 /// let zone = dnsbox::zone::parse(
 ///     "$ORIGIN example.\n$TTL 1d\n@ NS ns1\nns1 A 192.0.2.53\n",

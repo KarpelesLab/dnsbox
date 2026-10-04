@@ -183,7 +183,9 @@ See [ARCHITECTURE.md](ARCHITECTURE.md) for the design and extension guide.
 
 dnsbox is continuously fuzzed ([`fuzz/`](fuzz)), property-tested, and
 checked against real responses from BIND, NSD, Knot, PowerDNS, Unbound and
-public resolvers ([`tests/corpus/`](tests/corpus)). Benchmarks against
+public resolvers ([`tests/corpus/`](tests/corpus)). The threat model —
+what is guaranteed on hostile input and what callers must do — is in
+[SECURITY.md](SECURITY.md). Benchmarks against
 `hickory-proto` and `domain` are in [BENCH.md](BENCH.md).
 
 ## Minimum supported Rust version

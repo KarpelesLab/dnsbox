@@ -47,6 +47,14 @@
 //! error the reader resynchronises on the next entry, so all errors of a
 //! file can be reported in one pass.
 //!
+//! `$GENERATE` amplifies: one short line yields up to [`MAX_GENERATE`]
+//! records (each costing work linear in the directive), so the number of
+//! records is not bounded by the size of the text. When reading files from
+//! untrusted sources, bound the records you consume (e.g. with
+//! `Iterator::take`) rather than collecting everything ([`parse`]), and
+//! never follow their `$INCLUDE`s with [`FsIncludes`] (it opens any path
+//! named): use an [`IncludeResolver`] that only serves what you allow.
+//!
 //! # Example
 //!
 //! ```
