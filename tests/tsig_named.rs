@@ -324,8 +324,11 @@ fn axfr_stream() {
         // ARCOUNT back to its value before the TSIG was added.
         let ar = u16::from_be_bytes([out[10], out[11]]) - 1;
         out[10..12].copy_from_slice(&ar.to_be_bytes());
-        signer.sign_buf(&mut out, 0, t.data.time_signed).unwrap();
-        assert_eq!(&out, p);
+        let mut storage = vec![0u8; p.len()];
+        let mut w = dnsbox::WireWriter::new(&mut storage);
+        dnsbox::OutBuf::append(&mut w, &out).unwrap();
+        signer.sign_buf(&mut w, 0, t.data.time_signed).unwrap();
+        assert_eq!(w.written(), &p[..]);
     }
 }
 
