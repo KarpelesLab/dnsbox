@@ -27,5 +27,10 @@ unsafe_code = "forbid"
 missing_docs = "warn"
 
 [dependencies]
+# Cryptographic primitives (digests, HMAC, signatures) for DNSSEC, TSIG and
+# friends. Optional: dnsbox never implements crypto itself, and the wire-format
+# logic works without it. Features that need it enable the purecrypto
+# sub-features they use (e.g. `purecrypto/hash`).
+purecrypto = { version = "0.9", default-features = false, optional = true }
 
 [dev-dependencies]

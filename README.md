@@ -24,14 +24,34 @@ DNSSEC, SVCB/HTTPS, TSIG, and more).
 ## Example
 
 ```rust
-use dnsbox::{Header, Opcode};
+use dnsbox::{Class, Flags, Message, MessageBuilder, NameBuf, Rtype};
+use dnsbox::rdata::{A, RData};
 
-let wire = [0x12, 0x34, 0x01, 0x00, 0, 1, 0, 0, 0, 0, 0, 0];
-let header = Header::parse(&wire).unwrap();
-assert_eq!(header.id, 0x1234);
-assert_eq!(header.flags.opcode(), Opcode::QUERY);
-assert!(header.flags.rd());
+fn main() -> Result<(), dnsbox::Error> {
+    // Build a response into a stack buffer: no allocation, names compressed.
+    let name: NameBuf = "example.com".parse()?;
+    let mut buf = [0u8; 512];
+    let mut b = MessageBuilder::new(&mut buf)?;
+    b.set_id(0x1234);
+    b.set_flags(Flags::default().with_qr(true).with_rd(true));
+    b.push_question(&name, Rtype::A, Class::IN)?;
+    b.push_answer(&name, Class::IN, 3600, &A::new([192, 0, 2, 1].into()))?;
+    let wire = b.finish();
+
+    // Parse it back: a zero-copy view, decoded lazily.
+    let msg = Message::parse_validated(wire)?;
+    for rr in msg.answers() {
+        let rr = rr?;
+        assert_eq!(rr.to_string(), "example.com. 3600 IN A 192.0.2.1");
+        if let RData::A(a) = rr.data()? {
+            assert_eq!(a.addr.octets(), [192, 0, 2, 1]);
+        }
+    }
+    Ok(())
+}
 ```
+
+See [ARCHITECTURE.md](ARCHITECTURE.md) for the design and extension guide.
 
 ## Minimum supported Rust version
 
