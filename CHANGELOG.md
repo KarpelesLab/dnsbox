@@ -7,6 +7,61 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.2](https://github.com/KarpelesLab/dnsbox/compare/v0.0.1...v0.0.2) - 2026-10-04
+
+### Other
+
+- Drop #[must_use] where newer clippy treats the return type as must_use
+- API review: Display/FromStr pairs, Copy RData, documented conventions
+- API review: one error policy, documented features and conventions
+- API review: #[must_use] on pure functions and iterator types
+- API review: non_exhaustive where growth is expected, seal DenialProof
+- API review: common traits, iteration by reference, Send/Sync checks
+- API review: consistent naming for registries, buffers and records
+- sync Cargo.lock with dnsbox's optional serde dependency
+- build fuzz targets for the gnu target
+- Wire the zone-file parser into the owned types and serde; reject SVCB key 65535
+- before/after benchmarks, decoder cache and compression trie
+- Builder hot path: label-trie compression table, leaner record writes
+- Parse hot path: tight name decoder, suffix cache in the record iterators
+- Document the chain of trust, denial proofs and ZONEMD
+- Add ZONEMD zone digest computation and verification (RFC 8976)
+- Add DNSSEC denial-of-existence proofs and the chain of trust
+- Add owned message types, dig-style message display and serde support
+- Add presentation-format parsing for DNSSEC, TSIG and remaining types
+- Parse the presentation format of LOC, ILNP, EUI, CSYNC, ZONEMD, APL, IPSECKEY, HIP and legacy types
+- Add presentation-format parsing for batch-A and RFC 1183 record types
+- Document text parsing: the ParseRdataText recipe and zone files
+- Add presentation-format and master-file parsing (RFC 1035 §5)
+- roadmap, changelog, README and architecture for the integrated state
+- Wire cross-branch seams: EDNS response echo, SIG(0) over the DNSSEC backend, typed algorithms, fuzzing of the new protocols
+- Deduplicate after integration: one SIG type, one signature error, shared decoders
+- Document the assurance infrastructure
+- Add criterion benchmarks against hickory-proto and domain
+- Add an interop corpus of real DNS responses
+- Add property tests and an allocation-free hot path test
+- Add cargo-fuzz targets with shared property checks and seed corpora
+- Integrate feat/tsig: module order after merge
+- sign_buf interop test without the alloc feature
+- Milestone 6 polish: UPDATE section aliases, ARCHITECTURE notes, CI no_std+tsig build
+- DSO (RFC 8490): message view, TLV iteration and validation, builder, Keepalive/Retry Delay/Encryption Padding TLVs
+- AXFR/IXFR (RFC 5936, RFC 1995): query builders and a streaming response processor
+- NOTIFY (RFC 1996): query/response builders and parsed view
+- Dynamic UPDATE (RFC 2136): builder for every prerequisite/update form, classified parsed view
+- SIG(0) (RFC 2931): signed data construction, signing, verification
+- protocol tests with a stand-in MAC, refuse to generate sub-floor MACs
+- TSIG (RFC 8945): RDATA, MAC input, signing/verification, HMAC backend
+- *(0)* OPT record, option registry, typed options, padding, cookies
+- Add SVCB and HTTPS record data (RFC 9460)
+- Milestone 4 batch B: LOC, RFC 1183 types, ILNP, EUI, CSYNC, ZONEMD, APL, IPSECKEY, HIP and legacy types
+- Typed RDATA batch A: SRV, NAPTR, CAA, SSHFP, TLSA, SMIMEA, OPENPGPKEY, DNAME, URI, CERT, DHCID
+- document the wildcard caveat of verify_rrsig
+- O(n log n) canonical RRset sort, hostile-input tests, docs
+- RFC example vectors, real signed captures, sign/verify round trips
+- record types, registries, canonical form, key tags, DS/NSEC3 digests, RRSIG flows
+- truncation, query/response constructors, raw records, TCP framing
+- wire primitives, names, message views, RDATA registry, builder
+
 ### Breaking changes (1.0 API review)
 
 The Milestone 9 API review renamed and tightened parts of the public API.
