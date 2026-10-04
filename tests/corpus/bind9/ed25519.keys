@@ -1,0 +1,19 @@
+; Throwaway keys of ed25519.example made by dnssec-keygen for the dnsbox tests.
+; Ked25519.example.+015+07389.key
+ed25519.example. 3600 IN DNSKEY 257 3 15 ugflMliaZSuBNVaiEbnLo4cYSPsDt59TwonqlTkKrU8=
+; Ked25519.example.+015+07389.private
+;! Private-key-format: v1.3
+;! Algorithm: 15 (ED25519)
+;! PrivateKey: TRM/oJYxzfL5f/S0hlKOywQO1PGiOmT4vKEduAWpHCw=
+;! Created: 20261004143948
+;! Publish: 20261004143948
+;! Activate: 20261004143948
+; Ked25519.example.+015+56418.key
+ed25519.example. 3600 IN DNSKEY 256 3 15 hH8eQrf6nksDnG8RPidSpgjFjQwd14tHFyz4uxdzdYU=
+; Ked25519.example.+015+56418.private
+;! Private-key-format: v1.3
+;! Algorithm: 15 (ED25519)
+;! PrivateKey: Zd2zssqpeDiCnFx1h/TO4GwCB7JoQQA9aGt+ZMOsqcQ=
+;! Created: 20261004143948
+;! Publish: 20261004143948
+;! Activate: 20261004143948

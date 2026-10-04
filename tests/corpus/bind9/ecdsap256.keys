@@ -1,0 +1,19 @@
+; Throwaway keys of ecdsap256.example made by dnssec-keygen for the dnsbox tests.
+; Kecdsap256.example.+013+11177.key
+ecdsap256.example. 3600 IN DNSKEY 257 3 13 O6GHGnia6xS++mQpBEKw+gOvRHO2OUIhHyE5PfeBaCeA0oD5U3PG91EI OhdVtgVtkCMOy0MA1/isgJjG7atA9Q==
+; Kecdsap256.example.+013+11177.private
+;! Private-key-format: v1.3
+;! Algorithm: 13 (ECDSAP256SHA256)
+;! PrivateKey: khmYKVg7eTlxelD4tSPv23pG/dfevL+fuHgMo3+3hOk=
+;! Created: 20261004143947
+;! Publish: 20261004143947
+;! Activate: 20261004143947
+; Kecdsap256.example.+013+50702.key
+ecdsap256.example. 3600 IN DNSKEY 256 3 13 lqRPEuIfmLBLZu19TBN8HaoLw9zxPBB3MFoObGYldOjaOsE5skj6YCOe GRRTAn1PysG03Ek+dcivIedPcdE66g==
+; Kecdsap256.example.+013+50702.private
+;! Private-key-format: v1.3
+;! Algorithm: 13 (ECDSAP256SHA256)
+;! PrivateKey: O5nM7A80QGUF/nr/gUXoKlU9I1c/26+UKAGjF/eISDg=
+;! Created: 20261004143947
+;! Publish: 20261004143947
+;! Activate: 20261004143947

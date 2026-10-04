@@ -1,0 +1,4 @@
+; DS records of the KSK of ldns-ed25519.example (ldns-key2ds)
+ldns-ed25519.example.	3600	IN	DS	9555 15 1 257d65e088af5a8001caa8e88e68f217499c45c4
+ldns-ed25519.example.	3600	IN	DS	9555 15 2 6ed00a6e6da56a0ed7669ce0b57d7466a7e34d25f34955d93746fcaa8fca04c8
+ldns-ed25519.example.	3600	IN	DS	9555 15 4 eea4766db49abba8bb53601ccde0bb5bbb1ae327563bdf4c07598e621c6078cbee62baae633cb7d4cd239f6c862126f3

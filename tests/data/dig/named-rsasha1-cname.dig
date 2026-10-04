@@ -1,0 +1,26 @@
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 11784
+;; flags: qr aa; QUERY: 1, ANSWER: 4, AUTHORITY: 3, ADDITIONAL: 7
+
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags: do; udp: 1232
+;; QUESTION SECTION:
+;alias.rsasha1.example.		IN	A
+
+;; ANSWER SECTION:
+alias.rsasha1.example.	3600	IN	CNAME	www.rsasha1.example.
+alias.rsasha1.example.	3600	IN	RRSIG	CNAME 5 3 3600 20360101000000 20260101000000 7776 rsasha1.example. c8oMlgHkoiAbGRSxcBvNmJnZ9COc4fxSNSJiETz1rOaC2AN88lFxTihW muL/LtUUg38gHoSoP7WYW5l0U9VvApiLikuN1F8qSQfDsxFUmrajVlhj X5aAQwBd8xdstbI3yothSiMxk9jUpOx3x1Disaz0sMkcYY6n26Y1Tcnf y04=
+www.rsasha1.example.	3600	IN	A	192.0.2.80
+www.rsasha1.example.	3600	IN	RRSIG	A 5 3 3600 20360101000000 20260101000000 7776 rsasha1.example. nlwDpMoVflPiUeDiABR2oX9g57ao7GUVuBcR+8JEpnvtEFg4YrZt9/We UR4PwMKaxdR43kARUOzDXovUjp3K2muMC3TzipfRcQAbM2+hLWs6SGWq zKinEWGcJtLe62uHktk+FpE9aknkOYAVIOIXWliOU/T3d4XIt9i1D3FH xJo=
+
+;; AUTHORITY SECTION:
+rsasha1.example.	3600	IN	NS	ns1.rsasha1.example.
+rsasha1.example.	3600	IN	NS	ns2.rsasha1.example.
+rsasha1.example.	3600	IN	RRSIG	NS 5 2 3600 20360101000000 20260101000000 7776 rsasha1.example. OKcpOYslxFdA6DUWhm/pXK3gU/Lh7pwcU1XkVNs4OtvFD3eSE/19SfOY n1VyUIxkxAfrcNeLMk3C71723OqawsG9R9DdvNZmiw0KngnI+1uKOU9r XDeglbpe/dik9ySHrx4TGtqJz/R7RvDRcawc/uLtWvAzEGUWgoGh6za0 Me4=
+
+;; ADDITIONAL SECTION:
+ns1.rsasha1.example.	3600	IN	A	192.0.2.53
+ns2.rsasha1.example.	3600	IN	A	198.51.100.53
+ns1.rsasha1.example.	3600	IN	AAAA	2001:db8::53
+ns1.rsasha1.example.	3600	IN	RRSIG	A 5 3 3600 20360101000000 20260101000000 7776 rsasha1.example. MiGhP1hgVIYb1oKaX1OsGSXaRBdNgSdV0CDG0cmSlNGlOrxosUxdGuOx d5JanKIs5ZHKFO+MvLriLyPVtfaR+Hyz45pKMfGxTUsMQgkOP6764TVv FE+i+H6XNx9ibyFX/Y7y3YR0IaRpaIqfuNi/bifgDSxaAIRJV4ddpZY6 or0=
+ns1.rsasha1.example.	3600	IN	RRSIG	AAAA 5 3 3600 20360101000000 20260101000000 7776 rsasha1.example. Iu1eQP3Q2Y+sSxGrrVFIbDgOUFYgbpDS1XVXz6fUhg2u4Y/aRBG+s/MG HXKMHrclvoKNgwES21lqG4l+rTbE0iU9wIPyAYDgZTwIE2nJ+2OPdACr Aqqd+t4Hr7eJPpBkGFoifBrEte7kCjL4buHtJRGIbeEaJofgFGeJmgmz zXA=
+ns2.rsasha1.example.	3600	IN	RRSIG	A 5 3 3600 20360101000000 20260101000000 7776 rsasha1.example. hCscPkeet+HZcYIHPGTE60E0CeMH1+jP9xQCsaxeXWSSjRdTYgAVcZF9 274JZZ8wR1FGLgrkXZPq2gchG6sgVQ40ZdxBgcVNvYN0Vw163wBvXDw+ 7qG/yO/ZzPl7NvidnF+Co6DdtIqgvkaSIvcyn7XvGsFLJz93pi2U5BhG ST4=

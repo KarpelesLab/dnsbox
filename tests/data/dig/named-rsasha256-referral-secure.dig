@@ -1,0 +1,15 @@
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 26430
+;; flags: qr; QUERY: 1, ANSWER: 0, AUTHORITY: 3, ADDITIONAL: 2
+
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags: do; udp: 1232
+;; QUESTION SECTION:
+;host.secure.rsasha256.example.	IN	A
+
+;; AUTHORITY SECTION:
+secure.rsasha256.example. 3600	IN	NS	ns.secure.rsasha256.example.
+secure.rsasha256.example. 3600	IN	DS	12345 13 2 E06D44B80B8F1D39A95C0B0D7C65D08458E880409BBC683457104237 C7F8EC8D
+secure.rsasha256.example. 3600	IN	RRSIG	DS 8 3 3600 20360101000000 20260101000000 1620 rsasha256.example. Eq1cyqStPKZwxB+OzAYj5RdJr4dcIRgJklcA98uNyAzpHMiNuKhZLOJj a//pSf5vF9YEEl2tOTv2FXHSBAlY1k/e+Ca6PkgwRWgEUmjBXxStpT3h i6rzqHkyL4MKUbrtvDtMj75FobLffXUf8zrME9kw38xQB30y7xDFTqfj 7P4=
+
+;; ADDITIONAL SECTION:
+ns.secure.rsasha256.example. 3600 IN	A	192.0.2.99

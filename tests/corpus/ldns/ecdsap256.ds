@@ -1,0 +1,4 @@
+; DS records of the KSK of ldns-ecdsap256.example (ldns-key2ds)
+ldns-ecdsap256.example.	3600	IN	DS	56034 13 1 d7097eb44845b78582496701d1afdcbdc104928b
+ldns-ecdsap256.example.	3600	IN	DS	56034 13 2 79e8e54e4db36013a5e64fbcaa5a601dd1d72ae4569ef04af518af4e6ddd6ad8
+ldns-ecdsap256.example.	3600	IN	DS	56034 13 4 427164a5234a59bfb60c140000d6716fd6a98be89837ea61b461a411d28226ed5f4dd9240463fedf652b2ba0505469b4

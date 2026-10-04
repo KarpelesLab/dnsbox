@@ -1,0 +1,136 @@
+alltypes.example.	3600	IN	SOA	ns1.alltypes.example. hostmaster.alltypes.example. 2026100401 7200 3600 1209600 300
+alltypes.example.	3600	IN	NS	ns1.alltypes.example.
+alltypes.example.	3600	IN	NS	ns2.example.net.
+@\.\032x.alltypes.example.	3600	IN	A	192.0.2.43
+_443._tcp.alltypes.example.	3600	IN	TLSA	0 0 0 30820122300d06092a864886f70d01010105000382010f003082010a
+_443._tcp.alltypes.example.	3600	IN	TLSA	3 1 1 0c72ac70b745ac19998811b131d662c9ac69dbdbe7cb23e5b514b56664c5d3d6
+a.alltypes.example.	3600	IN	A	192.0.2.1
+a\000b.alltypes.example.	3600	IN	A	192.0.2.44
+aaaa.alltypes.example.	3600	IN	AAAA	::ffff:192.0.2.1
+aaaa.alltypes.example.	3600	IN	AAAA	2001:db8::1
+afsdb.alltypes.example.	3600	IN	AFSDB	1 afs.alltypes.example.
+afsdb.alltypes.example.	3600	IN	AFSDB	2 dce.alltypes.example.
+apl.alltypes.example.	3600	IN	APL	\# 0
+apl.alltypes.example.	3600	IN	APL	1:224.0.0.0/4  2:ff00:0000:0000:0000:0000:0000:0000:0000/8  !2:2001:0db8:0000:0000:0000:0000:0000:0000/32 
+apl.alltypes.example.	3600	IN	APL	1:192.168.32.0/21  !1:192.168.38.0/28 
+caa.alltypes.example.	3600	IN	CAA	0 iodef "mailto:security@example.com"
+caa.alltypes.example.	3600	IN	CAA	0 issue "ca.example.net; account=230123"
+caa.alltypes.example.	3600	IN	CAA	0 issue "letsencrypt.org"
+caa.alltypes.example.	3600	IN	CAA	0 issuewild ";"
+caa.alltypes.example.	3600	IN	CAA	128 tbs "Unknown"
+cdnskey.alltypes.example.	3600	IN	CDNSKEY	0 3 0 AA==
+cdnskey.alltypes.example.	3600	IN	CDNSKEY	257 3 15 l02Woi0iS8Aa25FQkUd9RMzZHJpBoRQwAQEX1SxZJA4=
+cds.alltypes.example.	3600	IN	CDS	0 0 0 00
+cds.alltypes.example.	3600	IN	CDS	60485 5 1 2bb183af5f22588179a53b0a98631fad1a292118
+cert.alltypes.example.	3600	IN	CERT	PKIX 12345 8 MIIBkjCB/KADAgECAgEAMA0GCSqGSIb3DQEBBQUA
+cert.alltypes.example.	3600	IN	CERT	PGP 0 0 AQID
+cert.alltypes.example.	3600	IN	CERT	65280 1 253 AQID
+cname.alltypes.example.	3600	IN	CNAME	a.alltypes.example.
+csync.alltypes.example.	3600	IN	CSYNC	66 3 A NS AAAA 
+dhcid.alltypes.example.	3600	IN	DHCID	AAIBY2/AuCccgoJbsaxcQc9TUapptP69lOjxfNuVAA2kjEA=
+dlv.alltypes.example.	3600	IN	DLV	60485 5 1 2bb183af5f22588179a53b0a98631fad1a292118
+dname.alltypes.example.	3600	IN	DNAME	example.net.
+dnskey.alltypes.example.	3600	IN	DNSKEY	256 3 15 l02Woi0iS8Aa25FQkUd9RMzZHJpBoRQwAQEX1SxZJA4= ;{id = 3612 (zsk), size = 256b}
+dnskey.alltypes.example.	3600	IN	DNSKEY	257 3 8 AwEAAagAIKlVZrpC6Ia7gEzahOR+9W29euxhJhVVLOyQbSEW0O8gcCjFFVQUTf6v58fLjwBd0YI0EzrAcQqBGCzh/RStIoO8g0NfnfL2MTJRkxoXbfDaUeVPQuYEhg37NZWAJQ9VnMVDxP/VHL496M/QZxkjf5/Efucp2gaDX6RS6CXpoY68LsvPVjR0ZSwzz1apAzvN9dlzEheX7ICJBBtuA6G3LQpzW5hOA2hzCTMjJPJ8LbqF6dsV6DoBQzgul0sGIcGOYl7OyQdXfZ57relSQageu+ipAdTTJ25AsRTAoub8ONGcLmqrAmRLKBP1dfwhYB4N7knNnulqQxA+Uk1ihz0= ;{id = 19036 (ksk), size = 2048b}
+dnskey.alltypes.example.	3600	IN	DNSKEY	385 3 13 mdsswUyr3DPW132mOi8V9xESWE8jTo0dxCjjnopKl+GqJxpVXckHAeF+KkxLbxILfDLUT0rAK9iUzy1L53eKGQ== ;{id = 2499 (ksk), size = 256b}
+ds.alltypes.example.	3600	IN	DS	12345 8 4 abababababababababababababababababababababababababababababababababababababababababababababababab
+ds.alltypes.example.	3600	IN	DS	20326 8 2 e06d44b80b8f1d39a95c0b0d7c65d08458e880409bbc683457104237c7f8ec8d
+ds.alltypes.example.	3600	IN	DS	60485 5 1 2bb183af5f22588179a53b0a98631fad1a292118
+eid.alltypes.example.	3600	IN	EID	0123456789abcdef
+eui48.alltypes.example.	3600	IN	EUI48	00-00-5e-00-53-2a
+eui64.alltypes.example.	3600	IN	EUI64	00-00-5e-ef-10-00-00-2a
+generic.alltypes.example.	3600	IN	A	192.0.2.2
+generic.alltypes.example.	3600	IN	MX	10 a.
+generic.alltypes.example.	3600	IN	TYPE65280	\# 5 0102030405
+generic.alltypes.example.	3600	IN	TYPE65281	\# 0
+gid.alltypes.example.	3600	IN	TYPE0	\# 4 000003e8
+gpos.alltypes.example.	3600	IN	GPOS	"0" "0" "0"
+gpos.alltypes.example.	3600	IN	GPOS	"-32.6882" "116.8652" "10.0"
+hinfo.alltypes.example.	3600	IN	HINFO	"RFC8482" ""
+hinfo.alltypes.example.	3600	IN	HINFO	"Generic PC" "Linux \"6.18\""
+hip.alltypes.example.	3600	IN	HIP	2 200100107b1a74df365639cc39f1d578 AwEAAbdxyhNuSutc5EMzxTs9LBPCIkOFH8cIvM4p9+LrV4e19WzK00+CI6zBCQTdtWsuxKbWIy87UOoJTwkUs7lBu+Upr1gsNrut79ryra+bSRGQb1slImA8YVJyuIDsj7kwzG7jnERNqnWxZ48AWkskmdHaVDP4BcelrTI3rMXdXF5D rvs.alltypes.example. rvs2.alltypes.example.
+https.alltypes.example.	3600	IN	HTTPS	0 cdn.example.
+https.alltypes.example.	3600	IN	HTTPS	1 . alpn=h3,h2 ipv4hint=104.16.132.229,104.16.133.229 ipv6hint=2606:4700::6810:84e5,2606:4700::6810:85e5
+ipseckey.alltypes.example.	3600	IN	IPSECKEY	10 0 2 . AQNRU3mG7TVTO2BkR47usntb102uFJtugbo6BSGvgqt4AQ==
+ipseckey.alltypes.example.	3600	IN	IPSECKEY	10 1 2 192.0.2.38 AQNRU3mG7TVTO2BkR47usntb102uFJtugbo6BSGvgqt4AQ==
+ipseckey.alltypes.example.	3600	IN	IPSECKEY	10 2 2 2001:db8:0:8002::2000:1 AQNRU3mG7TVTO2BkR47usntb102uFJtugbo6BSGvgqt4AQ==
+ipseckey.alltypes.example.	3600	IN	IPSECKEY	10 3 2 gw.alltypes.example. AQNRU3mG7TVTO2BkR47usntb102uFJtugbo6BSGvgqt4AQ==
+isdn.alltypes.example.	3600	IN	ISDN	"150862028003217"
+isdn.alltypes.example.	3600	IN	ISDN	"150862028003217" "004"
+key.alltypes.example.	3600	IN	KEY	256 3 15 l02Woi0iS8Aa25FQkUd9RMzZHJpBoRQwAQEX1SxZJA4=
+kx.alltypes.example.	3600	IN	KX	10 a.alltypes.example.
+l32.alltypes.example.	3600	IN	L32	10 10.1.2.0
+l64.alltypes.example.	3600	IN	L64	10 2001:0db8:1140:1000
+loc.alltypes.example.	3600	IN	LOC	52 22 23.000 N 04 53 32.000 E -2m 0.00m 10000m 10m
+loc.alltypes.example.	3600	IN	LOC	00 00 0.000 S 00 00 0.000 W 0m 1m 10000m 10m
+loc.alltypes.example.	3600	IN	LOC	42 21 54.000 N 71 06 18.000 W -24m 30m 10000m 10m
+loc.alltypes.example.	3600	IN	LOC	90 00 0.000 S 180 00 0.000 W 42849672.95m 90000000m 90000000m 90000000m
+lp.alltypes.example.	3600	IN	LP	10 l64-subnet1.alltypes.example.
+mb.alltypes.example.	3600	IN	MB	a.alltypes.example.
+mg.alltypes.example.	3600	IN	MG	a.alltypes.example.
+minfo.alltypes.example.	3600	IN	MINFO	rmail.alltypes.example. emailbx.alltypes.example.
+mr.alltypes.example.	3600	IN	MR	a.alltypes.example.
+mx.alltypes.example.	3600	IN	MX	0 .
+mx.alltypes.example.	3600	IN	MX	10 mail.alltypes.example.
+naptr.alltypes.example.	3600	IN	NAPTR	100 10 "S" "SIP+D2U" "" _sip._udp.alltypes.example.
+naptr.alltypes.example.	3600	IN	NAPTR	100 50 "u" "E2U+sip" "!^.*$!sip:info@example.com!" .
+nid.alltypes.example.	3600	IN	NID	10 0014:4fff:ff20:ee64
+nimloc.alltypes.example.	3600	IN	NIMLOC	32427b5e4c3b
+ns.alltypes.example.	3600	IN	NS	ns1.alltypes.example.
+ns1.alltypes.example.	3600	IN	A	192.0.2.53
+ns1.alltypes.example.	3600	IN	AAAA	2001:db8::53
+nsap.alltypes.example.	3600	IN	NSAP	0x4700058000
+nsap.alltypes.example.	3600	IN	NSAP	0x47000580005a0000000001e133ffffff00016100
+nsap-ptr.alltypes.example.	3600	IN	NSAP-PTR	"foo.alltypes.example."
+nsec.alltypes.example.	3600	IN	NSEC	\000.alltypes.example. NS SOA TYPE65534 
+nsec.alltypes.example.	3600	IN	NSEC	host.alltypes.example. A MX RRSIG NSEC TYPE1234 
+nsec3param.alltypes.example.	3600	IN	NSEC3PARAM	1 0 0 - 
+nsec3param.alltypes.example.	3600	IN	NSEC3PARAM	1 0 12 aabbccdd 
+null.alltypes.example.	3600	IN	NULL	\# 0
+null.alltypes.example.	3600	IN	NULL	\# 4 deadbeef
+openpgpkey.alltypes.example.	3600	IN	OPENPGPKEY	mQINBFit2jsBEADrbl5vjVxYeAE0g0IDYCBpHirv1Sjlqxx5gjtPhb2YhvyDMXjq
+ptr.alltypes.example.	3600	IN	PTR	a.alltypes.example.
+px.alltypes.example.	3600	IN	PX	10 map822.alltypes.example. mapx400.alltypes.example.
+rp.alltypes.example.	3600	IN	RP	. .
+rp.alltypes.example.	3600	IN	RP	mbox.alltypes.example. txt.alltypes.example.
+rrsig.alltypes.example.	3600	IN	RRSIG	A 5 3 86400 20030322173103 20030220173103 2642 example.com. oJB1W6WNGv+ldvQ3WDG0MQkg5IEhjRip8WTrPYGv07h108dUKGMeDPKijVCHX3DDKdfb+v6oB9wfuh3DTJXUAfI/M0zmO/zz8bW0Rznl8O3tGNazPwQKkRN20XPXV6nwwfoXmJQbsLNrLfkGJ5D6fwFm8nN+6pBzeDQfsS3Ap3o=
+rt.alltypes.example.	3600	IN	RT	10 a.alltypes.example.
+sig.alltypes.example.	3600	IN	SIG	TYPE0 15 0 0 20261004090347 20261004085347 43160 sig0.alltypes.example. AAAA
+smimea.alltypes.example.	3600	IN	SMIMEA	3 0 1 abababababababababababababababababababababababababababababababab
+spf.alltypes.example.	3600	IN	SPF	"v=spf1 ip4:192.0.2.0/24 -all"
+srv.alltypes.example.	3600	IN	SRV	0 0 0 .
+srv.alltypes.example.	3600	IN	SRV	10 60 5060 sip.alltypes.example.
+sshfp.alltypes.example.	3600	IN	SSHFP	1 1 dc2a7a1f15b1ba1f4e5d2d8a6e7e4f7e3b1c2d3e
+sshfp.alltypes.example.	3600	IN	SSHFP	4 2 123456789abcdef67890123456789abcdef67890123456789abcdef123456789
+svcb.alltypes.example.	3600	IN	SVCB	0 svc.example.
+svcb.alltypes.example.	3600	IN	SVCB	1 .
+svcb.alltypes.example.	3600	IN	SVCB	1 doh.example. alpn=h2 dohpath=/dns-query{?dns}
+svcb.alltypes.example.	3600	IN	SVCB	1 dot.example. alpn=dot no-default-alpn port=853 ech=AEX+DQBBpQAgACCW2/dfOBZAtQU55/KYxUYStyuA6Yg+1Sjqb4o1q7HY0wAEAAEAAQASY2xvdWRmbGFyZS1lY2guY29tAAA=
+svcb.alltypes.example.	3600	IN	SVCB	1 foo.alltypes.example. port=53
+svcb.alltypes.example.	3600	IN	SVCB	1 foo.alltypes.example. ipv6hint=2001:db8::1,2001:db8::53:1
+svcb.alltypes.example.	3600	IN	SVCB	1 foo.alltypes.example. key667=hello
+svcb.alltypes.example.	3600	IN	SVCB	1 foo.alltypes.example. key667=hello\210qoo
+svcb.alltypes.example.	3600	IN	SVCB	16 foo.example.org. mandatory=alpn,ipv4hint alpn=h2,h3-19 ipv4hint=192.0.2.1
+svcb.alltypes.example.	3600	IN	SVCB	16 foo.example.org. alpn=f\\\\oo\\,bar,h2
+talink.alltypes.example.	3600	IN	TALINK	. talink2.alltypes.example.
+talink2.alltypes.example.	3600	IN	TALINK	talink.alltypes.example. .
+ttl.alltypes.example.	300	IN	A	192.0.2.46
+ttl.alltypes.example.	300	IN	A	192.0.2.47
+txt.alltypes.example.	3600	IN	TXT	""
+txt.alltypes.example.	3600	IN	TXT	"first" "second" "semi;colon" "back\\slash" "tab	" "\195\169"
+txt.alltypes.example.	3600	IN	TXT	"unquoted"
+txt.alltypes.example.	3600	IN	TXT	"v=spf1 -all"
+uid.alltypes.example.	3600	IN	TYPE0	\# 4 000003e8
+uinfo.alltypes.example.	3600	IN	TYPE0	\# 3 616263
+unspec.alltypes.example.	3600	IN	TYPE0	\# 2 0102
+uri.alltypes.example.	3600	IN	URI	0 0 "https://example.com/\"q\"\\"
+uri.alltypes.example.	3600	IN	URI	10 1 "ftp://ftp1.example.com/public"
+*.wild.alltypes.example.	3600	IN	A	192.0.2.42
+wks.alltypes.example.	3600	IN	WKS	192.0.2.1 tcp smtp http https 
+wks.alltypes.example.	3600	IN	WKS	192.0.2.1 udp domain 
+x25.alltypes.example.	3600	IN	X25	"311061700956"
+zonemd.alltypes.example.	3600	IN	ZONEMD	2018031900 1 1 febe3d4ce2ec2ffa4ba99d46cd69d6d29711e55217057bee7eb1a7b641a47ba7fed2dd5b97ae499fafa4f22c6bd647de
+zonemd.alltypes.example.	3600	IN	ZONEMD	2018031900 240 241 000102030405060708090a0b
+\195\169.alltypes.example.	3600	IN	A	192.0.2.45
+nsec3.alltypes.example.	3600	IN	NSEC3	1 0 0 -  2vptu5timamqttgl4luu9kg21e0aor3s
+nsec3.alltypes.example.	3600	IN	NSEC3	1 1 12 aabbccdd  2t7b4g4vsa5smi47k61mv5bv1a22bojr NS SOA MX RRSIG DNSKEY NSEC3PARAM 

@@ -1,0 +1,13 @@
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 16848
+;; flags: qr aa; QUERY: 1, ANSWER: 0, AUTHORITY: 4, ADDITIONAL: 1
+
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags: do; udp: 1232
+;; QUESTION SECTION:
+;b.ent.rsasha512.example.	IN	A
+
+;; AUTHORITY SECTION:
+rsasha512.example.	300	IN	SOA	ns1.rsasha512.example. hostmaster.rsasha512.example. 2026100401 7200 3600 1209600 300
+rsasha512.example.	300	IN	RRSIG	SOA 10 2 3600 20360101000000 20260101000000 49473 rsasha512.example. VGOhVp0yhYadSKQ9BJqwDDp0H+B27nJihbxBuyYqcQPJvV1zl3ioUER1 lsJo4gj5beb3Vhb+4O4AFLki5ASWUvVEZ4KyZZ23By5QwgkyqWM54EDl z4FLGCChAF7tNIpF0CK5DeLcZb8AJ0GIgzrTYXnWUPQ0/cjVaZfXVFqz /QQ=
+dname.rsasha512.example. 300	IN	NSEC	a.b.ent.rsasha512.example. DNAME RRSIG NSEC
+dname.rsasha512.example. 300	IN	RRSIG	NSEC 10 3 300 20360101000000 20260101000000 49473 rsasha512.example. XG9EKFcpNEFDKOY9ZO1+qZZ2TKDoVadraGEdtw/4urXhcZD2xJGovc9a 065bLWWMzCOE6e7bWDtyJKw9Stt4Gy5sbOh50yaAsK8jbHhHEgFdkbtk u75Sn8+GtkLxb+qri2aNXBXgMxvT2Umb6jDRYlkryrO7gB+COIDYZ/W+ AC0=

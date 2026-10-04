@@ -1,0 +1,15 @@
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 61065
+;; flags: qr; QUERY: 1, ANSWER: 0, AUTHORITY: 3, ADDITIONAL: 2
+
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags: do; udp: 1232
+;; QUESTION SECTION:
+;host.insecure.rsasha1.example.	IN	A
+
+;; AUTHORITY SECTION:
+insecure.rsasha1.example. 3600	IN	NS	ns.insecure.rsasha1.example.
+insecure.rsasha1.example. 300	IN	NSEC	mail.rsasha1.example. NS RRSIG NSEC
+insecure.rsasha1.example. 300	IN	RRSIG	NSEC 5 3 300 20360101000000 20260101000000 7776 rsasha1.example. ZH9TJJyNhLhdO39V0FSJHhSw8sz6pPEdZpGs/5/TPIH2c9+lovKmkOX+ hQ9NlSp9tEByiEVyFMLI0mV/GM5EEmTT9soZkNG3XlDpmVmExsh+FOxk JTVay4xbd/DlnXRNdRR3gYop4BRO7oh7Skhw/7jr29DFlaOqqnttz7WI Qno=
+
+;; ADDITIONAL SECTION:
+ns.insecure.rsasha1.example. 3600 IN	A	192.0.2.98

@@ -1,0 +1,15 @@
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 26755
+;; flags: qr; QUERY: 1, ANSWER: 0, AUTHORITY: 3, ADDITIONAL: 2
+
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags: do; udp: 1232
+;; QUESTION SECTION:
+;host.insecure.ed448.example.	IN	A
+
+;; AUTHORITY SECTION:
+insecure.ed448.example.	3600	IN	NS	ns.insecure.ed448.example.
+insecure.ed448.example.	300	IN	NSEC	mail.ed448.example. NS RRSIG NSEC
+insecure.ed448.example.	300	IN	RRSIG	NSEC 16 3 300 20360101000000 20260101000000 11353 ed448.example. DnskORuQwZCqMc1jy1XZQQWwR/8P+Hf4DvYRIcDeIcU5ej7aHzohDs1B v16yY4ZxaZHU9LOix50ASzLt3+N/9cvhIixSkLikns79PMjMAtnEE93A XIboFyVT+SH3+EjjWfK6/+0N5992bPeCU5+GBDwA
+
+;; ADDITIONAL SECTION:
+ns.insecure.ed448.example. 3600	IN	A	192.0.2.98

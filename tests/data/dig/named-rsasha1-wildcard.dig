@@ -1,0 +1,25 @@
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 48100
+;; flags: qr aa; QUERY: 1, ANSWER: 2, AUTHORITY: 5, ADDITIONAL: 6
+
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags: do; udp: 1232
+;; QUESTION SECTION:
+;host.wild.rsasha1.example.	IN	A
+
+;; ANSWER SECTION:
+host.wild.rsasha1.example. 3600	IN	A	192.0.2.42
+host.wild.rsasha1.example. 3600	IN	RRSIG	A 5 3 3600 20360101000000 20260101000000 7776 rsasha1.example. ssO34y0COOperXYb0bSP7PWe/UKL19TH9+DV0Nj1oWZRguj6m0XzOfsO hNiooPlTW1lGgIzorYWoeTbgfLkuiR1vpu1i71zyy6ZpQyFdJxHLndHl M7NSzuWFEv18+0A+hBmcpzEDxeL6mok2ykOFPP1zKtCW4ozONTThfnnH U5I=
+
+;; AUTHORITY SECTION:
+rsasha1.example.	3600	IN	NS	ns1.rsasha1.example.
+rsasha1.example.	3600	IN	NS	ns2.rsasha1.example.
+rsasha1.example.	3600	IN	RRSIG	NS 5 2 3600 20360101000000 20260101000000 7776 rsasha1.example. OKcpOYslxFdA6DUWhm/pXK3gU/Lh7pwcU1XkVNs4OtvFD3eSE/19SfOY n1VyUIxkxAfrcNeLMk3C71723OqawsG9R9DdvNZmiw0KngnI+1uKOU9r XDeglbpe/dik9ySHrx4TGtqJz/R7RvDRcawc/uLtWvAzEGUWgoGh6za0 Me4=
+*.wild.rsasha1.example.	300	IN	NSEC	www.rsasha1.example. A TXT RRSIG NSEC
+*.wild.rsasha1.example.	300	IN	RRSIG	NSEC 5 3 300 20360101000000 20260101000000 7776 rsasha1.example. b0EbFnyjBBEX0N9yoNJi1nwMItFXXGw/4VSKsGGlnxkTFTxB3wDwDGcz hkryv1UarC3ukJC1jB5xBcj/qEyer69Vb/Tm/Pbr67qUxJWAkB9NIiCq mTYQLIQKq9brTv1aEObt6O88dQUQ2MrY5y+KGbmSDpz7UVtLhWoQI2J8 BoY=
+
+;; ADDITIONAL SECTION:
+ns1.rsasha1.example.	3600	IN	A	192.0.2.53
+ns2.rsasha1.example.	3600	IN	A	198.51.100.53
+ns1.rsasha1.example.	3600	IN	AAAA	2001:db8::53
+ns1.rsasha1.example.	3600	IN	RRSIG	A 5 3 3600 20360101000000 20260101000000 7776 rsasha1.example. MiGhP1hgVIYb1oKaX1OsGSXaRBdNgSdV0CDG0cmSlNGlOrxosUxdGuOx d5JanKIs5ZHKFO+MvLriLyPVtfaR+Hyz45pKMfGxTUsMQgkOP6764TVv FE+i+H6XNx9ibyFX/Y7y3YR0IaRpaIqfuNi/bifgDSxaAIRJV4ddpZY6 or0=
+ns1.rsasha1.example.	3600	IN	RRSIG	AAAA 5 3 3600 20360101000000 20260101000000 7776 rsasha1.example. Iu1eQP3Q2Y+sSxGrrVFIbDgOUFYgbpDS1XVXz6fUhg2u4Y/aRBG+s/MG HXKMHrclvoKNgwES21lqG4l+rTbE0iU9wIPyAYDgZTwIE2nJ+2OPdACr Aqqd+t4Hr7eJPpBkGFoifBrEte7kCjL4buHtJRGIbeEaJofgFGeJmgmz zXA=

@@ -1,0 +1,80 @@
+ldns-ecdsap256.example.	3600	IN	SOA	ns1.ldns-ecdsap256.example. hostmaster.ldns-ecdsap256.example. 2026100401 7200 3600 1209600 300
+ldns-ecdsap256.example.	3600	IN	RRSIG	SOA 13 2 3600 20360101000000 20260101000000 17113 ldns-ecdsap256.example. INMNlgF+iWAmbdcjRA4A8CVlm4o2FbuWpewD6hALYEwhLfY2CWZYD1dFMBqvyOOc7wRKQlSictEIhPNnsXv+NQ==
+ldns-ecdsap256.example.	3600	IN	NS	ns1.ldns-ecdsap256.example.
+ldns-ecdsap256.example.	3600	IN	NS	ns2.ldns-ecdsap256.example.
+ldns-ecdsap256.example.	3600	IN	RRSIG	NS 13 2 3600 20360101000000 20260101000000 17113 ldns-ecdsap256.example. gzTJ30uyHwqhplX4VEevPrUk8dOaiwMEmVIjtTjCk1zFaSQBCtyJmnoI2S4HWxMeqhVbqKNC10Cn1zU5fiuA6g==
+ldns-ecdsap256.example.	3600	IN	MX	10 mail.ldns-ecdsap256.example.
+ldns-ecdsap256.example.	3600	IN	RRSIG	MX 13 2 3600 20360101000000 20260101000000 17113 ldns-ecdsap256.example. tjj2GYXAXYffFZ7aPaaI/Y7/IhSTx4xnLCM/M3G1Ptl8Z3xNidygvzWmgq1nFv0T7tX18zZ/DBxvCymZQgdAEQ==
+ldns-ecdsap256.example.	3600	IN	TXT	"v=spf1 mx -all"
+ldns-ecdsap256.example.	3600	IN	RRSIG	TXT 13 2 3600 20360101000000 20260101000000 17113 ldns-ecdsap256.example. GAPnnURJV4zO6qjaniUZoR2jbtmVRecARiBKttNulQsS8Nhfuz+Ayu/542hJSmPpVENZP0Jxx2OMB1yQPiKudg==
+ldns-ecdsap256.example.	3600	IN	DNSKEY	256 3 13 C9XN5jemcMtpWwhFKqyTI50QPNzbyF5Hvph40AGEKa2hNfvdkOjTqIxds1//X501zRHFowsFBG/u+l0/gwfHMw== ;{id = 17113 (zsk), size = 256b}
+ldns-ecdsap256.example.	3600	IN	DNSKEY	257 3 13 ZTQHjEcOiuOWdVKohCU0YR9odrj/fsmSe4y6rAOnHG53THmZfm6sGm1Lna8yhxIW0LMnKXAyT4CvQF3oqVtn4Q== ;{id = 56034 (ksk), size = 256b}
+ldns-ecdsap256.example.	3600	IN	RRSIG	DNSKEY 13 2 3600 20360101000000 20260101000000 56034 ldns-ecdsap256.example. EWCi9LIsv/PrwrqzwtnIM5Lkfnw00S9v1TF8o+1+olNiVVIazUVk/GEqA+O4yuyiGh34kpaVyUtrb2BPFgCPAA==
+ldns-ecdsap256.example.	3600	IN	ZONEMD	2026100401 1 1 bfd046a2dc3f917d9e5e6fad63f6d11ad6287435742feccaac9f0a37ff41f5a8385883e6545a8ede1280fc8c7a3326b8
+ldns-ecdsap256.example.	3600	IN	ZONEMD	2026100401 1 2 ac31f088eb7451c0f85352f44ba5a62f6551f4df100a248a2160f8af390b134f8407cc106f9820425ef1b175edbc12b92b7dd72b84d50ed65cf54d479da118fe
+ldns-ecdsap256.example.	3600	IN	RRSIG	ZONEMD 13 2 3600 20360101000000 20260101000000 17113 ldns-ecdsap256.example. wjFrpFlhTMPJ20XFehf1MsbCXkO9WQeA1bMsmEaujZvwgjKBxIh18VVS+IxWY1KKG+c3mI+iY6SefotaM37J0g==
+ldns-ecdsap256.example.	3600	IN	HTTPS	1 . alpn=h2,h3
+ldns-ecdsap256.example.	3600	IN	RRSIG	HTTPS 13 2 3600 20360101000000 20260101000000 17113 ldns-ecdsap256.example. ihKyp3TyM5tJaUXMkdmQXONSimtK1kyy5YkSC/mzA/f6VEFKLKZoR788JcTwMFG0bl0ucTJl+ireFdrEbF0pLg==
+ldns-ecdsap256.example.	3600	IN	CAA	0 issue "letsencrypt.org"
+ldns-ecdsap256.example.	3600	IN	RRSIG	CAA 13 2 3600 20360101000000 20260101000000 17113 ldns-ecdsap256.example. 9Dc37so33qZvuN+BTY0ROl9IJDC4IW+pVltoeTbteajc7aVX/viwjgKvpdeHttyjbhJUKpS1mXueZZfhnSGohg==
+ldns-ecdsap256.example.	300	IN	NSEC	_sip._udp.ldns-ecdsap256.example. NS SOA MX TXT RRSIG NSEC DNSKEY ZONEMD HTTPS CAA 
+ldns-ecdsap256.example.	300	IN	RRSIG	NSEC 13 2 300 20360101000000 20260101000000 17113 ldns-ecdsap256.example. ZvkglPVzCCwEPBEOIwaDU5v4ocmJVv2fX7WZXyq862sqonEwf5mkiBE0VQQ0FyherBI7WudJskYwTYSunKaCGA==
+_sip._udp.ldns-ecdsap256.example.	3600	IN	SRV	10 60 5060 www.ldns-ecdsap256.example.
+_sip._udp.ldns-ecdsap256.example.	3600	IN	RRSIG	SRV 13 4 3600 20360101000000 20260101000000 17113 ldns-ecdsap256.example. yGHCMIi0pBIHPSOcOrSccYkjVc5wtpUI2mWKMO0PgdooaRQsIoqoaDJ3oQmZtSYyO21fLq0/dWJQtkPnW8u4TQ==
+_sip._udp.ldns-ecdsap256.example.	300	IN	NSEC	alias.ldns-ecdsap256.example. SRV RRSIG NSEC 
+_sip._udp.ldns-ecdsap256.example.	300	IN	RRSIG	NSEC 13 4 300 20360101000000 20260101000000 17113 ldns-ecdsap256.example. Mv4dT5Tiwj/rsggiY47Uhx0HOOscNvLRK66NGBl3/NW0J/BCkDFL6IAzWtL5U62WP0OnMZF8M/vjwzHjseqkLQ==
+alias.ldns-ecdsap256.example.	3600	IN	CNAME	www.ldns-ecdsap256.example.
+alias.ldns-ecdsap256.example.	3600	IN	RRSIG	CNAME 13 3 3600 20360101000000 20260101000000 17113 ldns-ecdsap256.example. lGiPW2CjxT3he1toc6t2ecBs0tTBlkzw9Z0orslROUnioHIpFds3sGSXeOvdCLFgdVVRntAoCK6eV2eFBFRKkg==
+alias.ldns-ecdsap256.example.	300	IN	NSEC	dname.ldns-ecdsap256.example. CNAME RRSIG NSEC 
+alias.ldns-ecdsap256.example.	300	IN	RRSIG	NSEC 13 3 300 20360101000000 20260101000000 17113 ldns-ecdsap256.example. AjS/3DmT3vL+OG4GXPYnASqhyDb62xv/oVZFT3Mn1xAHmcG1YSYbCnd55kUO/2pwuBjvOpwGJz3UYXKghqBiZw==
+dname.ldns-ecdsap256.example.	3600	IN	DNAME	example.net.
+dname.ldns-ecdsap256.example.	3600	IN	RRSIG	DNAME 13 3 3600 20360101000000 20260101000000 17113 ldns-ecdsap256.example. zrsYUFqZtBbtzM0B6f2yrPkjWxJONftQLrpohsl99ip2au7u+EQRZn52yv1u7w2DyKehPhmQVMGXztOF4vNbqw==
+dname.ldns-ecdsap256.example.	300	IN	NSEC	a.b.ent.ldns-ecdsap256.example. DNAME RRSIG NSEC 
+dname.ldns-ecdsap256.example.	300	IN	RRSIG	NSEC 13 3 300 20360101000000 20260101000000 17113 ldns-ecdsap256.example. 1vOcjC6O8lzgxCoCOULdxV0WMUuOBmKKI5oKABot6v9sjIsWv4QBodyjjU01+qlFFi9ivWXdKIPiJ3ZLSp/i1A==
+a.b.ent.ldns-ecdsap256.example.	3600	IN	A	192.0.2.7
+a.b.ent.ldns-ecdsap256.example.	3600	IN	RRSIG	A 13 5 3600 20360101000000 20260101000000 17113 ldns-ecdsap256.example. F1YxdXttLlPsubaW0XxR22IGRxUlQL/4/MrOq/aGtiVfC/ICwbFBPgEJoC2VYOJIxJH5LQsa+7iqdYhdnCb7DQ==
+a.b.ent.ldns-ecdsap256.example.	300	IN	NSEC	insecure.ldns-ecdsap256.example. A RRSIG NSEC 
+a.b.ent.ldns-ecdsap256.example.	300	IN	RRSIG	NSEC 13 5 300 20360101000000 20260101000000 17113 ldns-ecdsap256.example. gQNvIZKrxCpY++xcY3tF5LsViiFwJSn4UrX76HiDEGTIY+OO62rt8g2Mx2H5RqBtzVt96SoBlc7hSwSYvYqxKw==
+insecure.ldns-ecdsap256.example.	3600	IN	NS	ns.insecure.ldns-ecdsap256.example.
+insecure.ldns-ecdsap256.example.	300	IN	NSEC	mail.ldns-ecdsap256.example. NS RRSIG NSEC 
+insecure.ldns-ecdsap256.example.	300	IN	RRSIG	NSEC 13 3 300 20360101000000 20260101000000 17113 ldns-ecdsap256.example. fi4spExhtsxIdDU6zgrGKWD0IyTbZgTzRlq/g1mYF2CU1jO+HVOyRRBqwrq6pQNH+41gOQJRmvQfVC9dhjCXOg==
+ns.insecure.ldns-ecdsap256.example.	3600	IN	A	192.0.2.98
+mail.ldns-ecdsap256.example.	3600	IN	A	192.0.2.25
+mail.ldns-ecdsap256.example.	3600	IN	RRSIG	A 13 3 3600 20360101000000 20260101000000 17113 ldns-ecdsap256.example. d8EURayl6Jm4ZyLGDZTiz27IXWsZrcktQlqmB5P/UKyq7sMBRgbGyKxw6aGocYaEf5+pzpj1/0jDf93bFY4CAg==
+mail.ldns-ecdsap256.example.	300	IN	NSEC	ns1.ldns-ecdsap256.example. A RRSIG NSEC 
+mail.ldns-ecdsap256.example.	300	IN	RRSIG	NSEC 13 3 300 20360101000000 20260101000000 17113 ldns-ecdsap256.example. 3nOqoUHrQAQDmno6uU4yEuAfv+Eb1/NNcTN+2LEXFcjFxmevfpRASa3RNGuGQjwU2BgGxYnFRQYSOvSGC7KSzg==
+ns1.ldns-ecdsap256.example.	3600	IN	A	192.0.2.53
+ns1.ldns-ecdsap256.example.	3600	IN	RRSIG	A 13 3 3600 20360101000000 20260101000000 17113 ldns-ecdsap256.example. JHKind30paw19EM/xNhQsLujwfDkq7nMfS1xRL1sszgCdRwgt8Clow5Ru5DtobLFP4os5QrHN0TX1TNsCQMQkQ==
+ns1.ldns-ecdsap256.example.	3600	IN	AAAA	2001:db8::53
+ns1.ldns-ecdsap256.example.	3600	IN	RRSIG	AAAA 13 3 3600 20360101000000 20260101000000 17113 ldns-ecdsap256.example. a1F/fTXuoOwnrjv2E1mLlgXwy4FCAqPB+5TA37eQOnJGqJFPc5Nilqa6mi3nfAF43qc9fiDkItwaRA7dgVAG/w==
+ns1.ldns-ecdsap256.example.	300	IN	NSEC	ns2.ldns-ecdsap256.example. A AAAA RRSIG NSEC 
+ns1.ldns-ecdsap256.example.	300	IN	RRSIG	NSEC 13 3 300 20360101000000 20260101000000 17113 ldns-ecdsap256.example. vXmSnI8Aa2CM54tkyCYS+5fKk/3Qp/U8zkVyq8RDZCX2WNWCuQ4Lu3xrNE6GZ+Fuc9+Ar2hs1QKPykpeKpeP6Q==
+ns2.ldns-ecdsap256.example.	3600	IN	A	198.51.100.53
+ns2.ldns-ecdsap256.example.	3600	IN	RRSIG	A 13 3 3600 20360101000000 20260101000000 17113 ldns-ecdsap256.example. AdjHw0fTakkKXEtMFhXLPg/f9FTg7ywVPoUlvDEJQcW6gp5uTtDgd2/W8TnMgyZeTdHNaslVHWajOyCnpHvOEw==
+ns2.ldns-ecdsap256.example.	300	IN	NSEC	other.ldns-ecdsap256.example. A RRSIG NSEC 
+ns2.ldns-ecdsap256.example.	300	IN	RRSIG	NSEC 13 3 300 20360101000000 20260101000000 17113 ldns-ecdsap256.example. 3zZDXHaQDKxi1yp1DhLvANQIG/ayAY2vVCcJucPQbXCvmEbJ2o6B4U2sdh1ehn1mwv2V7yv21H300yJR3lSFsQ==
+other.ldns-ecdsap256.example.	3600	IN	NS	ns.example.net.
+other.ldns-ecdsap256.example.	300	IN	NSEC	secure.ldns-ecdsap256.example. NS RRSIG NSEC 
+other.ldns-ecdsap256.example.	300	IN	RRSIG	NSEC 13 3 300 20360101000000 20260101000000 17113 ldns-ecdsap256.example. 2lWkOxncLSU2PaTcQJTuKx/9ntRM2faq4uMqrbJxl34MXJ16d4CM8WaByq4ltlPhYBpdPRV/nsPgDRALQ6hBYw==
+secure.ldns-ecdsap256.example.	3600	IN	NS	ns.secure.ldns-ecdsap256.example.
+secure.ldns-ecdsap256.example.	3600	IN	DS	12345 13 2 e06d44b80b8f1d39a95c0b0d7c65d08458e880409bbc683457104237c7f8ec8d
+secure.ldns-ecdsap256.example.	3600	IN	RRSIG	DS 13 3 3600 20360101000000 20260101000000 17113 ldns-ecdsap256.example. Itxu4V9OsElAjraM02Khb4Q0TPNiuWhHVOo0GrhE0MJ8J0WSW3JHqXMwsoso+gwxWkXjrLd7/met02V0HxDVjA==
+secure.ldns-ecdsap256.example.	300	IN	NSEC	*.wild.ldns-ecdsap256.example. NS DS RRSIG NSEC 
+secure.ldns-ecdsap256.example.	300	IN	RRSIG	NSEC 13 3 300 20360101000000 20260101000000 17113 ldns-ecdsap256.example. VZDnfXoUWCXrQDanB6/gCN/sTACi4KjROwWhvhOSBZUKtpIGUTFq6ift6sE1SEJgmqb6O6Nx/FRMjg9cb1BaBQ==
+ns.secure.ldns-ecdsap256.example.	3600	IN	A	192.0.2.99
+*.wild.ldns-ecdsap256.example.	3600	IN	A	192.0.2.42
+*.wild.ldns-ecdsap256.example.	3600	IN	RRSIG	A 13 3 3600 20360101000000 20260101000000 17113 ldns-ecdsap256.example. gh1FYwNX6YWMZ1IwWPooPwbtvB/Cq8WLncmk63hnhZvnF8N2vxVQLM0ZQ4FrefOUlFhH1URu4TnLrvlGtrBXWQ==
+*.wild.ldns-ecdsap256.example.	3600	IN	TXT	"wildcard"
+*.wild.ldns-ecdsap256.example.	3600	IN	RRSIG	TXT 13 3 3600 20360101000000 20260101000000 17113 ldns-ecdsap256.example. 6H4IhVARlzOubaaNsHxLbYMt6yhHsZfhhACuq3xAZve1gEBriicutrh2oxCyLnUhWwVSt2YMAhcRsHQ09oCaWA==
+*.wild.ldns-ecdsap256.example.	300	IN	NSEC	www.ldns-ecdsap256.example. A TXT RRSIG NSEC 
+*.wild.ldns-ecdsap256.example.	300	IN	RRSIG	NSEC 13 3 300 20360101000000 20260101000000 17113 ldns-ecdsap256.example. HUI97bgY16/x+wB5/kcIx+DGKMfb0rETksH7DfXIeZzrO4H0CxqfleE3UuVVYF870u89iV1GIRXWlWolElBjIA==
+www.ldns-ecdsap256.example.	3600	IN	A	192.0.2.80
+www.ldns-ecdsap256.example.	3600	IN	RRSIG	A 13 3 3600 20360101000000 20260101000000 17113 ldns-ecdsap256.example. FofpmO6TZncg/5Cmv94nX7vmKmMkSyUwpBMkFTvMDX/s4feefQmmpSPkxh53w1ICzWEfCn2j1NJV1u937WHhgQ==
+www.ldns-ecdsap256.example.	3600	IN	AAAA	2001:db8::80
+www.ldns-ecdsap256.example.	3600	IN	RRSIG	AAAA 13 3 3600 20360101000000 20260101000000 17113 ldns-ecdsap256.example. ie2XiRDD61NVa6leL0r7eF2UDqGrPZ3u7oNYuESEkVbKvfqp+Tndz9KbNumQi7jP6w5FJfcJhhE3yNhap/PtwQ==
+www.ldns-ecdsap256.example.	300	IN	NSEC	_443._tcp.www.ldns-ecdsap256.example. A AAAA RRSIG NSEC 
+www.ldns-ecdsap256.example.	300	IN	RRSIG	NSEC 13 3 300 20360101000000 20260101000000 17113 ldns-ecdsap256.example. ZbU8n2SNDDLpJzr+fDEM7UXzBHK2qGZGoTYk24lOZ3/uW9NYt2y1aGiZaCokw7sHg4wk2vl083tf+/kkZlnocg==
+_443._tcp.www.ldns-ecdsap256.example.	3600	IN	TLSA	3 1 1 0c72ac70b745ac19998811b131d662c9ac69dbdbe7cb23e5b514b56664c5d3d6
+_443._tcp.www.ldns-ecdsap256.example.	3600	IN	RRSIG	TLSA 13 5 3600 20360101000000 20260101000000 17113 ldns-ecdsap256.example. 1gywlcPM8aFdIjeuwLXCz1fn+h/uU4LHRPcFsBUSXcSwouO1sgxVbXkXmBbVAcTzFop5NFZ80sevfOhSbCPCCg==
+_443._tcp.www.ldns-ecdsap256.example.	300	IN	NSEC	ldns-ecdsap256.example. RRSIG NSEC TLSA 
+_443._tcp.www.ldns-ecdsap256.example.	300	IN	RRSIG	NSEC 13 5 300 20360101000000 20260101000000 17113 ldns-ecdsap256.example. wUaAdgPIHejBw7bMTL8zD6IsF7giarbRz+hGabUSYvmiHGwHGAq3fCPeRDOdj9NnjQTz6zAz0ldto34I6OTF6A==

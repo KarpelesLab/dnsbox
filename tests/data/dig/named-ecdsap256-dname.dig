@@ -1,0 +1,12 @@
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 48864
+;; flags: qr aa; QUERY: 1, ANSWER: 3, AUTHORITY: 0, ADDITIONAL: 1
+
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags: do; udp: 1232
+;; QUESTION SECTION:
+;x.dname.ecdsap256.example.	IN	A
+
+;; ANSWER SECTION:
+dname.ecdsap256.example. 3600	IN	DNAME	example.net.
+dname.ecdsap256.example. 3600	IN	RRSIG	DNAME 13 3 3600 20360101000000 20260101000000 50702 ecdsap256.example. vk34UohnNeSyK0J+NFuxNx+d8ZZpZcvO2PeOOqkd55P609P0s5mrUphA OUvsmuKor23sbIVxx4TZ2g5xMLHJGg==
+x.dname.ecdsap256.example. 3600	IN	CNAME	x.example.net.

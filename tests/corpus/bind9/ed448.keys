@@ -1,0 +1,19 @@
+; Throwaway keys of ed448.example made by dnssec-keygen for the dnsbox tests.
+; Ked448.example.+016+24028.key
+ed448.example. 3600 IN DNSKEY 257 3 16 nSI4819xBU21gV2dzSkZIZZMwFFoswRJlbZPLvuI1bRW+Dt+6l+QX+9g /VaADaWlTXHv/8RyikoA
+; Ked448.example.+016+24028.private
+;! Private-key-format: v1.3
+;! Algorithm: 16 (ED448)
+;! PrivateKey: D+i0IORhacPgAf6wSuvQeoKKhccwjlpaHElhrB42+YUlSUV5EO2JHJ9KmTp62A8P0pMTdshSCsGL
+;! Created: 20261004143948
+;! Publish: 20261004143948
+;! Activate: 20261004143948
+; Ked448.example.+016+11353.key
+ed448.example. 3600 IN DNSKEY 256 3 16 qNQ5iTOR9jWoDpXi56j9QISgoslM8fmHM5fT9zQimf758MbCQxnEuqqO uvOCnVuwIlyMnzOIRtmA
+; Ked448.example.+016+11353.private
+;! Private-key-format: v1.3
+;! Algorithm: 16 (ED448)
+;! PrivateKey: yr5pcs629LJR8H32lhx8nDEmlHqQeph24KC+/dRhRh3R+oHREK8n8Dn5sUJK6Hawg5bDE6EVoDNx
+;! Created: 20261004143948
+;! Publish: 20261004143948
+;! Activate: 20261004143948

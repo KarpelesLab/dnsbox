@@ -1,0 +1,307 @@
+; File written on Sun Oct  4 23:39:48 2026
+; dnssec_signzone version 9.18.49
+ed448.example.		3600	IN SOA	ns1.ed448.example. hostmaster.ed448.example. (
+					2026100401 ; serial
+					7200       ; refresh (2 hours)
+					3600       ; retry (1 hour)
+					1209600    ; expire (2 weeks)
+					300        ; minimum (5 minutes)
+					)
+			3600	RRSIG	SOA 16 2 3600 (
+					20360101000000 20260101000000 11353 ed448.example.
+					eS8xuCaw0whWQc/P40V0D+gfytLb1n/w6hgM
+					YLEYGfM9OBm8iaG1aatM66NKtUpe6nNK5UdM
+					Ek8AU3z3zN0Lnhb/bKLbFQDR/hD6MGr/7jYj
+					Vmq738GM80GfL0mp4TYksuwZn/fzeXp4v+ks
+					1u28PCAA )
+			3600	NS	ns1.ed448.example.
+			3600	NS	ns2.ed448.example.
+			3600	RRSIG	NS 16 2 3600 (
+					20360101000000 20260101000000 11353 ed448.example.
+					+xbiazaa5GKnboUPE5xlaGmee7mMxXFKQQoN
+					rrV7ttOSaRmUu/ZtmKpWScIoqqDCgctaQF3F
+					pIqArn+YS8j7ryR+AquU1GiUCLMOVAgUxiKJ
+					HxXnj+Y1nPOe0VnmZZ0trwBo2eVNlhCjByl4
+					bVuUPzkA )
+			3600	MX	10 mail.ed448.example.
+			3600	RRSIG	MX 16 2 3600 (
+					20360101000000 20260101000000 11353 ed448.example.
+					LY2L5QmmiISvSBCwYm4aOzIaL2ieitJLwptC
+					c3b2U3FSVPm18x7Kzg1mFnNZEI7DndRxiAno
+					U7UAgDAaVOnlHrBB1zCbStmFnEyfEz5uA4ZK
+					2i7sY7vKJDOHi0ErTNKB6cwSTFfMoKfqMDGX
+					n4R2xxgA )
+			3600	TXT	"v=spf1 mx -all"
+			3600	RRSIG	TXT 16 2 3600 (
+					20360101000000 20260101000000 11353 ed448.example.
+					XtVJG+T1v2nnQdT+RtzTLyCa7pd7LQKXt8Ol
+					2Je3myK8sNSb5S3uogl2HZJOhpH3rNCq+Laf
+					a2IANXBAdsoaC8o4x9exrXqjAToDTZSygCez
+					RDAzj1Q62xforWjRb4wTUm5RJ35EkLTgBHyU
+					TLSqzwoA )
+			300	NSEC	_sip._udp.ed448.example. NS SOA MX TXT RRSIG NSEC DNSKEY HTTPS CAA
+			300	RRSIG	NSEC 16 2 300 (
+					20360101000000 20260101000000 11353 ed448.example.
+					srMy0lS/EPnxHzQ62yAaRHMZI/ZTzFLAoPJw
+					IMQisrW75RNTxMFaDapRrCfEupjnBTnn8jUe
+					MlEABjoWbQM4Er1CT9ukIfTM0QO7bJdRLFg/
+					1qJkH5A5CjbkmfMrUzQ8SyqzqHHcUCEqA9Z8
+					vu6X+QAA )
+			3600	DNSKEY	256 3 16 (
+					qNQ5iTOR9jWoDpXi56j9QISgoslM8fmHM5fT
+					9zQimf758MbCQxnEuqqOuvOCnVuwIlyMnzOI
+					RtmA
+					) ; ZSK; alg = ED448 ; key id = 11353
+			3600	DNSKEY	257 3 16 (
+					nSI4819xBU21gV2dzSkZIZZMwFFoswRJlbZP
+					LvuI1bRW+Dt+6l+QX+9g/VaADaWlTXHv/8Ry
+					ikoA
+					) ; KSK; alg = ED448 ; key id = 24028
+			3600	RRSIG	DNSKEY 16 2 3600 (
+					20360101000000 20260101000000 24028 ed448.example.
+					cynI2lMlbq3X8jEJnRzFctEhFL4aK52lG2fm
+					uvaH7S2xyV1kB4eYbRK3YyruE1wttNrxsKKE
+					CIsApj68CaOp565PwYZk+0S5WwB6gwTiobOL
+					OaiROaLdnYKBS8Q90nIKGLd39MON29NWOFQ6
+					9f7i6BsA )
+			3600	HTTPS	1 . alpn="h2,h3"
+			3600	RRSIG	HTTPS 16 2 3600 (
+					20360101000000 20260101000000 11353 ed448.example.
+					xtdsrMhBdxLpjMKEIYfo9XfDdNr3fDFfUlgN
+					qX5WR/Txg9vQc5ik9B7lKAcz+DlNq8Hf9G4/
+					KSMAJoW6rhw0DhH3yHYoX6rGVjEx/T0nejMl
+					FlVzUMxYzn8zQKIjReE0Z/sG0BDw7Y+3vLAj
+					yA3MITkA )
+			3600	CAA	0 issue "letsencrypt.org"
+			3600	RRSIG	CAA 16 2 3600 (
+					20360101000000 20260101000000 11353 ed448.example.
+					378X2e6Ti25YhQXU40U4gIZsRIr8XrjU963Y
+					BiwJqgvuEY6qZyoXv/67IVbyP7+ujgmOxJiT
+					6U0AEvoCELSvFwiKG+oClcUgQV/6tEM4Cliu
+					S/P1y9+Jdb+bfyfzNU4XVYRIzD58mRFpOXuf
+					h9vdqTgA )
+ns.insecure.ed448.example. 3600	IN A	192.0.2.98
+ns.secure.ed448.example. 3600	IN A	192.0.2.99
+secure.ed448.example.	3600	IN NS	ns.secure.ed448.example.
+			3600	DS	12345 13 2 (
+					E06D44B80B8F1D39A95C0B0D7C65D08458E8
+					80409BBC683457104237C7F8EC8D )
+			3600	RRSIG	DS 16 3 3600 (
+					20360101000000 20260101000000 11353 ed448.example.
+					os6bYqyQ7BSkfR8yj7cFy+y3p18q8YO44Uas
+					eW1YlIRbDgQlW3tL0nxu5yjdnq76091ecGAP
+					j62AG8trM1W5rWbz3Rgmfu7AaU0zjV5NUv7j
+					e9YzZQkICOMRVOnXGM/7tDXJE+qZoiNqTYGr
+					CZ4fwyAA )
+			300	NSEC	*.wild.ed448.example. NS DS RRSIG NSEC
+			300	RRSIG	NSEC 16 3 300 (
+					20360101000000 20260101000000 11353 ed448.example.
+					4XicL/1mwREWcXE5dav5GfvHvV+72DZes1Pi
+					j6sx+PKVDmTKLjkC9dQGjGeojQes4stmrQPe
+					HfgAhvyvOji9xM1qTSrdKcMWYa9dO7zjLst0
+					PxCf4XY5SiktORLhgpHRQJBAbwwDM/CcznDq
+					K/2ZYSwA )
+insecure.ed448.example.	3600	IN NS	ns.insecure.ed448.example.
+			300	NSEC	mail.ed448.example. NS RRSIG NSEC
+			300	RRSIG	NSEC 16 3 300 (
+					20360101000000 20260101000000 11353 ed448.example.
+					DnskORuQwZCqMc1jy1XZQQWwR/8P+Hf4DvYR
+					IcDeIcU5ej7aHzohDs1Bv16yY4ZxaZHU9LOi
+					x50ASzLt3+N/9cvhIixSkLikns79PMjMAtnE
+					E93AXIboFyVT+SH3+EjjWfK6/+0N5992bPeC
+					U5+GBDwA )
+dname.ed448.example.	3600	IN DNAME example.net.
+			3600	RRSIG	DNAME 16 3 3600 (
+					20360101000000 20260101000000 11353 ed448.example.
+					Se13zf6dbY4Dx6QPua1fyC3NgvCzo/zLs8/X
+					zlnW7aiPB3z1suXqstcyPwDqT996fXIAKs9a
+					C0sA4/4fn/xragu51Jt4Iu/akrusI8Q0zJ4Z
+					68+LTpkCkWaCkeniU1HqG/GuVApsZcp1AtrP
+					EYJIHTUA )
+			300	NSEC	a.b.ent.ed448.example. DNAME RRSIG NSEC
+			300	RRSIG	NSEC 16 3 300 (
+					20360101000000 20260101000000 11353 ed448.example.
+					SSoPIPk49+I2zzEmI8E2i9Sr6D1xwc88PR+Y
+					MJtrLRdnIlMRMnVkfSdDtwOApXXmRm/pZXmE
+					IqoAgFGjXNj4K2Ygcd3hmURxwwX5Huj25Gfg
+					YWVNnE1Rh1349DDU8hBeNPbOWKGWdtIFykw6
+					f4vwpwQA )
+www.ed448.example.	3600	IN A	192.0.2.80
+			3600	RRSIG	A 16 3 3600 (
+					20360101000000 20260101000000 11353 ed448.example.
+					9muX1STlzxXSh5CJZithtJnUTYHTCKF3QpSm
+					n5T5xsQqs3T7ceqk488mIb/VJNEqc7M5Qm5C
+					e9OAPC8+hQxTwvLqE29UTKpUgt6Q9ZRr1HrI
+					HYrq6Wen87Rxqo4TLzwht+8VMbkRTUX2tD1l
+					+YxHYTYA )
+			3600	AAAA	2001:db8::80
+			3600	RRSIG	AAAA 16 3 3600 (
+					20360101000000 20260101000000 11353 ed448.example.
+					Yl2nmlULbM2HmaRoxPQM5+MJ5UUKoMlcI8nT
+					cZw33cuXpuvIx/0xI37M7Vhp0erXKLc4C8Sq
+					ZfIACmyYW1/fvkPzQjwQdNntebdmoJecme3J
+					ijsTi5zr0MsCHSXuQCyL8qWpbnddHtLkji2K
+					sHGyogkA )
+			300	NSEC	_443._tcp.www.ed448.example. A AAAA RRSIG NSEC
+			300	RRSIG	NSEC 16 3 300 (
+					20360101000000 20260101000000 11353 ed448.example.
+					jT4uPrDSJSR7BcVHugVDE+OoRGWN7+L4Nsej
+					pC7ADONUr2KA6JfGssEwDWf2v73LMJ2kcB2t
+					npiA07mTGEih8/xZVaots3Sx0ce84FPkqlCo
+					oFHT6ReTrlnRK3n2V5OkRfbeuqQDWcjj61Au
+					GqI3+DEA )
+ns2.ed448.example.	3600	IN A	198.51.100.53
+			3600	RRSIG	A 16 3 3600 (
+					20360101000000 20260101000000 11353 ed448.example.
+					cP/OhTjhZ51N9dTkjDBMK6av+7XKoT2VuWjY
+					TQUvj0iSNvci8zMcacWE3HCcUEsgwtB65Eu5
+					4roA+lB3vY5zHbDKv9FWbXsn82pvnQ1+PXR8
+					+XT541WjFTZg+hrLoivt0T8o3XXOCJgntl/X
+					/fnV/z4A )
+			300	NSEC	other.ed448.example. A RRSIG NSEC
+			300	RRSIG	NSEC 16 3 300 (
+					20360101000000 20260101000000 11353 ed448.example.
+					OmU3qHrLY9dV4ZH/1Y/V+AJ+mtqXIa/xVnTa
+					M4VTavHTyvM6tyYVZiRP0QC4/2HfZ6bvExT3
+					VqoAGDoESZzw/TRgJH/tTFbF/KlSGyi3Adoh
+					j/FH1MIslVeST076BJUS/m2hu1Y0/JqdNG6P
+					r2A/SQkA )
+other.ed448.example.	3600	IN NS	ns.example.net.
+			300	NSEC	secure.ed448.example. NS RRSIG NSEC
+			300	RRSIG	NSEC 16 3 300 (
+					20360101000000 20260101000000 11353 ed448.example.
+					kyyuWBYVGwludYyY7u13YvdglCydlhlBcpWC
+					pQ0PGgIXAfOis8S9Pexkh8TenPNEy/eVc+/q
+					+fcAObw/hDTu2K3pi8agx82wsKMP6jGLdG7F
+					HgsThnJU1/ipKMixIUOFjJXZYxqrULx8G3mK
+					F8MDJgUA )
+mail.ed448.example.	3600	IN A	192.0.2.25
+			3600	RRSIG	A 16 3 3600 (
+					20360101000000 20260101000000 11353 ed448.example.
+					z+jFTYeaGtcz2ckiAoEq2H7vm/qTxSKX4CZR
+					jqXNZW8qEi/aOYWtIiZebf4v5XB+iQdE2nUI
+					f34Al1szjSwmxlMPVwAdVjkUlLQsIUde6K4C
+					HL1bI/IQmUHVcwL832i+ZTkH77yqACjiWa9j
+					/ZBJPjAA )
+			300	NSEC	ns1.ed448.example. A RRSIG NSEC
+			300	RRSIG	NSEC 16 3 300 (
+					20360101000000 20260101000000 11353 ed448.example.
+					p+uOaiE6daMZ5G2AIXMTch4ZvBSsJBNftRbR
+					d5mXcDN/OUhx3GYD5nXDYBNlYL0ncuuahKpg
+					dgsAqPsOLmfEiZVgvf9s0znFW5+NKygZGL8I
+					V0DGKf10UACls+0O4/HD2WdEmWl32TP5nTO7
+					3eFbQykA )
+a.b.ent.ed448.example.	3600	IN A	192.0.2.7
+			3600	RRSIG	A 16 5 3600 (
+					20360101000000 20260101000000 11353 ed448.example.
+					QVpPxkcI3OlUlIOYFznY3UR6jS18zYONBlVw
+					pUV3eyv4lLrvCn8yUVFNaiZWzlQV27E/aHOt
+					zC0AxA7Ic3LXye7M+srAtGnQzMu6rODb8wW0
+					4Ylz3dNXWDlSN/t0TNd9hi0TgCsxdE7OlGnM
+					ggyDnh0A )
+			300	NSEC	insecure.ed448.example. A RRSIG NSEC
+			300	RRSIG	NSEC 16 5 300 (
+					20360101000000 20260101000000 11353 ed448.example.
+					MQGXM9uP1yk+VDxesREvOZOrI/eXa4LuJ54t
+					0YmSpm0nS8Buh5196xBiHnESbvqIHRANu3fm
+					RjgAjPz1EQ6M7h16pRmyiPmgVRDjzTpQgklp
+					M+K4Zby0koLznyMZctg2VGWNTy/vO+rQDofl
+					BqAsUCkA )
+_sip._udp.ed448.example. 3600	IN SRV	10 60 5060 www.ed448.example.
+			3600	RRSIG	SRV 16 4 3600 (
+					20360101000000 20260101000000 11353 ed448.example.
+					jmLsBeovlyNkcS3t23HBoJBnsTU0NicP04Rs
+					aEH+QZENYTvmiBLYfozrg4/Opqb0dbDaPNAk
+					+ZyAsBNMbt8iaFdTYhh5xddqTjOHBDHtKIYe
+					noGzpUqv9UTYmKs7iSxyrjEu/L5f3hoJRx3k
+					H+WLBTMA )
+			300	NSEC	alias.ed448.example. SRV RRSIG NSEC
+			300	RRSIG	NSEC 16 4 300 (
+					20360101000000 20260101000000 11353 ed448.example.
+					EONUszmvuBTSA31MP6R5VRWou/KyYp828Opg
+					Y2ZOIviWBNKz/Gizuuqy5VB/6hNpuFJOwEEG
+					CeOAs5ZnuHnEGwN0vZUM8oDZRzkc3/Xjw3Qh
+					2P7wmPurRqMStJyyoZBlLkVAA15QgRM4eCXx
+					oDBCAQkA )
+alias.ed448.example.	3600	IN CNAME www.ed448.example.
+			3600	RRSIG	CNAME 16 3 3600 (
+					20360101000000 20260101000000 11353 ed448.example.
+					A0laDn1XB+EzPsWR3J9hO1bTxxfnqt8is2O4
+					VjQhUdbTltom5/gsdFlGvfjU2fvvo/WCdQTc
+					DSMA8FvEPdHBxU5XH4YGN8r86USt7qhjWK/c
+					ObJeJaCLKXOZeqSQoW/1DEAi8PYxwHtqN//L
+					CnHAvRQA )
+			300	NSEC	dname.ed448.example. CNAME RRSIG NSEC
+			300	RRSIG	NSEC 16 3 300 (
+					20360101000000 20260101000000 11353 ed448.example.
+					bLXazEYJ1ld48AWFzTeSsQ7tBVHGDpKCTppm
+					NYf/sGx3uPac4Or87/7B355vBzAl9QG9Jz0y
+					bnKAPac7nUp3RB2Y87I5YMr0m8al9EBUAyWh
+					GNgJQI7PfVKAb8B9Lc8nHs5ibMvTNZ55lGh5
+					s8k4Th8A )
+*.wild.ed448.example.	3600	IN A	192.0.2.42
+			3600	RRSIG	A 16 3 3600 (
+					20360101000000 20260101000000 11353 ed448.example.
+					hNWG8kN5rrC8tZQ1WfWr9JdvRS7erbnmKXuW
+					r9hTEREGnoWFUZxkFTb+08RHlR6I1taMtJaK
+					fZ6Azgp+F4Kt0+D6NST0wLnxJa0ic6Rd0RkF
+					5jf9C6QXl+eoJXja3sgwGjrlllLPwZGvZszB
+					YKhg9R4A )
+			3600	TXT	"wildcard"
+			3600	RRSIG	TXT 16 3 3600 (
+					20360101000000 20260101000000 11353 ed448.example.
+					3xJe0pSnpqFkrd6j0EDgzoNxwnEkLDJL7yLF
+					cgeM2ar1wmG9plXGd/piE/TXlF3PupQQFm5z
+					8I2AUN2Krg1nVddjyBehL1jHcGfnF1CIATq0
+					4AbVb5M8BlaxTsj3YekHQsCT3fwP2m7eeh0t
+					e/U69DAA )
+			300	NSEC	www.ed448.example. A TXT RRSIG NSEC
+			300	RRSIG	NSEC 16 3 300 (
+					20360101000000 20260101000000 11353 ed448.example.
+					LZmkgq3/lOrQlPlZNCGdcoo75aIa6iWe3SGN
+					y1hcmu3kj1HDPc2NEFYFPXMuveyVB8WYcZkY
+					RmOAi+VhGYWRVU6nUNem3JebB0mqQw8zwght
+					lVOUUP5NctsK+X/iGSZrjEfUiJbsSnCxlJ0z
+					az5OWDEA )
+ns1.ed448.example.	3600	IN A	192.0.2.53
+			3600	RRSIG	A 16 3 3600 (
+					20360101000000 20260101000000 11353 ed448.example.
+					PO7tVTEjoAFNACHXA5PazGfYZrzj2kFFMK15
+					XsSajwmJd5jCbC2eN1sq/KzwMyGHw6M1Hw3Q
+					THSAiQV/jvc8biyknsdPSHyv6hggU6TepQST
+					2JaBA2x9kdRxxw5WDpvWs4ew3b1o+kx7KIhN
+					Xfu4OycA )
+			3600	AAAA	2001:db8::53
+			3600	RRSIG	AAAA 16 3 3600 (
+					20360101000000 20260101000000 11353 ed448.example.
+					MCBQxXB4nEVp+YdK6H8HWppEGT7W6NirUiOh
+					LwBAoIiZVU53PKblJUnzvICzykkE07Xy/SZa
+					42cAqLtG2l1utr3WNpyVzHf4sQF/w545wY8M
+					/Fhu3fHlrcehglhTDNWa/Bazqd+aunwNaOpf
+					1osOlBkA )
+			300	NSEC	ns2.ed448.example. A AAAA RRSIG NSEC
+			300	RRSIG	NSEC 16 3 300 (
+					20360101000000 20260101000000 11353 ed448.example.
+					cjZHfmB+WS94WmfvLGuRvc1edf1/BymKfSp8
+					gZ5LJquBjPhHoEu4kaVrykNzdFVPnXQ+DG95
+					rj2ALnGC5YFajc9OXpPzILcgxA5c0UJXCEJw
+					Pifj65xCGSinZ3kcuoxaTMjLv1x/PQX+xl+A
+					+Bp11BQA )
+_443._tcp.www.ed448.example. 300 IN NSEC ed448.example. RRSIG NSEC TLSA
+			300	RRSIG	NSEC 16 5 300 (
+					20360101000000 20260101000000 11353 ed448.example.
+					l2NMoWQkvqHqPs5XAeJuIaJBmvVxfn8vfauu
+					JGbOO1EFdKGwUMeJXWNjj+Go9Xz2xx7Et63K
+					qKEAVfWZ/93X8Ay7V6mD3eKuIeW8k07mkSZu
+					WHKfsQaTslwWoQMvupwHncoWIYjmyHdXMQbJ
+					ohW1siAA )
+			3600	TLSA	3 1 1 (
+					0C72AC70B745AC19998811B131D662C9AC69
+					DBDBE7CB23E5B514B56664C5D3D6 )
+			3600	RRSIG	TLSA 16 5 3600 (
+					20360101000000 20260101000000 11353 ed448.example.
+					mwferIbYO2j/llfUnmLuZWSIu5MwPrqEcR4J
+					IJHfMu/GIceK2RFRBzEe2XzZvuZbFtnjoShr
+					p2sAnuB7tpvjUmaGjCp5S6pgkOZttzCt7FOV
+					Luez/6u53ulFcbi6fEe5ZsSjoruUzUkhMIjJ
+					d5Rm6hwA )

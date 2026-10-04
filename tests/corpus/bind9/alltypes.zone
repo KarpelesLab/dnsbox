@@ -1,0 +1,198 @@
+; One record (or more) of every type BIND 9.18 reads, written the way zone
+; files are: relative names, parentheses across lines, comments, TTL
+; units, mnemonics, split base64/hex. gen.sh loads it into named-checkzone
+; (canonical dump: alltypes.canonical) and into named (AXFR:
+; ../named-alltypes-axfr.hex).
+$ORIGIN alltypes.example.
+$TTL 1h
+@               IN SOA  ns1 hostmaster (
+                        2026100401 ; serial
+                        2h         ; refresh
+                        1h         ; retry
+                        2w         ; expire
+                        5m )       ; minimum
+                NS      ns1
+                NS      ns2.example.net.
+ns1             A       192.0.2.53
+                AAAA    2001:db8::53
+
+; RFC 1035
+a               A       192.0.2.1
+ns              NS      ns1
+cname           CNAME   a
+ptr             PTR     a.alltypes.example.
+hinfo           HINFO   "Generic PC" "Linux \"6.18\""
+hinfo           HINFO   RFC8482 ""
+mx              MX      10 mail
+mx              MX      0 .
+txt             TXT     "v=spf1 -all"
+txt             TXT     ( "first" "second"
+                          "semi;colon" "back\\slash" "tab\009" "\195\169" )
+txt             TXT     unquoted
+txt             TXT     ""
+wks             WKS     192.0.2.1 tcp ( smtp http 443 )
+wks             WKS     192.0.2.1 UDP domain
+mb              MB      a
+mg              MG      a
+mr              MR      a
+minfo           MINFO   rmail emailbx
+null            NULL    \# 4 deadbeef
+null            NULL    \# 0
+; RFC 1183, RFC 1706, RFC 1712, RFC 2163
+rp              RP      mbox.alltypes.example. txt
+rp              RP      . .
+afsdb           AFSDB   1 afs
+afsdb           AFSDB   2 dce
+x25             X25     "311061700956"
+isdn            ISDN    "150862028003217" "004"
+isdn            ISDN    "150862028003217"
+rt              RT      10 a
+nsap            NSAP    0x47.0005.80.005a00.0000.0001.e133.ffffff000161.00
+nsap            NSAP    0x4700058000
+nsap-ptr        NSAP-PTR foo.alltypes.example.
+px              PX      10 map822 mapx400
+gpos            GPOS    -32.6882 116.8652 10.0
+gpos            GPOS    "0" "0" "0"
+; RFC 3596, RFC 1876, RFC 2782, RFC 3403, RFC 2230, RFC 2874
+aaaa            AAAA    2001:db8::1
+aaaa            AAAA    ::ffff:192.0.2.1
+loc             LOC     52 22 23.000 N 4 53 32.000 E -2.00m 0.00m 10000m 10m
+loc             LOC     42 21 54 N 71 06 18 W -24m 30m
+loc             LOC     0 0 0 S 0 0 0 W 0m
+loc             LOC     90 S 180 W 42849672.95m 90000000m 90000000m 90000000m
+srv             SRV     10 60 5060 sip
+srv             SRV     0 0 0 .
+naptr           NAPTR   100 10 "S" "SIP+D2U" "" _sip._udp
+naptr           NAPTR   ( 100 50 "u" "E2U+sip"
+                          "!^.*$!sip:info@example.com!" . )
+kx              KX      10 a
+a6              A6      0 2001:db8::1
+a6              A6      64 ::1:2:3:4 prefix
+a6              A6      128 prefix
+; RFC 4398, RFC 4701, RFC 3123, RFC 4025, RFC 1712, RFC 2535
+cert            CERT    PKIX 12345 RSASHA256 MIIBkjCB/KADAgECAgEAMA0GCSqGSIb3DQEBBQUA
+cert            CERT    PGP 0 0 AQID
+cert            CERT    65280 1 PRIVATEDNS AQID
+cert            CERT    IPGP 1 7 AQID
+cert            CERT    OID 1 NSEC3DSA AQID
+dhcid           DHCID   ( AAIBY2/AuCccgoJbsaxcQc9TUapptP69
+                          lOjxfNuVAA2kjEA= )
+apl             APL     1:192.168.32.0/21 !1:192.168.38.0/28
+apl             APL     1:224.0.0.0/4 2:ff00::/8 !2:2001:db8::/32
+apl             APL
+ipseckey        IPSECKEY 10 0 2 . AQNRU3mG7TVTO2BkR47usntb102uFJtugbo6BSGvgqt4AQ==
+ipseckey        IPSECKEY 10 1 2 192.0.2.38 AQNRU3mG7TVTO2BkR47usntb102uFJtugbo6BSGvgqt4AQ==
+ipseckey        IPSECKEY ( 10 2 2 2001:db8:0:8002::2000:1
+                           AQNRU3mG7TVTO2BkR47usntb102uFJtugbo6BSGvgqt4AQ== )
+ipseckey        IPSECKEY 10 3 2 gw.alltypes.example. AQNRU3mG7TVTO2BkR47usntb102uFJtugbo6BSGvgqt4AQ==
+eid             EID     ( 0123456789abcdef )
+nimloc          NIMLOC  32427b5e4c3b
+atma            ATMA    +358.400.1234567
+atma            ATMA    39246f00e7c9000000000000000102030405060708
+sink            SINK    1 0 0
+sink            SINK    8 0 2 l1kFqOTsQOFjXWVn
+key             KEY     256 3 15 l02Woi0iS8Aa25FQkUd9RMzZHJpBoRQwAQEX1SxZJA4=
+key             KEY     49664 3 5
+nxt             NXT     a.alltypes.example. A MX SIG NXT
+; DNSSEC (RFC 4034, RFC 5155, RFC 7344, RFC 8078, RFC 4431, RFC 5011)
+ds              DS      60485 5 1 ( 2BB183AF5F22588179A53B0A
+                                    98631FAD1A292118 )
+ds              DS      20326 8 2 E06D44B80B8F1D39A95C0B0D7C65D08458E880409BBC683457104237C7F8EC8D
+ds              DS      12345 RSASHA256 SHA-384 abababababababababababababababababababababababababababababababababababababababababababababababab
+dnskey          DNSKEY  257 3 8 ( AwEAAagAIKlVZrpC6Ia7gEzahOR+9W29euxhJhVVLOyQbSEW0O8gcCjF
+                FVQUTf6v58fLjwBd0YI0EzrAcQqBGCzh/RStIoO8g0NfnfL2MTJRkxoXbfDaUeVPQuYEhg37NZWAJQ9VnMVDxP/VH
+                L496M/QZxkjf5/Efucp2gaDX6RS6CXpoY68LsvPVjR0ZSwzz1apAzvN9dlzEheX7ICJBBtuA6G3LQpzW5hOA2hzC
+                TMjJPJ8LbqF6dsV6DoBQzgul0sGIcGOYl7OyQdXfZ57relSQageu+ipAdTTJ25AsRTAoub8ONGcLmqrAmRLKBP1dfwh
+                YB4N7knNnulqQxA+Uk1ihz0= ) ; KSK
+dnskey          DNSKEY  256 3 ED25519 l02Woi0iS8Aa25FQkUd9RMzZHJpBoRQwAQEX1SxZJA4=
+dnskey          DNSKEY  385 3 13 mdsswUyr3DPW132mOi8V9xESWE8jTo0dxCjjnopKl+GqJxpVXckHAeF+KkxLbxILfDLUT0rAK9iUzy1L53eKGQ==
+cds             CDS     60485 5 1 2BB183AF5F22588179A53B0A98631FAD1A292118
+cds             CDS     0 0 0 00
+cdnskey         CDNSKEY 257 3 15 l02Woi0iS8Aa25FQkUd9RMzZHJpBoRQwAQEX1SxZJA4=
+cdnskey         CDNSKEY 0 3 0 AA==
+dlv             DLV     60485 5 1 2BB183AF5F22588179A53B0A98631FAD1A292118
+ta              TA      60485 5 1 2BB183AF5F22588179A53B0A98631FAD1A292118
+rrsig           RRSIG   A 5 3 86400 20030322173103 (
+                        20030220173103 2642 example.com.
+                        oJB1W6WNGv+ldvQ3WDG0MQkg5IEhjRip8WTr
+                        PYGv07h108dUKGMeDPKijVCHX3DDKdfb+v6o
+                        B9wfuh3DTJXUAfI/M0zmO/zz8bW0Rznl8O3t
+                        GNazPwQKkRN20XPXV6nwwfoXmJQbsLNrLfkG
+                        J5D6fwFm8nN+6pBzeDQfsS3Ap3o= )
+sig             SIG     TYPE0 15 0 0 20261004090347 20261004085347 43160 sig0.alltypes.example. AAAA
+nsec            NSEC    host.alltypes.example. A MX RRSIG NSEC TYPE1234
+nsec            NSEC    \000.alltypes.example. NS SOA TYPE65534
+nsec3           NSEC3   1 1 12 aabbccdd ( 2t7b4g4vsa5smi47k61mv5bv1a22bojr
+                                          MX DNSKEY NS SOA NSEC3PARAM RRSIG )
+nsec3           NSEC3   1 0 0 - 2vptu5timamqttgl4luu9kg21e0aor3s
+nsec3param      NSEC3PARAM 1 0 12 aabbccdd
+nsec3param      NSEC3PARAM 1 0 0 -
+; RFC 4255, RFC 6698, RFC 8162, RFC 7929, RFC 6672, RFC 7553
+sshfp           SSHFP   4 2 123456789abcdef67890123456789abcdef67890123456789abcdef123456789
+sshfp           SSHFP   1 1 dc2a7a1f15b1ba1f4e5d2d8a6e7e4f7e3b1c2d3e
+_443._tcp       TLSA    3 1 1 ( 0C72AC70B745AC19998811B131D662C9
+                                AC69DBDBE7CB23E5B514B56664C5D3D6 )
+_443._tcp       TLSA    0 0 0 30820122300D06092A864886F70D01010105000382010F003082010A
+smimea          SMIMEA  3 0 1 abababababababababababababababababababababababababababababababab
+openpgpkey      OPENPGPKEY mQINBFit2jsBEADrbl5vjVxYeAE0g0IDYCBpHirv1Sjlqxx5gjtPhb2YhvyDMXjq
+dname           DNAME   example.net.
+uri             URI     10 1 "ftp://ftp1.example.com/public"
+uri             URI     0 0 "https://example.com/\"q\"\\"
+; RFC 7043, RFC 6742, RFC 7477, RFC 8976, RFC 8005, RFC 4701
+eui48           EUI48   00-00-5e-00-53-2a
+eui64           EUI64   00-00-5e-ef-10-00-00-2a
+nid             NID     10 0014:4fff:ff20:ee64
+l32             L32     10 10.1.2.0
+l64             L64     10 2001:0db8:1140:1000
+lp              LP      10 l64-subnet1
+csync           CSYNC   66 3 A NS AAAA
+csync           CSYNC   0 0
+zonemd          ZONEMD  2018031900 1 1 (
+                        FEBE3D4CE2EC2FFA4BA99D46CD69D6D29711E55217057BEE
+                        7EB1A7B641A47BA7FED2DD5B97AE499FAFA4F22C6BD647DE )
+zonemd          ZONEMD  2018031900 240 241 000102030405060708090A0B
+hip             HIP     ( 2 200100107B1A74DF365639CC39F1D578
+                          AwEAAbdxyhNuSutc5EMzxTs9LBPCIkOFH8cIvM4p9+LrV4e19WzK00+CI6zBCQTdtWsuxKbWIy87UOoJTwkUs7lBu+Upr1gsNrut79ryra+bSRGQb1slImA8YVJyuIDsj7kwzG7jnERNqnWxZ48AWkskmdHaVDP4BcelrTI3rMXdXF5D
+                          rvs.alltypes.example. rvs2 )
+ninfo           NINFO   "Zone Status" "OK"
+rkey            RKEY    0 3 253 l02Woi0iS8Aa25FQkUd9RMzZHJpBoRQwAQEX1SxZJA4=
+talink          TALINK  . talink2
+talink2         TALINK  talink .
+; RFC 9460, RFC 9461, RFC 9540
+svcb            SVCB    0 svc.example.
+svcb            SVCB    1 .
+svcb            SVCB    16 foo.example.org. alpn=h2,h3-19 mandatory=ipv4hint,alpn ipv4hint=192.0.2.1
+svcb            SVCB    1 foo port=53
+svcb            SVCB    1 foo key667=hello
+svcb            SVCB    1 foo key667="hello\210qoo"
+svcb            SVCB    1 foo ipv6hint=2001:db8::1,2001:db8::53:1
+svcb            SVCB    16 foo.example.org. alpn="f\\\\oo\\,bar,h2"
+svcb            SVCB    1 dot.example. alpn=dot no-default-alpn port=853 ech=AEX+DQBBpQAgACCW2/dfOBZAtQU55/KYxUYStyuA6Yg+1Sjqb4o1q7HY0wAEAAEAAQASY2xvdWRmbGFyZS1lY2guY29tAAA=
+svcb            SVCB    1 doh.example. alpn=h2 dohpath=/dns-query{?dns}
+https           HTTPS   1 . alpn=h3,h2 ipv4hint=104.16.132.229,104.16.133.229 ipv6hint=2606:4700::6810:84e5,2606:4700::6810:85e5
+https           HTTPS   0 cdn.example.
+; RFC 8659 and others
+caa             CAA     0 issue "letsencrypt.org"
+caa             CAA     128 tbs "Unknown"
+caa             CAA     0 iodef "mailto:security@example.com"
+caa             CAA     0 issuewild ";"
+caa             CAA     0 issue "ca.example.net; account=230123"
+spf             SPF     "v=spf1 ip4:192.0.2.0/24 -all"
+avc             AVC     "app-name:WOLFGANG|app-class:OAM|business=yes"
+uinfo           UINFO   \# 3 616263
+uid             UID     \# 4 000003e8
+gid             GID     \# 4 000003e8
+unspec          UNSPEC  \# 2 0102
+; Unknown types and the RFC 3597 generic form of known ones
+generic         TYPE65280 \# 5 0102030405
+generic         TYPE65281 \# 0
+generic         A       \# 4 C0000202
+generic         CLASS1  3600 MX \# 5 000a016100
+; Owner names with escapes and wildcards
+*.wild          A       192.0.2.42
+\@\.\032x       A       192.0.2.43
+a\000b          A       192.0.2.44
+\195\169        A       192.0.2.45
+$TTL 300
+ttl             A       192.0.2.46
+ttl             60 IN   A 192.0.2.47

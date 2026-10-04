@@ -1,0 +1,19 @@
+; Throwaway keys of ecdsap384.example made by dnssec-keygen for the dnsbox tests.
+; Kecdsap384.example.+014+63512.key
+ecdsap384.example. 3600 IN DNSKEY 257 3 14 cOl65i3vD+OgKykrOXKYmom0liV4wPLhvV4q4nJpMmpDpfcW1PKF6rMe WlPFVgfbMhRpDhPfleIK1C5yCAXjCPtsE0qnJ2+pFcaLDncqtnQj49c8 3uILtsy4jfv/EQmC
+; Kecdsap384.example.+014+63512.private
+;! Private-key-format: v1.3
+;! Algorithm: 14 (ECDSAP384SHA384)
+;! PrivateKey: Yc0vQ2axYoZTIXak3meJJ2cZwajR8uQC1xJz6DPf1a6IF2kMq3d0Kb+44nfGEuRL
+;! Created: 20261004143947
+;! Publish: 20261004143947
+;! Activate: 20261004143947
+; Kecdsap384.example.+014+29545.key
+ecdsap384.example. 3600 IN DNSKEY 256 3 14 Me1ZOm8OI2GGL6jeDyUte9hOy9wQCWrp1m2Ev/SKe9ApFNZjjVuwZcV3 cIFi4INFlKi/dWowgA36t7XQcbTsWvpvpAaAD4ax9fNy0dIK4fLBC5UM gq42CbPXkMtKG/WY
+; Kecdsap384.example.+014+29545.private
+;! Private-key-format: v1.3
+;! Algorithm: 14 (ECDSAP384SHA384)
+;! PrivateKey: Le/8zK7ieX8jYA7ONdV/CROEfBF0+BNOUkFh7HeshswGbAKjNoiWcoSn2gx68rmO
+;! Created: 20261004143947
+;! Publish: 20261004143947
+;! Activate: 20261004143947

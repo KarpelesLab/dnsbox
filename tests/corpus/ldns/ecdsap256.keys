@@ -1,0 +1,13 @@
+; Throwaway keys of ldns-ecdsap256.example made by ldns-keygen for the dnsbox tests.
+; Kldns-ecdsap256.example.+013+56034.key
+ldns-ecdsap256.example.	IN	DNSKEY	257 3 13 ZTQHjEcOiuOWdVKohCU0YR9odrj/fsmSe4y6rAOnHG53THmZfm6sGm1Lna8yhxIW0LMnKXAyT4CvQF3oqVtn4Q== ;{id = 56034 (ksk), size = 256b}
+; Kldns-ecdsap256.example.+013+56034.private
+;! Private-key-format: v1.2
+;! Algorithm: 13 (ECDSAP256SHA256)
+;! PrivateKey: lpmGt28RwrEQVlZd5OJEq8AU2Gr3fBMnQZRfiSOEWWc=
+; Kldns-ecdsap256.example.+013+17113.key
+ldns-ecdsap256.example.	IN	DNSKEY	256 3 13 C9XN5jemcMtpWwhFKqyTI50QPNzbyF5Hvph40AGEKa2hNfvdkOjTqIxds1//X501zRHFowsFBG/u+l0/gwfHMw== ;{id = 17113 (zsk), size = 256b}
+; Kldns-ecdsap256.example.+013+17113.private
+;! Private-key-format: v1.2
+;! Algorithm: 13 (ECDSAP256SHA256)
+;! PrivateKey: zOEWQS+vRVJAwMMHmo0EmBQwo9kRQD9JDlDLtf7Tgew=

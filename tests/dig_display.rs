@@ -114,7 +114,7 @@ fn rdata_start(line: &str) -> Option<usize> {
 #[test]
 fn matches_dig() {
     let refs = references();
-    assert!(refs.len() >= 80, "{} reference outputs", refs.len());
+    assert!(refs.len() >= 170, "{} reference outputs", refs.len());
     let mut chunked = 0;
     let mut lines = 0;
     for (name, expected) in &refs {

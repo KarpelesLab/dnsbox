@@ -1,0 +1,24 @@
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 20999
+;; flags: qr aa; QUERY: 1, ANSWER: 2, AUTHORITY: 3, ADDITIONAL: 7
+
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags: do; udp: 1232
+;; QUESTION SECTION:
+;ecdsap256.example.		IN	SOA
+
+;; ANSWER SECTION:
+ecdsap256.example.	3600	IN	SOA	ns1.ecdsap256.example. hostmaster.ecdsap256.example. 2026100401 7200 3600 1209600 300
+ecdsap256.example.	3600	IN	RRSIG	SOA 13 2 3600 20360101000000 20260101000000 50702 ecdsap256.example. P1pyqPjux4/tPDpsVmPy2J3/McTikA8qUS4pNpuMwD+9K5/ViToxyYkj PQ0sjEm4UIOhPep3Amo7GOIX3S4yUw==
+
+;; AUTHORITY SECTION:
+ecdsap256.example.	3600	IN	NS	ns2.ecdsap256.example.
+ecdsap256.example.	3600	IN	NS	ns1.ecdsap256.example.
+ecdsap256.example.	3600	IN	RRSIG	NS 13 2 3600 20360101000000 20260101000000 50702 ecdsap256.example. 9HCQhqAcKMB+AmIGkDvyd4csdWY9OlNt9hU528dD6xZEkazmkUBodvp4 da9nDz5Afs9+NyqOoEnjlxUCNTCQqg==
+
+;; ADDITIONAL SECTION:
+ns1.ecdsap256.example.	3600	IN	A	192.0.2.53
+ns2.ecdsap256.example.	3600	IN	A	198.51.100.53
+ns1.ecdsap256.example.	3600	IN	AAAA	2001:db8::53
+ns1.ecdsap256.example.	3600	IN	RRSIG	A 13 3 3600 20360101000000 20260101000000 50702 ecdsap256.example. zaARd+kKLtc3ZEq0lBUvdULmYmpZHXdKgo3H5AVMVpcJf3++N6QYC5vQ L5HrC2KJs34r/FNBCLs6MCL0l+365g==
+ns1.ecdsap256.example.	3600	IN	RRSIG	AAAA 13 3 3600 20360101000000 20260101000000 50702 ecdsap256.example. QiwQB6+XhtGw91BoU1yZfJeQi6U+fB3bMJXIGDFRqVsNPKeCTzVHILUC huCiY1dhXz8IDzrdTSKxm/WToyNMyw==
+ns2.ecdsap256.example.	3600	IN	RRSIG	A 13 3 3600 20360101000000 20260101000000 50702 ecdsap256.example. IYc9wke6zRbspsTL/zZDIbEavRi7EJXmVt84Pjbb1nohbbTMjoRDjKTu KNTcGxpcGlu2YdlsNf3o6LyjYRvrWA==

@@ -1,0 +1,15 @@
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 55520
+;; flags: qr; QUERY: 1, ANSWER: 0, AUTHORITY: 3, ADDITIONAL: 2
+
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags: do; udp: 1232
+;; QUESTION SECTION:
+;host.insecure.ecdsap256.example. IN	A
+
+;; AUTHORITY SECTION:
+insecure.ecdsap256.example. 3600 IN	NS	ns.insecure.ecdsap256.example.
+VENJ934ME0T431HHFQ6ROCHN4CLSERQT.ecdsap256.example. 300	IN NSEC3 1 0 0 - VM8HF20KAV0MTOT79O9P2UUKUIO4EB22 NS
+VENJ934ME0T431HHFQ6ROCHN4CLSERQT.ecdsap256.example. 300	IN RRSIG NSEC3 13 3 300 20360101000000 20260101000000 50702 ecdsap256.example. nQlloV13p88TjxMoD+zlCecPsUx4iuZ0D8mzvxv+ipIiAHMARHTrRiuA /l26oje5+KHEcSD8i28VYNk9cnHwbw==
+
+;; ADDITIONAL SECTION:
+ns.insecure.ecdsap256.example. 3600 IN	A	192.0.2.98

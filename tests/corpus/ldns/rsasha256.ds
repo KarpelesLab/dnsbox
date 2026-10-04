@@ -1,0 +1,4 @@
+; DS records of the KSK of ldns-rsasha256.example (ldns-key2ds)
+ldns-rsasha256.example.	3600	IN	DS	36320 8 1 344161139317d505ed1ca55b8e03ca2717924235
+ldns-rsasha256.example.	3600	IN	DS	36320 8 2 571fccd89482bf0408ff0bcc3f52bb74ba67618fd2dd12b4205bdac3e19012d1
+ldns-rsasha256.example.	3600	IN	DS	36320 8 4 0ccd62aa1ff0c83fbf184095128f06cff723555b6ec494a1a7eab07712a8c361058d2191ecc3961d5e8795e82ad2d641

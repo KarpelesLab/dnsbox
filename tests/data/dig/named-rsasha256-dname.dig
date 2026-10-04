@@ -1,0 +1,12 @@
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 236
+;; flags: qr aa; QUERY: 1, ANSWER: 3, AUTHORITY: 0, ADDITIONAL: 1
+
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags: do; udp: 1232
+;; QUESTION SECTION:
+;x.dname.rsasha256.example.	IN	A
+
+;; ANSWER SECTION:
+dname.rsasha256.example. 3600	IN	DNAME	example.net.
+dname.rsasha256.example. 3600	IN	RRSIG	DNAME 8 3 3600 20360101000000 20260101000000 1620 rsasha256.example. SHlOl34EuJHZIfY53Dlp0/2ijxhmv2hA43mHITSFH43cDtDi5eGKbv5T sbbBAj4fOonAJs6mxglWrGZ12mzmbLAWqPQUmU1Bsi6scpc+TIBqvShq pWUTT6reASxw7j/86Lzau7cjH1CF+vXHONQzVkZT1GqvBsfNdHjcFQfz 3qk=
+x.dname.rsasha256.example. 3600	IN	CNAME	x.example.net.

@@ -1,0 +1,92 @@
+ldns-ed25519.example.	3600	IN	SOA	ns1.ldns-ed25519.example. hostmaster.ldns-ed25519.example. 2026100401 7200 3600 1209600 300
+ldns-ed25519.example.	3600	IN	RRSIG	SOA 15 2 3600 20360101000000 20260101000000 29323 ldns-ed25519.example. tSoJjew1d/mAaZImNzuAssMVE9txzmzpNiGS8azsQd0N/9Ely4aDmdmLngtZGT3oPQDLEn/yG+rpvZ/GjC+LBA==
+ldns-ed25519.example.	3600	IN	NS	ns1.ldns-ed25519.example.
+ldns-ed25519.example.	3600	IN	NS	ns2.ldns-ed25519.example.
+ldns-ed25519.example.	3600	IN	RRSIG	NS 15 2 3600 20360101000000 20260101000000 29323 ldns-ed25519.example. UK6kHk40r/Ujf9dDdOj2FluG6Tp885gcUUxQbRh4e5UPs6dJMG7naaTAnC1CJwZXPJfPIUGrCkd/uEN93sLUDQ==
+ldns-ed25519.example.	3600	IN	MX	10 mail.ldns-ed25519.example.
+ldns-ed25519.example.	3600	IN	RRSIG	MX 15 2 3600 20360101000000 20260101000000 29323 ldns-ed25519.example. CBlULvRWZRA1ELBeE8u7L4/6j30el5f//T2/Z1yhEoFAkHzLbwfRj730q0p2962d1mfeGAfqkgxbUJgI2spDAA==
+ldns-ed25519.example.	3600	IN	TXT	"v=spf1 mx -all"
+ldns-ed25519.example.	3600	IN	RRSIG	TXT 15 2 3600 20360101000000 20260101000000 29323 ldns-ed25519.example. Bmxis2mX0pbaK1e5HSlEqCo8txPajueWZQyAdKkJ7EyPorIDikVBBhrHJA+3AO0aX8L/+Ow7gI1ootDX1HLPCA==
+ldns-ed25519.example.	3600	IN	DNSKEY	256 3 15 VLUVnINdxcT832h3+uyc5zbOr9HZ1U87szz1V8RaQTw= ;{id = 29323 (zsk), size = 256b}
+ldns-ed25519.example.	3600	IN	DNSKEY	257 3 15 uOnuMrFTg8wCcXDmA2N8c7uuL7MbmMK2D7JMAF3AzrQ= ;{id = 9555 (ksk), size = 256b}
+ldns-ed25519.example.	3600	IN	RRSIG	DNSKEY 15 2 3600 20360101000000 20260101000000 9555 ldns-ed25519.example. +r0VV97ieve7NIKCiGfOkzSArpZ7v31GVcIoY8mYjKAa6doASx6BZVHyOl5JcfTGER9vYeZKWVcjK6foOUzcDw==
+ldns-ed25519.example.	3600	IN	NSEC3PARAM	1 0 0 - 
+ldns-ed25519.example.	3600	IN	RRSIG	NSEC3PARAM 15 2 3600 20360101000000 20260101000000 29323 ldns-ed25519.example. KnXZ5lhu0APflUg5+RVwyrc6jTBCSU7A+U4fvsYYeEyEoO9wLIClS7chhNXHXGCqosR68Ek1frWA2VNHAvKDBQ==
+ldns-ed25519.example.	3600	IN	ZONEMD	2026100401 1 1 cfd9e5d8df1b365c51415c8c315f140e196e5fd6a4e2024c225dc4fcc61a7a474796553be3c62a19481941a6808554e3
+ldns-ed25519.example.	3600	IN	ZONEMD	2026100401 1 2 8de29da0405833b1badcbdfa35511fd0aab70bc6df41ff8a7bf674e7e3975638706b3fd77831f62ee590bcedbe870d5b9e065e3050c74225fa9ef967d622feab
+ldns-ed25519.example.	3600	IN	RRSIG	ZONEMD 15 2 3600 20360101000000 20260101000000 29323 ldns-ed25519.example. uphzeECcFO8asazB0/rMIIyMaZVQ2mBArs/3NRIEpsMYnRDD1rdQxVXZxE9d/kIJFUB2BGJfVx6A2guONjqoDA==
+ldns-ed25519.example.	3600	IN	HTTPS	1 . alpn=h2,h3
+ldns-ed25519.example.	3600	IN	RRSIG	HTTPS 15 2 3600 20360101000000 20260101000000 29323 ldns-ed25519.example. DNItmJAGD0E1w6AtE3OTLTRrTGStrF4MhuCC27wkpu6yNsTEbGxu6JADVaoBm8Esq+eq1huPfa5ah67e6EiMAg==
+ldns-ed25519.example.	3600	IN	CAA	0 issue "letsencrypt.org"
+ldns-ed25519.example.	3600	IN	RRSIG	CAA 15 2 3600 20360101000000 20260101000000 29323 ldns-ed25519.example. saRQRsYnxTt/6KGgruPud7kJi4KkgE2oNfhdeX6BotTkfMkqt6xQytGRuE5NarfEME7ghjcIg5046owpIxvpBA==
+nei4t16up7rais8rhefi7bp02itejfnb.ldns-ed25519.example.	300	IN	NSEC3	1 0 0 -  nmscv5fr5imuq7vbdlpn99kmlhdklf74 NS SOA MX TXT RRSIG DNSKEY NSEC3PARAM ZONEMD HTTPS CAA 
+nei4t16up7rais8rhefi7bp02itejfnb.ldns-ed25519.example.	300	IN	RRSIG	NSEC3 15 3 300 20360101000000 20260101000000 29323 ldns-ed25519.example. yLH8yjlRhXENqXP0rJS9XYwIq1yaIAhdgm/CcTJcWy74t8RJRQjk0qKKobs0yNYq8ShgGCzxl87mkyURLMb8BQ==
+dl6jgrbgoa62af9pva4749moq716bcjr.ldns-ed25519.example.	300	IN	NSEC3	1 0 0 -  joj05e98nr2s7uaimt93kd1f5t9onrej
+dl6jgrbgoa62af9pva4749moq716bcjr.ldns-ed25519.example.	300	IN	RRSIG	NSEC3 15 3 300 20360101000000 20260101000000 29323 ldns-ed25519.example. TRg/VdkjlsVo4Hx2IxOTpFVa78GRAUZDpnR7Q26X91cn82KhDeZ8dTsRKothpydJF4apN0/TJabOAD2r4qdoAA==
+_sip._udp.ldns-ed25519.example.	3600	IN	SRV	10 60 5060 www.ldns-ed25519.example.
+_sip._udp.ldns-ed25519.example.	3600	IN	RRSIG	SRV 15 4 3600 20360101000000 20260101000000 29323 ldns-ed25519.example. 2GV1LmBR51LBjyg4H7jZgdR6M6O0VoZEDIPWgElbmL/WoNfXhn/aYF+3ujVeUbG6+9g6zHQ0K2CCGEIRgFcxBg==
+qs2k5rtu010jguto30fn3941fgu74ea5.ldns-ed25519.example.	300	IN	NSEC3	1 0 0 -  rbb3us6hsclivroghlga0nhia3vdl2f2 SRV RRSIG 
+qs2k5rtu010jguto30fn3941fgu74ea5.ldns-ed25519.example.	300	IN	RRSIG	NSEC3 15 3 300 20360101000000 20260101000000 29323 ldns-ed25519.example. 0LiOc3rrbe4Jer2mVP0RNY0r+kufvcUbw22ocXbQ3XybBg5PUEa7w49A1VAg5ia9FTsyA6oTJp+kT2msuY2TBw==
+alias.ldns-ed25519.example.	3600	IN	CNAME	www.ldns-ed25519.example.
+alias.ldns-ed25519.example.	3600	IN	RRSIG	CNAME 15 3 3600 20360101000000 20260101000000 29323 ldns-ed25519.example. CBrffiUvHH+tO+0VftvTbtfjmuckNVyF9kJbFv8Up13GMvyfukoAtaBTgVwD6krqB4KNZtSeZNmo20Cb5HHTDw==
+klu9mllrkhun9639n3log77v2djfk2pb.ldns-ed25519.example.	300	IN	NSEC3	1 0 0 -  n7qp0b66kgomkjnbhhnelvdtouggptts CNAME RRSIG 
+klu9mllrkhun9639n3log77v2djfk2pb.ldns-ed25519.example.	300	IN	RRSIG	NSEC3 15 3 300 20360101000000 20260101000000 29323 ldns-ed25519.example. pccqjcetSNjKbYn2ACC2VW++JsAWpOcalPh3jtcw6tlGZIOyR5eu3yMVPG4+VIuLdGnTyspoiTEqu7/4HzgABg==
+dname.ldns-ed25519.example.	3600	IN	DNAME	example.net.
+dname.ldns-ed25519.example.	3600	IN	RRSIG	DNAME 15 3 3600 20360101000000 20260101000000 29323 ldns-ed25519.example. Kud43jtOQeFb5HgQadKM06R27is/0o/snxGNTZ8AqA97cfci91tgmQhYDLRMSAIrBTePWmPf7+MYu/KKj676AA==
+joj05e98nr2s7uaimt93kd1f5t9onrej.ldns-ed25519.example.	300	IN	NSEC3	1 0 0 -  klu9mllrkhun9639n3log77v2djfk2pb DNAME RRSIG 
+joj05e98nr2s7uaimt93kd1f5t9onrej.ldns-ed25519.example.	300	IN	RRSIG	NSEC3 15 3 300 20360101000000 20260101000000 29323 ldns-ed25519.example. 4YKvom434+9z1eOeBoW0uoktsf9LbmTLanpYmPYNj6uSddEKdVlOuh9OdJpYOZuVg2eUlbvGRye8Z4AXDsNGBA==
+412jjltlhm3coe6g9mf7kidesnho4b0v.ldns-ed25519.example.	300	IN	NSEC3	1 0 0 -  6lc7u29e9b6iv56ufhglld8q5nardd2p
+412jjltlhm3coe6g9mf7kidesnho4b0v.ldns-ed25519.example.	300	IN	RRSIG	NSEC3 15 3 300 20360101000000 20260101000000 29323 ldns-ed25519.example. CbWZ7iEoN7xB8vcXVKVlE38scKz6Msy5TFZJngOsJZh60Pzk7sLAcGVhH4qIilr74KkF9IQCJzO0f+dFY3xuAw==
+6lc7u29e9b6iv56ufhglld8q5nardd2p.ldns-ed25519.example.	300	IN	NSEC3	1 0 0 -  6ru2pbpk7jqh1a59b9r6gkg8sr1im4g5
+6lc7u29e9b6iv56ufhglld8q5nardd2p.ldns-ed25519.example.	300	IN	RRSIG	NSEC3 15 3 300 20360101000000 20260101000000 29323 ldns-ed25519.example. +q6zsZ9QUXmdKXrIXSS3XY9mwhrUInADRxxPlY8fLFYM/ogk2V+hB9drgM2QgwcVu8FuhPyxaa/tN3kvDDfaDg==
+a.b.ent.ldns-ed25519.example.	3600	IN	A	192.0.2.7
+a.b.ent.ldns-ed25519.example.	3600	IN	RRSIG	A 15 5 3600 20360101000000 20260101000000 29323 ldns-ed25519.example. D5YBCeTOWRXRu36369oxL4XpFEDf31HQ4tV8TXxaXcE2UxSg4zkLMP1BTZ3BNR2OIIKaVW0XTlssp1PyOUkLCQ==
+pq7c7323l6dqp072f2i1jaj98pv5j545.ldns-ed25519.example.	300	IN	NSEC3	1 0 0 -  prpip0v64hqj2k76n8l0tnv1t4mcgfba A RRSIG 
+pq7c7323l6dqp072f2i1jaj98pv5j545.ldns-ed25519.example.	300	IN	RRSIG	NSEC3 15 3 300 20360101000000 20260101000000 29323 ldns-ed25519.example. joOSs4m00WjBlYVj6nMgawzUug8PzoDPtM9wUNSU2kWAXmmIYySAfomTjP9jqmLB6Y7vj6gRgRoOzbPMyt9iAQ==
+insecure.ldns-ed25519.example.	3600	IN	NS	ns.insecure.ldns-ed25519.example.
+a65k27780rgb8bhpf2791annlgv08sui.ldns-ed25519.example.	300	IN	NSEC3	1 0 0 -  dl6jgrbgoa62af9pva4749moq716bcjr NS 
+a65k27780rgb8bhpf2791annlgv08sui.ldns-ed25519.example.	300	IN	RRSIG	NSEC3 15 3 300 20360101000000 20260101000000 29323 ldns-ed25519.example. YeD0Nxp7orEHdCBHaRsk69cRJL7gkstKJUTudHcIA718l6RSZvxRWdPz4rgA8oWX8aTEkHynN3FXYWP8r5gcBw==
+ns.insecure.ldns-ed25519.example.	3600	IN	A	192.0.2.98
+mail.ldns-ed25519.example.	3600	IN	A	192.0.2.25
+mail.ldns-ed25519.example.	3600	IN	RRSIG	A 15 3 3600 20360101000000 20260101000000 29323 ldns-ed25519.example. kde46UbfH0C5EICDd/b0ZCXK7F82uaTKpLobhJ8CFndvIGmu9aepbLlY0C0CCAZwX73Yds/m2Oy0Joj0brDHCg==
+0603n9hmjb4ebinjrlamkjmrnu0v8sa1.ldns-ed25519.example.	300	IN	NSEC3	1 0 0 -  412jjltlhm3coe6g9mf7kidesnho4b0v A RRSIG 
+0603n9hmjb4ebinjrlamkjmrnu0v8sa1.ldns-ed25519.example.	300	IN	RRSIG	NSEC3 15 3 300 20360101000000 20260101000000 29323 ldns-ed25519.example. 3L/fxje3oiO97qIfJxnYWI3BHws5W+N/s7ocn7HuJOsNrMq8KnrSPwZGDZZYT2y/c0ejF2wnm8nQLkD7x0G5DQ==
+ns1.ldns-ed25519.example.	3600	IN	A	192.0.2.53
+ns1.ldns-ed25519.example.	3600	IN	RRSIG	A 15 3 3600 20360101000000 20260101000000 29323 ldns-ed25519.example. M8z//DBEiPlBQAkaxS9F6KdCzlFgIvwDjy6CjNXTi1cLTqHgWTSQuH7IBaQegGpuz8aP2diq1AGWIFwXPqI4Bg==
+ns1.ldns-ed25519.example.	3600	IN	AAAA	2001:db8::53
+ns1.ldns-ed25519.example.	3600	IN	RRSIG	AAAA 15 3 3600 20360101000000 20260101000000 29323 ldns-ed25519.example. +PaysttX2qDSSaN9suaoXe2MVF+utgRnjHZoIH+WoQUtBHoVyhR9q08aYxO+tBBQFbKZedgrT2l7hKcpMXPSCQ==
+8of97kr4r5mkpvj7rnjjurp04emktr74.ldns-ed25519.example.	300	IN	NSEC3	1 0 0 -  a65k27780rgb8bhpf2791annlgv08sui A AAAA RRSIG 
+8of97kr4r5mkpvj7rnjjurp04emktr74.ldns-ed25519.example.	300	IN	RRSIG	NSEC3 15 3 300 20360101000000 20260101000000 29323 ldns-ed25519.example. SZn+CbfGHSnDGrlorlIGMPlza3fNSQNruTC9igdGF+J/LCRGDJxzHCQnuUpw7hB4mA2DF0U+N4B6eoLs2j3iAA==
+ns2.ldns-ed25519.example.	3600	IN	A	198.51.100.53
+ns2.ldns-ed25519.example.	3600	IN	RRSIG	A 15 3 3600 20360101000000 20260101000000 29323 ldns-ed25519.example. 7RkX1Zy2gZcPolhxb36XLCZ0sdqzyvMgfghSW6ruAEVwpj0ex7KAvBG/bxTEnOGrFH0ag9mNaLZiYLn65M81Cg==
+6ru2pbpk7jqh1a59b9r6gkg8sr1im4g5.ldns-ed25519.example.	300	IN	NSEC3	1 0 0 -  8of97kr4r5mkpvj7rnjjurp04emktr74 A RRSIG 
+6ru2pbpk7jqh1a59b9r6gkg8sr1im4g5.ldns-ed25519.example.	300	IN	RRSIG	NSEC3 15 3 300 20360101000000 20260101000000 29323 ldns-ed25519.example. sf2B8MTmVeMfLgeT2XNmYRDV3pbXTpPlXwvZRw6+In+5HerilDfJSbd07ISUvbE9kEtRcucRHFCIDcfI86I0Bw==
+other.ldns-ed25519.example.	3600	IN	NS	ns.example.net.
+nmscv5fr5imuq7vbdlpn99kmlhdklf74.ldns-ed25519.example.	300	IN	NSEC3	1 0 0 -  pq7c7323l6dqp072f2i1jaj98pv5j545 NS 
+nmscv5fr5imuq7vbdlpn99kmlhdklf74.ldns-ed25519.example.	300	IN	RRSIG	NSEC3 15 3 300 20360101000000 20260101000000 29323 ldns-ed25519.example. X9pnKDgG9RAMPRDTjgHRRE1kqv6eeBuznci5OCCm1jJ0RirOu80ozmrz6vP5CyndFAKRdhIPH+WI3Ar5CnscAA==
+secure.ldns-ed25519.example.	3600	IN	NS	ns.secure.ldns-ed25519.example.
+secure.ldns-ed25519.example.	3600	IN	DS	12345 13 2 e06d44b80b8f1d39a95c0b0d7c65d08458e880409bbc683457104237c7f8ec8d
+secure.ldns-ed25519.example.	3600	IN	RRSIG	DS 15 3 3600 20360101000000 20260101000000 29323 ldns-ed25519.example. vAEwFUXWztD8RR+psoZKpuEAlmP9Rx4wZa0aUezFwH3Ieojvsw0Mt/Ie1J0oYzzlOGjkKv1U/0+5GBzVhW9qBw==
+ub2dvdo8vaj2vdfkgg5j9a2stsm0si5a.ldns-ed25519.example.	300	IN	NSEC3	1 0 0 -  ute4vogihltgses7k620qp2tlgjv7cen NS DS RRSIG 
+ub2dvdo8vaj2vdfkgg5j9a2stsm0si5a.ldns-ed25519.example.	300	IN	RRSIG	NSEC3 15 3 300 20360101000000 20260101000000 29323 ldns-ed25519.example. KD0lmogH6O12yZT9fjWfCXlWPEsQ3qodT8es03w3PJb+ODE1hp9RzDzynFunbCAlj1sMMP+2cF5xaax/EqIiDw==
+ns.secure.ldns-ed25519.example.	3600	IN	A	192.0.2.99
+prpip0v64hqj2k76n8l0tnv1t4mcgfba.ldns-ed25519.example.	300	IN	NSEC3	1 0 0 -  qs2k5rtu010jguto30fn3941fgu74ea5
+prpip0v64hqj2k76n8l0tnv1t4mcgfba.ldns-ed25519.example.	300	IN	RRSIG	NSEC3 15 3 300 20360101000000 20260101000000 29323 ldns-ed25519.example. fNWdNvSWFzTI418DHuQUoWFqbunfM5SbxSpVA1o+5f9Fkjxb1viBBVwrWE4TR7ga2ly4+UDdkKh8yL29tKBpDg==
+*.wild.ldns-ed25519.example.	3600	IN	A	192.0.2.42
+*.wild.ldns-ed25519.example.	3600	IN	RRSIG	A 15 3 3600 20360101000000 20260101000000 29323 ldns-ed25519.example. kPM2D3uN5dyJ1E+XCLi3VFHvu+bQp9TMHZncld6UBuvOW5Us/kFt8XM1NnWmwoFZe0oytwVz9P93QhW917HhAg==
+*.wild.ldns-ed25519.example.	3600	IN	TXT	"wildcard"
+*.wild.ldns-ed25519.example.	3600	IN	RRSIG	TXT 15 3 3600 20360101000000 20260101000000 29323 ldns-ed25519.example. KGOSqEepnsyd6cW1cR//yqmgmMAJxouRT/Rqjzx+3aHwKCpCL/fpzn2+TH+76ZwrMjn8uAt+j5VBshr65ZRjDw==
+ute4vogihltgses7k620qp2tlgjv7cen.ldns-ed25519.example.	300	IN	NSEC3	1 0 0 -  0603n9hmjb4ebinjrlamkjmrnu0v8sa1 A TXT RRSIG 
+ute4vogihltgses7k620qp2tlgjv7cen.ldns-ed25519.example.	300	IN	RRSIG	NSEC3 15 3 300 20360101000000 20260101000000 29323 ldns-ed25519.example. zNEgBNzxuVOsIiafHxu+67LzL4z95TjSHfahxHM++zty4r73Ez/rIFeKI/84p+RC3RjM0FW0OOL+6QX6Uf20Dw==
+www.ldns-ed25519.example.	3600	IN	A	192.0.2.80
+www.ldns-ed25519.example.	3600	IN	RRSIG	A 15 3 3600 20360101000000 20260101000000 29323 ldns-ed25519.example. Z1UGakDXYcE2kONB2COQsNeQlANXlspZaK5iH7MKFmQGNZjgYCQ/PhBNwW56tL3gms2k3QW0yomUhVXASXzyCw==
+www.ldns-ed25519.example.	3600	IN	AAAA	2001:db8::80
+www.ldns-ed25519.example.	3600	IN	RRSIG	AAAA 15 3 3600 20360101000000 20260101000000 29323 ldns-ed25519.example. 0L+vU1NWTOYXMUAclJprf8J6oq+wgJyVlqPcWdfXUPWX9/XOEb5Z1v8H/liWDu5cxZsF5Cji6z+TzpvuhUtgDw==
+rk1pbbi72u9d9n5lukh3ltpak4kclbg6.ldns-ed25519.example.	300	IN	NSEC3	1 0 0 -  ub2dvdo8vaj2vdfkgg5j9a2stsm0si5a A AAAA RRSIG 
+rk1pbbi72u9d9n5lukh3ltpak4kclbg6.ldns-ed25519.example.	300	IN	RRSIG	NSEC3 15 3 300 20360101000000 20260101000000 29323 ldns-ed25519.example. mg7ofDWERgtmk5cKdS5pSQLMZE+7WyRCiKR79DGXiKdhCuBP5D3ihC/is7og3KlUJUtghc90FXdTNd2jreSSBA==
+n7qp0b66kgomkjnbhhnelvdtouggptts.ldns-ed25519.example.	300	IN	NSEC3	1 0 0 -  nei4t16up7rais8rhefi7bp02itejfnb
+n7qp0b66kgomkjnbhhnelvdtouggptts.ldns-ed25519.example.	300	IN	RRSIG	NSEC3 15 3 300 20360101000000 20260101000000 29323 ldns-ed25519.example. lnqPZV2QcUmiexVl1OVcvH+gPS6/jUQjvRrG8ztzVmc2VhwiTCzM5QEdiXCWm2fqGQ9sJVcympYDE/RCvjHfAg==
+_443._tcp.www.ldns-ed25519.example.	3600	IN	TLSA	3 1 1 0c72ac70b745ac19998811b131d662c9ac69dbdbe7cb23e5b514b56664c5d3d6
+_443._tcp.www.ldns-ed25519.example.	3600	IN	RRSIG	TLSA 15 5 3600 20360101000000 20260101000000 29323 ldns-ed25519.example. 6JxfiEeMuBH4d5vE46uzKxmPAOTexsCIWW9mJGJXhr1SLeMNIpX8wbhMx61QVnIYGJrmM50agLmJATLWP3boDg==
+rbb3us6hsclivroghlga0nhia3vdl2f2.ldns-ed25519.example.	300	IN	NSEC3	1 0 0 -  rk1pbbi72u9d9n5lukh3ltpak4kclbg6 RRSIG TLSA 
+rbb3us6hsclivroghlga0nhia3vdl2f2.ldns-ed25519.example.	300	IN	RRSIG	NSEC3 15 3 300 20360101000000 20260101000000 29323 ldns-ed25519.example. 028UVsUAUuH8jd0xMg7QZYngasSeEgw/Eem0Q+8w4z/LDK7NrEMOvz/SGZMHcvnJ8iNFF9jC7xO0nNkogr4tDQ==

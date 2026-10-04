@@ -1,0 +1,25 @@
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 36961
+;; flags: qr aa; QUERY: 1, ANSWER: 4, AUTHORITY: 3, ADDITIONAL: 6
+
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags: do; udp: 1232
+;; QUESTION SECTION:
+;alias.nsec3rsasha1.example.	IN	A
+
+;; ANSWER SECTION:
+alias.nsec3rsasha1.example. 3600 IN	CNAME	www.nsec3rsasha1.example.
+alias.nsec3rsasha1.example. 3600 IN	RRSIG	CNAME 7 3 3600 20360101000000 20260101000000 51914 nsec3rsasha1.example. h00TuyxzE/L1THEMvd8JqApdZnH1Tj6NyzVDMt3OZ3UJ0ZNw9Fe6Yz43 uZF+lysjRGhXQBfyYU8C78KjzT/4dmdmVVhElbjHuNqpDkJI86MG5UGd umKaghm5mou2JIEJIGQfKGMFC9wbjeakze4VDHjtPZTCoqi8kMc+FQG6 +3g=
+www.nsec3rsasha1.example. 3600	IN	A	192.0.2.80
+www.nsec3rsasha1.example. 3600	IN	RRSIG	A 7 3 3600 20360101000000 20260101000000 51914 nsec3rsasha1.example. IJzfI6cO8cYJWpQBDtWDgs1rwS2xL0jnxfODMp6G8QA8Rw715dGOHfJ6 vpX3onvZ1j0nnpJtGnzSGUcn7mTlxHRK5gGb2XOmQ7pAcus/G8tmRRFi L5PeDAm2CGQry3FcRBoAOB1wF+1r07dDqcqywnTuHPc3n13RXzb5B9gg J7w=
+
+;; AUTHORITY SECTION:
+nsec3rsasha1.example.	3600	IN	NS	ns1.nsec3rsasha1.example.
+nsec3rsasha1.example.	3600	IN	NS	ns2.nsec3rsasha1.example.
+nsec3rsasha1.example.	3600	IN	RRSIG	NS 7 2 3600 20360101000000 20260101000000 51914 nsec3rsasha1.example. IKIJRvBq1oJllANzd0jhHGuHffORFMhWW64rxNh0DTO2+euM/tE0SnoD AuCS/e+qGJRxKKZHTqQP57qBDk9tVMj1JY0VmLaBAlGuS8b7OuIepBdM w9yCSl03845j5XaDlv5w7q77EA5trN8Etg1OwLz1+kLqrbE6xW8JOMVX Grg=
+
+;; ADDITIONAL SECTION:
+ns1.nsec3rsasha1.example. 3600	IN	A	192.0.2.53
+ns2.nsec3rsasha1.example. 3600	IN	A	198.51.100.53
+ns1.nsec3rsasha1.example. 3600	IN	AAAA	2001:db8::53
+ns1.nsec3rsasha1.example. 3600	IN	RRSIG	A 7 3 3600 20360101000000 20260101000000 51914 nsec3rsasha1.example. neo3A4rdTA77OM1XbfF0y0UuNiDPUNUOCOCOtgYZM+ByinEUBlZUi+qh J4sSRYseWwjs2cJpn/icFHVuIX9ce3GW3qnJ5SX6qpGePDhISBbRfcfq Z9eOpy7z4kngL5AOe8t/Vo0YMC05A/2vxtuUpzP71U9rEAPok9hq+9gy svA=
+ns1.nsec3rsasha1.example. 3600	IN	RRSIG	AAAA 7 3 3600 20360101000000 20260101000000 51914 nsec3rsasha1.example. hBQIVdREFOuOjkve+CWlULQRl5w8siueSdZODClzB/nbTiWRrYsYo7us Qb2ONqjGjPFFnYQ2mYqgyLg8ffDKCxEw0+HsCf0agunEG3oo6+pYx+pq uanHoMvyCFS/8hcaofUfecKqmea/lrN3R2Ev/5ZszoYx5gHer5wdn7LP NA4=

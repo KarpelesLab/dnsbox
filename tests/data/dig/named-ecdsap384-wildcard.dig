@@ -1,0 +1,26 @@
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 36650
+;; flags: qr aa; QUERY: 1, ANSWER: 2, AUTHORITY: 5, ADDITIONAL: 7
+
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags: do; udp: 1232
+;; QUESTION SECTION:
+;host.wild.ecdsap384.example.	IN	A
+
+;; ANSWER SECTION:
+host.wild.ecdsap384.example. 3600 IN	A	192.0.2.42
+host.wild.ecdsap384.example. 3600 IN	RRSIG	A 14 3 3600 20360101000000 20260101000000 29545 ecdsap384.example. KKZqNLKUHCCZ9yhLasGrEpN2BYitdI+KzdiZCeWX/+fgSlE+zBzfk9St Hg8i/B5LRz+s9Xd8tmTfYmsXSxFUpV55x/d20VXPs7gKbk14Fcs+92+X 6ZZY9vA44bL04aC7
+
+;; AUTHORITY SECTION:
+ecdsap384.example.	3600	IN	NS	ns1.ecdsap384.example.
+ecdsap384.example.	3600	IN	NS	ns2.ecdsap384.example.
+ecdsap384.example.	3600	IN	RRSIG	NS 14 2 3600 20360101000000 20260101000000 29545 ecdsap384.example. gilvUTR7L/TvcI1FlFpNzFWv6Z/IhTnV1Kl9Vg06XltG2vqG7r6xsccg gxhCy171p0661DbLqCrwfCZT0id4rTML8Jzns/ejdf1wkgyuLAzbLR9K AaC3drcqST/xi2Yc
+*.wild.ecdsap384.example. 300	IN	NSEC	www.ecdsap384.example. A TXT RRSIG NSEC
+*.wild.ecdsap384.example. 300	IN	RRSIG	NSEC 14 3 300 20360101000000 20260101000000 29545 ecdsap384.example. Sm1mY9ytUDybGIJDNJgvoVyPhkDLw20fOVLI3Sa/79bTBE4RRzLlwd5b h9jYzyQory6xAv9nN4wjXbcWZ1c+9fckH35Ls6KHRBED07/I/gXLXXlG s8Z3TKEXRdPjcEKG
+
+;; ADDITIONAL SECTION:
+ns1.ecdsap384.example.	3600	IN	A	192.0.2.53
+ns2.ecdsap384.example.	3600	IN	A	198.51.100.53
+ns1.ecdsap384.example.	3600	IN	AAAA	2001:db8::53
+ns1.ecdsap384.example.	3600	IN	RRSIG	A 14 3 3600 20360101000000 20260101000000 29545 ecdsap384.example. DDfmocWeZxL8nwfBjFA9+aius81oocj9lPQdC+eGri9QDCGpgv+nIajt GhBC572p4Gs8/OwzVTTOVCRWqcTlY2ttewEk3ZBhKBirZMxW4nEDzvoG hngU7z21bQXEHvok
+ns1.ecdsap384.example.	3600	IN	RRSIG	AAAA 14 3 3600 20360101000000 20260101000000 29545 ecdsap384.example. +XmZJXhBGcMY+fh9lXFqN3RIzmUhwKbcWb3jiJTFSgiuIHRTvbiah6R5 EeTm9+b4UsrET8RIDYpd5xtwt9vypIX+AX5NeDGT3VJMMnt02O6IiwCt KiyomAf8QVhXeI9I
+ns2.ecdsap384.example.	3600	IN	RRSIG	A 14 3 3600 20360101000000 20260101000000 29545 ecdsap384.example. Hkpn/nfJlrIiwkV2jF5bunoBv6/3Gqq6CExitiDAlkQDPwWQHf5UMYP3 drghCUQw6zg7DJdGTpYXYOyJuYLI+67IiKexTgsbY5/G+6L4iNWkIf/w dBBHH17vd5k+62Co

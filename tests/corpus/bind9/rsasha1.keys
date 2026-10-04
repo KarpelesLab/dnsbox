@@ -1,0 +1,33 @@
+; Throwaway keys of rsasha1.example made by dnssec-keygen for the dnsbox tests.
+; Krsasha1.example.+005+61921.key
+rsasha1.example. 3600 IN DNSKEY 257 3 5 AwEAAePHrYniZwc389Hqx6ROBfsUDQj8n9OTSVYcCasAKSyFIN9ITyIU RewpzEghG9jDiKeVc+66RBpaK0g9BFfKzKsRPvPvj7ya7P/vfAhCTFFM oo3j1XZuA5z9tdre8fn1dqg0LvGR1sFqeV2413Gqsb7adatQY/p+Z3E/ aQm9I2cwRR/R3g22FpOkgiPEhdeyiYFxQzzJpNAlEh9jLbpiGpxY9yBw XYPtTi3LSPIUlgDCCcIxl/FOaAE2zMJ5eYu6nctqXAEpkCYaVLhcliA5 t3z/Ve0m631InDcqWZ3wgEJIiaUgsyIvAF8lBJSZx7SzN4HiJtG38kP+ Uszi7qy2IHs=
+; Krsasha1.example.+005+61921.private
+;! Private-key-format: v1.3
+;! Algorithm: 5 (RSASHA1)
+;! Modulus: 48etieJnBzfz0erHpE4F+xQNCPyf05NJVhwJqwApLIUg30hPIhRF7CnMSCEb2MOIp5Vz7rpEGlorSD0EV8rMqxE+8++PvJrs/+98CEJMUUyijePVdm4DnP212t7x+fV2qDQu8ZHWwWp5XbjXcaqxvtp1q1Bj+n5ncT9pCb0jZzBFH9HeDbYWk6SCI8SF17KJgXFDPMmk0CUSH2MtumIanFj3IHBdg+1OLctI8hSWAMIJwjGX8U5oATbMwnl5i7qdy2pcASmQJhpUuFyWIDm3fP9V7SbrfUicNypZnfCAQkiJpSCzIi8AXyUElJnHtLM3geIm0bfyQ/5SzOLurLYgew==
+;! PublicExponent: AQAB
+;! PrivateExponent: VIM1xD8YcvkzoeM2h6PbXDkoTPlOY7X2M9jbTXMV08rhU3cExWQ4PVOU0/5U0qxZ+7Pb++tocU6bWIYrIlfAcIhJj0CHWDczUBKPNpFCt7dzaKnr/bD77jfETZ0Csvd8OxSBhmfSApl6xmdaqHXo1SNBHXsKXVqhDse0NUTT6eivy41ZlQrzeV/ROhUGxfxtR1AQq1smkrkm5hZTkLRFShx1Pdcl26ZVL1j3lIfPEaFhIkDTrNAKTNMeFWtzu9BmVyrbC8rGlHk3GkiKIlYx5KsiedjBQ3xVSbv4VRpcEqCQ/0eCcdJ74X1AcL1Z/3iDhSjx1t0wobfIJvFzMeHYYQ==
+;! Prime1: 8i6gSQvZOG8oIwl7s6eseU72gsGz9cpiUxYDi1YkC2+XkzGM9uiXEM8vtXL/QyfYTCIVTRe95Ce2mJn1qyaBZS2L9IFti7HgSiwIPCN6qzXH4lxA+lQ+T5V7CvJMkN2ohwogThfLnhgzzxv5WY6QmmEJrjQ/biLojrutFU0MN50=
+;! Prime2: 8Mawv7nYZf42mzgIt6AM72/H3Ac8aBX6EIgeTQpVqckkRs83P9WIrmxQSnVHD/U/9RdPOlMacRm/wzUsqfngzhPP+obf1HQ6l9b/iH2wujan251p4444ETCEHtyhcClomDCJXhP64rg2S27LsVny6UqoeUp6VQ8u2FYsWfMA2Pc=
+;! Exponent1: m8+Lp/NLiZdaR1BumaMiv9khl/ZvhY7zu2jKVvbQsdrVtgmHG8OAjXv+wcp+mAImkrTK55KCxSsXuw4ylC5tyV6IUIKEq/+AwbeahLZ+0XAEbYnU9DkG7cTKKLzCreEt79N//T4p7ki77F+fCRNDzU7pH37V4FHtNQdhz/aGCbE=
+;! Exponent2: 63mGFpvM9UK/aOJONDeFLw3lKlyxSSJlI5HcAIBg8uHSZqX1ZKqTN/KaO5ei3gp+eFZJl8L6ky4ZivIQMlQ89Y4O0vbhJMhfHWyZEIXMNvGJDJFQo8nNL5KBRCWGhUkaD+04CxgDP4PlJbS/5T0RAfOP/L9IELP+nnj4eyfa5lU=
+;! Coefficient: P+Qy4pe/dWVVR59IYLXBsG2Qck7j7ZmbwBnahIQ1eAEhRg3wIfczYxx6FY/o7Rb8sYewhPlYu7ex67DboMK+NmJcE+tV7CxbWZVgPXI0JUmPU6ImbvLz5sKcIn8cD/CQtXyfUpxuRg/dq5BDnqEI6uLMPiRxZA8uMkBJwmka1Rc=
+;! Created: 20261004143946
+;! Publish: 20261004143946
+;! Activate: 20261004143946
+; Krsasha1.example.+005+07776.key
+rsasha1.example. 3600 IN DNSKEY 256 3 5 AwEAAbtmOUSi6+En7WffZoG1i5wcp0NepPNEh3IQA1dPCI6BAX+E0s2g OJrOFg0wj6UmoFugoC7/Hqc/7IxilU70yFQi9RFmU17UAa33QmhIyx64 lKg3W8riLx7vP5dPurGRhxigW2xuH3KINWgmGZPks2UK0Kq8JjMYuEW/ P749NwY9
+; Krsasha1.example.+005+07776.private
+;! Private-key-format: v1.3
+;! Algorithm: 5 (RSASHA1)
+;! Modulus: u2Y5RKLr4SftZ99mgbWLnBynQ16k80SHchADV08IjoEBf4TSzaA4ms4WDTCPpSagW6CgLv8epz/sjGKVTvTIVCL1EWZTXtQBrfdCaEjLHriUqDdbyuIvHu8/l0+6sZGHGKBbbG4fcog1aCYZk+SzZQrQqrwmMxi4Rb8/vj03Bj0=
+;! PublicExponent: AQAB
+;! PrivateExponent: cs0IwDdecSxYj42X6lYhFJ2pCehs/Go633FX2qCcCVCWblwcF8PTaWJet+3L0cx76CXae2/mg2bxrn6mIRxrq7D3ed9wqe+ZbwSGG/gz5QmcnFaKnBcaLE/+W87ZZC7ZL8JmeSCPPblVRDVIttEAEbXki0hl1EhmgJ/7HfTBZTE=
+;! Prime1: 9024sm+rLQeV7KcTkaaOBRFNvl0McK8ki5pkN8Pz/wK8NNctAu8hV6rwKVoPZYH5aEahSs90n/A9WHF1pW75Gw==
+;! Prime2: wf07OZ/zNeocVuMMssG5F7BOscb/UZp7bxSO9Qn6WcimAaDkwJrQaHSmzKN8eiZpBVVpSXDiCbZMxC79ElCLhw==
+;! Exponent1: 0BXtmvarKbCATignJx7l0Q3GRK82kHpOXckDGoke/SvoAO4tSZK8k2+ZtLG60saSfVMw1CnLD+itNYYCX7kIkQ==
+;! Exponent2: mDV3qOlFzcHZZptUNVYnQt0Fghwf7QmHXEsHOGER3CzBhHmXw0A10h/lWJ/WZYmJ0bOInyVBVlmBtlUgIKSuNQ==
+;! Coefficient: 7f5IJVrkmTVdIduW8PrjK8AqLfu2xYv/dNUHQB5eZFRJtDzhJjUS3LszqdpSE1+qoYvxlBg/0wWEJJ2ktQGRcw==
+;! Created: 20261004143946
+;! Publish: 20261004143946
+;! Activate: 20261004143946

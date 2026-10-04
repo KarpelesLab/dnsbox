@@ -1,0 +1,15 @@
+;; ->>HEADER<<- opcode: QUERY, status: NXDOMAIN, id: 19570
+;; flags: qr aa; QUERY: 1, ANSWER: 0, AUTHORITY: 6, ADDITIONAL: 1
+
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags: do; udp: 1232
+;; QUESTION SECTION:
+;nosuch.ecdsap384.example.	IN	A
+
+;; AUTHORITY SECTION:
+ecdsap384.example.	300	IN	SOA	ns1.ecdsap384.example. hostmaster.ecdsap384.example. 2026100401 7200 3600 1209600 300
+ecdsap384.example.	300	IN	RRSIG	SOA 14 2 3600 20360101000000 20260101000000 29545 ecdsap384.example. JRVrHTzUK2Oe8itTfyPZAWQ8OfsH4Ucmocu3Yzyn3RctFpPG3ALM92+T tRjEsrX1YhRxmVv2M8o1bph5GdGd4LGxGM0hvcEYoTE54vO5D4/6PEd6 RxwW5pjI6jBMH431
+ecdsap384.example.	300	IN	NSEC	_sip._udp.ecdsap384.example. NS SOA MX TXT RRSIG NSEC DNSKEY HTTPS CAA
+ecdsap384.example.	300	IN	RRSIG	NSEC 14 2 300 20360101000000 20260101000000 29545 ecdsap384.example. B2B3vStStN7fttIiwNHRq8BMaCVQKTmGNuiLiPbIAfXl7UbYd4r9Nzus ec9px05LO7fVmaSsTNPIM27vZ2VGMTP30KkkI2pJ5GSXG69v2yzH1cAE eEesxLitReOrXiEA
+mail.ecdsap384.example.	300	IN	NSEC	ns1.ecdsap384.example. A RRSIG NSEC
+mail.ecdsap384.example.	300	IN	RRSIG	NSEC 14 3 300 20360101000000 20260101000000 29545 ecdsap384.example. 6+kml0v3Blyp2Mic9TbPyKoSsYosufC2z/XigHM4Sh1cm5/2cx3O+vRb yfFxAI20odoNjk+yPDB6DeTxLDy4QUAW82Tw+kjHiBvEJumzKWtL1lbe btwZ9alnzQh6GreO

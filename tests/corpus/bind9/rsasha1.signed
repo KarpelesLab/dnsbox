@@ -1,0 +1,321 @@
+; File written on Sun Oct  4 23:39:46 2026
+; dnssec_signzone version 9.18.49
+rsasha1.example.	3600	IN SOA	ns1.rsasha1.example. hostmaster.rsasha1.example. (
+					2026100401 ; serial
+					7200       ; refresh (2 hours)
+					3600       ; retry (1 hour)
+					1209600    ; expire (2 weeks)
+					300        ; minimum (5 minutes)
+					)
+			3600	RRSIG	SOA 5 2 3600 (
+					20360101000000 20260101000000 7776 rsasha1.example.
+					iSsDqbIf13/cx7PP43B89aBqywAxEWrLoKJG
+					arvBAMfLdDsH2KOnnQiE1ii7j7P5fifW5YLA
+					ZztPhj2AYrKlaBATXSSvTfAAw2iRFE9YoRwO
+					jyGzV6wnzfXDaSs3jJWq601ZIPwXC09x7ILO
+					FU2jK23ss6gkRT5lJFEZDjL7EiI= )
+			3600	NS	ns1.rsasha1.example.
+			3600	NS	ns2.rsasha1.example.
+			3600	RRSIG	NS 5 2 3600 (
+					20360101000000 20260101000000 7776 rsasha1.example.
+					OKcpOYslxFdA6DUWhm/pXK3gU/Lh7pwcU1Xk
+					VNs4OtvFD3eSE/19SfOYn1VyUIxkxAfrcNeL
+					Mk3C71723OqawsG9R9DdvNZmiw0KngnI+1uK
+					OU9rXDeglbpe/dik9ySHrx4TGtqJz/R7RvDR
+					cawc/uLtWvAzEGUWgoGh6za0Me4= )
+			3600	MX	10 mail.rsasha1.example.
+			3600	RRSIG	MX 5 2 3600 (
+					20360101000000 20260101000000 7776 rsasha1.example.
+					cRzAQCugKCbkXgwm+SvrSL7nb+9RP28J7B4Z
+					BibzJSHWXln33lU09MGz2kVdhlALdgQZA7Nx
+					ocif7cpWcvoAuZV/zRJHNJtvGiieSyFfYL5R
+					ryf2Ni+5Zcot+bgH7Fk38SWrjwg4li0snRsp
+					5RR70rmlg5TYzlDgrWheBdcmnXE= )
+			3600	TXT	"v=spf1 mx -all"
+			3600	RRSIG	TXT 5 2 3600 (
+					20360101000000 20260101000000 7776 rsasha1.example.
+					mSLo5JDgDqEh80nf0HIKRpp943vVzm9AoG6q
+					ZK+BvoqY3dDtiI7PBAcgACKETn42tpGV21Wd
+					OiiKIZIN+px373t3AHYftGBg5Q6bhJ+UKbCi
+					krOYf7Xk3hm+Qtyqxn1WpKYVGqmynGDalKI8
+					U3yG37O/4B/ZVVXZ7hbdRYaj9FY= )
+			300	NSEC	_sip._udp.rsasha1.example. NS SOA MX TXT RRSIG NSEC DNSKEY HTTPS CAA
+			300	RRSIG	NSEC 5 2 300 (
+					20360101000000 20260101000000 7776 rsasha1.example.
+					Tq6yVJkOv5biP8A2VRN+0TBFXVXg7NwamVuy
+					2tplNgXp6dbht1fKmeKWpWx3Qw+mr3BzWqe7
+					qskVR1wGP6Inbmklh6dB7qWm8Ofj/EHy35L3
+					TpXUJ2TAl8LLghf8XHfys+iwvioFN5JOH8m4
+					xMIvrs3PADfZAWZnoI+C1cugQyw= )
+			3600	DNSKEY	256 3 5 (
+					AwEAAbtmOUSi6+En7WffZoG1i5wcp0NepPNE
+					h3IQA1dPCI6BAX+E0s2gOJrOFg0wj6UmoFug
+					oC7/Hqc/7IxilU70yFQi9RFmU17UAa33QmhI
+					yx64lKg3W8riLx7vP5dPurGRhxigW2xuH3KI
+					NWgmGZPks2UK0Kq8JjMYuEW/P749NwY9
+					) ; ZSK; alg = RSASHA1 ; key id = 7776
+			3600	DNSKEY	257 3 5 (
+					AwEAAePHrYniZwc389Hqx6ROBfsUDQj8n9OT
+					SVYcCasAKSyFIN9ITyIURewpzEghG9jDiKeV
+					c+66RBpaK0g9BFfKzKsRPvPvj7ya7P/vfAhC
+					TFFMoo3j1XZuA5z9tdre8fn1dqg0LvGR1sFq
+					eV2413Gqsb7adatQY/p+Z3E/aQm9I2cwRR/R
+					3g22FpOkgiPEhdeyiYFxQzzJpNAlEh9jLbpi
+					GpxY9yBwXYPtTi3LSPIUlgDCCcIxl/FOaAE2
+					zMJ5eYu6nctqXAEpkCYaVLhcliA5t3z/Ve0m
+					631InDcqWZ3wgEJIiaUgsyIvAF8lBJSZx7Sz
+					N4HiJtG38kP+Uszi7qy2IHs=
+					) ; KSK; alg = RSASHA1 ; key id = 61921
+			3600	RRSIG	DNSKEY 5 2 3600 (
+					20360101000000 20260101000000 61921 rsasha1.example.
+					dRUvN+nWYMx2JpLXyxG9TMCweT0yv+7jjwIb
+					+uY5LEEJ+55mhES2k2y/UcZMy0tOEV2wGZJk
+					/IwOVtr3lqBP1L8wcF8A2aOQOvr13iTnPqRd
+					72vtKdIwGWhWULOf01B0wr9v7jrykwviDDP6
+					HDVDxfrS88PwZN32Ix4iLPhZNokpBKeih2dY
+					MZ9A+jHpdQSs3Tb5ba+8jv7Bnmn7pepBw1go
+					V0SRQg1erfdivsgPFQe7OT/0qQo5paJb/4rJ
+					4b0BuOp5Id+Ajdv1AB8JUiaTgwBOEXXwqA59
+					OUQW8Ru91rOO20ia7P0xHb50uGCH8cfen/Wo
+					O1u8Mspl5L+T9MMOlQ== )
+			3600	HTTPS	1 . alpn="h2,h3"
+			3600	RRSIG	HTTPS 5 2 3600 (
+					20360101000000 20260101000000 7776 rsasha1.example.
+					TcbcmAUjG1PVBIuHpCFjH+LQxn8WB4ugFpmA
+					Ni9PthzF3YMfpYkvTAggcy8pdQZTJoVlpW/4
+					X9g7bsQTg3H769KEKP6X3Md4PJ7XWPtJBEiu
+					MDBISOl+xCWYXwzhW/v8lj5eMRV257f1n3KY
+					mrJmLl07/utoog++ZSrcP5imW9s= )
+			3600	CAA	0 issue "letsencrypt.org"
+			3600	RRSIG	CAA 5 2 3600 (
+					20360101000000 20260101000000 7776 rsasha1.example.
+					mpAUzIgqOYnDfgbdsIqliM5EJh3/ZZ4brSnN
+					537Va8bijvriCeWcDy+OjA1j/XNaMt9sCSxY
+					m+oqxS6u1tNAHBKQ0xB5K0BQDfN5mTJEcEYV
+					OpbsBwah+PyQj7qDzdoaWIrgZYyduLJAxI2W
+					k+BY3uf9J5Aj76QZaJEcE8aELgs= )
+ns.insecure.rsasha1.example. 3600 IN A	192.0.2.98
+ns.secure.rsasha1.example. 3600	IN A	192.0.2.99
+a.b.ent.rsasha1.example. 3600	IN A	192.0.2.7
+			3600	RRSIG	A 5 5 3600 (
+					20360101000000 20260101000000 7776 rsasha1.example.
+					DhVOYkDbEPkqhqYlS0nw1MZhkEitVUEM3buD
+					umu/PKn2y+PB3LK1XR9wKm6LnyjC4L8eaJ9v
+					zYk4GVkRcDgh4kDH8X0Wp4vvMxnaE6BZjF2h
+					P91A/H25Sa15Mr8xsjuvyh1u1n6L8eBsDk3P
+					kb+nzuRUgzqQjknrnND5kYQkVRI= )
+			300	NSEC	insecure.rsasha1.example. A RRSIG NSEC
+			300	RRSIG	NSEC 5 5 300 (
+					20360101000000 20260101000000 7776 rsasha1.example.
+					aFKfJRO1ylm1tZBeT7rUG1yZkl2dEnzpjDfG
+					oW+1uZqPSwAGY9T/O92cVT8vFYqRd6JkyuEz
+					xMrxdkTChHhlPU4bdO1SmR1wr7o9oMhKo8Qx
+					xo0hih7WxQu8SFCQQ6CXzFfTN2DPC8hqK6kV
+					xHZPgODYIa3mK7Fx+23L7dbEIFs= )
+mail.rsasha1.example.	3600	IN A	192.0.2.25
+			3600	RRSIG	A 5 3 3600 (
+					20360101000000 20260101000000 7776 rsasha1.example.
+					MzuI1baODhMiUtbfA5ffQn17SWl/BIs357oi
+					gV9kQuSxsFQ5EtzGXJKTGv4QVf/6LdlihIny
+					duEJxSLqdrW6UYVDheV3ZeUNwU3FhdFZhGg6
+					EI+rMzge17QjquDO7fXxumPmX+Mqy9uTZyZi
+					pQddSy+5n1DfhIz2xuJ3HfAdA9A= )
+			300	NSEC	ns1.rsasha1.example. A RRSIG NSEC
+			300	RRSIG	NSEC 5 3 300 (
+					20360101000000 20260101000000 7776 rsasha1.example.
+					CmpZMOwYklkIwe5v2/ZS4j/eXLu/bqlK1iS/
+					fj4vihMQxS2U+0YckbWYFGSWlfSf0vRaEtvF
+					QB2noiQIZ/zVcndu3z35yHyEQcm4O+djhFHh
+					1YgF2T06nGARaJbli4Y/lQ/mjXOiEOs8KbFI
+					HnOhyB66WYTcOKZyASwuosueh24= )
+other.rsasha1.example.	3600	IN NS	ns.example.net.
+			300	NSEC	secure.rsasha1.example. NS RRSIG NSEC
+			300	RRSIG	NSEC 5 3 300 (
+					20360101000000 20260101000000 7776 rsasha1.example.
+					pxso2/HyTWt+we3LdIF04ROHs+OWqDMqgx4X
+					ID5bfADzr0aln6bLCF8XtmPVsn6FVhfOABQf
+					13YeGDIsYFE2RTS9RAItjKYA5xWZZUGVxdJo
+					ALia4rAqcL1RwU1YVXeysAz5JYf09jNd0fGk
+					ZJN7qmnDtqcVrJfITjZihq4d3Fw= )
+insecure.rsasha1.example. 3600	IN NS	ns.insecure.rsasha1.example.
+			300	NSEC	mail.rsasha1.example. NS RRSIG NSEC
+			300	RRSIG	NSEC 5 3 300 (
+					20360101000000 20260101000000 7776 rsasha1.example.
+					ZH9TJJyNhLhdO39V0FSJHhSw8sz6pPEdZpGs
+					/5/TPIH2c9+lovKmkOX+hQ9NlSp9tEByiEVy
+					FMLI0mV/GM5EEmTT9soZkNG3XlDpmVmExsh+
+					FOxkJTVay4xbd/DlnXRNdRR3gYop4BRO7oh7
+					Skhw/7jr29DFlaOqqnttz7WIQno= )
+_443._tcp.www.rsasha1.example. 300 IN NSEC rsasha1.example. RRSIG NSEC TLSA
+			300	RRSIG	NSEC 5 5 300 (
+					20360101000000 20260101000000 7776 rsasha1.example.
+					IxNP7Sh96HQBlVVihD549tlXcskPAUwita0e
+					4L3h0LfwKzJmfjj/7OX9SAqAyAZvqA1pQG5c
+					rD0bCV8fSc9rYM1utJ4i4kTyjsd2pf1t9PTZ
+					3rclCoSN9zzXtqiDUdGxf6R4cQueSrCVCqhb
+					O8cWcUoWt+hgLrBm8bvdQJZHqMg= )
+			3600	TLSA	3 1 1 (
+					0C72AC70B745AC19998811B131D662C9AC69
+					DBDBE7CB23E5B514B56664C5D3D6 )
+			3600	RRSIG	TLSA 5 5 3600 (
+					20360101000000 20260101000000 7776 rsasha1.example.
+					ppGSdC002HwzqopFyBrXhGjN1+WzuZrWBP2N
+					DbhyGhbliU62lWasA01HN8LfeYacFnZq1sO6
+					tb98mzNdn3gkNc2TFrAQmhQot7MXAkVmgIW5
+					MskOxOdsiZzhXqWQM2DHjLh/hAE+8BqtLf59
+					dghn33l/s6txZxKOb7OuhRcK9xE= )
+ns2.rsasha1.example.	3600	IN A	198.51.100.53
+			3600	RRSIG	A 5 3 3600 (
+					20360101000000 20260101000000 7776 rsasha1.example.
+					hCscPkeet+HZcYIHPGTE60E0CeMH1+jP9xQC
+					saxeXWSSjRdTYgAVcZF9274JZZ8wR1FGLgrk
+					XZPq2gchG6sgVQ40ZdxBgcVNvYN0Vw163wBv
+					XDw+7qG/yO/ZzPl7NvidnF+Co6DdtIqgvkaS
+					Ivcyn7XvGsFLJz93pi2U5BhGST4= )
+			300	NSEC	other.rsasha1.example. A RRSIG NSEC
+			300	RRSIG	NSEC 5 3 300 (
+					20360101000000 20260101000000 7776 rsasha1.example.
+					Uy0G4N1kloevLmubTHwAR1kFifov8BIJDi1c
+					f/CrzzuVPLMUS0li5rJEdoVBOgL1FEiWpHDi
+					NqsjTJmi/Me0NgvK3f/IouOmEtWTeeR5ZQSV
+					V15k1PzTmNspvq6d7m+c/S7Rad4tZxTEKkH/
+					kRz0+2w/exycGWZ7aemWcVG5Jzw= )
+dname.rsasha1.example.	3600	IN DNAME example.net.
+			3600	RRSIG	DNAME 5 3 3600 (
+					20360101000000 20260101000000 7776 rsasha1.example.
+					qFmXanVgKLEjm9Lfc3LOrI4906VyF7/DcAL6
+					z+tK/v/l1Zr87RZvURGA4SC2x2EwuMr1fm5g
+					oXkqhTW8YLJeSs6qbNz8ojKez9K3d9kGMn4s
+					ZtoFdsKA5ONrdBDPZ9P44ajFSkewGv/UGsng
+					IhThzyb0TwX+bJomcr1j85/UsSk= )
+			300	NSEC	a.b.ent.rsasha1.example. DNAME RRSIG NSEC
+			300	RRSIG	NSEC 5 3 300 (
+					20360101000000 20260101000000 7776 rsasha1.example.
+					h3w8NJrEv/6Xch6cb1vzE+aTmWdoJsnD7giN
+					gIc5K20sjDkMqZ7ySBnlIA91L57R0L8Po5fw
+					GQQY9JxUsRDU59irb8auzA65TehFPmzu6a+z
+					AZ4NjJbH7S+Q4z/+3DidYgNmwN611eBU0zhg
+					V/LCgmxMU0p9NQgp6gkksKvv1BY= )
+alias.rsasha1.example.	3600	IN CNAME www.rsasha1.example.
+			3600	RRSIG	CNAME 5 3 3600 (
+					20360101000000 20260101000000 7776 rsasha1.example.
+					c8oMlgHkoiAbGRSxcBvNmJnZ9COc4fxSNSJi
+					ETz1rOaC2AN88lFxTihWmuL/LtUUg38gHoSo
+					P7WYW5l0U9VvApiLikuN1F8qSQfDsxFUmraj
+					VlhjX5aAQwBd8xdstbI3yothSiMxk9jUpOx3
+					x1Disaz0sMkcYY6n26Y1Tcnfy04= )
+			300	NSEC	dname.rsasha1.example. CNAME RRSIG NSEC
+			300	RRSIG	NSEC 5 3 300 (
+					20360101000000 20260101000000 7776 rsasha1.example.
+					Ux2cubeKa0V5p1cEfPlEWMCPhCIjf7Lh6hIq
+					Hjv1I39r9ydH3kSRtw8s752C4rtYa7skgO3/
+					lzKPiujN9k2hOLcYgNw3fAZbUWwJCzoiyHUy
+					18e7deZDEr/lItyhSGk5NmexdMLOo4DrJlTm
+					reJx3tMd9XBzr80ioz3zV8/CG8s= )
+*.wild.rsasha1.example.	3600	IN A	192.0.2.42
+			3600	RRSIG	A 5 3 3600 (
+					20360101000000 20260101000000 7776 rsasha1.example.
+					ssO34y0COOperXYb0bSP7PWe/UKL19TH9+DV
+					0Nj1oWZRguj6m0XzOfsOhNiooPlTW1lGgIzo
+					rYWoeTbgfLkuiR1vpu1i71zyy6ZpQyFdJxHL
+					ndHlM7NSzuWFEv18+0A+hBmcpzEDxeL6mok2
+					ykOFPP1zKtCW4ozONTThfnnHU5I= )
+			3600	TXT	"wildcard"
+			3600	RRSIG	TXT 5 3 3600 (
+					20360101000000 20260101000000 7776 rsasha1.example.
+					o5T/Z2XNyrQD2NKqHAMYZ93Se0J4RxkA6CYb
+					9i7RGd4WvjxdVSWsszTAlGIRYNjmx5AZ64Nq
+					ZnHnD3ts/OiwuLe2Jbkv1X1GZIkzJsJ8mNsc
+					jFQ2+uSPy8lXrGNqeKwogRZfRSl4eEnsOL7q
+					+FGF6w8ltu0biUVUaWbB69tTh9Y= )
+			300	NSEC	www.rsasha1.example. A TXT RRSIG NSEC
+			300	RRSIG	NSEC 5 3 300 (
+					20360101000000 20260101000000 7776 rsasha1.example.
+					b0EbFnyjBBEX0N9yoNJi1nwMItFXXGw/4VSK
+					sGGlnxkTFTxB3wDwDGczhkryv1UarC3ukJC1
+					jB5xBcj/qEyer69Vb/Tm/Pbr67qUxJWAkB9N
+					IiCqmTYQLIQKq9brTv1aEObt6O88dQUQ2MrY
+					5y+KGbmSDpz7UVtLhWoQI2J8BoY= )
+ns1.rsasha1.example.	3600	IN A	192.0.2.53
+			3600	RRSIG	A 5 3 3600 (
+					20360101000000 20260101000000 7776 rsasha1.example.
+					MiGhP1hgVIYb1oKaX1OsGSXaRBdNgSdV0CDG
+					0cmSlNGlOrxosUxdGuOxd5JanKIs5ZHKFO+M
+					vLriLyPVtfaR+Hyz45pKMfGxTUsMQgkOP676
+					4TVvFE+i+H6XNx9ibyFX/Y7y3YR0IaRpaIqf
+					uNi/bifgDSxaAIRJV4ddpZY6or0= )
+			3600	AAAA	2001:db8::53
+			3600	RRSIG	AAAA 5 3 3600 (
+					20360101000000 20260101000000 7776 rsasha1.example.
+					Iu1eQP3Q2Y+sSxGrrVFIbDgOUFYgbpDS1XVX
+					z6fUhg2u4Y/aRBG+s/MGHXKMHrclvoKNgwES
+					21lqG4l+rTbE0iU9wIPyAYDgZTwIE2nJ+2OP
+					dACrAqqd+t4Hr7eJPpBkGFoifBrEte7kCjL4
+					buHtJRGIbeEaJofgFGeJmgmzzXA= )
+			300	NSEC	ns2.rsasha1.example. A AAAA RRSIG NSEC
+			300	RRSIG	NSEC 5 3 300 (
+					20360101000000 20260101000000 7776 rsasha1.example.
+					Li5iMbI3IWz7Ey28atzHQKIR8wyCEL0j9dt7
+					J70vo3sQNrmRYJeWUDPLIxTfxLNNbUTpPnWy
+					cJCdM493SBvtnkaswzjT+aHicAjWjIVi5xfm
+					KwKqjs6tvOihErzNJlvW3WmPKmSA5LbERhTP
+					hDgrFRSDeIt/VgQhiPi026LzHuM= )
+_sip._udp.rsasha1.example. 3600	IN SRV	10 60 5060 www.rsasha1.example.
+			3600	RRSIG	SRV 5 4 3600 (
+					20360101000000 20260101000000 7776 rsasha1.example.
+					PTr0E3tzEZnzHRgWH1tP9Y2g6sOZPPRvKEKv
+					9mFC7eMmCur17akj9TYgFB6n69VJAi9dq5S6
+					Zbtx/hAD5VzfUFvjwGuuHCe7EMe6fh4b/mIc
+					KAMhYv9EgafvvUz9CVPVbnXpm0sciorCXiA6
+					QeNZwXfs64z/W9FCFz2EIybl0vM= )
+			300	NSEC	alias.rsasha1.example. SRV RRSIG NSEC
+			300	RRSIG	NSEC 5 4 300 (
+					20360101000000 20260101000000 7776 rsasha1.example.
+					ZrHDN3sAxPCRKstZVp51m0tGC1hmshRfSVmZ
+					RFMPbkqtHeg6j3Q6aax4dK9CX5t/uDGBA2O1
+					Qzr7MijrsOiJszxRpz+VDn2XO7KP5QCXG/op
+					cYX0yHvxweoLOBN34YusD/OJ0fQF/nWsHEVo
+					F79c+mQwAUXJFbp1Nlt1+VuAcGc= )
+secure.rsasha1.example.	3600	IN NS	ns.secure.rsasha1.example.
+			3600	DS	12345 13 2 (
+					E06D44B80B8F1D39A95C0B0D7C65D08458E8
+					80409BBC683457104237C7F8EC8D )
+			3600	RRSIG	DS 5 3 3600 (
+					20360101000000 20260101000000 7776 rsasha1.example.
+					ZGk/vC/CINEKJu4NvCUlcrXvIE9yJxup5rPV
+					u8+xw2tfShTS/jx+wTbStObSJeUxixCp8pjU
+					ouas7eMevMYHABEY3ccI85GsJQvtXZIAed2K
+					kOco6ZVPc8Clohts15ihGaeaKewqKL0u91RQ
+					mDs8WoRYddJQb4yt+4CnkC/i9Dc= )
+			300	NSEC	*.wild.rsasha1.example. NS DS RRSIG NSEC
+			300	RRSIG	NSEC 5 3 300 (
+					20360101000000 20260101000000 7776 rsasha1.example.
+					eXAnRIsRCEHiLsUYLqnymxK7brF4C4XuA+au
+					oN7F94s+Ti5eYqDAX0des19K+d+xLrxeu5zY
+					9tPYzA4Syck6921r1ql4m/cbJU3GPyA/HYlX
+					8y0CGwbqNaKDLekwrmI9hIya19ApmuHliLzy
+					AyyihYP6nVfYKcb9CNQZicVEwh4= )
+www.rsasha1.example.	3600	IN A	192.0.2.80
+			3600	RRSIG	A 5 3 3600 (
+					20360101000000 20260101000000 7776 rsasha1.example.
+					nlwDpMoVflPiUeDiABR2oX9g57ao7GUVuBcR
+					+8JEpnvtEFg4YrZt9/WeUR4PwMKaxdR43kAR
+					UOzDXovUjp3K2muMC3TzipfRcQAbM2+hLWs6
+					SGWqzKinEWGcJtLe62uHktk+FpE9aknkOYAV
+					IOIXWliOU/T3d4XIt9i1D3FHxJo= )
+			3600	AAAA	2001:db8::80
+			3600	RRSIG	AAAA 5 3 3600 (
+					20360101000000 20260101000000 7776 rsasha1.example.
+					SJOu9FkWSVlGPqKAZCDs78XooQ6FGxBS5A6Q
+					0uln0g/bAjmL8ZceYAEKsFPFGqQpSdGJsAki
+					QlTmVrqEP4Z69ohQnGMEqHUKZeOCq082pBcj
+					QfzldagnAlvsvvboyGHGH64PbPu5hn0GraJy
+					mGP7ycbcoH72CejpqLDBAAR97ko= )
+			300	NSEC	_443._tcp.www.rsasha1.example. A AAAA RRSIG NSEC
+			300	RRSIG	NSEC 5 3 300 (
+					20360101000000 20260101000000 7776 rsasha1.example.
+					N9ZpJ9eiki45FzlOxYWLrZIQCXo62WD9IvOa
+					WgV7zxATAasbGhGbOP5ENNF+UBilbhwZykDI
+					BX17Gd1SqmZmIvaDBNIToQOBX0AJK5m2eFK/
+					GWJuY6pFmTjuIw204Goxdz2Sz+4K0EKejPNX
+					KvgfUHzjulMrHMwwcYF4lB0jXps= )

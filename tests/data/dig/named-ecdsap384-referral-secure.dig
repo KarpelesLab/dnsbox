@@ -1,0 +1,15 @@
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 15866
+;; flags: qr; QUERY: 1, ANSWER: 0, AUTHORITY: 3, ADDITIONAL: 2
+
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags: do; udp: 1232
+;; QUESTION SECTION:
+;host.secure.ecdsap384.example.	IN	A
+
+;; AUTHORITY SECTION:
+secure.ecdsap384.example. 3600	IN	NS	ns.secure.ecdsap384.example.
+secure.ecdsap384.example. 3600	IN	DS	12345 13 2 E06D44B80B8F1D39A95C0B0D7C65D08458E880409BBC683457104237 C7F8EC8D
+secure.ecdsap384.example. 3600	IN	RRSIG	DS 14 3 3600 20360101000000 20260101000000 29545 ecdsap384.example. GWjQI8oY8nDU7Hq9qTPE8JXWGCwSwg4Bk1dx3ZtKJtSXB625Sh2tIwUO YAHS9TFnHvPtTwc8ZTcn7kcrnjllOc3rQFrszAEt7sFEmEVJfKC7dybp L7Mn5yuzu2Mweh8v
+
+;; ADDITIONAL SECTION:
+ns.secure.ecdsap384.example. 3600 IN	A	192.0.2.99

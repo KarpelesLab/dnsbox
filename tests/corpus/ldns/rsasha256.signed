@@ -1,0 +1,92 @@
+ldns-rsasha256.example.	3600	IN	SOA	ns1.ldns-rsasha256.example. hostmaster.ldns-rsasha256.example. 2026100401 7200 3600 1209600 300
+ldns-rsasha256.example.	3600	IN	RRSIG	SOA 8 2 3600 20360101000000 20260101000000 38698 ldns-rsasha256.example. ZFkDL+7gJHszdI3YFtBNayhFvzFe0CDlYboX7NqiT30IadR6+OpT4PgLOeTmQYdoQUk8y9Erwg+T9cZ4SA0ChN9jdS0cNJfkgIsHah5Ix7e9mVyPe1eLqn7nB/tv5I9LrLyeaK0Plcpx8xAyGq3RzZV4Ns9UqsAiSLy1bjirM/8=
+ldns-rsasha256.example.	3600	IN	NS	ns1.ldns-rsasha256.example.
+ldns-rsasha256.example.	3600	IN	NS	ns2.ldns-rsasha256.example.
+ldns-rsasha256.example.	3600	IN	RRSIG	NS 8 2 3600 20360101000000 20260101000000 38698 ldns-rsasha256.example. R0w2lwM+tK8a4Y16HqLUhfZaoXU/WCsASf8XOyvlsSJfuNfzyUs9JaWtASlkyvhO9cbKwk5osXXkWQgSP+Kfs9e4pcJ8lGcd9uJsSSUsrmFYXJ49sRFgYu8lurAw/pKXjUC42B4sCFL8aP3FkUG16UqXYMndLvqJ5JOpUpL5HNM=
+ldns-rsasha256.example.	3600	IN	MX	10 mail.ldns-rsasha256.example.
+ldns-rsasha256.example.	3600	IN	RRSIG	MX 8 2 3600 20360101000000 20260101000000 38698 ldns-rsasha256.example. lhf50dW+Fwsza4oRn2KfvaL27MBCvEfzDvsXPgsyDgfxVUdODOZX4ymt1jiGcl8NWUfMPdNg45usTQ91+H8ZyjpQMXmDbU7YT0+FeSuSmFLhwf/mP5jL9pg1EpZflmgXPsGkWfo9Hy0sPQe5w5Ivwp0xGjRDLFzEqBidPuHCXVo=
+ldns-rsasha256.example.	3600	IN	TXT	"v=spf1 mx -all"
+ldns-rsasha256.example.	3600	IN	RRSIG	TXT 8 2 3600 20360101000000 20260101000000 38698 ldns-rsasha256.example. ucziBCG9+zVAx8JqkuIgKi6DtgxrSkTIBuZ4c42V2SdTKEjyOayarAyaBaZVd3Qy6E2sZ/TBY4cv1Pg4IMsj6V0p8IAXErplyQ0yC7HIYsC16Ul8vjSdsqXa7/nP/fbinPpktwpX14bzZgfXYZ0+DYwbJwEJ+cp4I+x1V8UEcVE=
+ldns-rsasha256.example.	3600	IN	DNSKEY	256 3 8 AwEAAdHaoVfJc9+YPUlJiKeqmx3AH5DRlw4UlCGxtNv1pPoNkCz/211DzJbrYuVUMljoXhW60X+2gPbJVOnVSghWx68c1Zf9L9i5dnatIEvl0PWezdXyNW3sakoMA5qKCwL6qFtdbrgvaCFwdhNb6rGSeFWk0Hw3BjomEPf1VGZOxl8V ;{id = 38698 (zsk), size = 1024b}
+ldns-rsasha256.example.	3600	IN	DNSKEY	257 3 8 AwEAAZ+fYY9KObOfttHA4+o+wBWA86gjsggxTkpvNYEHsaAYwX9Satt2ozM+kYgJz/Q2D8wt3YM9zJSWdwQWT8UnQqkOE2wmtnQoEisSdJx0ruO1dV50MSTVe2szN8lZeKjR98ZJ1jVSJG7kq9aKsWu5Tm0GcfxbwwqPgfFHWUsKXqLpIBfoGW26k7HSbuzOB2cFz7GsCJg1sGSJqkp5v7MGJjYbCv8H4Y91OzCacA4oBw45M0rPq1np6PloP9pyk9j1k/Cqcomi4mAhXNTYjesZ/+QF6Y4p8upXociCClSs+HE6VBPHzQl+7GbBu/wyNkoHWrWX48PtmRrHZc9ddcpI73M= ;{id = 36320 (ksk), size = 2048b}
+ldns-rsasha256.example.	3600	IN	RRSIG	DNSKEY 8 2 3600 20360101000000 20260101000000 36320 ldns-rsasha256.example. ijHRrgrlQ6UDeYTlwjuTKgPPwTD4WLdy/R8Y2BeyOdaNixVO/cm5ydK9cQhkL7xFpQakGbjrdKA79IG/J0jhmxOY9vi/UCeeJ1QMSb9SWJqvQaJm+brQ5S2RLV7GMDJR0Wz1DLnQME032UEOvuTPgbYp1oC6KWzWcDTTqFOfhI3xDfwNqQIceAk/6kYZqHGTbqBkmxAlEYjCb5ouOrASyFzympeAwZqYmb9/IHNh06180idv1WSq/cW0SuJgyyqiYb0pVF47IDWXE+uOA5aUKQ52jPdup28CuqegpVR4U41tRvOSrJRGpBhyiFRuhcT/lZQs08LvBGBZRHRSbRFDpg==
+ldns-rsasha256.example.	3600	IN	NSEC3PARAM	1 0 2 beef 
+ldns-rsasha256.example.	3600	IN	RRSIG	NSEC3PARAM 8 2 3600 20360101000000 20260101000000 38698 ldns-rsasha256.example. BsCmQcJNXGBMbo/tkq72jyqBr44f3tl0hQ3TkrcONE04UL3KhNKRgUuQUv4DF/tNc/Mr96Gk11KhDfUMeuZhHprUT+i+j+g2hJEscQpMRCxki62sUqPPwblC+/ZbiWCOK8JOPaXfCcJrvxAKY9ANROWp4daJVJq9KQuhe96OIms=
+ldns-rsasha256.example.	3600	IN	ZONEMD	2026100401 1 1 f276ffbdbd1f739f4e0a026a446b192c60ced05b347fb6ede1ee596bc62fef945f1af68370c8a42a68228cf875b12673
+ldns-rsasha256.example.	3600	IN	ZONEMD	2026100401 1 2 e3c14c68903d5cc585899e81710975537e61399b8dc14cf2f409226c089b8d105e9dec7e83b948f18d932136c7afbaa03e4583618de7ef141cff41f68dc2b532
+ldns-rsasha256.example.	3600	IN	RRSIG	ZONEMD 8 2 3600 20360101000000 20260101000000 38698 ldns-rsasha256.example. PJ+lDwMHJrwFtT1wPa9/yutjreOOgD1f7bW2HqE+JIeHBxCoIgxDQKyYLH9DqUl3fEoI1mq/5SRlNS+ejg1JgWubIcKpZ8Ep1Qjv4vt0AnU/J4wCTRK7iF/dT0/Ub9VFEjcxhInOSBSoR5IiUdnNSQk9uqJEMgTRtR1P8vKlJhY=
+ldns-rsasha256.example.	3600	IN	HTTPS	1 . alpn=h2,h3
+ldns-rsasha256.example.	3600	IN	RRSIG	HTTPS 8 2 3600 20360101000000 20260101000000 38698 ldns-rsasha256.example. RwXosa24yctQ51QmaNc16QcSS33MicuVqUl183jPNsjIiwcFLjrMG05flgCvFwEDfCBdBUPw3kbLduUYR+RecQDYHSJE68LsA6Vl/Tbd7bas4pv7mo7e1zfDaVyCM8DQsyvwNsaMThYY0KX/nvqXT3UGd93CPHX50jsp28D7Fwo=
+ldns-rsasha256.example.	3600	IN	CAA	0 issue "letsencrypt.org"
+ldns-rsasha256.example.	3600	IN	RRSIG	CAA 8 2 3600 20360101000000 20260101000000 38698 ldns-rsasha256.example. dqqbQVpA07Hb3rIsyj36v48DRlELR+zujMApYRBWJKhzz77NJuoyves1m3CmbFGrbsL0WCw3HG3sSNdIOcsQaJB6m8P27PC9xm6Bkd0hDrClE67wXOtuRBJZcTpbvQ52cXRs/yw5CzyDAmZ8/+XI4Uin/0D08bnMEXfopvfMcJI=
+oqagqefq4c4mgnmmfgl22u5v3l54sk8q.ldns-rsasha256.example.	300	IN	NSEC3	1 1 2 beef  t0nvtg9ekepvofu0rtq3n8f372mr9v50 NS SOA MX TXT RRSIG DNSKEY NSEC3PARAM ZONEMD HTTPS CAA 
+oqagqefq4c4mgnmmfgl22u5v3l54sk8q.ldns-rsasha256.example.	300	IN	RRSIG	NSEC3 8 3 300 20360101000000 20260101000000 38698 ldns-rsasha256.example. lTXEJusKlmhuLACawEnFhs3muwoylcikRr+bUyLeTbcAwwv6Xz2o69CmUW9v3FrIduDKTixfe4kP9kKQCFFxhT4J6Q9k+oTNqYhAiZ/DySn/ivRAb9slaVrykkPekfV+awI+gcnLrFpvwwhdS3tYxsqvkvt4W5Rr4OefoMoWPac=
+j0suahsbcg2ro4o2ij3ptelgeo6blq34.ldns-rsasha256.example.	300	IN	NSEC3	1 1 2 beef  jfa0hc6a3smr75h4umsi1bropl2ul97i
+j0suahsbcg2ro4o2ij3ptelgeo6blq34.ldns-rsasha256.example.	300	IN	RRSIG	NSEC3 8 3 300 20360101000000 20260101000000 38698 ldns-rsasha256.example. hYEL4rSHEVC+Fngmu7vbpHPf5CeXBhgjtde7HllLlh3MDdXHs25z2mqALGmdONOigb0ysCWwTP/ofozj+aMO2ww2E2boKCZWOf7dBkeTHv88H1Hw/ewBSpIiAqJokSvjkQSaKCBUwGL+/K+PFR0RJwjTRtTarL+Uh3vvlUrL5lM=
+_sip._udp.ldns-rsasha256.example.	3600	IN	SRV	10 60 5060 www.ldns-rsasha256.example.
+_sip._udp.ldns-rsasha256.example.	3600	IN	RRSIG	SRV 8 4 3600 20360101000000 20260101000000 38698 ldns-rsasha256.example. U8OabGLOu6rrlZco53ldYpE6zBBqBTfNLFwPk/AwCt5S+Bt49vibICPGwbOhFGJDLqSuNhDmvUhjkAJfPNB4wWyME00ax3DJEprhvemCJTCszjMLrYrGI4Sm6qU3d3prTentdxp70ZIjLnTqZ9Qz9Vzu2V3MF6SKuH8we06hnH8=
+1vj82a4chl75qd1i61fb87siou9au09q.ldns-rsasha256.example.	300	IN	NSEC3	1 1 2 beef  bchun7jtd23nir2skm677t7arjhp962u SRV RRSIG 
+1vj82a4chl75qd1i61fb87siou9au09q.ldns-rsasha256.example.	300	IN	RRSIG	NSEC3 8 3 300 20360101000000 20260101000000 38698 ldns-rsasha256.example. g+OmZPBJnpwRmGeqtxTbM2gY5eqy3wtQ5naEzPul3/ZtuBJZD1yHfna6AwMXi/XYWz8G90BpZZNodLYtDb1s5egFRY2BuyptIO+H7Tak4kej4ZCyiRH3El7tzCxdwDJHXe0xPWsxWxEXeiBfRJ2SROBHi2JkdsZH+FlQB4oNzvQ=
+alias.ldns-rsasha256.example.	3600	IN	CNAME	www.ldns-rsasha256.example.
+alias.ldns-rsasha256.example.	3600	IN	RRSIG	CNAME 8 3 3600 20360101000000 20260101000000 38698 ldns-rsasha256.example. F9CeDDz0Y91V1XXJomPLl+E2wpSCtZk0mExBkNaf8AniyrN5ndIe0qWQq9C8D9zY3lWcRUqpWT2zQicIuaHDjoKXjb2uYxf9qrZOqfw/UoVEQscQ+HYCwN5L9vIoZeDVbBMVQyG6haXrjvtfsJOUSNyrfGXOStsp4YFW9vYghdE=
+t0nvtg9ekepvofu0rtq3n8f372mr9v50.ldns-rsasha256.example.	300	IN	NSEC3	1 1 2 beef  te3a48t3qp8adruvroa8tr8n1au95k3h CNAME RRSIG 
+t0nvtg9ekepvofu0rtq3n8f372mr9v50.ldns-rsasha256.example.	300	IN	RRSIG	NSEC3 8 3 300 20360101000000 20260101000000 38698 ldns-rsasha256.example. ghS5pky1Hg+dfWXY49GQ0b2OeZsIvItgAoTJiFELgDLi082SWvptLS7lnFANao2QartSXioUEdzuCIllbhG9conOx7SB6D3aoLs9x0oqeP/UgZTWG+HCtoZAVOuCLqsChGs89aBEOFpFdrzqgUmxzV3iWDnkb2Z2mUsIqYOOrxY=
+dname.ldns-rsasha256.example.	3600	IN	DNAME	example.net.
+dname.ldns-rsasha256.example.	3600	IN	RRSIG	DNAME 8 3 3600 20360101000000 20260101000000 38698 ldns-rsasha256.example. BE2kR86Pyp/W/v2H1quPFxTMamNdRlIC4JwG1gg9DyQtPWvQ2ByvdB3QQfoxjVujiDMr6YThEQz5Z6ncWuWi61vpAsfhg+NpMv3zgBcaDLPjAnZW0nwAVXTUyADYW/tngpc2b5Q3IQwyyw3Pvq5yFB6yYCd77W3RaMUqfFdPqFw=
+n6j9s3aja7c8h5deedo7lm4obltgckg8.ldns-rsasha256.example.	300	IN	NSEC3	1 1 2 beef  oqagqefq4c4mgnmmfgl22u5v3l54sk8q DNAME RRSIG 
+n6j9s3aja7c8h5deedo7lm4obltgckg8.ldns-rsasha256.example.	300	IN	RRSIG	NSEC3 8 3 300 20360101000000 20260101000000 38698 ldns-rsasha256.example. lBg91GvLZr8zyzsR+ZL3O3a+K5UR/e38GOS4rUrEjjy1rbxmvEtMsFMSljqxWSiRRaLj7C24Yb6RPJ51PbHMTOAglmEY3LMFIuRMXj55xqIPRip9CvyIitvJ54mNki3tAuESduIMrXiYf5NlptIDoMynantcMxRVPNpAUY8wHbU=
+jfa0hc6a3smr75h4umsi1bropl2ul97i.ldns-rsasha256.example.	300	IN	NSEC3	1 1 2 beef  kh7tqte5tc3jih8386ck2cp5v61jft3f
+jfa0hc6a3smr75h4umsi1bropl2ul97i.ldns-rsasha256.example.	300	IN	RRSIG	NSEC3 8 3 300 20360101000000 20260101000000 38698 ldns-rsasha256.example. vhViZYT0Dff1lo74yKOMQaSGNJ5p1jSZU7M1DWFXmq4Xk598g4u+zu5236VgmW4Zn63eUdoeXIOz8eB+SzHvxkj03uMLANOaHzrDYXyxwtbUVP8vPivDS7pffRSxZ1G6keMDmBlAEUSittPR2aTOAwbK4VnKwFoTg5FbqfPwuYU=
+kh7tqte5tc3jih8386ck2cp5v61jft3f.ldns-rsasha256.example.	300	IN	NSEC3	1 1 2 beef  l6qf8qsrkb44n2u6mf81pt6g3eohsa7m
+kh7tqte5tc3jih8386ck2cp5v61jft3f.ldns-rsasha256.example.	300	IN	RRSIG	NSEC3 8 3 300 20360101000000 20260101000000 38698 ldns-rsasha256.example. zJxD+kDvbGcf2qE7VrD0xjgasizXoTvZdG24O/TAvwL8Xtm7LbhsvIqaxmdfXIOS4OY6a/80bhCNz8RmG7jGoq3GDqzjVSKClwmfE0Wf8xOw21OphD3zKecibx9nsoRJEAoBavGltkrG8OrF5zHPNAec0LpbQA/L60BMQJkwFTM=
+a.b.ent.ldns-rsasha256.example.	3600	IN	A	192.0.2.7
+a.b.ent.ldns-rsasha256.example.	3600	IN	RRSIG	A 8 5 3600 20360101000000 20260101000000 38698 ldns-rsasha256.example. F6wnbUcaWN9P2klWc7KvpV1PU9uEawMCOurulu6S/TYblQZvLEKqUV4P9u2WK1C5UGHaBsTLGIy0SaWlM7va4sLDpxTqRfEjo+Is8+mxbW3lk+WxDLFZnNjtvueAtRI38tGNBa6wqocFXsmma1xUx+ncZm9QVbaxUaD7wqqp20A=
+tft12pgbkj6go1m98hleuoji6me35l6l.ldns-rsasha256.example.	300	IN	NSEC3	1 1 2 beef  v5rtrvk0tkes9iuki46vkhpfmkeqjvd4 A RRSIG 
+tft12pgbkj6go1m98hleuoji6me35l6l.ldns-rsasha256.example.	300	IN	RRSIG	NSEC3 8 3 300 20360101000000 20260101000000 38698 ldns-rsasha256.example. KJ5IQdgjLxyWvPwHzqwtXVBG3t5AlgzVMES1xLN6baqEd2IMzP2vVE0EqkCBOVmYqD0i9x1qolF/1rLB8otLh4m7JEBTpPNKUCypkxTk5KxEZ/izUwm0d6FkZ4iuM4jd0btsV0CHQ7W2xUYKq4IJcqURV0qC862xxDK+lYO8dRY=
+insecure.ldns-rsasha256.example.	3600	IN	NS	ns.insecure.ldns-rsasha256.example.
+te3a48t3qp8adruvroa8tr8n1au95k3h.ldns-rsasha256.example.	300	IN	NSEC3	1 1 2 beef  tft12pgbkj6go1m98hleuoji6me35l6l NS 
+te3a48t3qp8adruvroa8tr8n1au95k3h.ldns-rsasha256.example.	300	IN	RRSIG	NSEC3 8 3 300 20360101000000 20260101000000 38698 ldns-rsasha256.example. IrUl2j52O66HDBOFoQMuYT7SJtgBiLulr0L8eX1nUbsdIhkoi67FpzJH6MK0OoB+Vtk8sEVsDR9gtSggrSoY6WMuZAoy8OgTHnl1DQZaQ+5Xuhyr9WwP7/38iG0LooHV427gZD3wCRldLMoB2oyauUGmHVdg2ZNedsNpgqD4Xf8=
+ns.insecure.ldns-rsasha256.example.	3600	IN	A	192.0.2.98
+mail.ldns-rsasha256.example.	3600	IN	A	192.0.2.25
+mail.ldns-rsasha256.example.	3600	IN	RRSIG	A 8 3 3600 20360101000000 20260101000000 38698 ldns-rsasha256.example. RTGgDKevTwkm5kPNZ7bO+C8+35l/KnrOtscsNGOQgoQH3sdSwTGAhpSI4j14vXes4J1k8uweF7H5V88H8yet9PmEDYNsBlFoohwOdhWC3i6QAoiMvVtRrGrPrREx7W2iKUPfGGe3MuNYl0/vLACN5aEiB6ve06iQfETlxmNeA1E=
+bchun7jtd23nir2skm677t7arjhp962u.ldns-rsasha256.example.	300	IN	NSEC3	1 1 2 beef  c1klg82od8aninuivaps47ss5rhg980u A RRSIG 
+bchun7jtd23nir2skm677t7arjhp962u.ldns-rsasha256.example.	300	IN	RRSIG	NSEC3 8 3 300 20360101000000 20260101000000 38698 ldns-rsasha256.example. AtQ+/F2cHTS+K8K23GxLjeBFSCWQk+FgnV/GdfIewftY8wu/Ksu6OGbtl5gmeSNg19LCTcOvGyv/b+weyrExQQBig9fazRf7lBE2lyCwegVBL2TXJAIbvG6kYo7MiBUI4w3cOW3jehdObRWZOox+RLqr30kCKgfv8fTITK0VSs8=
+ns1.ldns-rsasha256.example.	3600	IN	A	192.0.2.53
+ns1.ldns-rsasha256.example.	3600	IN	RRSIG	A 8 3 3600 20360101000000 20260101000000 38698 ldns-rsasha256.example. BjU/Q9nc29I2079hXJZGQD3icVfiQ7DrYf28kWiDnkyRWobkR/leY4Jzkv3Ikyk+JSdx+v/2cBEIxTkm58D0XayK1qzepf2lQ04Fc+q6HYjTMUq7K2d8aWpbwsEtkRob/BEaSf6s01Ne4Qq1g7VNTW2niJX1V6wn7S4283ghgoA=
+ns1.ldns-rsasha256.example.	3600	IN	AAAA	2001:db8::53
+ns1.ldns-rsasha256.example.	3600	IN	RRSIG	AAAA 8 3 3600 20360101000000 20260101000000 38698 ldns-rsasha256.example. EV+Xu52QrId6StNFRhPX5/ZWaY0scJPHvxbJehqho8KKLzwoWnd8/YJjTueTiiyG/1I81VMQb6STTbkm2daRDFAhgggcFrpZQmJ41Poraj1JZFbj67xKiHx9MIGt4e9ONdoPUFWRF7QK92y4bY4CTXsKSIWZLbvRBbeTbR9/ohI=
+v5rtrvk0tkes9iuki46vkhpfmkeqjvd4.ldns-rsasha256.example.	300	IN	NSEC3	1 1 2 beef  1vj82a4chl75qd1i61fb87siou9au09q A AAAA RRSIG 
+v5rtrvk0tkes9iuki46vkhpfmkeqjvd4.ldns-rsasha256.example.	300	IN	RRSIG	NSEC3 8 3 300 20360101000000 20260101000000 38698 ldns-rsasha256.example. QNFM4dHdrZmJtvmX4tMF/YrNHsna2EP4+UYlVOS65Xg/wNhxKDDe6WKDGIShqXmjDgznMaOJBugFUCF91NQ5WKrm4sESbuY4yFyFZzUiv5LbcioQYbXDJhWDTYSn4MlwTkolPg0/uX+D61VoOkzWsVV+KonxBBuRrxW1A3s4dgQ=
+ns2.ldns-rsasha256.example.	3600	IN	A	198.51.100.53
+ns2.ldns-rsasha256.example.	3600	IN	RRSIG	A 8 3 3600 20360101000000 20260101000000 38698 ldns-rsasha256.example. tEtLu3dyiHWTfsBYNyPNwmbAgsB030FMdvHJ2g52WIRlCsgSvDgEhcq7BXe6EW7y0SEMwO7s8bSqw0Eo2kEOe3EsNidJpmyzv9QsNymUZWA7D57Zsv5UkPhPEbsrupmyzZrTocbbX90bMMfIckFGQVx9h79tj3UPwcd1Fe19o0U=
+farvproir0f3377l3nh3rcuhj01tjkot.ldns-rsasha256.example.	300	IN	NSEC3	1 1 2 beef  fu8ml79v8g1vje62brlp8ijq4krl4q20 A RRSIG 
+farvproir0f3377l3nh3rcuhj01tjkot.ldns-rsasha256.example.	300	IN	RRSIG	NSEC3 8 3 300 20360101000000 20260101000000 38698 ldns-rsasha256.example. QAeJCDsLEaakkH3uLwVzEwclhUpp0bEwiaK3yiYjj+X0/Buek8v8iuUYQKUumzQkW4kNVp5j+zQ/qvz6Dheblmz6FD1c3I3AtMK2GPCPGAbE+kWchr6f2KNI0Rk+s+Yj4V7+u0sJTE4/8CKshjJuSjyALWXHrcXo7t5G1tGs9JU=
+other.ldns-rsasha256.example.	3600	IN	NS	ns.example.net.
+f318pqmn0ceanclqgto3kfsf00cm8f9a.ldns-rsasha256.example.	300	IN	NSEC3	1 1 2 beef  farvproir0f3377l3nh3rcuhj01tjkot NS 
+f318pqmn0ceanclqgto3kfsf00cm8f9a.ldns-rsasha256.example.	300	IN	RRSIG	NSEC3 8 3 300 20360101000000 20260101000000 38698 ldns-rsasha256.example. jaXb+/09j/f/lcaVS3eTGm1PPIL+/yJLhAMgQNgIrMsj1cG+zjD/xs5Unx5VXLE3JmKzYK5Cr4xQrEBaxKgkAizO02Bdj/cUhFa2eQ2u/CoX5kzN4vxACEVH1tfVBag+Pf7DlxQKBeJfw80Us8w9AulbGIOEyPfXJdpBxVmgX6A=
+secure.ldns-rsasha256.example.	3600	IN	NS	ns.secure.ldns-rsasha256.example.
+secure.ldns-rsasha256.example.	3600	IN	DS	12345 13 2 e06d44b80b8f1d39a95c0b0d7c65d08458e880409bbc683457104237c7f8ec8d
+secure.ldns-rsasha256.example.	3600	IN	RRSIG	DS 8 3 3600 20360101000000 20260101000000 38698 ldns-rsasha256.example. TZxAcDs0+qT87nntlIvFdOqrLqOZfMUao6IUZytZmBS8ifJRK8H0C8NF6kfKeegRT92n9+6SZlazpCZffec9mzOsG+z2514bpLvhQ5R+JZEJP0QRCMy15ZObpr0IA9/At1HBUidr6j8woH5/Q+l3iYDjQJ8R17zAdsDWkrGBmIA=
+fu8ml79v8g1vje62brlp8ijq4krl4q20.ldns-rsasha256.example.	300	IN	NSEC3	1 1 2 beef  j0suahsbcg2ro4o2ij3ptelgeo6blq34 NS DS RRSIG 
+fu8ml79v8g1vje62brlp8ijq4krl4q20.ldns-rsasha256.example.	300	IN	RRSIG	NSEC3 8 3 300 20360101000000 20260101000000 38698 ldns-rsasha256.example. JfeRBN+ueHo/M44tgiQzmR8UWmWm6HIyRqsGCCvLuiZPWk+2J+cx2HCiy0Gw7nrC+FqDN50SGGO8huEwbkmOeVDzzydBsNXmZfCmRaBgo8YEcVIJBfsQI6uvAwIHFTmZ0jYpgvPWtOdffwZO+A53a55lklOhEkA8N+4qxRczviU=
+ns.secure.ldns-rsasha256.example.	3600	IN	A	192.0.2.99
+l6qf8qsrkb44n2u6mf81pt6g3eohsa7m.ldns-rsasha256.example.	300	IN	NSEC3	1 1 2 beef  m4enek6s4df258j1rrkuso154vf938on
+l6qf8qsrkb44n2u6mf81pt6g3eohsa7m.ldns-rsasha256.example.	300	IN	RRSIG	NSEC3 8 3 300 20360101000000 20260101000000 38698 ldns-rsasha256.example. PYS2ikS748qdBKuH1UImclV/sPfeZ9HDm0YKItecY+n+wxovN6G7hufmwy5sRPPcZiI3LUgZEWSJ8iU9sEbwGpNBVLvt+TM0JfMd4PT49XjNjfqHubpWDJpA0s3FlaMzVEmqd5ppZUesdEUUBJRr4U+y/jxrHdRIu49/L+zBBno=
+*.wild.ldns-rsasha256.example.	3600	IN	A	192.0.2.42
+*.wild.ldns-rsasha256.example.	3600	IN	RRSIG	A 8 3 3600 20360101000000 20260101000000 38698 ldns-rsasha256.example. 0Oq1HFNFk9BuRY0U7h6bKgozkya75HW14MT2Jg5iBHu5aQVLkYM/o+HOpwsxpZmCdBILct7dBOiFNOTNdprdhv++WRtPMKzB4iXU4b5ZktFAuZPquApY9qJeAcX1nhkjNiIbAOA1X1xzsEsDF3G75m/++qS/nYp4zuxs+oc6nP8=
+*.wild.ldns-rsasha256.example.	3600	IN	TXT	"wildcard"
+*.wild.ldns-rsasha256.example.	3600	IN	RRSIG	TXT 8 3 3600 20360101000000 20260101000000 38698 ldns-rsasha256.example. VXB2wVHWAgmGbkcFweIln3wNE8lMT5Clp4uRY0HoA2fW2tOeHypUJqdFJfRHzg6yJMsk2AtvBBbo8yioanUqTNvbdl0eAf7GA0ufoazAX44zE/qtKtxr0/GfX+F22AfqsE0CBd/EoxOzgPhyxAJuqEDpxO7WgQRuAhaiJzOa200=
+dcui1jsfoqnumq8a26gk3lt7emshvanr.ldns-rsasha256.example.	300	IN	NSEC3	1 1 2 beef  f318pqmn0ceanclqgto3kfsf00cm8f9a A TXT RRSIG 
+dcui1jsfoqnumq8a26gk3lt7emshvanr.ldns-rsasha256.example.	300	IN	RRSIG	NSEC3 8 3 300 20360101000000 20260101000000 38698 ldns-rsasha256.example. ifnfrFbfNpjRf5CZvy1QoWqPz4+8fGlKvNuSB12j131H9R9/ZMy++/NugcB4LuN/V5E1U8WYxAPlRb/TmBJQDxQ8SqpUmRbzGxWv+Vz2lm08TeY556CalGJqvJv5HHcNzOaIxWnksMxVWxEN4jQI/WbwFmWcl2kd71W91rT7orA=
+www.ldns-rsasha256.example.	3600	IN	A	192.0.2.80
+www.ldns-rsasha256.example.	3600	IN	RRSIG	A 8 3 3600 20360101000000 20260101000000 38698 ldns-rsasha256.example. S6PIv98DrLIueVxXhi4OFSedIKk3Ge92a14UlVpODwJQuKwrVrBBThovxRM+y3xobAb5n/CNp1nIRjqgGZn7VRPXwyAlXegeNkTW4RDnQvyVBjNya9oedDx5p3+P8/szas1AWXXXpYgW+4bcrbktdv28/weEnpYuJSp7fCb9i60=
+www.ldns-rsasha256.example.	3600	IN	AAAA	2001:db8::80
+www.ldns-rsasha256.example.	3600	IN	RRSIG	AAAA 8 3 3600 20360101000000 20260101000000 38698 ldns-rsasha256.example. RFxlRnWN8+HGUCyz3+BnjhTwfCkG+FIDiG3Na+g96e3rEfkSf6UUH+nNgqCmmwdCbPco3jl/q+x3eMHLSPq9uDuP4fvXj8Gcis3N5wgYg79SZ2vEedNVY15hJ+SMwLdF2WILpP/uGzM/fzDZdf2MVtZe61W3qNDhTi57eTZE9SI=
+mtpitbmvff9mtmdqd1p5fl4u69otncrn.ldns-rsasha256.example.	300	IN	NSEC3	1 1 2 beef  n6j9s3aja7c8h5deedo7lm4obltgckg8 A AAAA RRSIG 
+mtpitbmvff9mtmdqd1p5fl4u69otncrn.ldns-rsasha256.example.	300	IN	RRSIG	NSEC3 8 3 300 20360101000000 20260101000000 38698 ldns-rsasha256.example. XoYU7x9Pga2zzhJAMKzox6J7Ixg08Y/EYDWGQpCWYJOv71b2luJNERiaSRXJsJSPBv6acZXMQVXcHnJj2ali8tJjagqAxKQObgDvm9xhIJ4wgcnQr8pmO887AOcba7bkPgGqEFaRmPVhiyMKxI2OFnnkgEEqDita/jBxJEcj0hc=
+c1klg82od8aninuivaps47ss5rhg980u.ldns-rsasha256.example.	300	IN	NSEC3	1 1 2 beef  dcui1jsfoqnumq8a26gk3lt7emshvanr
+c1klg82od8aninuivaps47ss5rhg980u.ldns-rsasha256.example.	300	IN	RRSIG	NSEC3 8 3 300 20360101000000 20260101000000 38698 ldns-rsasha256.example. zCx/nkBp0elu5hfPKucCCYpRG322wo6pasbUTYmjUyaK4KfQiNxP3PZN42MNnJzF2oZB07Dxa3CREdxVrtUd6X10PSpJ5c3pargsauN7BywY2/Ob3r7IlLrtJdDAoeHzqa63JG2l1XzBpM+GHF/eVglxt+NRrLUmlTi4Al2g6u0=
+_443._tcp.www.ldns-rsasha256.example.	3600	IN	TLSA	3 1 1 0c72ac70b745ac19998811b131d662c9ac69dbdbe7cb23e5b514b56664c5d3d6
+_443._tcp.www.ldns-rsasha256.example.	3600	IN	RRSIG	TLSA 8 5 3600 20360101000000 20260101000000 38698 ldns-rsasha256.example. NOUOIjI3naHa3LQIj60VKRv40yk4SZFFjAHXk1+Z5ogYh4N0RLKDiayFF6MEcX8YjJzYArPXaEiJGHNtNSSKWi/nQk3YvdOEqeLT4HS8jiIRZGCQ65muW4IA7Is1irvX8TFaHQsTXJRIvfM/HaY68/qfAZLOc1lbKC2k7KYEZKA=
+m4enek6s4df258j1rrkuso154vf938on.ldns-rsasha256.example.	300	IN	NSEC3	1 1 2 beef  mtpitbmvff9mtmdqd1p5fl4u69otncrn RRSIG TLSA 
+m4enek6s4df258j1rrkuso154vf938on.ldns-rsasha256.example.	300	IN	RRSIG	NSEC3 8 3 300 20360101000000 20260101000000 38698 ldns-rsasha256.example. oJrzSOxeWSwjflZfxeESumrFQFyxHo2qoIg3PadSLIdRlExzE0AXRuM/I44rklklLH0WEqlfXOz8Lj2HQ74gSuxQuYEhaQ8jA5XAF2MSUiECv0Jf+C1uTZYMbDmWvyvrJcJYAFoIGwwF6m2v289DYyAKPk1+qL4YewvocsNQ5XI=

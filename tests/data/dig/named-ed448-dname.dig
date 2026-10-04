@@ -1,0 +1,12 @@
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 65085
+;; flags: qr aa; QUERY: 1, ANSWER: 3, AUTHORITY: 0, ADDITIONAL: 1
+
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags: do; udp: 1232
+;; QUESTION SECTION:
+;x.dname.ed448.example.		IN	A
+
+;; ANSWER SECTION:
+dname.ed448.example.	3600	IN	DNAME	example.net.
+dname.ed448.example.	3600	IN	RRSIG	DNAME 16 3 3600 20360101000000 20260101000000 11353 ed448.example. Se13zf6dbY4Dx6QPua1fyC3NgvCzo/zLs8/XzlnW7aiPB3z1suXqstcy PwDqT996fXIAKs9aC0sA4/4fn/xragu51Jt4Iu/akrusI8Q0zJ4Z68+L TpkCkWaCkeniU1HqG/GuVApsZcp1AtrPEYJIHTUA
+x.dname.ed448.example.	3600	IN	CNAME	x.example.net.

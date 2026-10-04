@@ -1,0 +1,274 @@
+; File written on Sun Oct  4 23:39:47 2026
+; dnssec_signzone version 9.18.49
+ecdsap384.example.	3600	IN SOA	ns1.ecdsap384.example. hostmaster.ecdsap384.example. (
+					2026100401 ; serial
+					7200       ; refresh (2 hours)
+					3600       ; retry (1 hour)
+					1209600    ; expire (2 weeks)
+					300        ; minimum (5 minutes)
+					)
+			3600	RRSIG	SOA 14 2 3600 (
+					20360101000000 20260101000000 29545 ecdsap384.example.
+					JRVrHTzUK2Oe8itTfyPZAWQ8OfsH4Ucmocu3
+					Yzyn3RctFpPG3ALM92+TtRjEsrX1YhRxmVv2
+					M8o1bph5GdGd4LGxGM0hvcEYoTE54vO5D4/6
+					PEd6RxwW5pjI6jBMH431 )
+			3600	NS	ns1.ecdsap384.example.
+			3600	NS	ns2.ecdsap384.example.
+			3600	RRSIG	NS 14 2 3600 (
+					20360101000000 20260101000000 29545 ecdsap384.example.
+					gilvUTR7L/TvcI1FlFpNzFWv6Z/IhTnV1Kl9
+					Vg06XltG2vqG7r6xsccggxhCy171p0661DbL
+					qCrwfCZT0id4rTML8Jzns/ejdf1wkgyuLAzb
+					LR9KAaC3drcqST/xi2Yc )
+			3600	MX	10 mail.ecdsap384.example.
+			3600	RRSIG	MX 14 2 3600 (
+					20360101000000 20260101000000 29545 ecdsap384.example.
+					Q2K91mxQHZ+iDHKOW1WzbgedVDrxa2HxHyZk
+					ULuP2y8DYwy81SOWHG5crGZe85Wp4ex5C/kX
+					9tNfgA4kxVvfC2PV3Jyg/adye8t5G54jlme/
+					c4rlybg01FkWS2+RabQ8 )
+			3600	TXT	"v=spf1 mx -all"
+			3600	RRSIG	TXT 14 2 3600 (
+					20360101000000 20260101000000 29545 ecdsap384.example.
+					hY9RjDvqvzeAnSx6kOlfYMB8cfGA66rPzJNV
+					ISZsRxbcktmIAvv5XG7gL6KyC6/8xHN2/n1I
+					9IXJ5sGVThey/P7BK2X+UpnUghmqKrEQfaM4
+					JcAm/ajPYySc2v3AZiyB )
+			300	NSEC	_sip._udp.ecdsap384.example. NS SOA MX TXT RRSIG NSEC DNSKEY HTTPS CAA
+			300	RRSIG	NSEC 14 2 300 (
+					20360101000000 20260101000000 29545 ecdsap384.example.
+					B2B3vStStN7fttIiwNHRq8BMaCVQKTmGNuiL
+					iPbIAfXl7UbYd4r9Nzusec9px05LO7fVmaSs
+					TNPIM27vZ2VGMTP30KkkI2pJ5GSXG69v2yzH
+					1cAEeEesxLitReOrXiEA )
+			3600	DNSKEY	256 3 14 (
+					Me1ZOm8OI2GGL6jeDyUte9hOy9wQCWrp1m2E
+					v/SKe9ApFNZjjVuwZcV3cIFi4INFlKi/dWow
+					gA36t7XQcbTsWvpvpAaAD4ax9fNy0dIK4fLB
+					C5UMgq42CbPXkMtKG/WY
+					) ; ZSK; alg = ECDSAP384SHA384 ; key id = 29545
+			3600	DNSKEY	257 3 14 (
+					cOl65i3vD+OgKykrOXKYmom0liV4wPLhvV4q
+					4nJpMmpDpfcW1PKF6rMeWlPFVgfbMhRpDhPf
+					leIK1C5yCAXjCPtsE0qnJ2+pFcaLDncqtnQj
+					49c83uILtsy4jfv/EQmC
+					) ; KSK; alg = ECDSAP384SHA384 ; key id = 63512
+			3600	RRSIG	DNSKEY 14 2 3600 (
+					20360101000000 20260101000000 63512 ecdsap384.example.
+					uJ5+QYLtYFnXISuytTHRs5Gy0fSAG0g+to6L
+					0hIkWYlpjS3aWwn4jFSwPkUP4W4OHg3mU1c4
+					G0HVFWxYVISdClqdpnpGSTpTQ3kyLEb9yDzX
+					V3VFUAWssnXWL+IgPabt )
+			3600	HTTPS	1 . alpn="h2,h3"
+			3600	RRSIG	HTTPS 14 2 3600 (
+					20360101000000 20260101000000 29545 ecdsap384.example.
+					BkHGv4QFl2PKnpmywOio4ni7q97PDvx7yem1
+					gd+fDFsgR3stbpSvCGcjDmqDy0iF8f3VjZbQ
+					0PWkzpJQvzI8m2RHss+CbeHqITdgzmhZetXr
+					2NmkBhBU6tDkoyV9zIbE )
+			3600	CAA	0 issue "letsencrypt.org"
+			3600	RRSIG	CAA 14 2 3600 (
+					20360101000000 20260101000000 29545 ecdsap384.example.
+					+Mt7tk/hEnlMxhThqtRJ8G/L3nwTAAwm0G/R
+					X+n27/C6jS0Z+Hm1L+9JfH2c1CpvJDdhXpgf
+					PaRmjnT4KVpsQZEsII/ayDf8A2rwqE4bKGZb
+					UbUO0DPh3by7aLymhD3B )
+ns.insecure.ecdsap384.example. 3600 IN A 192.0.2.98
+ns.secure.ecdsap384.example. 3600 IN A	192.0.2.99
+other.ecdsap384.example. 3600	IN NS	ns.example.net.
+			300	NSEC	secure.ecdsap384.example. NS RRSIG NSEC
+			300	RRSIG	NSEC 14 3 300 (
+					20360101000000 20260101000000 29545 ecdsap384.example.
+					PVGhvzuwfdk/MLVKmq1PUP1ZQLmZ6173Xo1z
+					XT/7l6GTOhq+bruJpvTKdezA9/B/W1GQXJFa
+					8KTkokFeK4MznxXxyGS5yQhrbaIQzVmFhPkN
+					jt/iU52+JO/WFlblrf0W )
+ns2.ecdsap384.example.	3600	IN A	198.51.100.53
+			3600	RRSIG	A 14 3 3600 (
+					20360101000000 20260101000000 29545 ecdsap384.example.
+					Hkpn/nfJlrIiwkV2jF5bunoBv6/3Gqq6CExi
+					tiDAlkQDPwWQHf5UMYP3drghCUQw6zg7DJdG
+					TpYXYOyJuYLI+67IiKexTgsbY5/G+6L4iNWk
+					If/wdBBHH17vd5k+62Co )
+			300	NSEC	other.ecdsap384.example. A RRSIG NSEC
+			300	RRSIG	NSEC 14 3 300 (
+					20360101000000 20260101000000 29545 ecdsap384.example.
+					QDAj9VY77FZICR+L90cfMmBdEYE3SXvSR+y4
+					UE+wbJqO/y2govEJTicYte9lm5hcbaoguB6s
+					JoyrXe1Xqzss18G9Omn++y+sLmeLQvJY/J1S
+					/CgWSAbJwd8xW9Ioe39O )
+_sip._udp.ecdsap384.example. 3600 IN SRV 10 60 5060 www.ecdsap384.example.
+			3600	RRSIG	SRV 14 4 3600 (
+					20360101000000 20260101000000 29545 ecdsap384.example.
+					yA0xxaZJ36OkGl/q4Pd4m6nd5bE1Au+EI4Ft
+					TSyk6Y7a6ACDOkZnsLWGxCxYteIRzxhCfLno
+					6M1W0Cv8HJ6eZITqKJaUjqvbYBGxNJpMD3Mg
+					Nf1JHACFOxiafNZJm/Aa )
+			300	NSEC	alias.ecdsap384.example. SRV RRSIG NSEC
+			300	RRSIG	NSEC 14 4 300 (
+					20360101000000 20260101000000 29545 ecdsap384.example.
+					l1uENpi3O8XSqgZG88yq2swqmvnG21V3cZWg
+					X0gMasq4i8ODLBZ6m5QASiTEojauhNjogqm6
+					9n8QsIABV7nfn6c3lk8f/VZpNXC07GVZi/Xa
+					M5WlNQbZYaYPlZugk4Mv )
+_443._tcp.www.ecdsap384.example. 300 IN	NSEC ecdsap384.example. RRSIG NSEC TLSA
+			300	RRSIG	NSEC 14 5 300 (
+					20360101000000 20260101000000 29545 ecdsap384.example.
+					jYlL/TqUVbQAa9cYQAnPmeH6UBjQddd8ZtH1
+					J7w//HHMdik7wY1gP3Rng97vVBKMcp23NjXs
+					sPz3jGMdHGd7/0oMWo05/8Iksrhs55/reMi6
+					pcWmNMpozCPrG4O002tq )
+			3600	TLSA	3 1 1 (
+					0C72AC70B745AC19998811B131D662C9AC69
+					DBDBE7CB23E5B514B56664C5D3D6 )
+			3600	RRSIG	TLSA 14 5 3600 (
+					20360101000000 20260101000000 29545 ecdsap384.example.
+					0juZ2s2nZh6Pw7/Whj5Y9wFHqrd98IaLi3J0
+					kpwN1tw1Z2bDptIsnPe0qVN3+wXWr7YwKMnf
+					m0+XhFRB3jRZ3PV7Rgp+/4ILpVeyJIAUs/G7
+					3cOHOS87z1QICyogxbCx )
+insecure.ecdsap384.example. 3600 IN NS	ns.insecure.ecdsap384.example.
+			300	NSEC	mail.ecdsap384.example. NS RRSIG NSEC
+			300	RRSIG	NSEC 14 3 300 (
+					20360101000000 20260101000000 29545 ecdsap384.example.
+					DOwCpyt4XM8C6nJ8x/W43PyzXpWg6gkRtIhm
+					EvSEzGqALuMUyQBdeF8rmPNWkrALcxsN4d82
+					cnoRiv4pmQSxUrD/Djr6J17FTHnTbOeU2uQT
+					9i4uGMNhnbO/aR4J6I4c )
+dname.ecdsap384.example. 3600	IN DNAME example.net.
+			3600	RRSIG	DNAME 14 3 3600 (
+					20360101000000 20260101000000 29545 ecdsap384.example.
+					CwGqUwk6QaSfMn6rLATJkqLq38rYHtAUBK7d
+					rDcb/wUPeZLFWeBEZ31VGmfa5eTHwwmP0vE4
+					dvTYdkoMomyJE5mXcWvL68sHOto2y3CvBV3z
+					BRHQNkiGW5CG19gMX/My )
+			300	NSEC	a.b.ent.ecdsap384.example. DNAME RRSIG NSEC
+			300	RRSIG	NSEC 14 3 300 (
+					20360101000000 20260101000000 29545 ecdsap384.example.
+					V1gPxcgtcN13CGAcfB27GXkrdFVsFtcGH0UJ
+					TGisRHt2N6lBAQeoszrDjvqpGNBEXofXrF1l
+					m675Qeam+zaeQTIMnILejb3r2CckEtuvSuIn
+					BhtqV2921M13QQDCPGjg )
+a.b.ent.ecdsap384.example. 3600	IN A	192.0.2.7
+			3600	RRSIG	A 14 5 3600 (
+					20360101000000 20260101000000 29545 ecdsap384.example.
+					4d5lBoPCGOxmvW+uqbI2pSSXmYnRr+ryUDLG
+					tR4mHoS/Kb+eGhFcPakqO3TFuItM71j01/Jg
+					fckMPCuh+42RWTSDMIaKU8KhHlbjXBsVpX0N
+					jBG9qY6WS6b40LnM1vAf )
+			300	NSEC	insecure.ecdsap384.example. A RRSIG NSEC
+			300	RRSIG	NSEC 14 5 300 (
+					20360101000000 20260101000000 29545 ecdsap384.example.
+					c65F+If3kRrF6sGR5hXb95f+Y4U/O39U1uja
+					4LuXkDQwktsTjdktSUMpR6GxfoSEnQXYJO1e
+					kzM8Q2anKYqc+VdWDQPCD8T58MdxHxvOM1VU
+					Vv6gr1v54XPhjzarLTuH )
+mail.ecdsap384.example.	3600	IN A	192.0.2.25
+			3600	RRSIG	A 14 3 3600 (
+					20360101000000 20260101000000 29545 ecdsap384.example.
+					laCHC3NgJUnNFL/9Z2Q8b4HtnXllO+8U2t8O
+					Pch58NBEbpPb+vdiPWcuSG55EJBoBHa/UceS
+					fys2twLbwo9x0hZ2+LrwG62IPHXMJpUW2b74
+					l1cG78mPhvbptzDwXl3g )
+			300	NSEC	ns1.ecdsap384.example. A RRSIG NSEC
+			300	RRSIG	NSEC 14 3 300 (
+					20360101000000 20260101000000 29545 ecdsap384.example.
+					6+kml0v3Blyp2Mic9TbPyKoSsYosufC2z/Xi
+					gHM4Sh1cm5/2cx3O+vRbyfFxAI20odoNjk+y
+					PDB6DeTxLDy4QUAW82Tw+kjHiBvEJumzKWtL
+					1lbebtwZ9alnzQh6GreO )
+www.ecdsap384.example.	3600	IN A	192.0.2.80
+			3600	RRSIG	A 14 3 3600 (
+					20360101000000 20260101000000 29545 ecdsap384.example.
+					mR1jSA1glDugJp47QEMmYnSPWPjc3+NeaQ3X
+					L5qYCdHc4IKN/9ePuGMz1R8cS6sRc0J6DXup
+					znmfg9tyhpkpL2FTHR5+8T3lCKIsT5wlj8FL
+					v/9W0plTb1S4/9rREOxZ )
+			3600	AAAA	2001:db8::80
+			3600	RRSIG	AAAA 14 3 3600 (
+					20360101000000 20260101000000 29545 ecdsap384.example.
+					eNd/ST8z0wMkyiz8DTJhCENnlEUkScoIX5ml
+					bTS7GwBFULuA5fk2LCIdcJ54cWRixh7KkvSF
+					DZ7pShQpKptk1v++mKGARVooTXDte0UvDLlp
+					2SOBnf4GKZmdTA6rxeh4 )
+			300	NSEC	_443._tcp.www.ecdsap384.example. A AAAA RRSIG NSEC
+			300	RRSIG	NSEC 14 3 300 (
+					20360101000000 20260101000000 29545 ecdsap384.example.
+					ViHEbXnFQVkeQ7ouqKiw+w/flwocDCDPAQiW
+					PtSLXCOpGPHTQpQd6MKMgNUEOOOZOpoabQS4
+					YnPs8RWchCkuM3Xro9BQ8g5YOxQ0Etzs8QEk
+					PCdZEFeNp/hv91V9ZZUx )
+ns1.ecdsap384.example.	3600	IN A	192.0.2.53
+			3600	RRSIG	A 14 3 3600 (
+					20360101000000 20260101000000 29545 ecdsap384.example.
+					DDfmocWeZxL8nwfBjFA9+aius81oocj9lPQd
+					C+eGri9QDCGpgv+nIajtGhBC572p4Gs8/Owz
+					VTTOVCRWqcTlY2ttewEk3ZBhKBirZMxW4nED
+					zvoGhngU7z21bQXEHvok )
+			3600	AAAA	2001:db8::53
+			3600	RRSIG	AAAA 14 3 3600 (
+					20360101000000 20260101000000 29545 ecdsap384.example.
+					+XmZJXhBGcMY+fh9lXFqN3RIzmUhwKbcWb3j
+					iJTFSgiuIHRTvbiah6R5EeTm9+b4UsrET8RI
+					DYpd5xtwt9vypIX+AX5NeDGT3VJMMnt02O6I
+					iwCtKiyomAf8QVhXeI9I )
+			300	NSEC	ns2.ecdsap384.example. A AAAA RRSIG NSEC
+			300	RRSIG	NSEC 14 3 300 (
+					20360101000000 20260101000000 29545 ecdsap384.example.
+					pw6493l5OjS0RbQEqC87S/hgApITYashIrN5
+					9v+GRB0ZZEK5HWxvT1xzzO3cwwjEk5HS2vCQ
+					GE1ltj83jo8JrLtfxW4OWRIOV0aMH+UKfLjm
+					u+sYhevSodQVa8FIlQkU )
+alias.ecdsap384.example. 3600	IN CNAME www.ecdsap384.example.
+			3600	RRSIG	CNAME 14 3 3600 (
+					20360101000000 20260101000000 29545 ecdsap384.example.
+					G7yeH8fc4f9WOBVkXcpVrFPeJnHcyMiEhUZQ
+					3L/elndIcyH0D1tfzronXN9BoyqBeseStsSB
+					ss959uYIlap/e/7LEnwhW4L5r0IgNOkHAsGU
+					7Toql2K595+r9DKmxlbn )
+			300	NSEC	dname.ecdsap384.example. CNAME RRSIG NSEC
+			300	RRSIG	NSEC 14 3 300 (
+					20360101000000 20260101000000 29545 ecdsap384.example.
+					Vi5ThP4sp3qVA2qCzrxMWbRrVQlkx8A+CS93
+					jGZtMLIS+smOBBPoeej+XFerQ+8vl3U2Wk3y
+					G5ihA3uBbubYyESV6hNnV0tVsVBuIzYSCULG
+					M3BTC+Gnms5ENtnMEDtF )
+secure.ecdsap384.example. 3600	IN NS	ns.secure.ecdsap384.example.
+			3600	DS	12345 13 2 (
+					E06D44B80B8F1D39A95C0B0D7C65D08458E8
+					80409BBC683457104237C7F8EC8D )
+			3600	RRSIG	DS 14 3 3600 (
+					20360101000000 20260101000000 29545 ecdsap384.example.
+					GWjQI8oY8nDU7Hq9qTPE8JXWGCwSwg4Bk1dx
+					3ZtKJtSXB625Sh2tIwUOYAHS9TFnHvPtTwc8
+					ZTcn7kcrnjllOc3rQFrszAEt7sFEmEVJfKC7
+					dybpL7Mn5yuzu2Mweh8v )
+			300	NSEC	*.wild.ecdsap384.example. NS DS RRSIG NSEC
+			300	RRSIG	NSEC 14 3 300 (
+					20360101000000 20260101000000 29545 ecdsap384.example.
+					18fOsHZYs8qnfPrjPcRhA0ljQoTBsxW+3Ix/
+					bQlJ+xg6naPICYiq72SyhcmUi1Pa8PRJQb9u
+					C5IduRjRT7pzoWip0yelb9XshTDE+c0byK0f
+					kiAVxoLIagRSRCuUDYkC )
+*.wild.ecdsap384.example. 3600	IN A	192.0.2.42
+			3600	RRSIG	A 14 3 3600 (
+					20360101000000 20260101000000 29545 ecdsap384.example.
+					KKZqNLKUHCCZ9yhLasGrEpN2BYitdI+KzdiZ
+					CeWX/+fgSlE+zBzfk9StHg8i/B5LRz+s9Xd8
+					tmTfYmsXSxFUpV55x/d20VXPs7gKbk14Fcs+
+					92+X6ZZY9vA44bL04aC7 )
+			3600	TXT	"wildcard"
+			3600	RRSIG	TXT 14 3 3600 (
+					20360101000000 20260101000000 29545 ecdsap384.example.
+					WD4T+EAYHuhfktO+WFpS3+VwT1Vfn2d4rHS4
+					tJrLWi6f0E1M/uFm81hXt9/nwTUXElqqUYh+
+					QdLidLUmQxfHMo4cqH4ZRIAvc3wDjrh/G1lC
+					2CjEt60z5fcg7dvSNdIF )
+			300	NSEC	www.ecdsap384.example. A TXT RRSIG NSEC
+			300	RRSIG	NSEC 14 3 300 (
+					20360101000000 20260101000000 29545 ecdsap384.example.
+					Sm1mY9ytUDybGIJDNJgvoVyPhkDLw20fOVLI
+					3Sa/79bTBE4RRzLlwd5bh9jYzyQory6xAv9n
+					N4wjXbcWZ1c+9fckH35Ls6KHRBED07/I/gXL
+					XXlGs8Z3TKEXRdPjcEKG )

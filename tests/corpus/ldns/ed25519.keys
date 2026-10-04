@@ -1,0 +1,13 @@
+; Throwaway keys of ldns-ed25519.example made by ldns-keygen for the dnsbox tests.
+; Kldns-ed25519.example.+015+09555.key
+ldns-ed25519.example.	IN	DNSKEY	257 3 15 uOnuMrFTg8wCcXDmA2N8c7uuL7MbmMK2D7JMAF3AzrQ= ;{id = 9555 (ksk), size = 256b}
+; Kldns-ed25519.example.+015+09555.private
+;! Private-key-format: v1.2
+;! Algorithm: 15 (ED25519)
+;! PrivateKey: fstCr4vUdrJFDWzI+kiat/JnYSVEZGunoskiTNKM7xg=
+; Kldns-ed25519.example.+015+29323.key
+ldns-ed25519.example.	IN	DNSKEY	256 3 15 VLUVnINdxcT832h3+uyc5zbOr9HZ1U87szz1V8RaQTw= ;{id = 29323 (zsk), size = 256b}
+; Kldns-ed25519.example.+015+29323.private
+;! Private-key-format: v1.2
+;! Algorithm: 15 (ED25519)
+;! PrivateKey: J9Gu+ijzoWuw9RMFt8mJKVzml7LDkWn63WYSgyu/6hA=

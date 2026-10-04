@@ -1,0 +1,26 @@
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 923
+;; flags: qr aa; QUERY: 1, ANSWER: 4, AUTHORITY: 3, ADDITIONAL: 7
+
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags: do; udp: 1232
+;; QUESTION SECTION:
+;alias.ecdsap384.example.	IN	A
+
+;; ANSWER SECTION:
+alias.ecdsap384.example. 3600	IN	CNAME	www.ecdsap384.example.
+alias.ecdsap384.example. 3600	IN	RRSIG	CNAME 14 3 3600 20360101000000 20260101000000 29545 ecdsap384.example. G7yeH8fc4f9WOBVkXcpVrFPeJnHcyMiEhUZQ3L/elndIcyH0D1tfzron XN9BoyqBeseStsSBss959uYIlap/e/7LEnwhW4L5r0IgNOkHAsGU7Toq l2K595+r9DKmxlbn
+www.ecdsap384.example.	3600	IN	A	192.0.2.80
+www.ecdsap384.example.	3600	IN	RRSIG	A 14 3 3600 20360101000000 20260101000000 29545 ecdsap384.example. mR1jSA1glDugJp47QEMmYnSPWPjc3+NeaQ3XL5qYCdHc4IKN/9ePuGMz 1R8cS6sRc0J6DXupznmfg9tyhpkpL2FTHR5+8T3lCKIsT5wlj8FLv/9W 0plTb1S4/9rREOxZ
+
+;; AUTHORITY SECTION:
+ecdsap384.example.	3600	IN	NS	ns1.ecdsap384.example.
+ecdsap384.example.	3600	IN	NS	ns2.ecdsap384.example.
+ecdsap384.example.	3600	IN	RRSIG	NS 14 2 3600 20360101000000 20260101000000 29545 ecdsap384.example. gilvUTR7L/TvcI1FlFpNzFWv6Z/IhTnV1Kl9Vg06XltG2vqG7r6xsccg gxhCy171p0661DbLqCrwfCZT0id4rTML8Jzns/ejdf1wkgyuLAzbLR9K AaC3drcqST/xi2Yc
+
+;; ADDITIONAL SECTION:
+ns1.ecdsap384.example.	3600	IN	A	192.0.2.53
+ns2.ecdsap384.example.	3600	IN	A	198.51.100.53
+ns1.ecdsap384.example.	3600	IN	AAAA	2001:db8::53
+ns1.ecdsap384.example.	3600	IN	RRSIG	A 14 3 3600 20360101000000 20260101000000 29545 ecdsap384.example. DDfmocWeZxL8nwfBjFA9+aius81oocj9lPQdC+eGri9QDCGpgv+nIajt GhBC572p4Gs8/OwzVTTOVCRWqcTlY2ttewEk3ZBhKBirZMxW4nEDzvoG hngU7z21bQXEHvok
+ns1.ecdsap384.example.	3600	IN	RRSIG	AAAA 14 3 3600 20360101000000 20260101000000 29545 ecdsap384.example. +XmZJXhBGcMY+fh9lXFqN3RIzmUhwKbcWb3jiJTFSgiuIHRTvbiah6R5 EeTm9+b4UsrET8RIDYpd5xtwt9vypIX+AX5NeDGT3VJMMnt02O6IiwCt KiyomAf8QVhXeI9I
+ns2.ecdsap384.example.	3600	IN	RRSIG	A 14 3 3600 20360101000000 20260101000000 29545 ecdsap384.example. Hkpn/nfJlrIiwkV2jF5bunoBv6/3Gqq6CExitiDAlkQDPwWQHf5UMYP3 drghCUQw6zg7DJdGTpYXYOyJuYLI+67IiKexTgsbY5/G+6L4iNWkIf/w dBBHH17vd5k+62Co

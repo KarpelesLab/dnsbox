@@ -1,0 +1,15 @@
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 14657
+;; flags: qr; QUERY: 1, ANSWER: 0, AUTHORITY: 3, ADDITIONAL: 2
+
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags: do; udp: 1232
+;; QUESTION SECTION:
+;host.secure.nsec3rsasha1.example. IN	A
+
+;; AUTHORITY SECTION:
+secure.nsec3rsasha1.example. 3600 IN	NS	ns.secure.nsec3rsasha1.example.
+secure.nsec3rsasha1.example. 3600 IN	DS	12345 13 2 E06D44B80B8F1D39A95C0B0D7C65D08458E880409BBC683457104237 C7F8EC8D
+secure.nsec3rsasha1.example. 3600 IN	RRSIG	DS 7 3 3600 20360101000000 20260101000000 51914 nsec3rsasha1.example. D5GnNLGhZHdb3VqSvjR5E5RZ3HSeH6ZJXdWANM/s3qQygCinBVxUMZog W3hENlyx/ulNYq7KUCPNwC63J2PNXUJ5Xd5grgV23sY7ybFyci0mIHjt CBQ1uiMiMBFrZY0nQoDz5oCmnpWV4sAFCQKbt0SSjY8Ko5pbA5FggzCQ YIM=
+
+;; ADDITIONAL SECTION:
+ns.secure.nsec3rsasha1.example.	3600 IN	A	192.0.2.99
