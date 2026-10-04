@@ -283,7 +283,11 @@ where
 /// `now` is the current time in seconds since 1970 (modulo 2^32). The
 /// caller is responsible for having authenticated `key` (through a DS or
 /// a trust anchor) and for matching the RRSIG's owner, class and type
-/// covered with the RRset's.
+/// covered with the RRset's. When the RRset was synthesized from a
+/// wildcard (the labels field is smaller than the owner's label count,
+/// see [`rrsig_owner`]), the signature only covers the wildcard RRset:
+/// the caller must also check the proof that no closer match exists
+/// (RFC 4035 §5.3.4).
 ///
 /// ```
 /// # #[cfg(feature = "dnssec")] {
