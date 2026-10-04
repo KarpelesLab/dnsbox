@@ -33,6 +33,15 @@ Every change that can break a caller is listed here:
 - The `builder::compress` module is private; its tuning constants
   (`CAPACITY`, `MAX_PROBES`) are implementation details, described in the
   `builder` documentation.
+- `#[non_exhaustive]` on the enums that may gain variants
+  (`zone::Entry`, `xfr::XfrEvent`, `rdata::IpseckeyGateway`) and on the
+  result structs the library produces (`zone::ZoneRecord`, `zone::Include`,
+  `zone::ZoneRecordBuf`, `dnssec::Verified`, `dnssec::ZonemdVerified`,
+  `dnssec::ClosestEncloser`, `tsig::TsigRecord`, `sig0::Sig0Record`): match
+  them with a wildcard arm, and read their fields rather than building
+  them with struct literals.
+- `dnssec::DenialProof` is sealed: only `NsecProof` and `Nsec3Proof` (and
+  references to them) implement it.
 
 
 ### Added

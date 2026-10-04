@@ -13,6 +13,13 @@ use crate::{Rtype, name};
 mod nsec;
 mod nsec3;
 
+/// Seals [`DenialProof`]: only the proofs of this crate implement it.
+mod sealed {
+    pub trait Sealed {}
+
+    impl<P: Sealed + ?Sized> Sealed for &P {}
+}
+
 pub use nsec::{NsecProof, NsecRecord};
 #[cfg(feature = "dnssec-digest")]
 #[cfg_attr(docsrs, doc(cfg(feature = "dnssec-digest")))]
@@ -202,6 +209,7 @@ impl fmt::Display for DenialStatus {
 /// Both are views of the name the proof was made for. Returned by
 /// [`NsecProof::closest_encloser`] and [`Nsec3Proof::closest_encloser`].
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+#[non_exhaustive]
 pub struct ClosestEncloser<'q> {
     /// The closest encloser: an ancestor of the name that exists.
     pub encloser: Name<'q>,
@@ -234,8 +242,9 @@ impl ClosestEncloser<'_> {
 /// or [`TrustedKeys::verify_rrset`](super::TrustedKeys::verify_rrset), with
 /// an RRSIG labels field equal to the owner's label count: an NSEC record
 /// is never itself a wildcard expansion, RFC 4035 §5.4), all from one zone.
-/// [`NsecProof`] and [`Nsec3Proof`] (which implement this trait) then answer the questions a validator
-/// asks of a negative or wildcard response:
+/// [`NsecProof`] and [`Nsec3Proof`] (which implement this trait) then
+/// answer the questions a validator asks of a negative or wildcard
+/// response:
 ///
 /// | Response | Method | Proves |
 /// |----------|--------|--------|
@@ -283,7 +292,10 @@ impl ClosestEncloser<'_> {
 /// assert_eq!(proof.name_error(qname.as_name()), DenialStatus::Secure(Denial::NameError));
 /// # Ok::<(), dnsbox::Error>(())
 /// ```
-pub trait DenialProof {
+///
+/// The trait is sealed: [`TrustedKeys`](super::TrustedKeys) relies on its
+/// verdicts, and new checks may be added to it in minor versions.
+pub trait DenialProof: sealed::Sealed {
     /// Checks an NXDOMAIN response for `qname`: the name does not exist and
     /// neither does the wildcard at its closest encloser (RFC 4035 §5.4,
     /// RFC 5155 §8.4).

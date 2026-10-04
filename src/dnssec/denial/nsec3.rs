@@ -554,6 +554,8 @@ fn secure_unless_opt_out(opt_out: bool, denial: Denial) -> DenialStatus {
     }
 }
 
+impl<I, H> super::sealed::Sealed for Nsec3Proof<'_, I, H> {}
+
 impl<'a, I, H> DenialProof for Nsec3Proof<'a, I, H>
 where
     I: IntoIterator + Clone,

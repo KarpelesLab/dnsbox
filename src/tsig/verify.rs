@@ -18,6 +18,7 @@ pub const MAX_UNSIGNED: usize = 99;
 
 /// A TSIG record found in a message by [`find`].
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[non_exhaustive]
 pub struct TsigRecord<'a> {
     /// The key name (the record's owner name).
     pub key_name: Name<'a>,

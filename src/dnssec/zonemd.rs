@@ -409,6 +409,7 @@ impl core::error::Error for ZonemdFailure {}
 #[cfg(feature = "dnssec-digest")]
 #[cfg_attr(docsrs, doc(cfg(feature = "dnssec-digest")))]
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+#[non_exhaustive]
 pub struct ZonemdVerified {
     /// The zone serial (SOA and ZONEMD).
     pub serial: u32,

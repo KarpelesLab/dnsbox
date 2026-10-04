@@ -21,6 +21,7 @@ pub const DEFAULT_MAX_INCLUDES: usize = 256;
 /// An owned resource record read from a master file: a [`ZoneRecord`]
 /// with its RDATA in a `Vec`.
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
+#[non_exhaustive]
 pub struct ZoneRecordBuf {
     /// The owner name.
     pub name: NameBuf,

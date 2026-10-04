@@ -302,6 +302,8 @@ pub(super) fn wildcard_encloser(qname: Name<'_>, labels: u8) -> Option<Name<'_>>
     qname.strip_labels(extra)
 }
 
+impl<I> super::sealed::Sealed for NsecProof<'_, I> {}
+
 impl<'a, I> DenialProof for NsecProof<'a, I>
 where
     I: IntoIterator + Clone,

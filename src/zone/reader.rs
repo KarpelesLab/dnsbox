@@ -34,6 +34,7 @@ use crate::{Class, Error, Result, Rtype};
 /// # Ok::<(), dnsbox::Error>(())
 /// ```
 #[derive(Clone, Debug, PartialEq, Eq)]
+#[non_exhaustive]
 pub struct ZoneRecord<'b> {
     /// The owner name.
     pub name: NameBuf,
@@ -97,6 +98,7 @@ pub(super) fn write_record(
 /// its own origin. [`Records`](super::Records) does this through an
 /// [`IncludeResolver`](super::IncludeResolver).
 #[derive(Clone, Debug, PartialEq, Eq)]
+#[non_exhaustive]
 pub struct Include<'a> {
     /// The file name as written (decode escapes with
     /// [`Token::unescape`]).
@@ -112,7 +114,10 @@ pub struct Include<'a> {
 
 /// One entry of a master file, as returned by
 /// [`ZoneReader::next_entry`].
+///
+/// More kinds of entries may be reported in future versions.
 #[derive(Clone, Debug, PartialEq, Eq)]
+#[non_exhaustive]
 pub enum Entry<'a, 'b> {
     /// A resource record.
     Record(ZoneRecord<'b>),

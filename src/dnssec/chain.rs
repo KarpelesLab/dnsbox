@@ -55,6 +55,7 @@ pub struct TrustedKeys<'a, K> {
 
 /// What a successful RRset verification established.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+#[non_exhaustive]
 pub struct Verified {
     /// The key tag of the DNSKEY that verified the signature.
     pub key_tag: u16,

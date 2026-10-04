@@ -34,8 +34,11 @@ open_enum! {
 
 /// The gateway of an IPSECKEY record (RFC 4025 §2.3, §2.5): its variant
 /// determines the gateway type field (0–3). Other gateway types have no
-/// defined layout and are rejected with [`Error::InvalidRdata`].
+/// defined layout and are rejected with [`Error::InvalidRdata`]; the enum
+/// is `#[non_exhaustive]` so that gateway types IANA registers later can be
+/// added.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+#[non_exhaustive]
 pub enum IpseckeyGateway<'a> {
     /// Gateway type 0: no gateway (`.` in presentation format).
     None,

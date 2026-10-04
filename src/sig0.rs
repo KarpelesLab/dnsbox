@@ -216,6 +216,7 @@ pub fn sign<B: OutBuf, S: Sig0Signer + ?Sized>(
 
 /// A SIG(0) record found in a message by [`find`].
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[non_exhaustive]
 pub struct Sig0Record<'a> {
     /// The record data.
     pub data: Sig<'a>,

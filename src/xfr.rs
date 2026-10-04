@@ -105,7 +105,10 @@ pub const fn serial_newer(a: u32, b: u32) -> bool {
 }
 
 /// One step of a zone transfer, borrowing from the current message.
+///
+/// More kinds of events may be reported in future versions.
 #[derive(Clone, Copy, Debug)]
+#[non_exhaustive]
 pub enum XfrEvent<'a> {
     /// The first SOA: the version being transferred (RFC 5936 §2.2, RFC
     /// 1995 §4). For a full transfer it is also the zone's SOA record.
