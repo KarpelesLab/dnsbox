@@ -3,10 +3,19 @@
 use core::fmt;
 use core::net::Ipv4Addr;
 
-use super::{ComposeRdata, ParseRdata};
+use super::{ComposeRdata, ParseRdata, ParseRdataText};
 use crate::name::Name;
-use crate::wire::{Composer, NameEncoding, WireReader};
+use crate::wire::{Composer, NameEncoding, OutBuf, WireReader};
+use crate::zone::Scanner;
 use crate::{Result, Rtype};
+
+/// Reads a 64-bit value written as four colon-separated groups of one to
+/// four hex digits (RFC 6742 §2.1, §2.3; no `::` shorthand) and writes it.
+fn put_u64_groups<B: OutBuf + ?Sized>(s: &mut Scanner<'_>, out: &mut B) -> Result<()> {
+    let mut groups = [0u16; 4];
+    super::eui::parse_hex_groups(s.word()?.as_bytes(), b':', 4, &mut groups)?;
+    groups.iter().try_for_each(|&g| out.put_u16(g))
+}
 
 /// Writes a 64-bit value as four colon-separated groups of four lowercase
 /// hex digits (RFC 6742 §2.1, §2.3).
@@ -33,7 +42,13 @@ macro_rules! pref_u64_rdata {
             pub $field: u64,
         }
 
-        impl super::ParseRdataText for $ty {}
+        impl ParseRdataText for $ty {
+            /// `preference xxxx:xxxx:xxxx:xxxx` (RFC 6742 §2.1, §2.3).
+            fn parse_text<B: OutBuf + ?Sized>(s: &mut Scanner<'_>, out: &mut B) -> Result<()> {
+                out.put_u16(s.u16()?)?;
+                put_u64_groups(s, out)
+            }
+        }
 
         impl<'a> ParseRdata<'a> for $ty {
             const RTYPE: Rtype = Rtype::$rt;
@@ -91,7 +106,13 @@ pub struct L32 {
     pub locator: Ipv4Addr,
 }
 
-impl super::ParseRdataText for L32 {}
+impl ParseRdataText for L32 {
+    /// `preference a.b.c.d` (RFC 6742 §2.2).
+    fn parse_text<B: OutBuf + ?Sized>(s: &mut Scanner<'_>, out: &mut B) -> Result<()> {
+        out.put_u16(s.u16()?)?;
+        out.put_bytes(&s.ipv4()?.octets())
+    }
+}
 
 impl<'a> ParseRdata<'a> for L32 {
     const RTYPE: Rtype = Rtype::L32;
@@ -136,7 +157,13 @@ pub struct Lp<'a> {
     pub fqdn: Name<'a>,
 }
 
-impl super::ParseRdataText for Lp<'_> {}
+impl ParseRdataText for Lp<'_> {
+    /// `preference fqdn` (RFC 6742 §2.4).
+    fn parse_text<B: OutBuf + ?Sized>(s: &mut Scanner<'_>, out: &mut B) -> Result<()> {
+        out.put_u16(s.u16()?)?;
+        s.name_into(out, NameEncoding::Plain)
+    }
+}
 
 impl<'a> ParseRdata<'a> for Lp<'a> {
     const RTYPE: Rtype = Rtype::LP;
@@ -173,7 +200,7 @@ impl fmt::Display for Lp<'_> {
 #[cfg(test)]
 mod tests {
     use super::{L32, Nid};
-    use crate::rdata::tests::{compose, parse, round_trip};
+    use crate::rdata::tests::{compose, parse, round_trip, text_error, text_round_trip};
     use crate::{Class, Error, Rtype};
 
     #[test]
@@ -222,5 +249,67 @@ mod tests {
             parse(Rtype::LP, Class::IN, b"\x00\x0a\xc0\x00"),
             Err(Error::UnexpectedPointer)
         );
+    }
+
+    #[test]
+    fn text() {
+        // RFC 6742 §2 examples (named-rrchecker).
+        text_round_trip(
+            Rtype::NID,
+            "10 0014:4fff:ff20:ee64",
+            &crate::testutil::hex("000A00144FFFFF20EE64"),
+            "10 0014:4fff:ff20:ee64",
+        );
+        text_round_trip(
+            Rtype::NID,
+            "20 14:4FFF:FF20:EE64",
+            &crate::testutil::hex("001400144FFFFF20EE64"),
+            "20 0014:4fff:ff20:ee64",
+        );
+        text_round_trip(
+            Rtype::L64,
+            "10 2001:0DB8:1140:1000",
+            &crate::testutil::hex("000A20010DB811401000"),
+            "10 2001:0db8:1140:1000",
+        );
+        text_round_trip(
+            Rtype::L32,
+            "10 10.1.2.0",
+            &crate::testutil::hex("000A0A010200"),
+            "10 10.1.2.0",
+        );
+        text_round_trip(
+            Rtype::LP,
+            "10 l64-subnet1.example.com.",
+            b"\x00\x0a\x0bl64-subnet1\x07example\x03com\x00",
+            "10 l64-subnet1.example.com.",
+        );
+        // Relative to the origin (`example.`).
+        text_round_trip(
+            Rtype::LP,
+            "20 l32-subnet1",
+            b"\x00\x14\x0bl32-subnet1\x07example\x00",
+            "20 l32-subnet1.example.",
+        );
+        for (t, text, err) in [
+            // BIND: "syntax error", "out of range", "bad dotted quad".
+            (Rtype::NID, "10 0014:4fff:ff20:ee64:1", Error::InvalidText),
+            (Rtype::NID, "10 0014:4fff:ff20", Error::InvalidText),
+            (Rtype::NID, "10 00014:4fff:ff20:ee64", Error::InvalidText),
+            (Rtype::NID, "10 ::4fff:ff20:ee64", Error::InvalidText),
+            (Rtype::NID, "10 1::2:3", Error::InvalidText),
+            (Rtype::NID, "10 g:1:2:3", Error::InvalidText),
+            (Rtype::L64, "65536 1:2:3:4", Error::InvalidText),
+            (Rtype::L64, "10", Error::UnexpectedEof),
+            (Rtype::L32, "10 10.1.2", Error::InvalidText),
+            (Rtype::L32, "10 010.1.2.3", Error::InvalidText),
+            (Rtype::L32, "10 2001:db8::1", Error::InvalidText),
+            (Rtype::L32, "10", Error::UnexpectedEof),
+            (Rtype::LP, "10", Error::UnexpectedEof),
+            (Rtype::LP, "x foo.", Error::InvalidText),
+            (Rtype::LP, "10 foo. bar.", Error::InvalidText),
+        ] {
+            assert_eq!(text_error(t, text), err, "{t} {text:?}");
+        }
     }
 }

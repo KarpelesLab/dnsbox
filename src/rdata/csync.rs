@@ -2,8 +2,9 @@
 
 use core::fmt;
 
-use super::{ComposeRdata, ParseRdata, TypeBitmap};
-use crate::wire::{Composer, WireReader};
+use super::{ComposeRdata, ParseRdata, ParseRdataText, TypeBitmap};
+use crate::wire::{Composer, OutBuf, WireReader};
+use crate::zone::Scanner;
 use crate::{Result, Rtype};
 
 /// `CSYNC` record data: child-to-parent synchronization instructions
@@ -42,7 +43,15 @@ impl Csync<'_> {
     }
 }
 
-impl super::ParseRdataText for Csync<'_> {}
+impl ParseRdataText for Csync<'_> {
+    /// `serial flags type...` (RFC 7477 §2.1.2): decimal SOA serial and
+    /// flags, then the type mnemonics (`TYPEnnn` too), possibly none.
+    fn parse_text<B: OutBuf + ?Sized>(s: &mut Scanner<'_>, out: &mut B) -> Result<()> {
+        out.put_u32(s.u32()?)?;
+        out.put_u16(s.u16()?)?;
+        s.type_bitmap_into(out)
+    }
+}
 
 impl<'a> ParseRdata<'a> for Csync<'a> {
     const RTYPE: Rtype = Rtype::CSYNC;
@@ -126,7 +135,7 @@ impl ComposeRdata for CsyncParts<'_> {
 #[cfg(test)]
 mod tests {
     use super::{Csync, CsyncParts};
-    use crate::rdata::tests::{compose, parse, round_trip};
+    use crate::rdata::tests::{compose, parse, round_trip, text_error, text_round_trip};
     use crate::rdata::RData;
     use crate::{Class, Error, Rtype};
 
@@ -167,5 +176,45 @@ mod tests {
             parse(Rtype::CSYNC, Class::IN, b"\x00\x00\x00\x42\x00\x00\x00\x00"),
             Err(Error::InvalidRdata)
         );
+    }
+
+    #[test]
+    fn text() {
+        // RFC 7477 §2.2 example (named-rrchecker).
+        text_round_trip(
+            Rtype::CSYNC,
+            "66 3 A NS AAAA",
+            &crate::testutil::hex("000000420003000460000008"),
+            "66 3 A NS AAAA",
+        );
+        // Any order, duplicates, generic type names, empty bitmap.
+        text_round_trip(
+            Rtype::CSYNC,
+            "66 3 aaaa TYPE2 a NS",
+            &crate::testutil::hex("000000420003000460000008"),
+            "66 3 A NS AAAA",
+        );
+        text_round_trip(
+            Rtype::CSYNC,
+            "4294967295 0",
+            b"\xff\xff\xff\xff\x00\x00",
+            "4294967295 0",
+        );
+        // The last window: block 255, 32 octets, bit 255 set.
+        let mut wire = std::vec![0, 0, 0, 1, 0, 1, 0xff, 32];
+        wire.extend_from_slice(&[0; 31]);
+        wire.push(0x01);
+        text_round_trip(Rtype::CSYNC, "1 1 TYPE65535", &wire, "1 1 TYPE65535");
+        for (text, err) in [
+            // BIND: "out of range", "unknown class/type".
+            ("66 65536 A", Error::InvalidText),
+            ("4294967296 1 A", Error::InvalidText),
+            ("66 3 FOO", Error::UnknownMnemonic),
+            ("66 3 \"A\"", Error::InvalidText),
+            ("66", Error::UnexpectedEof),
+            ("", Error::UnexpectedEof),
+        ] {
+            assert_eq!(text_error(Rtype::CSYNC, text), err, "{text:?}");
+        }
     }
 }

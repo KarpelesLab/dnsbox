@@ -2,9 +2,10 @@
 
 use core::fmt;
 
-use super::{ComposeRdata, ParseRdata};
+use super::{ComposeRdata, ParseRdata, ParseRdataText};
 use crate::name::Name;
-use crate::wire::{Composer, NameEncoding, WireReader};
+use crate::wire::{Composer, NameEncoding, OutBuf, WireReader};
+use crate::zone::Scanner;
 use crate::{Class, Result, Rtype};
 
 /// `PX` record data: X.400 / RFC 822 address mapping information
@@ -19,7 +20,14 @@ pub struct Px<'a> {
     pub mapx400: Name<'a>,
 }
 
-impl super::ParseRdataText for Px<'_> {}
+impl ParseRdataText for Px<'_> {
+    /// `preference map822 mapx400` (RFC 2163 §4).
+    fn parse_text<B: OutBuf + ?Sized>(s: &mut Scanner<'_>, out: &mut B) -> Result<()> {
+        out.put_u16(s.u16()?)?;
+        s.name_into(out, NameEncoding::Lowercase)?;
+        s.name_into(out, NameEncoding::Lowercase)
+    }
+}
 
 impl<'a> ParseRdata<'a> for Px<'a> {
     const RTYPE: Rtype = Rtype::PX;
@@ -58,8 +66,8 @@ impl fmt::Display for Px<'_> {
 
 #[cfg(test)]
 mod tests {
-    use crate::Rtype;
-    use crate::rdata::tests::round_trip;
+    use crate::rdata::tests::{round_trip, text_error, text_round_trip};
+    use crate::{Error, Rtype};
 
     #[test]
     fn rfc2163_example() {
@@ -69,5 +77,36 @@ mod tests {
             b"\x00\x32\x02it\x00\x09ADMD-garr\x04C-it\x00",
             "50 it. ADMD-garr.C-it.",
         );
+    }
+
+    #[test]
+    fn text() {
+        // RFC 2163 §4 examples (named-rrchecker).
+        text_round_trip(
+            Rtype::PX,
+            "50 it. ADMD-garr.C-it.",
+            b"\x00\x32\x02it\x00\x09ADMD-garr\x04C-it\x00",
+            "50 it. ADMD-garr.C-it.",
+        );
+        text_round_trip(
+            Rtype::PX,
+            "50 cnr.it. O-cnr.PRMD-infn.ADMD-garr.C-it.",
+            b"\x00\x32\x03cnr\x02it\x00\x05O-cnr\x09PRMD-infn\x09ADMD-garr\x04C-it\x00",
+            "50 cnr.it. O-cnr.PRMD-infn.ADMD-garr.C-it.",
+        );
+        // Relative names.
+        text_round_trip(
+            Rtype::PX,
+            "50 it ADMD-garr.C-it.",
+            b"\x00\x32\x02it\x07example\x00\x09ADMD-garr\x04C-it\x00",
+            "50 it.example. ADMD-garr.C-it.",
+        );
+        for (text, err) in [
+            ("50 it.", Error::UnexpectedEof),
+            ("65536 it. it.", Error::InvalidText),
+            ("50 it. it. it.", Error::InvalidText),
+        ] {
+            assert_eq!(text_error(Rtype::PX, text), err, "{text:?}");
+        }
     }
 }

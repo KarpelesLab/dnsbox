@@ -2,10 +2,11 @@
 
 use core::fmt;
 
-use super::{ComposeRdata, IpseckeyAlgorithm, ParseRdata};
+use super::{ComposeRdata, IpseckeyAlgorithm, ParseRdata, ParseRdataText};
 use crate::name::Name;
 use crate::text::{Base64, Hex};
-use crate::wire::{Composer, NameEncoding, WireReader};
+use crate::wire::{Composer, NameEncoding, OutBuf, WireReader};
+use crate::zone::Scanner;
 use crate::{Error, Result, Rtype};
 
 /// `HIP` record data: a Host Identity Tag, Host Identity public key and
@@ -113,7 +114,27 @@ fn compose_head<C: Composer + ?Sized>(
     c.put_bytes(public_key)
 }
 
-impl super::ParseRdataText for Hip<'_> {}
+impl ParseRdataText for Hip<'_> {
+    /// `pk-algorithm base16-HIT base64-public-key rendezvous-server...`
+    /// (RFC 8005 §6): the HIT and the key are one token each (whitespace
+    /// would make them ambiguous with the server names that follow, so
+    /// BIND does not allow it either), then zero or more domain names.
+    fn parse_text<B: OutBuf + ?Sized>(s: &mut Scanner<'_>, out: &mut B) -> Result<()> {
+        let pk_algorithm = s.u8()?;
+        let head = out.pos();
+        // HIT length, algorithm and key length; the lengths are patched.
+        out.put_bytes(&[0, pk_algorithm, 0, 0])?;
+        let hit_len = u8::try_from(s.hex_into(out)?).map_err(|_| Error::InvalidRdata)?;
+        let pk_len = u16::try_from(s.base64_into(out)?).map_err(|_| Error::InvalidRdata)?;
+        out.patch(head, &[hit_len])?;
+        out.patch(head + 2, &pk_len.to_be_bytes())?;
+        while !s.is_at_end()? {
+            // "MUST NOT be compressed" (RFC 8005 §5).
+            s.name_into(out, NameEncoding::Plain)?;
+        }
+        Ok(())
+    }
+}
 
 impl<'a> ParseRdata<'a> for Hip<'a> {
     const RTYPE: Rtype = Rtype::HIP;
@@ -245,7 +266,7 @@ impl fmt::Display for HipParts<'_> {
 #[cfg(test)]
 mod tests {
     use super::{HipParts, HipServers};
-    use crate::rdata::tests::{compose, parse, round_trip};
+    use crate::rdata::tests::{compose, parse, round_trip, text_error, text_round_trip};
     use crate::rdata::{IpseckeyAlgorithm, RData};
     use crate::{Class, ComposeRdata, Error, Name, Rtype};
     use std::string::ToString;
@@ -306,5 +327,75 @@ mod tests {
         let big = [0u8; 256];
         let long_hit = HipParts { hit: &big, ..empty };
         assert_eq!(long_hit.compose_rdata(&mut w), Err(Error::InvalidRdata));
+    }
+
+    /// The public key of the RFC 8005 §6 examples.
+    const RFC_KEY: &str = "AwEAAbdxyhNuSutc5EMzxTs9LBPCIkOFH8cIvM4p9+LrV4e19WzK00+CI6zBCQTdtWsu\
+                           xKbWIy87UOoJTwkUs7lBu+Upr1gsNrut79ryra+bSRGQb1slImA8YVJyuIDsj7kwzG7j\
+                           nERNqnWxZ48AWkskmdHaVDP4BcelrTI3rMXdXF5D";
+
+    /// Its wire form, after the HIT (named-rrchecker).
+    const RFC_KEY_HEX: &str = "03010001B771CA136E4AEB5CE44333C53B3D2C13C22243851FC708BCCE29F7E2\
+                               EB5787B5F56CCAD34F8223ACC10904DDB56B2EC4A6D6232F3B50EA094F0914B3\
+                               B941BBE529AF582C36BBADEFDAF2ADAF9B4911906F5B2522603C615272B880EC\
+                               8FB930CC6EE39C444DAA75B1678F005A4B2499D1DA5433F805C7A5AD3237ACC5\
+                               DD5C5E43";
+
+    #[test]
+    fn text() {
+        // RFC 8005 §6 examples, without and with rendezvous servers
+        // (named-rrchecker).
+        let mut wire = crate::testutil::hex("10020084200100107B1A74DF365639CC39F1D578");
+        wire.extend_from_slice(&crate::testutil::hex(RFC_KEY_HEX));
+        let text = std::format!("2 200100107B1A74DF365639CC39F1D578 {RFC_KEY}");
+        text_round_trip(Rtype::HIP, &text, &wire, &text);
+        let mut with_rvs = wire.clone();
+        with_rvs.extend_from_slice(b"\x03rvs\x07example\x03com\x00");
+        let text = std::format!(
+            "( 2 200100107b1a74df365639cc39f1d578\n {RFC_KEY}\n rvs.example.com. )"
+        );
+        text_round_trip(
+            Rtype::HIP,
+            &text,
+            &with_rvs,
+            &std::format!("2 200100107B1A74DF365639CC39F1D578 {RFC_KEY} rvs.example.com."),
+        );
+        let mut two = wire.clone();
+        two.extend_from_slice(b"\x03rvs\x07example\x03com\x00\x04rvs2\x07example\x03com\x00");
+        let text = std::format!(
+            "2 200100107B1A74DF365639CC39F1D578 {RFC_KEY} rvs.example.com. rvs2.example.com."
+        );
+        text_round_trip(Rtype::HIP, &text, &two, &text);
+        // Relative server names (named-rrchecker).
+        text_round_trip(
+            Rtype::HIP,
+            "2 2001 AQID rvs1 rvs2.",
+            &crate::testutil::hex("0202000320010102030472767331076578616D706C6500047276733200"),
+            "2 2001 AQID rvs1.example. rvs2.",
+        );
+        text_round_trip(Rtype::HIP, "2 2001 AQ==", b"\x02\x02\x00\x01\x20\x01\x01", "2 2001 AQ==");
+        for (text, err) in [
+            // BIND: "bad hex encoding", "out of range", "unexpected end of
+            // input", "label too long" (a split key).
+            ("2 200 AQID", Error::InvalidText),
+            ("2 - AQID", Error::InvalidText),
+            ("256 2001 AQID", Error::InvalidText),
+            ("2 2001 AQI", Error::InvalidText),
+            ("2 2001 \"AQID\"", Error::InvalidText),
+            ("2 2001 AQID rvs..example.", Error::EmptyLabel),
+            ("2 2001", Error::UnexpectedEof),
+            ("2", Error::UnexpectedEof),
+            ("", Error::UnexpectedEof),
+        ] {
+            assert_eq!(text_error(Rtype::HIP, text), err, "{text:?}");
+        }
+        // A HIT of 256 octets does not fit its length field.
+        let long = std::format!("2 {} AQID", "00".repeat(256));
+        assert_eq!(text_error(Rtype::HIP, &long), Error::InvalidRdata);
+        assert_eq!(
+            crate::rdata::tests::text_parse(Rtype::HIP, &std::format!("2 {} AQID", "ab".repeat(255)))
+                .map(|w| w.len()),
+            Ok(4 + 255 + 3)
+        );
     }
 }

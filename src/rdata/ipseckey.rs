@@ -4,10 +4,11 @@
 use core::fmt;
 use core::net::{Ipv4Addr, Ipv6Addr};
 
-use super::{ComposeRdata, ParseRdata};
+use super::{ComposeRdata, ParseRdata, ParseRdataText};
 use crate::name::Name;
 use crate::text::Base64;
-use crate::wire::{Composer, NameEncoding, WireReader};
+use crate::wire::{Composer, NameEncoding, OutBuf, WireReader};
+use crate::zone::Scanner;
 use crate::{Error, Result, Rtype};
 
 // IANA "IPSECKEY Resource Record Parameters", Algorithm Type Field
@@ -83,7 +84,32 @@ pub struct Ipseckey<'a> {
     pub public_key: &'a [u8],
 }
 
-impl super::ParseRdataText for Ipseckey<'_> {}
+impl ParseRdataText for Ipseckey<'_> {
+    /// `precedence gateway-type algorithm gateway [base64-key]`
+    /// (RFC 4025 §3.1): decimal fields; the gateway is `.` for type 0, an
+    /// IPv4 address for type 1, an IPv6 address for type 2 and a domain
+    /// name for type 3 (other types are [`Error::InvalidRdata`]); the key
+    /// may be split by blanks and may be absent.
+    fn parse_text<B: OutBuf + ?Sized>(s: &mut Scanner<'_>, out: &mut B) -> Result<()> {
+        let precedence = s.u8()?;
+        let gateway_type = s.u8()?;
+        let algorithm = s.u8()?;
+        out.put_bytes(&[precedence, gateway_type, algorithm])?;
+        match gateway_type {
+            // "a single period" (RFC 4025 §3.1).
+            0 => {
+                if !s.word()?.is(".") {
+                    return Err(Error::InvalidText);
+                }
+            }
+            1 => out.put_bytes(&s.ipv4()?.octets())?,
+            2 => out.put_bytes(&s.ipv6()?.octets())?,
+            3 => s.name_into(out, NameEncoding::Plain)?,
+            _ => return Err(Error::InvalidRdata),
+        }
+        s.base64_rest_into(out).map(drop)
+    }
+}
 
 impl<'a> ParseRdata<'a> for Ipseckey<'a> {
     const RTYPE: Rtype = Rtype::IPSECKEY;
@@ -154,7 +180,7 @@ impl fmt::Display for Ipseckey<'_> {
 #[cfg(test)]
 mod tests {
     use super::{Ipseckey, IpseckeyAlgorithm, IpseckeyGateway};
-    use crate::rdata::tests::{parse, round_trip};
+    use crate::rdata::tests::{parse, round_trip, text_error, text_round_trip};
     use crate::rdata::RData;
     use crate::{Class, Error, Rtype};
     use std::string::ToString;
@@ -221,5 +247,64 @@ mod tests {
             parse(Rtype::IPSECKEY, Class::IN, b"\x0a\x02\x02\x20\x01"),
             Err(Error::UnexpectedEof)
         );
+    }
+
+    #[test]
+    fn text() {
+        // RFC 4025 §3.3 examples (wire from named-rrchecker).
+        let key = crate::testutil::hex(KEY);
+        let b64 = "AQNRU3mG7TVTO2BkR47usntb102uFJtugbo6BSGvgqt4AQ==";
+        let mut wire = crate::testutil::hex("0A0102C0000226");
+        wire.extend_from_slice(&key);
+        let text = std::format!("10 1 2 192.0.2.38 {b64}");
+        text_round_trip(Rtype::IPSECKEY, &text, &wire, &text);
+        let mut wire = crate::testutil::hex("0A0002");
+        wire.extend_from_slice(&key);
+        let text = std::format!("10 0 2 . {b64}");
+        text_round_trip(Rtype::IPSECKEY, &text, &wire, &text);
+        let mut wire = crate::testutil::hex("0A0102C0000203");
+        wire.extend_from_slice(&key);
+        let text = std::format!("10 1 2 192.0.2.3 {b64}");
+        text_round_trip(Rtype::IPSECKEY, &text, &wire, &text);
+        let mut wire = crate::testutil::hex("0A0302");
+        wire.extend_from_slice(b"\x09mygateway\x07example\x03com\x00");
+        wire.extend_from_slice(&key);
+        let text = std::format!("10 3 2 mygateway.example.com. {b64}");
+        text_round_trip(Rtype::IPSECKEY, &text, &wire, &text);
+        let mut wire = crate::testutil::hex("0A020220010DB8000080020000000020000001");
+        wire.extend_from_slice(&key);
+        text_round_trip(
+            Rtype::IPSECKEY,
+            &std::format!("10 2 2 2001:0DB8:0:8002::2000:1 {b64}"),
+            &wire,
+            &std::format!("10 2 2 2001:db8:0:8002::2000:1 {b64}"),
+        );
+        // Relative gateway, key split by blanks (named-rrchecker).
+        text_round_trip(
+            Rtype::IPSECKEY,
+            "10 3 2 mygateway ( AQNR\n U3mG )",
+            &crate::testutil::hex("0A0302096D7967617465776179076578616D706C6500010351537986"),
+            "10 3 2 mygateway.example. AQNRU3mG",
+        );
+        // No key (BIND requires one, but the wire format allows none).
+        text_round_trip(Rtype::IPSECKEY, "10 0 0 .", b"\x0a\x00\x00", "10 0 0 .");
+        for (text, err) in [
+            // BIND: "syntax error", "bad dotted quad", "bad IPv6 address",
+            // "out of range", "bad base64 encoding".
+            ("10 0 0 foo.", Error::InvalidText),
+            ("10 0 0 @", Error::InvalidText),
+            ("10 1 0 .", Error::InvalidText),
+            ("10 2 2 192.0.2.38 AQID", Error::InvalidText),
+            ("10 1 2 192.0.2.38 AQN", Error::InvalidText),
+            ("10 4 0 .", Error::InvalidRdata),
+            ("256 0 0 .", Error::InvalidText),
+            ("10 0 256 .", Error::InvalidText),
+            ("10 0 0 \".\"", Error::InvalidText),
+            ("10 0 0", Error::UnexpectedEof),
+            ("10 3 0", Error::UnexpectedEof),
+            ("10", Error::UnexpectedEof),
+        ] {
+            assert_eq!(text_error(Rtype::IPSECKEY, text), err, "{text:?}");
+        }
     }
 }

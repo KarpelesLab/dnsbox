@@ -2,8 +2,9 @@
 
 use core::fmt;
 
-use super::{ComposeRdata, ParseRdata};
-use crate::wire::{Composer, WireReader};
+use super::{ComposeRdata, ParseRdata, ParseRdataText};
+use crate::wire::{Composer, OutBuf, WireReader};
+use crate::zone::{Scanner, Token};
 use crate::{Error, Result, Rtype};
 
 /// Raw latitude/longitude value of the equator and the prime meridian:
@@ -229,7 +230,144 @@ impl Loc {
     }
 }
 
-impl super::ParseRdataText for Loc {}
+/// Parses an unsigned fixed-point decimal `int[.frac]` with at most
+/// `places` fraction digits (either part may be empty, not both, as in
+/// BIND: `54.`, `.5`) and returns it scaled by 10^`places`.
+fn parse_fixed(raw: &[u8], places: usize) -> Result<u64> {
+    let (int, frac) = match raw.iter().position(|&c| c == b'.') {
+        Some(dot) => (
+            raw.get(..dot).unwrap_or(&[]),
+            raw.get(dot + 1..).unwrap_or(&[]),
+        ),
+        None => (raw, &[][..]),
+    };
+    if (int.is_empty() && frac.is_empty()) || frac.len() > places {
+        return Err(Error::InvalidText);
+    }
+    let digits = int.iter().chain(frac).map(|&c| {
+        if c.is_ascii_digit() {
+            Ok(u64::from(c - b'0'))
+        } else {
+            Err(Error::InvalidText)
+        }
+    });
+    let mut v: u64 = 0;
+    for d in digits {
+        v = v
+            .checked_mul(10)
+            .and_then(|v| v.checked_add(d.ok()?))
+            .ok_or(Error::InvalidText)?;
+    }
+    for _ in frac.len()..places {
+        v = v.checked_mul(10).ok_or(Error::InvalidText)?;
+    }
+    Ok(v)
+}
+
+/// Strips the optional `m` unit of a distance (RFC 1876 §3).
+fn strip_metres(raw: &[u8]) -> &[u8] {
+    raw.strip_suffix(b"m").unwrap_or(raw)
+}
+
+/// Whether `t` is a hemisphere letter (`N`, `S`, `E` or `W`, either
+/// case), which ends an angle.
+fn is_hemisphere(t: &Token<'_>) -> bool {
+    ["N", "S", "E", "W"].iter().any(|h| t.is(h))
+}
+
+/// Reads an angle `d [m [s[.fff]]] H` (RFC 1876 §3) of at most `max_deg`
+/// degrees, `pos` / `neg` being the hemisphere letters, and returns the
+/// raw wire value (thousandths of an arcsecond offset by 2^31).
+fn read_angle(s: &mut Scanner<'_>, max_deg: u32, pos: &str, neg: &str) -> Result<u32> {
+    let degrees = s.u32()?;
+    let mut minutes = 0;
+    let mut thousandths = 0;
+    let mut t = s.word()?;
+    if !is_hemisphere(&t) {
+        minutes = t.u8()?;
+        t = s.word()?;
+        if !is_hemisphere(&t) {
+            thousandths = parse_fixed(t.as_bytes(), 3)?;
+            t = s.word()?;
+        }
+    }
+    if degrees > max_deg || minutes > 59 || thousandths > 59_999 {
+        return Err(Error::InvalidText);
+    }
+    let abs = (u64::from(degrees) * 60 + u64::from(minutes)) * 60_000 + thousandths;
+    if abs > u64::from(max_deg) * 3_600_000 {
+        return Err(Error::InvalidText);
+    }
+    // At most 180° = 648 000 000 < 2^31.
+    let abs = abs as u32;
+    if t.is(pos) {
+        Ok(EQUATOR + abs)
+    } else if t.is(neg) {
+        Ok(EQUATOR - abs)
+    } else {
+        Err(Error::InvalidText)
+    }
+}
+
+/// Reads an altitude `[-]m[.cc][m]` (RFC 1876 §3: −100000.00 to
+/// 42849672.95 metres; BIND also accepts a `+` sign) and returns the raw
+/// wire value.
+fn read_altitude(s: &mut Scanner<'_>) -> Result<u32> {
+    let raw = s.word()?.as_bytes();
+    let (negative, raw) = match raw.split_first() {
+        Some((b'-', rest)) => (true, rest),
+        Some((b'+', rest)) => (false, rest),
+        _ => (false, raw),
+    };
+    let cm = i64::try_from(parse_fixed(strip_metres(raw), 2)?).map_err(|_| Error::InvalidText)?;
+    let cm = if negative { -cm } else { cm };
+    u32::try_from(cm + ALTITUDE_BASE).map_err(|_| Error::InvalidText)
+}
+
+/// Largest size or precision BIND accepts, in centimetres: up to
+/// 90 000 000 whole metres (RFC 1876 §3), which saturates the encoding.
+const MAX_PRECISION_CM: u64 = 90_000_000 * 100 + 99;
+
+impl ParseRdataText for Loc {
+    /// `d1 [m1 [s1]] {N|S} d2 [m2 [s2]] {E|W} alt[m] [siz[m] [hp[m]
+    /// [vp[m]]]]` (RFC 1876 §3): degrees, minutes and seconds (up to three
+    /// decimals) with the hemisphere, the altitude in metres (up to two
+    /// decimals), then optionally the size and the horizontal and vertical
+    /// precisions in metres (defaults 1 m, 10 000 m and 10 m), rounded
+    /// down to the "digit × power of ten" values the encoding can hold,
+    /// as BIND does.
+    fn parse_text<B: OutBuf + ?Sized>(s: &mut Scanner<'_>, out: &mut B) -> Result<()> {
+        let latitude = read_angle(s, 90, "N", "S")?;
+        let longitude = read_angle(s, 180, "E", "W")?;
+        let altitude = read_altitude(s)?;
+        let mut precisions = [
+            Loc::DEFAULT_SIZE,
+            Loc::DEFAULT_HORIZ_PRE,
+            Loc::DEFAULT_VERT_PRE,
+        ];
+        for p in &mut precisions {
+            let Some(t) = s.next_token()? else { break };
+            if t.is_quoted() {
+                return Err(Error::InvalidText);
+            }
+            let cm = parse_fixed(strip_metres(t.as_bytes()), 2)?;
+            if cm > MAX_PRECISION_CM {
+                return Err(Error::InvalidText);
+            }
+            *p = Loc::encode_precision(cm);
+        }
+        let [size, horiz_pre, vert_pre] = precisions;
+        let loc = Loc {
+            size,
+            horiz_pre,
+            vert_pre,
+            latitude,
+            longitude,
+            altitude,
+        };
+        out.put_bytes(&loc.to_wire())
+    }
+}
 
 impl<'a> ParseRdata<'a> for Loc {
     const RTYPE: Rtype = Rtype::LOC;
@@ -325,7 +463,9 @@ impl fmt::Display for Loc {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::rdata::tests::{compose, parse, round_trip};
+    use crate::rdata::tests::{
+        compose, parse, round_trip, text_error, text_parse, text_round_trip,
+    };
     use crate::{Class, Error, Rtype};
     use std::string::ToString;
 
@@ -460,5 +600,115 @@ mod tests {
         assert_eq!(loc.compose_rdata(&mut w), Err(Error::InvalidRdata));
         assert!(loc.to_string().starts_with("\\# 16 00AB1212"));
         assert_eq!(loc.size_cm(), None);
+    }
+
+    #[test]
+    fn text() {
+        // RFC 1876 §3 examples; wire forms from named-rrchecker.
+        text_round_trip(
+            Rtype::LOC,
+            "42 21 54 N 71 06 18 W -24m 30m",
+            &crate::testutil::hex("0033161389172DD070BE15F000988D20"),
+            "42 21 54.000 N 71 6 18.000 W -24.00m 30m 10000m 10m",
+        );
+        text_round_trip(
+            Rtype::LOC,
+            "52 22 23.000 N 4 53 32.000 E -2.00m 0.00m 10000m 10m",
+            &crate::testutil::hex("000016138B3CF018810CBCE0009895B8"),
+            "52 22 23.000 N 4 53 32.000 E -2.00m 0.00m 10000m 10m",
+        );
+        text_round_trip(
+            Rtype::LOC,
+            "32 7 19 S 116 2 25 E 10m",
+            &crate::testutil::hex("00121613791B7D2898E6486800989A68"),
+            "32 7 19.000 S 116 2 25.000 E 10.00m 1m 10000m 10m",
+        );
+        text_round_trip(
+            Rtype::LOC,
+            "60 9 0.000 N 24 39 0.000 E ( 10.00m 20.00m\n 2000.00m 20.00m )",
+            &crate::testutil::hex("002325238CE82360854A10A000989A68"),
+            "60 9 0.000 N 24 39 0.000 E 10.00m 20m 2000m 20m",
+        );
+        // Omitted minutes and seconds, no unit.
+        text_round_trip(
+            Rtype::LOC,
+            "42 N 71 W 0",
+            &crate::testutil::hex("001216138903210070C3DA8000989680"),
+            "42 0 0.000 N 71 0 0.000 W 0.00m 1m 10000m 10m",
+        );
+        // Extremes.
+        text_round_trip(
+            Rtype::LOC,
+            "90 0 0 N 180 0 0 W 42849672.95m",
+            &crate::testutil::hex("00121613934FD90059604E00FFFFFFFF"),
+            "90 0 0.000 N 180 0 0.000 W 42849672.95m 1m 10000m 10m",
+        );
+        text_round_trip(
+            Rtype::LOC,
+            "90 S 180 E -100000m 0 0.05m 90000000m",
+            &crate::testutil::hex("000050996CB02700A69FB20000000000"),
+            "90 0 0.000 S 180 0 0.000 E -100000.00m 0.00m 0.05m 90000000m",
+        );
+        // BIND's lenient forms (named-rrchecker).
+        for (text, wire) in [
+            ("42 21 .5 n 71 06 18 w 0", "0012161389165CD470BE15F000989680"),
+            ("42 21 54.5 N 71 06 18 W -.5", "0012161389172FC470BE15F00098964E"),
+            ("42 21 54.5 N 71 06 18 W +1.", "0012161389172FC470BE15F0009896E4"),
+            ("42 21 54.5 N 71 06 18 W 1.55m 1.", "0012161389172FC470BE15F00098971B"),
+            ("0 0 59.999 N 0 E 0", "001216138000EA5F8000000000989680"),
+            ("00 0 N 0 E 0 0.", "00001613800000008000000000989680"),
+            // Precisions are rounded down: 0.15m, 99m, 1.5m.
+            ("0 N 0 E 0 0.15m 99m 1.5m", "00119312800000008000000000989680"),
+            // 90000000.01m saturates.
+            ("0 N 0 E 0 90000000.01m", "00991613800000008000000000989680"),
+        ] {
+            assert_eq!(
+                text_parse(Rtype::LOC, text),
+                Ok(crate::testutil::hex(wire)),
+                "{text}"
+            );
+        }
+    }
+
+    #[test]
+    fn text_malformed() {
+        for (text, err) in [
+            // Out of range (BIND: "out of range").
+            ("91 N 0 E 0", Error::InvalidText),
+            ("90 1 N 0 E 0", Error::InvalidText),
+            ("90 0 0.001 S 0 E 0", Error::InvalidText),
+            ("0 60 N 0 E 0", Error::InvalidText),
+            ("0 0 60 N 0 E 0", Error::InvalidText),
+            ("0 N 181 E 0", Error::InvalidText),
+            ("0 N 0 E 42849672.96m", Error::InvalidText),
+            ("0 N 0 E -100000.01m", Error::InvalidText),
+            ("0 N 0 E 0 90000001m", Error::InvalidText),
+            ("0 N 0 E 0 99999999999999999999999m", Error::InvalidText),
+            ("0 N 0 E 99999999999999999999999m", Error::InvalidText),
+            ("4294967296 N 0 E 0", Error::InvalidText),
+            // Syntax (BIND: "syntax error", "not a valid number").
+            ("0 0 59.9999 N 0 E 0", Error::InvalidText),
+            ("0 N 0 E 1.555m", Error::InvalidText),
+            ("0 N 0 E 0M", Error::InvalidText),
+            ("0 N 0 E 0 1M", Error::InvalidText),
+            ("0 N 0 E .", Error::InvalidText),
+            ("0 N 0 E -", Error::InvalidText),
+            ("0 N 0 E m", Error::InvalidText),
+            ("0 N 0 E 1.2.3", Error::InvalidText),
+            ("-1 N 0 E 0", Error::InvalidText),
+            ("0 E 0 N 0", Error::InvalidText),
+            ("0 N 0 N 0", Error::InvalidText),
+            ("0 1 2 3 N 0 E 0", Error::InvalidText),
+            ("0 N 0 E 0 \"1m\"", Error::InvalidText),
+            ("\"0\" N 0 E 0", Error::InvalidText),
+            ("0 N 0 E 0 1m 2m 3m 4m", Error::InvalidText),
+            // Missing fields.
+            ("", Error::UnexpectedEof),
+            ("0 N", Error::UnexpectedEof),
+            ("0 N 0 E", Error::UnexpectedEof),
+            ("0 0 0", Error::UnexpectedEof),
+        ] {
+            assert_eq!(text_error(Rtype::LOC, text), err, "{text:?}");
+        }
     }
 }

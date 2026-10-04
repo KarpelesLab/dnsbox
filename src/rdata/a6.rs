@@ -3,9 +3,10 @@
 use core::fmt;
 use core::net::Ipv6Addr;
 
-use super::{ComposeRdata, ParseRdata};
+use super::{ComposeRdata, ParseRdata, ParseRdataText};
 use crate::name::Name;
-use crate::wire::{Composer, NameEncoding, WireReader};
+use crate::wire::{Composer, NameEncoding, OutBuf, WireReader};
+use crate::zone::Scanner;
 use crate::{Class, Error, Result, Rtype};
 
 /// `A6` record data: an IPv6 address given as a suffix plus the name of a
@@ -46,7 +47,29 @@ impl A6<'_> {
     }
 }
 
-impl super::ParseRdataText for A6<'_> {}
+impl ParseRdataText for A6<'_> {
+    /// `prefix-len [address-suffix] [prefix-name]` (RFC 2874 §3.1.1): the
+    /// suffix is present unless `prefix-len` is 128, the name unless it is
+    /// 0. As in BIND, the address bits covered by the prefix are ignored
+    /// (cleared), so `64 2001:db8::1 name` keeps only `::1`.
+    fn parse_text<B: OutBuf + ?Sized>(s: &mut Scanner<'_>, out: &mut B) -> Result<()> {
+        let prefix_len = s.u8()?;
+        if prefix_len > 128 {
+            return Err(Error::InvalidRdata);
+        }
+        out.put_u8(prefix_len)?;
+        if prefix_len < 128 {
+            let bits = u128::from(s.ipv6()?) & (u128::MAX >> prefix_len);
+            let n = Self::suffix_octets(prefix_len);
+            out.put_bytes(bits.to_be_bytes().get(16 - n..).unwrap_or(&[]))?;
+        }
+        if prefix_len > 0 {
+            // Lowercased in canonical form (RFC 4034 §6.2).
+            s.name_into(out, NameEncoding::Lowercase)?;
+        }
+        Ok(())
+    }
+}
 
 impl<'a> ParseRdata<'a> for A6<'a> {
     const RTYPE: Rtype = Rtype::A6;
@@ -116,7 +139,7 @@ impl fmt::Display for A6<'_> {
 #[cfg(test)]
 mod tests {
     use super::A6;
-    use crate::rdata::tests::{parse, round_trip};
+    use crate::rdata::tests::{parse, round_trip, text_error, text_round_trip};
     use crate::{Class, ComposeRdata, Error, Name, Rtype};
 
     #[test]
@@ -187,6 +210,61 @@ mod tests {
             },
         ] {
             assert_eq!(bad.compose_rdata(&mut w), Err(Error::InvalidRdata));
+        }
+    }
+
+    #[test]
+    fn text() {
+        // RFC 2874 §3.1.1 / §5 examples (named-rrchecker).
+        text_round_trip(
+            Rtype::A6,
+            "64 ::2:3:4:5 subnet-1.ip6.a.net.",
+            &crate::testutil::hex("400002000300040005087375626E65742D31036970360161036E657400"),
+            "64 ::2:3:4:5 subnet-1.ip6.a.net.",
+        );
+        text_round_trip(
+            Rtype::A6,
+            "0 2001:db8::1",
+            &crate::testutil::hex("0020010DB8000000000000000000000001"),
+            "0 2001:db8::1",
+        );
+        text_round_trip(Rtype::A6, "128 foo.", b"\x80\x03foo\x00", "128 foo.");
+        // BIND prints "128  foo." (two blanks), which reads the same.
+        assert_eq!(
+            crate::rdata::tests::text_parse(Rtype::A6, "128  foo."),
+            Ok(b"\x80\x03foo\x00".to_vec())
+        );
+        // Relative prefix name; 16 - 48/8 = 10 suffix octets.
+        let mut wire = crate::testutil::hex("300000123456789ABCDEF0");
+        wire.extend_from_slice(b"\x06SUBNET\x03ip6\x07example\x00");
+        text_round_trip(
+            Rtype::A6,
+            "48 0::0:1234:5678:9abc:def0 SUBNET.ip6",
+            &wire,
+            "48 ::1234:5678:9abc:def0 SUBNET.ip6.example.",
+        );
+        // Prefix bits and pad bits are cleared (named-rrchecker).
+        text_round_trip(
+            Rtype::A6,
+            "65 ::ff00:0:0:1 .",
+            &crate::testutil::hex("417F0000000000000100"),
+            "65 ::7f00:0:0:1 .",
+        );
+        assert_eq!(
+            crate::rdata::tests::text_parse(Rtype::A6, "64 1::2:3:4:5 foo."),
+            Ok(crate::testutil::hex("40000200030004000503666F6F00"))
+        );
+        for (text, err) in [
+            // BIND: "out of range", "extra input text", "unexpected end".
+            ("129 foo.", Error::InvalidRdata),
+            ("256 foo.", Error::InvalidText),
+            ("0 2001:db8::1 foo.", Error::InvalidText),
+            ("128", Error::UnexpectedEof),
+            ("64 ::1", Error::UnexpectedEof),
+            ("64 192.0.2.1 foo.", Error::InvalidText),
+            ("0", Error::UnexpectedEof),
+        ] {
+            assert_eq!(text_error(Rtype::A6, text), err, "{text:?}");
         }
     }
 }

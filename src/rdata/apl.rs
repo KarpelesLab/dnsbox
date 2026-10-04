@@ -3,8 +3,9 @@
 use core::fmt;
 use core::net::{IpAddr, Ipv4Addr, Ipv6Addr};
 
-use super::{ComposeRdata, ParseRdata};
-use crate::wire::{Composer, WireReader};
+use super::{ComposeRdata, ParseRdata, ParseRdataText};
+use crate::wire::{Composer, OutBuf, WireReader};
+use crate::zone::Scanner;
 use crate::{Class, Error, Result, Rtype};
 
 /// `APL` record data: a list of address prefixes (RFC 3123 §4). Class IN
@@ -202,7 +203,80 @@ impl<'a> Iterator for AplIter<'a> {
 
 impl core::iter::FusedIterator for AplIter<'_> {}
 
-impl super::ParseRdataText for Apl<'_> {}
+/// Parses an unsigned decimal number (digits only, no sign).
+fn decimal<T: core::str::FromStr>(text: &str) -> Result<T> {
+    if text.is_empty() || !text.bytes().all(|c| c.is_ascii_digit()) {
+        return Err(Error::InvalidText);
+    }
+    text.parse().map_err(|_| Error::InvalidText)
+}
+
+/// Parses one `[!]afi:address/prefix` item (RFC 3123 §5) and writes it.
+fn put_item_text<B: OutBuf + ?Sized>(text: &[u8], out: &mut B) -> Result<()> {
+    let (negation, text) = match text.split_first() {
+        Some((b'!', rest)) => (true, rest),
+        _ => (false, text),
+    };
+    let colon = text
+        .iter()
+        .position(|&c| c == b':')
+        .ok_or(Error::InvalidText)?;
+    let slash = text
+        .iter()
+        .rposition(|&c| c == b'/')
+        .filter(|&p| p > colon)
+        .ok_or(Error::InvalidText)?;
+    let field = |range: core::ops::Range<usize>| {
+        text.get(range)
+            .and_then(|f| core::str::from_utf8(f).ok())
+            .ok_or(Error::InvalidText)
+    };
+    let family: u16 = decimal(field(0..colon)?)?;
+    let prefix: u8 = decimal(field(slash + 1..text.len())?)?;
+    let address = field(colon + 1..slash)?;
+    let (octets, len) = match family {
+        AplItem::IPV4 => {
+            let a: Ipv4Addr = address.parse().map_err(|_| Error::InvalidText)?;
+            (a.to_ipv6_compatible().octets(), 4)
+        }
+        AplItem::IPV6 => {
+            let a: Ipv6Addr = address.parse().map_err(|_| Error::InvalidText)?;
+            (a.octets(), 16)
+        }
+        // No presentation format is defined for other families.
+        _ => return Err(Error::InvalidText),
+    };
+    let item = AplItem {
+        family,
+        prefix,
+        negation,
+        // IPv4 is in the last four octets of the compatible address.
+        afdpart: octets.get(16 - len..).unwrap_or(&[]),
+    };
+    item.compose(out).map_err(|e| match e {
+        // A prefix longer than the address (BIND: "out of range").
+        Error::InvalidRdata => Error::InvalidText,
+        e => e,
+    })
+}
+
+impl ParseRdataText for Apl<'_> {
+    /// Zero or more blank-separated `[!]afi:address/prefix` items
+    /// (RFC 3123 §5): address family 1 with a dotted-quad IPv4 address or
+    /// 2 with an IPv6 address, then the prefix length. Trailing zero
+    /// octets are dropped from the encoded address; host bits beyond the
+    /// prefix are kept, as BIND does. Other families have no presentation
+    /// format and must use the generic form.
+    fn parse_text<B: OutBuf + ?Sized>(s: &mut Scanner<'_>, out: &mut B) -> Result<()> {
+        while let Some(t) = s.next_token()? {
+            if t.is_quoted() {
+                return Err(Error::InvalidText);
+            }
+            put_item_text(t.as_bytes(), out)?;
+        }
+        Ok(())
+    }
+}
 
 impl<'a> ParseRdata<'a> for Apl<'a> {
     const RTYPE: Rtype = Rtype::APL;
@@ -274,7 +348,7 @@ impl ComposeRdata for AplItems<'_> {
 #[cfg(test)]
 mod tests {
     use super::{Apl, AplItem, AplItems};
-    use crate::rdata::tests::{compose, parse, round_trip};
+    use crate::rdata::tests::{compose, parse, round_trip, text_error, text_round_trip};
     use crate::{Class, ComposeRdata, Error, Rtype};
     use std::string::ToString;
     use std::vec::Vec;
@@ -360,5 +434,68 @@ mod tests {
             afdpart: &huge,
         };
         assert_eq!(other.compose(&mut w), Err(Error::InvalidRdata));
+    }
+
+    #[test]
+    fn text() {
+        // RFC 3123 §5 examples (named-rrchecker).
+        text_round_trip(
+            Rtype::APL,
+            "1:192.168.32.0/21 !1:192.168.38.0/28",
+            &crate::testutil::hex("00011503C0A82000011C83C0A826"),
+            "1:192.168.32.0/21 !1:192.168.38.0/28",
+        );
+        text_round_trip(
+            Rtype::APL,
+            "1:224.0.0.0/4 2:FF00:0:0:0:0:0:0:0/8",
+            &crate::testutil::hex("00010401E000020801FF"),
+            "1:224.0.0.0/4 2:ff00::/8",
+        );
+        text_round_trip(
+            Rtype::APL,
+            "1:192.168.32.0/21 !1:192.168.38.0/28 2:ff00::/8",
+            &crate::testutil::hex("00011503C0A82000011C83C0A82600020801FF"),
+            "1:192.168.32.0/21 !1:192.168.38.0/28 2:ff00::/8",
+        );
+        // RFC 3123 §5: "an empty list is allowed".
+        text_round_trip(Rtype::APL, "", b"", "");
+        // Host bits beyond the prefix are kept, all-zero addresses are
+        // empty (named-rrchecker).
+        text_round_trip(
+            Rtype::APL,
+            "1:192.168.32.1/21 1:0.0.0.0/32 !2:::/0",
+            &crate::testutil::hex("00011504C0A820010001200000020080"),
+            "1:192.168.32.1/21 1:0.0.0.0/32 !2:::/0",
+        );
+        text_round_trip(
+            Rtype::APL,
+            "2:2001:db8::1:0/128",
+            &crate::testutil::hex("0002800E20010DB800000000000000000001"),
+            "2:2001:db8::1:0/128",
+        );
+        for (text, err) in [
+            // BIND: "out of range", "not implemented", "syntax error",
+            // "bad dotted quad", "bad IPv6 address", "unexpected token".
+            ("1:192.168.32.0/33", Error::InvalidText),
+            ("2:ff00::/129", Error::InvalidText),
+            ("1:1.2.3.4/256", Error::InvalidText),
+            ("3:1/1", Error::InvalidText),
+            ("65536:1.2.3.4/32", Error::InvalidText),
+            ("1:192.168.32.0", Error::InvalidText),
+            ("192.168.32.0/24", Error::InvalidText),
+            ("!!1:1.2.3.4/32", Error::InvalidText),
+            ("+1:1.2.3.4/32", Error::InvalidText),
+            ("1:1.2.3.4/+32", Error::InvalidText),
+            ("1:1.2.3/24", Error::InvalidText),
+            ("1:1.2.3.4/", Error::InvalidText),
+            (":1.2.3.4/32", Error::InvalidText),
+            ("2:1.2.3.4/32", Error::InvalidText),
+            ("1:::/0", Error::InvalidText),
+            ("1/8:1.2.3.4", Error::InvalidText),
+            ("\"1:1.2.3.4/32\"", Error::InvalidText),
+            ("1:1.2.3.4/32 x", Error::InvalidText),
+        ] {
+            assert_eq!(text_error(Rtype::APL, text), err, "{text:?}");
+        }
     }
 }

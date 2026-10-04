@@ -1,0 +1,64 @@
+$ORIGIN example.
+$TTL 3600
+@               SOA     ns hostmaster ( 1 2h 15m 2w 1h )
+                NS      ns
+ns              A       192.0.2.1
+; RFC 1876 §3
+cambridge-net   LOC     42 21 54 N 71 06 18 W -24m 30m
+loiosh          LOC     ( 42 21 43.952 N 71 5 6.344 W
+                          -24m 1m 200m 10m )        ; precisions
+; RFC 6742 §2
+host1           NID     10 0014:4fff:ff20:ee64
+                L32     10 10.1.2.0
+                L64     10 2001:0DB8:1140:1000
+                LP      10 l64-subnet1
+; RFC 7043 §3.2, §4.2
+host2           EUI48   00-00-5e-00-53-2a
+                EUI64   00-00-5e-ef-10-00-00-2a
+; RFC 7477 §2.2
+                CSYNC   66 3 A NS AAAA
+; RFC 8976 Appendix A.1
+@               ZONEMD  2018031900 1 1 (
+                        c68090d90a7aed716bc459f9340e3d7c1370d4d24b7e2fc3
+                        a1ddc0b9a87153b9a9713b3c9ae5cc27777f98b8e730044c )
+; RFC 3123 §5
+apl             APL     1:192.168.32.0/21 !1:192.168.38.0/28
+                APL     1:224.0.0.0/4 2:FF00:0:0:0:0:0:0:0/8
+                APL
+; RFC 4025 §3.3
+38.2.0.192.in-addr.arpa. IPSECKEY ( 10 1 2
+                        192.0.2.38
+                        AQNRU3mG7TVTO2BkR47usntb102uFJtugbo6BSGvgqt4AQ== )
+ipsec           IPSECKEY 10 0 2 . AQNRU3mG7TVTO2BkR47usntb102uFJtugbo6BSGvgqt4AQ==
+                IPSECKEY 10 3 2 mygateway.example.com. AQNRU3mG7TVTO2BkR47usntb102uFJtugbo6BSGvgqt4AQ==
+                IPSECKEY 10 2 2 2001:0DB8:0:8002::2000:1 AQNRU3mG7TVTO2BkR47usntb102uFJtugbo6BSGvgqt4AQ==
+; RFC 8005 §6
+www             HIP     ( 2 200100107B1A74DF365639CC39F1D578
+                        AwEAAbdxyhNuSutc5EMzxTs9LBPCIkOFH8cIvM4p9+LrV4e19WzK00+CI6zBCQTdtWsuxKbWIy87UOoJTwkUs7lBu+Upr1gsNrut79ryra+bSRGQb1slImA8YVJyuIDsj7kwzG7jnERNqnWxZ48AWkskmdHaVDP4BcelrTI3rMXdXF5D
+                        rvs.example.com. )
+; Legacy types
+gpos            GPOS    -32.6882 116.8652 10.0      ; RFC 1712 §3
+nsap            NSAP    0x47.0005.80.005a00.0000.0001.e133.ffffff000161.00
+1.6.1.0.0.0.f.f.f.f.f.f.3.3.1.e.1.0.0.0.0.0.0.0.0.0.a.5.0.0.0.8.5.0.0.0.7.4 NSAP-PTR host.school.de.
+px              PX      50 it. ADMD-garr.C-it.      ; RFC 2163 §4
+a6              A6      64 ::2:3:4:5 subnet-1.ip6.a.net.
+                A6      0 2001:db8::1
+                A6      128 prefix
+sink            SINK    1 2 3 AQ ID
+rkey            RKEY    0 3 RSASHA256 AQID
+talink          TALINK  . next
+eid             EID     12 89 AB
+nimloc          NIMLOC  1289AB
+atma            ATMA    47.0005.80.ffde00.0000.0000.ffff.ffffffffffff.00
+                ATMA    +1.2345
+spf             SPF     "v=spf1 -all"
+ninfo           NINFO   a "b c"
+avc             AVC     app
+resinfo         RESINFO qnamemin exterr=15,16,17
+wallet          WALLET  "x" "y"
+; Reserved types without a defined format: generic form only
+opaque          UINFO   \# 4 03666F6F
+                UID     \# 4 000004D2
+                GID     \# 4 000004D2
+                UNSPEC  \# 3 616263
+                TYPE103 \# 0

@@ -2,9 +2,10 @@
 
 use core::fmt;
 
-use super::{ComposeRdata, ParseRdata};
+use super::{ComposeRdata, ParseRdata, ParseRdataText};
 use crate::name::Name;
-use crate::wire::{Composer, NameEncoding, WireReader};
+use crate::wire::{Composer, NameEncoding, OutBuf, WireReader};
+use crate::zone::Scanner;
 use crate::{Result, Rtype};
 
 /// `TALINK` record data: a link in a trust-anchor history chain
@@ -17,7 +18,14 @@ pub struct Talink<'a> {
     pub next: Name<'a>,
 }
 
-impl super::ParseRdataText for Talink<'_> {}
+impl ParseRdataText for Talink<'_> {
+    /// `previous-name next-name`
+    /// (draft-wijngaards-dnsop-trust-history-02 §3).
+    fn parse_text<B: OutBuf + ?Sized>(s: &mut Scanner<'_>, out: &mut B) -> Result<()> {
+        s.name_into(out, NameEncoding::Plain)?;
+        s.name_into(out, NameEncoding::Plain)
+    }
+}
 
 impl<'a> ParseRdata<'a> for Talink<'a> {
     const RTYPE: Rtype = Rtype::TALINK;
@@ -52,7 +60,7 @@ impl fmt::Display for Talink<'_> {
 
 #[cfg(test)]
 mod tests {
-    use crate::rdata::tests::{parse, round_trip};
+    use crate::rdata::tests::{parse, round_trip, text_error, text_round_trip};
     use crate::{Class, Error, Rtype};
 
     #[test]
@@ -64,5 +72,19 @@ mod tests {
             parse(Rtype::TALINK, Class::IN, b"\xc0\x00"),
             Err(Error::UnexpectedPointer)
         );
+    }
+
+    #[test]
+    fn text() {
+        // named-rrchecker.
+        text_round_trip(
+            Rtype::TALINK,
+            "prev next.",
+            b"\x04prev\x07example\x00\x04next\x00",
+            "prev.example. next.",
+        );
+        text_round_trip(Rtype::TALINK, ". .", b"\x00\x00", ". .");
+        assert_eq!(text_error(Rtype::TALINK, "prev"), Error::UnexpectedEof);
+        assert_eq!(text_error(Rtype::TALINK, "a. b. c."), Error::InvalidText);
     }
 }

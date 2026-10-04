@@ -3,9 +3,10 @@
 
 use core::fmt;
 
-use super::{ComposeRdata, ParseRdata};
+use super::{ComposeRdata, ParseRdata, ParseRdataText};
 use crate::text::Hex;
-use crate::wire::{Composer, WireReader};
+use crate::wire::{Composer, OutBuf, WireReader};
+use crate::zone::Scanner;
 use crate::{Error, Result, Rtype};
 
 // IANA "ZONEMD Schemes" (RFC 8976 §5.2), as of 2026-10: 0 and 255 are
@@ -75,7 +76,21 @@ impl Zonemd<'_> {
     }
 }
 
-impl super::ParseRdataText for Zonemd<'_> {}
+impl ParseRdataText for Zonemd<'_> {
+    /// `serial scheme hash-algorithm digest` (RFC 8976 §2.3): decimal
+    /// serial, scheme and algorithm, then the digest in hexadecimal, which
+    /// may be split by blanks. The digest length is checked as on the
+    /// wire.
+    fn parse_text<B: OutBuf + ?Sized>(s: &mut Scanner<'_>, out: &mut B) -> Result<()> {
+        out.put_u32(s.u32()?)?;
+        out.put_u8(s.u8()?)?;
+        out.put_u8(s.u8()?)?;
+        if s.hex_rest_into(out)? == 0 {
+            return Err(Error::UnexpectedEof);
+        }
+        Ok(())
+    }
+}
 
 impl<'a> ParseRdata<'a> for Zonemd<'a> {
     const RTYPE: Rtype = Rtype::ZONEMD;
@@ -127,7 +142,7 @@ impl fmt::Display for Zonemd<'_> {
 #[cfg(test)]
 mod tests {
     use super::{Zonemd, ZonemdHashAlg, ZonemdScheme};
-    use crate::rdata::tests::{parse, round_trip};
+    use crate::rdata::tests::{parse, round_trip, text_error, text_round_trip};
     use crate::rdata::RData;
     use crate::{Class, ComposeRdata, Error, Rtype};
     use std::string::ToString;
@@ -186,5 +201,55 @@ mod tests {
         let mut buf = [0u8; 128];
         let mut w = crate::WireWriter::new(&mut buf);
         assert_eq!(bad.compose_rdata(&mut w), Err(Error::InvalidRdata));
+    }
+
+    #[test]
+    fn text() {
+        // RFC 8976 Appendix A.1 (digest split as in the RFC; wire from
+        // named-rrchecker).
+        let mut wire = crate::testutil::hex("7848B91C0101");
+        wire.extend_from_slice(&crate::testutil::hex(DIGEST));
+        text_round_trip(
+            Rtype::ZONEMD,
+            "2018031900 1 1 (\n c68090d90a7aed716bc459f9340e3d7c1370d4d24b7e2fc3\n \
+             a1ddc0b9a87153b9a9713b3c9ae5cc27777f98b8e730044c )",
+            &wire,
+            &std::format!("2018031900 1 1 {DIGEST}"),
+        );
+        // An unassigned (private-use) algorithm with the minimum digest
+        // length (named-rrchecker).
+        text_round_trip(
+            Rtype::ZONEMD,
+            "1 1 240 001122334455667788990011",
+            &crate::testutil::hex("0000000101F0001122334455667788990011"),
+            "1 1 240 001122334455667788990011",
+        );
+        // SHA-512 needs exactly 64 octets, here given as four tokens.
+        let quarter = "00112233445566778899AABBCCDDEEFF";
+        let text = std::format!("7 1 2 {quarter} {quarter} {quarter} {quarter}");
+        let mut wire = crate::testutil::hex("000000070102");
+        for _ in 0..4 {
+            wire.extend_from_slice(&crate::testutil::hex(quarter));
+        }
+        text_round_trip(
+            Rtype::ZONEMD,
+            &text,
+            &wire,
+            &std::format!("7 1 2 {}", quarter.repeat(4)),
+        );
+        for (text, err) in [
+            // Digest length (BIND: "unexpected end of input").
+            ("1 1 1 0011", Error::InvalidRdata),
+            ("1 1 3 0011223344556677889900", Error::InvalidRdata),
+            ("1 1 3", Error::UnexpectedEof),
+            // Numbers only (BIND: "not a valid number").
+            ("1 SIMPLE SHA384 001122334455667788990011", Error::InvalidText),
+            ("1 1 256 001122334455667788990011", Error::InvalidText),
+            ("1 1 3 00112233445566778899001", Error::InvalidText),
+            ("1 1 3 0011223344556677889900xx", Error::InvalidText),
+            ("1 1", Error::UnexpectedEof),
+        ] {
+            assert_eq!(text_error(Rtype::ZONEMD, text), err, "{text:?}");
+        }
     }
 }

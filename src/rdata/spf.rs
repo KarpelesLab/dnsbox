@@ -4,9 +4,10 @@
 
 use core::fmt;
 
-use super::{ComposeRdata, ParseRdata};
+use super::{ComposeRdata, ParseRdata, ParseRdataText};
 use crate::charstr::{CharStrIter, CharStrs};
-use crate::wire::{Composer, WireReader};
+use crate::wire::{Composer, OutBuf, WireReader};
+use crate::zone::Scanner;
 use crate::{Error, Result, Rtype};
 
 /// Defines a TXT-format record-data view.
@@ -42,7 +43,13 @@ macro_rules! txt_like_rdata {
             }
         }
 
-        impl super::ParseRdataText for $ty<'_> {}
+        impl ParseRdataText for $ty<'_> {
+            /// One or more `<character-string>`s, quoted or not, as TXT
+            /// (RFC 1035 §3.3.14, §5.1).
+            fn parse_text<B: OutBuf + ?Sized>(s: &mut Scanner<'_>, out: &mut B) -> Result<()> {
+                s.char_strings_into(out)
+            }
+        }
 
         impl<'a> ParseRdata<'a> for $ty<'a> {
             const RTYPE: Rtype = Rtype::$rt;
@@ -107,7 +114,7 @@ txt_like_rdata! {
 #[cfg(test)]
 mod tests {
     use super::Spf;
-    use crate::rdata::tests::{parse, round_trip};
+    use crate::rdata::tests::{parse, round_trip, text_error, text_round_trip};
     use crate::{Class, Error, Rtype};
     use std::vec::Vec;
 
@@ -142,5 +149,39 @@ mod tests {
         let spf = Spf::from_wire(b"\x01a\x01b").unwrap();
         let s: Vec<_> = spf.strings().map(|s| s.as_bytes()).collect();
         assert_eq!(s, [b"a", b"b"]);
+    }
+
+    #[test]
+    fn text() {
+        // RFC 4408 §3.1.1 / RFC 7208 §3 policy; named-rrchecker.
+        text_round_trip(
+            Rtype::SPF,
+            "\"v=spf1 +mx a:colo.example.com/28 -all\"",
+            b"\x25v=spf1 +mx a:colo.example.com/28 -all",
+            "\"v=spf1 +mx a:colo.example.com/28 -all\"",
+        );
+        text_round_trip(Rtype::NINFO, "a b c", b"\x01a\x01b\x01c", "\"a\" \"b\" \"c\"");
+        text_round_trip(Rtype::AVC, "app ( \"x y\" )", b"\x03app\x03x y", "\"app\" \"x y\"");
+        // RFC 9606 §3 example.
+        text_round_trip(
+            Rtype::RESINFO,
+            "qnamemin exterr=15,16,17 infourl=https://resolver.example.com/guide",
+            b"\x08qnamemin\x0fexterr=15,16,17\x2ainfourl=https://resolver.example.com/guide",
+            "\"qnamemin\" \"exterr=15,16,17\" \"infourl=https://resolver.example.com/guide\"",
+        );
+        text_round_trip(Rtype::WALLET, "\"\" \\065", b"\x00\x01A", "\"\" \"A\"");
+        for t in [
+            Rtype::SPF,
+            Rtype::NINFO,
+            Rtype::AVC,
+            Rtype::RESINFO,
+            Rtype::WALLET,
+        ] {
+            assert_eq!(text_error(t, ""), Error::UnexpectedEof, "{t}");
+            assert_eq!(text_error(t, "\\256"), Error::InvalidText, "{t}");
+            assert_eq!(text_error(t, "\"a"), Error::InvalidText, "{t}");
+            let long = "x".repeat(256);
+            assert_eq!(text_error(t, &long), Error::CharStringTooLong, "{t}");
+        }
     }
 }

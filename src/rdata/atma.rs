@@ -3,8 +3,9 @@
 
 use core::fmt;
 
-use super::{ComposeRdata, ParseRdata};
-use crate::wire::{Composer, WireReader};
+use super::{ComposeRdata, ParseRdata, ParseRdataText};
+use crate::wire::{Composer, OutBuf, WireReader};
+use crate::zone::Scanner;
 use crate::{Class, Error, Result, Rtype};
 
 /// `ATMA` record data: an ATM address (ATM Forum AF-DANS-0152.000).
@@ -41,7 +42,31 @@ impl Atma<'_> {
     }
 }
 
-impl super::ParseRdataText for Atma<'_> {}
+impl ParseRdataText for Atma<'_> {
+    /// One token (ATM Forum AF-DANS-0152.000 §4, as BIND reads it): `+`
+    /// and decimal digits for an E.164 address, otherwise hexadecimal
+    /// digits for an AESA address; `.` separators may appear anywhere.
+    /// Other formats have no presentation form (generic form only).
+    fn parse_text<B: OutBuf + ?Sized>(s: &mut Scanner<'_>, out: &mut B) -> Result<()> {
+        let t = s.word()?;
+        match t.as_bytes() {
+            [b'+', digits @ ..] => {
+                out.put_u8(Atma::E164)?;
+                for &c in digits.iter().filter(|&&c| c != b'.') {
+                    if !c.is_ascii_digit() {
+                        return Err(Error::InvalidText);
+                    }
+                    out.put_u8(c)?;
+                }
+                Ok(())
+            }
+            hex => {
+                out.put_u8(Atma::AESA)?;
+                super::nsap::put_dotted_hex(hex, out).map(drop)
+            }
+        }
+    }
+}
 
 impl<'a> ParseRdata<'a> for Atma<'a> {
     const RTYPE: Rtype = Rtype::ATMA;
@@ -97,7 +122,7 @@ impl fmt::Display for Atma<'_> {
 #[cfg(test)]
 mod tests {
     use super::Atma;
-    use crate::rdata::tests::{parse, round_trip};
+    use crate::rdata::tests::{parse, round_trip, text_error, text_round_trip};
     use crate::{Class, ComposeRdata, Error, Rtype};
     use std::string::ToString;
 
@@ -134,5 +159,34 @@ mod tests {
         let mut buf = [0u8; 8];
         let mut w = crate::WireWriter::new(&mut buf);
         assert_eq!(bad.compose_rdata(&mut w), Err(Error::InvalidRdata));
+    }
+
+    #[test]
+    fn text() {
+        // named-rrchecker.
+        text_round_trip(
+            Rtype::ATMA,
+            "47.0005.80.ffde00.0000.0000.ffff.ffffffffffff.00",
+            &crate::testutil::hex("0047000580FFDE0000000000FFFFFFFFFFFFFFFF00"),
+            "47000580ffde0000000000ffffffffffffffff00",
+        );
+        text_round_trip(Rtype::ATMA, "+1.2345", b"\x0112345", "+12345");
+        text_round_trip(Rtype::ATMA, "01", b"\x00\x01", "01");
+        // Unknown formats only in the generic form.
+        text_round_trip(Rtype::ATMA, "\\# 2 0231", b"\x021", "\\# 2 0231");
+        for (text, err) in [
+            // BIND: "unexpected end of input", "extra input text".
+            ("4", Error::InvalidText),
+            ("47 00", Error::InvalidText),
+            ("+12a", Error::InvalidText),
+            ("+-1", Error::InvalidText),
+            ("4g", Error::InvalidText),
+            ("\"47\"", Error::InvalidText),
+            ("+", Error::UnexpectedEof),
+            ("..", Error::UnexpectedEof),
+            ("", Error::UnexpectedEof),
+        ] {
+            assert_eq!(text_error(Rtype::ATMA, text), err, "{text:?}");
+        }
     }
 }

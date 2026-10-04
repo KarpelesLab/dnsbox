@@ -6,9 +6,10 @@
 
 use core::fmt;
 
-use super::{ComposeRdata, ParseRdata};
+use super::{ComposeRdata, ParseRdata, ParseRdataText};
 use crate::text::Hex;
-use crate::wire::{Composer, WireReader};
+use crate::wire::{Composer, OutBuf, WireReader};
+use crate::zone::Scanner;
 use crate::{Class, Error, Result, Rtype};
 
 /// Defines a class-IN record type holding one non-empty opaque value
@@ -22,7 +23,13 @@ macro_rules! hex_rdata {
             pub data: &'a [u8],
         }
 
-        impl super::ParseRdataText for $ty<'_> {}
+        impl ParseRdataText for $ty<'_> {
+            /// The value in hexadecimal (either case), possibly split by
+            /// blanks, as BIND reads it.
+            fn parse_text<B: OutBuf + ?Sized>(s: &mut Scanner<'_>, out: &mut B) -> Result<()> {
+                s.hex_rest_into(out).map(drop)
+            }
+        }
 
         impl<'a> ParseRdata<'a> for $ty<'a> {
             const RTYPE: Rtype = Rtype::$rt;
@@ -75,7 +82,7 @@ hex_rdata! {
 #[cfg(test)]
 mod tests {
     use super::{Eid, Nimloc};
-    use crate::rdata::tests::{parse, round_trip};
+    use crate::rdata::tests::{parse, round_trip, text_error, text_round_trip};
     use crate::rdata::{RData, UnknownRdata};
     use crate::{Class, ComposeRdata, Error, Rtype};
 
@@ -105,5 +112,23 @@ mod tests {
             Nimloc { data: b"" }.compose_rdata(&mut w),
             Err(Error::InvalidRdata)
         );
+    }
+
+    #[test]
+    fn text() {
+        // named-rrchecker.
+        for t in [Rtype::EID, Rtype::NIMLOC] {
+            text_round_trip(t, "12 89 AB", b"\x12\x89\xab", "1289AB");
+            text_round_trip(t, "( 1289ab\n cd )", b"\x12\x89\xab\xcd", "1289ABCD");
+            for (text, err) in [
+                // BIND: "bad hex encoding", "unexpected end of input".
+                ("1", Error::InvalidText),
+                ("12.89", Error::InvalidText),
+                ("\"12\"", Error::InvalidText),
+                ("", Error::UnexpectedEof),
+            ] {
+                assert_eq!(text_error(t, text), err, "{t} {text:?}");
+            }
+        }
     }
 }

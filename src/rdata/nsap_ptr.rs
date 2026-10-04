@@ -2,9 +2,10 @@
 
 use core::fmt;
 
-use super::{ComposeRdata, ParseRdata};
+use super::{ComposeRdata, ParseRdata, ParseRdataText};
 use crate::name::Name;
-use crate::wire::{Composer, NameEncoding, WireReader};
+use crate::wire::{Composer, NameEncoding, OutBuf, WireReader};
+use crate::zone::Scanner;
 use crate::{Class, Result, Rtype};
 
 /// `NSAP-PTR` record data: the domain name for an NSAP address, the
@@ -15,7 +16,12 @@ pub struct NsapPtr<'a> {
     pub ptrdname: Name<'a>,
 }
 
-impl super::ParseRdataText for NsapPtr<'_> {}
+impl ParseRdataText for NsapPtr<'_> {
+    /// `<domain-name>` (RFC 1706 §6).
+    fn parse_text<B: OutBuf + ?Sized>(s: &mut Scanner<'_>, out: &mut B) -> Result<()> {
+        s.name_into(out, NameEncoding::Plain)
+    }
+}
 
 impl<'a> ParseRdata<'a> for NsapPtr<'a> {
     const RTYPE: Rtype = Rtype::NSAP_PTR;
@@ -48,7 +54,7 @@ impl fmt::Display for NsapPtr<'_> {
 
 #[cfg(test)]
 mod tests {
-    use crate::rdata::tests::{parse, round_trip};
+    use crate::rdata::tests::{parse, round_trip, text_error, text_round_trip};
     use crate::{Class, Error, Rtype};
 
     #[test]
@@ -59,5 +65,21 @@ mod tests {
             parse(Rtype::NSAP_PTR, Class::IN, b"\xc0\x00"),
             Err(Error::UnexpectedPointer)
         );
+    }
+
+    #[test]
+    fn text() {
+        // RFC 1706 §6 example: NSAP-PTR host.school.de (named-rrchecker).
+        text_round_trip(
+            Rtype::NSAP_PTR,
+            "host.school.de.",
+            b"\x04host\x06school\x02de\x00",
+            "host.school.de.",
+        );
+        text_round_trip(Rtype::NSAP_PTR, "foo", b"\x03foo\x07example\x00", "foo.example.");
+        text_round_trip(Rtype::NSAP_PTR, "@", b"\x07example\x00", "example.");
+        assert_eq!(text_error(Rtype::NSAP_PTR, ""), Error::UnexpectedEof);
+        assert_eq!(text_error(Rtype::NSAP_PTR, "a. b."), Error::InvalidText);
+        assert_eq!(text_error(Rtype::NSAP_PTR, "a..b."), Error::EmptyLabel);
     }
 }
