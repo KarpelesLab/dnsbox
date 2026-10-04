@@ -224,6 +224,7 @@ impl Rtype {
     /// Whether this is a QTYPE that may only appear in questions: IXFR,
     /// AXFR, MAILB, MAILA and ANY (RFC 1035 §3.2.3, RFC 6895 §3.1).
     #[inline]
+    #[must_use]
     pub const fn is_question_only(self) -> bool {
         matches!(self.0, 251..=255)
     }
@@ -232,12 +233,14 @@ impl Rtype {
     /// range (RFC 6895 §3.1; this includes NXNAME, RFC 9824 §4). Such types
     /// carry per-message data and are never cached or stored in zones.
     #[inline]
+    #[must_use]
     pub const fn is_meta(self) -> bool {
         self.0 == 41 || (self.0 >= 128 && self.0 <= 255)
     }
 
     /// Whether this is an ordinary data type (neither meta nor QTYPE).
     #[inline]
+    #[must_use]
     pub const fn is_data(self) -> bool {
         !self.is_meta() && self.0 != 0
     }
@@ -245,6 +248,7 @@ impl Rtype {
     /// Whether the value lies in the private-use range 65280–65534
     /// (RFC 6895 §3.1).
     #[inline]
+    #[must_use]
     pub const fn is_private_use(self) -> bool {
         self.0 >= 0xff00 && self.0 != 0xffff
     }

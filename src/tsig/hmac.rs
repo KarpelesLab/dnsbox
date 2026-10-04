@@ -67,6 +67,7 @@ impl<'s> HmacKey<'s> {
 
     /// The algorithm.
     #[inline]
+    #[must_use]
     pub const fn algorithm_id(&self) -> TsigAlgorithm {
         self.algorithm
     }

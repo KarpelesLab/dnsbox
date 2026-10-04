@@ -21,6 +21,7 @@ pub struct WireReader<'a> {
 impl<'a> WireReader<'a> {
     /// Creates a reader over all of `buf`, positioned at its start.
     #[inline]
+    #[must_use]
     pub const fn new(buf: &'a [u8]) -> Self {
         WireReader {
             msg: buf,
@@ -47,30 +48,35 @@ impl<'a> WireReader<'a> {
 
     /// The full message this reader was created over.
     #[inline]
+    #[must_use]
     pub const fn message(&self) -> &'a [u8] {
         self.msg
     }
 
     /// The current position, as an offset from the start of the message.
     #[inline]
+    #[must_use]
     pub const fn position(&self) -> usize {
         self.pos
     }
 
     /// The end of the readable window, as an offset into the message.
     #[inline]
+    #[must_use]
     pub const fn end(&self) -> usize {
         self.end
     }
 
     /// Number of bytes left before the end of the window.
     #[inline]
+    #[must_use]
     pub const fn remaining(&self) -> usize {
         self.end - self.pos
     }
 
     /// Whether the window is exhausted.
     #[inline]
+    #[must_use]
     pub const fn is_empty(&self) -> bool {
         self.pos >= self.end
     }
@@ -90,6 +96,7 @@ impl<'a> WireReader<'a> {
 
     /// The unread bytes of the window, without consuming them.
     #[inline]
+    #[must_use]
     pub fn peek_rest(&self) -> &'a [u8] {
         self.msg.get(self.pos..self.end).unwrap_or(&[])
     }

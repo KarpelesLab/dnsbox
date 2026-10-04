@@ -31,6 +31,7 @@ pub struct Srv<'a> {
 impl<'a> Srv<'a> {
     /// Builds SRV data from its fields (RFC 2782).
     #[inline]
+    #[must_use]
     pub const fn new(priority: u16, weight: u16, port: u16, target: Name<'a>) -> Self {
         Srv {
             priority,
@@ -43,6 +44,7 @@ impl<'a> Srv<'a> {
     /// Whether the service is "decidedly not available" at this domain:
     /// a target of `.` (RFC 2782).
     #[inline]
+    #[must_use]
     pub const fn is_unavailable(&self) -> bool {
         self.target.is_root()
     }

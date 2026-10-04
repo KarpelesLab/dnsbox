@@ -42,12 +42,14 @@ impl<'a> Opt<'a> {
 
     /// The encoded options: the OPT RDATA in wire form.
     #[inline]
+    #[must_use]
     pub const fn as_wire(&self) -> &'a [u8] {
         self.data
     }
 
     /// Whether there are no options.
     #[inline]
+    #[must_use]
     pub const fn is_empty(&self) -> bool {
         self.data.is_empty()
     }
@@ -72,11 +74,13 @@ impl<'a> Opt<'a> {
     }
 
     /// The first option with code `code`, undecoded.
+    #[must_use]
     pub fn find(&self, code: OptionCode) -> Option<RawOption<'a>> {
         self.raw_options().find(|o| o.code == code)
     }
 
     /// Decodes the first option of type `T`, if there is one.
+    #[must_use]
     pub fn get<T: ParseOption<'a>>(&self) -> Option<Result<T>> {
         self.find(T::CODE).map(|o| o.parse_as())
     }
@@ -183,6 +187,7 @@ impl fmt::Display for RawOption<'_> {
 
 /// Iterator over the options of an [`Opt`]; see [`Opt::raw_options`].
 #[derive(Clone, Debug)]
+#[must_use = "iterators are lazy and do nothing unless consumed"]
 pub struct RawOptions<'a> {
     r: WireReader<'a>,
 }
@@ -210,6 +215,7 @@ impl core::iter::FusedIterator for RawOptions<'_> {}
 
 /// Iterator over the decoded options of an [`Opt`]; see [`Opt::options`].
 #[derive(Clone, Debug)]
+#[must_use = "iterators are lazy and do nothing unless consumed"]
 pub struct Options<'a> {
     raw: RawOptions<'a>,
 }

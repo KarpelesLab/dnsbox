@@ -18,6 +18,7 @@ pub struct A {
 impl A {
     /// Wraps an address.
     #[inline]
+    #[must_use]
     pub const fn new(addr: Ipv4Addr) -> Self {
         A { addr }
     }

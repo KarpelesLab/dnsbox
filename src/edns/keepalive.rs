@@ -25,6 +25,7 @@ impl TcpKeepalive {
 
     /// A server's option with the given timeout, in units of 100 ms.
     #[inline]
+    #[must_use]
     pub const fn new(timeout: u16) -> Self {
         TcpKeepalive {
             timeout: Some(timeout),
@@ -33,6 +34,7 @@ impl TcpKeepalive {
 
     /// The timeout in milliseconds, if present.
     #[inline]
+    #[must_use]
     pub const fn timeout_millis(&self) -> Option<u32> {
         match self.timeout {
             Some(t) => Some(t as u32 * 100),

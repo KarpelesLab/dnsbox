@@ -37,6 +37,7 @@ impl<'b> MessageBuilder<WireWriter<'b>> {
 impl MessageBuilder<alloc::vec::Vec<u8>> {
     /// Starts a length-prefixed message for DNS over TCP in a new `Vec`;
     /// see [`new_tcp`](MessageBuilder::new_tcp).
+    #[must_use]
     pub fn new_tcp_vec() -> Self {
         let mut b = Self::new_vec();
         b.buf = alloc::vec![0; 2 + crate::Header::LEN];

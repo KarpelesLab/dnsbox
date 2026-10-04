@@ -24,6 +24,7 @@ impl Expire {
 
     /// A response option with the given timer, in seconds (RFC 7314 §3).
     #[inline]
+    #[must_use]
     pub const fn new(expire: u32) -> Self {
         Expire {
             expire: Some(expire),

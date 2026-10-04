@@ -33,6 +33,7 @@ open_enum! {
 
 impl ZonemdHashAlg {
     /// The digest length of a registered algorithm, in octets.
+    #[must_use]
     pub const fn digest_len(self) -> Option<usize> {
         match self.0 {
             1 => Some(48),

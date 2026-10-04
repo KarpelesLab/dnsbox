@@ -74,18 +74,21 @@ impl<'b> SvcbBuilder<'b> {
 
     /// The RDATA written so far.
     #[inline]
+    #[must_use]
     pub fn as_bytes(&self) -> &[u8] {
         self.buf.get(..self.len).unwrap_or(&[])
     }
 
     /// The RDATA length so far.
     #[inline]
+    #[must_use]
     pub const fn len(&self) -> usize {
         self.len
     }
 
     /// Whether no SvcParams have been added yet (the RDATA is never empty).
     #[inline]
+    #[must_use]
     pub const fn is_empty(&self) -> bool {
         self.len == self.params_at
     }

@@ -30,6 +30,7 @@ macro_rules! ds_like {
         impl<'a> $ty<'a> {
             /// Builds the record data.
             #[inline]
+            #[must_use]
             pub const fn new(key_tag: u16, algorithm: Algorithm, digest_type: DigestType, digest: &'a [u8]) -> Self {
                 $ty { key_tag, algorithm, digest_type, digest }
             }
@@ -137,6 +138,7 @@ impl Cds<'_> {
     /// Whether this is the RFC 8078 §4 delete form (key tag, algorithm and
     /// digest type 0, digest a single zero octet).
     #[inline]
+    #[must_use]
     pub const fn is_delete(&self) -> bool {
         self.key_tag == 0
             && self.algorithm.get() == 0

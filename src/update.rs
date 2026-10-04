@@ -245,6 +245,7 @@ pub enum Prerequisite<'a> {
 
 impl<'a> Prerequisite<'a> {
     /// The owner name the prerequisite is about.
+    #[must_use]
     pub fn name(&self) -> Name<'a> {
         match *self {
             Prerequisite::RrsetExists { name, .. }
@@ -314,6 +315,7 @@ pub enum UpdateOp<'a> {
 
 impl<'a> UpdateOp<'a> {
     /// The owner name the operation applies to.
+    #[must_use]
     pub fn name(&self) -> Name<'a> {
         match *self {
             UpdateOp::Add(rr) | UpdateOp::DeleteRr(rr) => rr.name(),
@@ -376,30 +378,35 @@ impl<'a> UpdateMessage<'a> {
 
     /// The underlying message.
     #[inline]
+    #[must_use]
     pub const fn message(&self) -> Message<'a> {
         self.msg
     }
 
     /// The zone section entry.
     #[inline]
+    #[must_use]
     pub const fn zone(&self) -> Question<'a> {
         self.zone
     }
 
     /// The zone name (ZNAME).
     #[inline]
+    #[must_use]
     pub const fn zone_name(&self) -> Name<'a> {
         self.zone.name()
     }
 
     /// The zone class (ZCLASS).
     #[inline]
+    #[must_use]
     pub const fn zone_class(&self) -> Class {
         self.zone.qclass()
     }
 
     /// Whether `name` is at or below the zone name: servers answer NOTZONE
     /// for prerequisites or updates outside the zone (§3.2, §3.4.1.3).
+    #[must_use]
     pub fn in_zone(&self, name: &Name<'_>) -> bool {
         name.is_subdomain_of(&self.zone.name())
     }
@@ -444,6 +451,7 @@ impl<'a> UpdateMessage<'a> {
 /// Iterator over the prerequisites of an UPDATE; see
 /// [`UpdateMessage::prerequisites`]. Stops after the first error.
 #[derive(Clone, Debug)]
+#[must_use = "iterators are lazy and do nothing unless consumed"]
 pub struct Prerequisites<'a> {
     inner: Records<'a>,
     class: Class,
@@ -471,6 +479,7 @@ impl core::iter::FusedIterator for Prerequisites<'_> {}
 /// Iterator over the update operations of an UPDATE; see
 /// [`UpdateMessage::updates`]. Stops after the first error.
 #[derive(Clone, Debug)]
+#[must_use = "iterators are lazy and do nothing unless consumed"]
 pub struct Updates<'a> {
     inner: Records<'a>,
     class: Class,

@@ -18,18 +18,21 @@ pub struct UnknownOption<'a> {
 impl<'a> UnknownOption<'a> {
     /// Wraps a raw option value.
     #[inline]
+    #[must_use]
     pub const fn new(code: OptionCode, data: &'a [u8]) -> Self {
         UnknownOption { code, data }
     }
 
     /// The option code.
     #[inline]
+    #[must_use]
     pub const fn code(&self) -> OptionCode {
         self.code
     }
 
     /// The raw OPTION-DATA.
     #[inline]
+    #[must_use]
     pub const fn data(&self) -> &'a [u8] {
         self.data
     }

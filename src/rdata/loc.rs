@@ -130,6 +130,7 @@ impl Loc {
     /// of ten. Values that are not "one digit × power of ten" are rounded
     /// down; values of 9 × 10^9 cm or more saturate to `0x99` (the
     /// algorithm of RFC 1876 Appendix A, `precsize_aton`).
+    #[must_use]
     pub const fn encode_precision(cm: u64) -> u8 {
         let mut exponent = 0;
         while exponent < 9 && cm >= POWERS[exponent + 1] {
@@ -145,6 +146,7 @@ impl Loc {
     /// mantissa has a non-zero exponent (a non-canonical zero that BIND
     /// also rejects, and that [`encode_precision`](Self::encode_precision)
     /// never produces).
+    #[must_use]
     pub const fn decode_precision(octet: u8) -> Option<u64> {
         let mantissa = (octet >> 4) as u64;
         let exponent = (octet & 0x0f) as usize;
@@ -156,36 +158,42 @@ impl Loc {
 
     /// The size in centimetres (`None` if the octet is invalid).
     #[inline]
+    #[must_use]
     pub const fn size_cm(&self) -> Option<u64> {
         Self::decode_precision(self.size)
     }
 
     /// The horizontal precision in centimetres (`None` if invalid).
     #[inline]
+    #[must_use]
     pub const fn horiz_pre_cm(&self) -> Option<u64> {
         Self::decode_precision(self.horiz_pre)
     }
 
     /// The vertical precision in centimetres (`None` if invalid).
     #[inline]
+    #[must_use]
     pub const fn vert_pre_cm(&self) -> Option<u64> {
         Self::decode_precision(self.vert_pre)
     }
 
     /// The latitude in thousandths of an arcsecond, positive north.
     #[inline]
+    #[must_use]
     pub const fn latitude_mas(&self) -> i64 {
         self.latitude as i64 - EQUATOR as i64
     }
 
     /// The longitude in thousandths of an arcsecond, positive east.
     #[inline]
+    #[must_use]
     pub const fn longitude_mas(&self) -> i64 {
         self.longitude as i64 - EQUATOR as i64
     }
 
     /// The altitude in centimetres relative to the WGS 84 spheroid.
     #[inline]
+    #[must_use]
     pub const fn altitude_cm(&self) -> i64 {
         self.altitude as i64 - ALTITUDE_BASE
     }
@@ -205,6 +213,7 @@ impl Loc {
     }
 
     /// The 16-byte wire form.
+    #[must_use]
     pub const fn to_wire(&self) -> [u8; 16] {
         let [a0, a1, a2, a3] = self.latitude.to_be_bytes();
         let [o0, o1, o2, o3] = self.longitude.to_be_bytes();

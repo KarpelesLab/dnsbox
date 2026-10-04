@@ -28,6 +28,7 @@ pub struct Token<'a> {
 impl<'a> Token<'a> {
     /// The token as written (escapes not decoded, quotes stripped).
     #[inline]
+    #[must_use]
     pub const fn as_bytes(&self) -> &'a [u8] {
         self.raw
     }
@@ -36,6 +37,7 @@ impl<'a> Token<'a> {
     /// for `<character-string>`s; numbers, names and mnemonics are never
     /// quoted.
     #[inline]
+    #[must_use]
     pub const fn is_quoted(&self) -> bool {
         self.quoted
     }
@@ -49,6 +51,7 @@ impl<'a> Token<'a> {
     /// Whether the token is unquoted and equals `s`, ASCII
     /// case-insensitively (for mnemonics such as `TCP` or `\#`).
     #[inline]
+    #[must_use]
     pub fn is(&self, s: &str) -> bool {
         !self.quoted && self.raw.eq_ignore_ascii_case(s.as_bytes())
     }
@@ -94,6 +97,7 @@ impl<'a> Token<'a> {
 /// escapes); yields [`Error::InvalidText`] once for a malformed escape
 /// (`\DDD` above 255, fewer than three digits, or a trailing backslash).
 #[derive(Clone, Debug)]
+#[must_use = "iterators are lazy and do nothing unless consumed"]
 pub struct Unescape<'a>(&'a [u8]);
 
 impl Iterator for Unescape<'_> {
@@ -197,6 +201,7 @@ impl<'a> Scanner<'a> {
     /// are completed with the root (set another origin with
     /// [`with_origin`](Self::with_origin)).
     #[inline]
+    #[must_use]
     pub fn new(text: &'a str) -> Self {
         Scanner::from_bytes(text.as_bytes())
     }
@@ -204,6 +209,7 @@ impl<'a> Scanner<'a> {
     /// Like [`new`](Self::new), for text that is not necessarily UTF-8
     /// (escapes are the portable way to write other octets).
     #[inline]
+    #[must_use]
     pub fn from_bytes(text: &'a [u8]) -> Self {
         Scanner {
             input: text,
@@ -232,6 +238,7 @@ impl<'a> Scanner<'a> {
     /// Sets the origin that relative names are completed with
     /// (`$ORIGIN`, RFC 1035 §5.1).
     #[inline]
+    #[must_use]
     pub fn with_origin(mut self, origin: Name<'a>) -> Self {
         self.origin = origin;
         self
@@ -239,6 +246,7 @@ impl<'a> Scanner<'a> {
 
     /// The origin relative names are completed with.
     #[inline]
+    #[must_use]
     pub fn origin(&self) -> Name<'a> {
         self.origin
     }

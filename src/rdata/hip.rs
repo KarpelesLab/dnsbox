@@ -46,12 +46,14 @@ impl<'a> HipServers<'a> {
 
     /// The encoded names.
     #[inline]
+    #[must_use]
     pub const fn as_wire(&self) -> &'a [u8] {
         self.0
     }
 
     /// Whether there are no servers.
     #[inline]
+    #[must_use]
     pub const fn is_empty(&self) -> bool {
         self.0.is_empty()
     }
@@ -82,6 +84,7 @@ impl<'a> IntoIterator for &HipServers<'a> {
 
 /// Iterator over [`HipServers`].
 #[derive(Clone, Debug)]
+#[must_use = "iterators are lazy and do nothing unless consumed"]
 pub struct HipServerIter<'a>(WireReader<'a>);
 
 impl<'a> Iterator for HipServerIter<'a> {

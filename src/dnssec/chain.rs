@@ -80,6 +80,7 @@ impl Verified {
     /// is only proven together with a proof that no closer match exists
     /// ([`DenialProof::wildcard_answer`], RFC 4035 §5.3.4).
     #[inline]
+    #[must_use]
     pub const fn is_wildcard_expansion(&self) -> bool {
         self.wildcard.is_some()
     }
@@ -108,6 +109,7 @@ pub enum Answer {
 impl Answer {
     /// The signature check.
     #[inline]
+    #[must_use]
     pub const fn verified(&self) -> &Verified {
         match self {
             Answer::Exact(v) | Answer::Wildcard { verified: v, .. } => v,
@@ -117,6 +119,7 @@ impl Answer {
     /// Whether the answer is secure: exact, or a wildcard expansion with a
     /// secure proof.
     #[inline]
+    #[must_use]
     pub const fn is_secure(&self) -> bool {
         match self {
             Answer::Exact(_) => true,

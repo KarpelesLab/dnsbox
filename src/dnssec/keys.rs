@@ -17,6 +17,7 @@ use crate::{Error, Result};
 ///
 /// assert_eq!(key_tag(257, 3, Algorithm::ED25519, &[0; 32]), 1040);
 /// ```
+#[must_use]
 pub fn key_tag(flags: u16, protocol: u8, algorithm: Algorithm, public_key: &[u8]) -> u16 {
     if algorithm == Algorithm::RSAMD5 {
         // RFC 4034 §B.1: the modulus ends the public key field (RFC 3110),
@@ -88,6 +89,7 @@ impl<'a> RsaPublicKey<'a> {
     }
 
     /// The size of the modulus in bits.
+    #[must_use]
     pub fn modulus_bits(&self) -> usize {
         match self.modulus.first() {
             Some(&b) => self.modulus.len() * 8 - b.leading_zeros() as usize,
@@ -96,6 +98,7 @@ impl<'a> RsaPublicKey<'a> {
     }
 
     /// The length of the encoded public key field.
+    #[must_use]
     pub const fn wire_len(&self) -> usize {
         let prefix = if self.exponent.len() > 255 { 3 } else { 1 };
         prefix + self.exponent.len() + self.modulus.len()

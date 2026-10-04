@@ -22,12 +22,14 @@ pub struct NsecRecord<'a> {
 impl<'a> NsecRecord<'a> {
     /// Pairs an owner name with NSEC data.
     #[inline]
+    #[must_use]
     pub const fn new(owner: Name<'a>, nsec: Nsec<'a>) -> Self {
         NsecRecord { owner, nsec }
     }
 
     /// The NSEC record `rr`, or `None` if it is of another type or its
     /// data is malformed.
+    #[must_use]
     pub fn from_record(rr: &Record<'a>) -> Option<Self> {
         if rr.rtype() != Rtype::NSEC {
             return None;

@@ -140,6 +140,7 @@ impl MessageBuilder<alloc::vec::Vec<u8>> {
     /// RFC 1035 §4.2.1), so typical messages are written with a single
     /// allocation.
     #[inline]
+    #[must_use]
     pub fn new_vec() -> Self {
         Self::new_vec_with_capacity(DEFAULT_VEC_CAPACITY)
     }
@@ -148,6 +149,7 @@ impl MessageBuilder<alloc::vec::Vec<u8>> {
     /// (e.g. the expected response size) so typical messages never
     /// reallocate.
     #[inline]
+    #[must_use]
     pub fn new_vec_with_capacity(capacity: usize) -> Self {
         let mut buf = alloc::vec::Vec::with_capacity(capacity.max(Header::LEN));
         buf.resize(Header::LEN, 0);

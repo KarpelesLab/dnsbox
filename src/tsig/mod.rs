@@ -103,6 +103,7 @@ use crate::{Error, Rcode};
 /// | [`Error::BadTime`] | NOTAUTH | BADTIME |
 /// | [`Error::BadTrunc`] | NOTAUTH | BADTRUNC |
 /// | anything else ([`Error::MisplacedSignature`], [`Error::BadMacSize`], parse errors) | FORMERR | NOERROR |
+#[must_use]
 pub const fn response_codes(error: Error) -> (Rcode, TsigRcode) {
     match error {
         Error::BadKey => (Rcode::NOTAUTH, TsigRcode::BADKEY),

@@ -20,6 +20,7 @@ use crate::{Class, Flags, Opcode, Result, Rtype};
 /// let r = response_flags(q);
 /// assert!(r.qr() && r.rd() && r.cd() && !r.ad());
 /// ```
+#[must_use]
 pub const fn response_flags(query: Flags) -> Flags {
     Flags::from_bits(0)
         .with_qr(true)

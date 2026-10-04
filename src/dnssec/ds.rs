@@ -104,12 +104,14 @@ impl DsDigest {
 
     /// The digest.
     #[inline]
+    #[must_use]
     pub fn digest(&self) -> &[u8] {
         self.digest.get(..usize::from(self.len)).unwrap_or(&[])
     }
 
     /// The DS record data for this digest (convert with `.into()` for CDS).
     #[inline]
+    #[must_use]
     pub fn to_ds(&self) -> Ds<'_> {
         Ds::new(
             self.key_tag,
@@ -121,6 +123,7 @@ impl DsDigest {
 
     /// Whether `ds` matches this digest: same key tag, algorithm, digest
     /// type and digest (RFC 4035 §5.2).
+    #[must_use]
     pub fn matches(&self, ds: &Ds<'_>) -> bool {
         ds.key_tag == self.key_tag
             && ds.algorithm == self.algorithm

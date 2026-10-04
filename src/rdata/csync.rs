@@ -32,12 +32,14 @@ impl Csync<'_> {
 
     /// Whether the immediate flag is set.
     #[inline]
+    #[must_use]
     pub const fn immediate(&self) -> bool {
         self.flags & Self::IMMEDIATE != 0
     }
 
     /// Whether the soaminimum flag is set.
     #[inline]
+    #[must_use]
     pub const fn soa_minimum(&self) -> bool {
         self.flags & Self::SOA_MINIMUM != 0
     }

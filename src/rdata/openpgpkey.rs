@@ -20,6 +20,7 @@ pub struct Openpgpkey<'a> {
 impl<'a> Openpgpkey<'a> {
     /// Wraps a binary OpenPGP key (RFC 7929 §2.1).
     #[inline]
+    #[must_use]
     pub const fn new(key: &'a [u8]) -> Self {
         Openpgpkey { key }
     }

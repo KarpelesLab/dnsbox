@@ -66,6 +66,7 @@ impl DsoType {
     /// Whether the value is in the experimental/local range 0xF800–0xFBFF
     /// (RFC 8490 §10.3).
     #[inline]
+    #[must_use]
     pub const fn is_experimental(self) -> bool {
         self.0 >= 0xf800 && self.0 <= 0xfbff
     }
@@ -256,24 +257,28 @@ impl<'a> DsoMessage<'a> {
 
     /// The raw bytes.
     #[inline]
+    #[must_use]
     pub const fn as_bytes(&self) -> &'a [u8] {
         self.buf
     }
 
     /// The header.
     #[inline]
+    #[must_use]
     pub const fn header(&self) -> Header {
         self.header
     }
 
     /// The message ID.
     #[inline]
+    #[must_use]
     pub const fn id(&self) -> u16 {
         self.header.id
     }
 
     /// Whether this is a response (QR set).
     #[inline]
+    #[must_use]
     pub const fn is_response(&self) -> bool {
         self.header.flags.qr()
     }
@@ -281,12 +286,14 @@ impl<'a> DsoMessage<'a> {
     /// Whether this is a unidirectional message: a non-response with ID 0
     /// (RFC 8490 §5.4), which must not be answered.
     #[inline]
+    #[must_use]
     pub const fn is_unidirectional(&self) -> bool {
         !self.is_response() && self.header.id == 0
     }
 
     /// The header RCODE (responses).
     #[inline]
+    #[must_use]
     pub const fn rcode(&self) -> Rcode {
         self.header.flags.rcode()
     }
@@ -354,6 +361,7 @@ impl<'a> DsoMessage<'a> {
 /// Iterator over the TLVs of a DSO message. Yields an error once (a
 /// truncated TLV) and then stops.
 #[derive(Clone, Debug)]
+#[must_use = "iterators are lazy and do nothing unless consumed"]
 pub struct DsoTlvs<'a> {
     reader: WireReader<'a>,
     failed: bool,

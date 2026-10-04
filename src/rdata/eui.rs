@@ -46,6 +46,7 @@ macro_rules! eui_rdata {
         impl $ty {
             /// Wraps an address.
             #[inline]
+            #[must_use]
             pub const fn new(address: [u8; $n]) -> Self {
                 $ty { address }
             }

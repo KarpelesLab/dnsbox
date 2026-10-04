@@ -78,6 +78,7 @@ impl Nsec3<'_> {
 
     /// Whether the Opt-Out flag is set.
     #[inline]
+    #[must_use]
     pub const fn is_opt_out(&self) -> bool {
         self.flags & Self::OPT_OUT != 0
     }
@@ -89,6 +90,7 @@ impl Nsec3<'_> {
     ///
     /// Use [`dnssec::Nsec3Hash::from_owner`](crate::dnssec) to decode the
     /// owner's hash and [`dnssec::nsec3_hash`](crate::dnssec) to hash a name.
+    #[must_use]
     pub fn covers(&self, owner_hash: &[u8], hash: &[u8]) -> bool {
         let next = self.next_hashed_owner;
         let after_owner = owner_hash.cmp(hash) == Ordering::Less;

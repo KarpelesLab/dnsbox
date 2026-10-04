@@ -53,12 +53,14 @@ impl Algorithm {
     /// Whether this is one of the RSA algorithms whose public key uses the
     /// RFC 3110 format (RSAMD5, RSASHA1, RSASHA1-NSEC3-SHA1, RSASHA256,
     /// RSASHA512).
+    #[must_use]
     pub const fn is_rsa(self) -> bool {
         matches!(self.0, 1 | 5 | 7 | 8 | 10)
     }
 
     /// The size in octets of public keys of this algorithm, for the
     /// fixed-size algorithms: ECDSA (RFC 6605 §4) and EdDSA (RFC 8080 §3).
+    #[must_use]
     pub const fn public_key_len(self) -> Option<usize> {
         match self.0 {
             13 => Some(64),
@@ -71,6 +73,7 @@ impl Algorithm {
 
     /// The size in octets of signatures of this algorithm, for the
     /// fixed-size algorithms: ECDSA (RFC 6605 §4) and EdDSA (RFC 8080 §4).
+    #[must_use]
     pub const fn signature_len(self) -> Option<usize> {
         match self.0 {
             13 => Some(64),
@@ -107,6 +110,7 @@ open_enum! {
 
 impl DigestType {
     /// The digest length in octets of a registered digest type.
+    #[must_use]
     pub const fn digest_len(self) -> Option<usize> {
         match self.0 {
             1 => Some(20),
@@ -127,6 +131,7 @@ open_enum! {
 
 impl Nsec3HashAlgorithm {
     /// The hash length in octets of a registered algorithm.
+    #[must_use]
     pub const fn hash_len(self) -> Option<usize> {
         match self.0 {
             1 => Some(20),

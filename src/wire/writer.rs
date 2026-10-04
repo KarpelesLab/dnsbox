@@ -75,30 +75,35 @@ impl<'b> WireWriter<'b> {
 
     /// Number of bytes written.
     #[inline]
+    #[must_use]
     pub const fn len(&self) -> usize {
         self.len
     }
 
     /// Whether nothing has been written yet.
     #[inline]
+    #[must_use]
     pub const fn is_empty(&self) -> bool {
         self.len == 0
     }
 
     /// Total size of the underlying buffer.
     #[inline]
+    #[must_use]
     pub const fn capacity(&self) -> usize {
         self.buf.len()
     }
 
     /// Bytes still available.
     #[inline]
+    #[must_use]
     pub const fn remaining(&self) -> usize {
         self.buf.len() - self.len
     }
 
     /// The bytes written so far (also [`OutBuf::as_bytes`]).
     #[inline]
+    #[must_use]
     pub fn as_bytes(&self) -> &[u8] {
         self.buf.get(..self.len).unwrap_or(&[])
     }
@@ -106,6 +111,7 @@ impl<'b> WireWriter<'b> {
     /// Consumes the writer, returning the written prefix of the buffer
     /// (also [`OutBuf::into_output`]).
     #[inline]
+    #[must_use]
     pub fn into_written(self) -> &'b mut [u8] {
         let len = self.len.min(self.buf.len());
         self.buf.split_at_mut(len).0

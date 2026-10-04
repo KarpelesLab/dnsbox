@@ -38,6 +38,7 @@ macro_rules! txt_like_rdata {
 
             /// The encoded RDATA.
             #[inline]
+            #[must_use]
             pub const fn as_wire(&self) -> &'a [u8] {
                 self.strings.as_wire()
             }

@@ -316,6 +316,7 @@ macro_rules! rdata_registry {
             }
 
             /// Whether `rtype` has a typed implementation.
+            #[must_use]
             pub const fn is_known(rtype: Rtype) -> bool {
                 match rtype {
                     $( $(#[$attr])* Rtype::$rt => true, )*
@@ -572,6 +573,7 @@ impl<'a> RData<'a> {
 impl RData<'_> {
     /// The record type of this data.
     #[inline]
+    #[must_use]
     pub fn rtype(&self) -> Rtype {
         ComposeRdata::rtype(self)
     }

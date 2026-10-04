@@ -23,6 +23,7 @@ use crate::{Error, Result};
 /// assert_eq!(serial_cmp(0xffff_fff0, 5), Some(Ordering::Less));
 /// assert_eq!(serial_cmp(0, 0x8000_0000), None);
 /// ```
+#[must_use]
 pub const fn serial_cmp(a: u32, b: u32) -> Option<Ordering> {
     let diff = b.wrapping_sub(a);
     if diff == 0 {
@@ -87,12 +88,14 @@ pub struct Timestamp(u32);
 impl Timestamp {
     /// Wraps a raw value.
     #[inline]
+    #[must_use]
     pub const fn new(secs: u32) -> Self {
         Timestamp(secs)
     }
 
     /// The raw value.
     #[inline]
+    #[must_use]
     pub const fn get(self) -> u32 {
         self.0
     }
@@ -100,6 +103,7 @@ impl Timestamp {
     /// Builds a timestamp from a UTC calendar date and time (year 1970 or
     /// later; later than 2106 wraps modulo 2^32). Returns `None` for an
     /// invalid date or time.
+    #[must_use]
     pub const fn from_utc(year: u32, month: u32, day: u32, h: u32, m: u32, s: u32) -> Option<Self> {
         if year < 1970 || year > 9999 || month < 1 || month > 12 || day < 1 || h > 23 || m > 59 {
             return None;
@@ -115,6 +119,7 @@ impl Timestamp {
 
     /// The UTC calendar date and time `(year, month, day, hour, minute,
     /// second)`, reading the value as seconds since 1970.
+    #[must_use]
     pub const fn to_utc(self) -> (u32, u32, u32, u32, u32, u32) {
         let secs = self.0 as u64;
         let days = secs / 86_400;

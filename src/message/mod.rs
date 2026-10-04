@@ -41,12 +41,14 @@ impl Section {
 
     /// Position of the section in wire order (0–3).
     #[inline]
+    #[must_use]
     pub const fn index(self) -> usize {
         self as usize
     }
 
     /// The section's entry count from a header.
     #[inline]
+    #[must_use]
     pub const fn count(self, header: &Header) -> u16 {
         match self {
             Section::Question => header.qdcount,
@@ -108,24 +110,28 @@ impl<'a> Message<'a> {
 
     /// The raw message bytes.
     #[inline]
+    #[must_use]
     pub const fn as_bytes(&self) -> &'a [u8] {
         self.buf
     }
 
     /// The header.
     #[inline]
+    #[must_use]
     pub const fn header(&self) -> Header {
         self.header
     }
 
     /// The transaction ID.
     #[inline]
+    #[must_use]
     pub const fn id(&self) -> u16 {
         self.header.id
     }
 
     /// The flags word (QR, opcode, flag bits, header RCODE).
     #[inline]
+    #[must_use]
     pub const fn flags(&self) -> Flags {
         self.header.flags
     }
@@ -318,12 +324,14 @@ impl<'a> Question<'a> {
 
     /// QNAME.
     #[inline]
+    #[must_use]
     pub const fn name(&self) -> Name<'a> {
         self.name
     }
 
     /// QTYPE.
     #[inline]
+    #[must_use]
     pub const fn qtype(&self) -> Rtype {
         self.qtype
     }
@@ -331,12 +339,14 @@ impl<'a> Question<'a> {
     /// QCLASS. In a query carrying the unicast-response bit (mDNS), the
     /// top bit is part of this raw value.
     #[inline]
+    #[must_use]
     pub const fn qclass(&self) -> Class {
         self.qclass
     }
 
     /// Byte range of the entry within the message.
     #[inline]
+    #[must_use]
     pub const fn range(&self) -> core::ops::Range<usize> {
         self.start..self.end
     }
@@ -419,18 +429,21 @@ impl<'a> Record<'a> {
 
     /// The owner name.
     #[inline]
+    #[must_use]
     pub const fn name(&self) -> Name<'a> {
         self.name
     }
 
     /// TYPE.
     #[inline]
+    #[must_use]
     pub const fn rtype(&self) -> Rtype {
         self.rtype
     }
 
     /// CLASS. For OPT this is the UDP payload size (RFC 6891 §6.1.2).
     #[inline]
+    #[must_use]
     pub const fn class(&self) -> Class {
         self.class
     }
@@ -439,6 +452,7 @@ impl<'a> Record<'a> {
     /// bit set should be treated as zero; for OPT the field holds the
     /// extended RCODE, version and flags (RFC 6891 §6.1.3).
     #[inline]
+    #[must_use]
     pub const fn ttl(&self) -> u32 {
         self.ttl
     }
@@ -447,6 +461,7 @@ impl<'a> Record<'a> {
     /// compression pointers relative to the message; use
     /// [`data`](Self::data) to decode them.
     #[inline]
+    #[must_use]
     pub fn rdata(&self) -> &'a [u8] {
         self.message()
             .get(self.rdata_start..self.rdata_start + self.rdata_len as usize)
@@ -455,6 +470,7 @@ impl<'a> Record<'a> {
 
     /// A reader whose window is exactly the RDATA, able to decompress names.
     #[inline]
+    #[must_use]
     pub fn rdata_reader(&self) -> WireReader<'a> {
         WireReader::with_range(
             self.message(),
@@ -485,24 +501,28 @@ impl<'a> Record<'a> {
 
     /// The message this record belongs to.
     #[inline]
+    #[must_use]
     pub const fn message(&self) -> &'a [u8] {
         self.name.buffer()
     }
 
     /// Offset of the first byte of the record (its owner name).
     #[inline]
+    #[must_use]
     pub const fn start(&self) -> usize {
         self.start
     }
 
     /// Offset just past the record.
     #[inline]
+    #[must_use]
     pub const fn end(&self) -> usize {
         self.rdata_start + self.rdata_len as usize
     }
 
     /// Byte range of the RDATA within the message.
     #[inline]
+    #[must_use]
     pub const fn rdata_range(&self) -> core::ops::Range<usize> {
         self.rdata_start..self.end()
     }
@@ -529,6 +549,7 @@ impl fmt::Display for Record<'_> {
 /// Yields exactly QDCOUNT items unless an error occurs, in which case the
 /// error is yielded once and iteration stops.
 #[derive(Clone, Debug)]
+#[must_use = "iterators are lazy and do nothing unless consumed"]
 pub struct Questions<'a> {
     msg: &'a [u8],
     pos: usize,
@@ -570,6 +591,7 @@ impl core::iter::FusedIterator for Questions<'_> {}
 /// Yields exactly the section's count of items unless an error occurs, in
 /// which case the error is yielded once and iteration stops.
 #[derive(Clone, Debug)]
+#[must_use = "iterators are lazy and do nothing unless consumed"]
 pub struct Records<'a> {
     msg: &'a [u8],
     /// Offset of the next record; [`NOT_LOCATED`] until the section start
@@ -586,6 +608,7 @@ pub struct Records<'a> {
 impl<'a> Records<'a> {
     /// The section being iterated.
     #[inline]
+    #[must_use]
     pub const fn section(&self) -> Section {
         self.section
     }
@@ -632,6 +655,7 @@ impl core::iter::FusedIterator for Records<'_> {}
 /// Iterator over all resource records with their section; see
 /// [`Message::records`].
 #[derive(Clone, Debug)]
+#[must_use = "iterators are lazy and do nothing unless consumed"]
 pub struct AllRecords<'a> {
     msg: &'a [u8],
     /// Offset of the next record; [`NOT_LOCATED`] before the first call.

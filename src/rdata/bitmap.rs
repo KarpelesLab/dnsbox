@@ -53,17 +53,20 @@ impl<'a> TypeBitmap<'a> {
 
     /// The encoded bitmap.
     #[inline]
+    #[must_use]
     pub const fn as_wire(&self) -> &'a [u8] {
         self.0
     }
 
     /// Whether no type is present.
     #[inline]
+    #[must_use]
     pub fn is_empty(&self) -> bool {
         self.iter().next().is_none()
     }
 
     /// Whether `rtype` is present.
+    #[must_use]
     pub fn contains(&self, rtype: Rtype) -> bool {
         let [hi, lo] = rtype.get().to_be_bytes();
         let mut rest = self.0;
@@ -149,6 +152,7 @@ impl fmt::Debug for TypeBitmap<'_> {
 
 /// Iterator over the types in a [`TypeBitmap`].
 #[derive(Clone, Debug)]
+#[must_use = "iterators are lazy and do nothing unless consumed"]
 pub struct TypeBitmapIter<'a> {
     rest: &'a [u8],
     window: u8,

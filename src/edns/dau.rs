@@ -25,6 +25,7 @@ macro_rules! algorithm_list_option {
         impl<'a> $ty<'a> {
             /// Wraps a list of algorithm numbers.
             #[inline]
+            #[must_use]
             pub const fn new(algorithms: &'a [u8]) -> Self {
                 $ty { algorithms }
             }
@@ -37,6 +38,7 @@ macro_rules! algorithm_list_option {
 
             /// Whether `algorithm` is listed.
             #[inline]
+            #[must_use]
             pub fn contains(&self, algorithm: u8) -> bool {
                 self.algorithms.contains(&algorithm)
             }

@@ -52,6 +52,7 @@ pub enum IpseckeyGateway<'a> {
 
 impl IpseckeyGateway<'_> {
     /// The gateway type field value (RFC 4025 §2.3).
+    #[must_use]
     pub const fn gateway_type(&self) -> u8 {
         match self {
             IpseckeyGateway::None => 0,

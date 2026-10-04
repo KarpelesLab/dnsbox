@@ -166,24 +166,28 @@ pub enum DenialStatus {
 impl DenialStatus {
     /// Whether the proof holds.
     #[inline]
+    #[must_use]
     pub const fn is_secure(&self) -> bool {
         matches!(self, DenialStatus::Secure(_))
     }
 
     /// Whether the response is insecure.
     #[inline]
+    #[must_use]
     pub const fn is_insecure(&self) -> bool {
         matches!(self, DenialStatus::Insecure(_))
     }
 
     /// Whether the proof fails.
     #[inline]
+    #[must_use]
     pub const fn is_bogus(&self) -> bool {
         matches!(self, DenialStatus::Bogus(_))
     }
 
     /// What was proven, for a secure proof.
     #[inline]
+    #[must_use]
     pub const fn denial(&self) -> Option<Denial> {
         match self {
             DenialStatus::Secure(d) => Some(*d),
@@ -228,6 +232,7 @@ impl ClosestEncloser<'_> {
     /// synthesis for the name (RFC 4592 §3.3.1), or `None` if it would be
     /// longer than 255 octets (and so cannot exist).
     #[inline]
+    #[must_use]
     pub fn wildcard(&self) -> Option<NameBuf> {
         wildcard_of(self.encloser)
     }

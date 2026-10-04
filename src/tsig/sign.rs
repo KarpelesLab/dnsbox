@@ -19,6 +19,7 @@ pub const DEFAULT_FUDGE: u16 = 300;
 /// useful to reserve room for the signature (e.g. lower the builder
 /// [limit](MessageBuilder::set_limit) by this much while filling a
 /// response, then raise it back before signing).
+#[must_use]
 pub fn record_len(
     key_name: Name<'_>,
     algorithm: Name<'_>,

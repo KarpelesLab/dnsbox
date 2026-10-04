@@ -42,12 +42,14 @@ impl<'a> Dhcid<'a> {
 
     /// The whole RDATA.
     #[inline]
+    #[must_use]
     pub const fn as_wire(&self) -> &'a [u8] {
         self.data
     }
 
     /// The identifier-type code (RFC 4701 §3.3).
     #[inline]
+    #[must_use]
     pub const fn identifier_type(&self) -> u16 {
         match self.data {
             [a, b, ..] => u16::from_be_bytes([*a, *b]),
@@ -57,6 +59,7 @@ impl<'a> Dhcid<'a> {
 
     /// The digest-type code (RFC 4701 §3.4).
     #[inline]
+    #[must_use]
     pub const fn digest_type(&self) -> u8 {
         match self.data {
             [_, _, d, ..] => *d,
@@ -66,6 +69,7 @@ impl<'a> Dhcid<'a> {
 
     /// The digest: `digest(identifier || FQDN)` (RFC 4701 §3.3, §3.5).
     #[inline]
+    #[must_use]
     pub const fn digest(&self) -> &'a [u8] {
         match self.data {
             [_, _, _, rest @ ..] => rest,

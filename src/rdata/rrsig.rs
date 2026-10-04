@@ -104,6 +104,7 @@ macro_rules! rrsig_like {
             /// from [`ZoneKey::rrsig_template`](crate::dnssec::ZoneKey::rrsig_template)
             /// completed after signing).
             #[inline]
+            #[must_use]
             pub const fn with_signature<'s>(&self, signature: &'s [u8]) -> $ty<'s>
             where
                 'a: 's,

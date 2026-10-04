@@ -107,17 +107,20 @@ impl<'b, B: OutBuf> CanonicalRrset<'b, B> {
 
     /// Number of records pushed (duplicates included).
     #[inline]
+    #[must_use]
     pub const fn len(&self) -> usize {
         self.count
     }
 
     /// Whether no record has been pushed.
     #[inline]
+    #[must_use]
     pub const fn is_empty(&self) -> bool {
         self.count == 0
     }
 
     /// The RRs written so far, in push order.
+    #[must_use]
     pub fn as_bytes(&self) -> &[u8] {
         self.out.as_bytes().get(self.start..).unwrap_or(&[])
     }

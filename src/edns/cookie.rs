@@ -39,6 +39,7 @@ impl<'a> Cookie<'a> {
     /// A cookie with only the client part, as sent before a server cookie
     /// is known (RFC 7873 §5.1).
     #[inline]
+    #[must_use]
     pub const fn client_only(client: [u8; 8]) -> Self {
         Cookie { client, server: &[] }
     }
@@ -56,12 +57,14 @@ impl<'a> Cookie<'a> {
 
     /// The client cookie.
     #[inline]
+    #[must_use]
     pub const fn client(&self) -> [u8; 8] {
         self.client
     }
 
     /// The server cookie, if present.
     #[inline]
+    #[must_use]
     pub const fn server(&self) -> Option<&'a [u8]> {
         if self.server.is_empty() {
             None
@@ -73,6 +76,7 @@ impl<'a> Cookie<'a> {
     /// The server cookie decoded as an RFC 9018 [`ServerCookie`]: `Some`
     /// only if it is exactly 16 bytes (RFC 9018 §4.4 requires the 24-byte
     /// option length for verification) and of version 1.
+    #[must_use]
     pub fn server_cookie_v1(&self) -> Option<ServerCookie> {
         ServerCookie::from_bytes(self.server)
             .ok()
@@ -169,6 +173,7 @@ impl ServerCookie {
     }
 
     /// The 16-byte encoding.
+    #[must_use]
     pub const fn to_bytes(&self) -> [u8; 16] {
         let [r0, r1, r2] = self.reserved;
         let [t0, t1, t2, t3] = self.timestamp.to_be_bytes();
@@ -196,6 +201,7 @@ impl ServerCookie {
     /// The SipHash-2-4 input for this cookie (RFC 9018 §4.4): `Client
     /// Cookie | Version | Reserved | Timestamp | Client-IP`, 20 bytes for an
     /// IPv4 client and 32 for IPv6.
+    #[must_use]
     pub fn hash_input(&self, client: &[u8; 8], client_ip: IpAddr) -> HashInput {
         let mut buf = [0u8; 32];
         buf[..8].copy_from_slice(client);
@@ -219,6 +225,7 @@ impl ServerCookie {
     /// Unix epoch, modulo 2^32): at most [`MAX_AGE`](Self::MAX_AGE) in the
     /// past and [`MAX_FUTURE`](Self::MAX_FUTURE) in the future, compared
     /// with serial number arithmetic (RFC 9018 §4.3, RFC 1982).
+    #[must_use]
     pub const fn is_fresh(&self, now: u32) -> bool {
         let age = now.wrapping_sub(self.timestamp) as i32;
         if age >= 0 {
@@ -231,6 +238,7 @@ impl ServerCookie {
     /// Whether a server should issue a fresh cookie at time `now`: the
     /// cookie is older than [`REFRESH_AGE`](Self::REFRESH_AGE) (RFC 9018
     /// §4.3) or not [fresh](Self::is_fresh) at all.
+    #[must_use]
     pub const fn needs_refresh(&self, now: u32) -> bool {
         let age = now.wrapping_sub(self.timestamp) as i32;
         !self.is_fresh(now) || age > Self::REFRESH_AGE as i32
@@ -256,6 +264,7 @@ impl ServerCookie {
     /// assert_eq!(sc.hash, [0x1f, 0x81, 0x30, 0xc3, 0xee, 0xe2, 0x94, 0x80]);
     /// assert!(sc.verify(&secret, &client, ip));
     /// ```
+    #[must_use]
     pub fn generate(secret: &[u8; 16], client: &[u8; 8], client_ip: IpAddr, now: u32) -> Self {
         let mut cookie = ServerCookie {
             version: Self::VERSION,
@@ -272,6 +281,7 @@ impl ServerCookie {
     /// (RFC 9018 §4.4). The version must be 1. Check the timestamp
     /// separately with [`is_fresh`](Self::is_fresh); during a secret
     /// rollover (§5), try each valid secret.
+    #[must_use]
     pub fn verify(&self, secret: &[u8; 16], client: &[u8; 8], client_ip: IpAddr) -> bool {
         if self.version != Self::VERSION {
             return false;
@@ -301,6 +311,7 @@ pub struct HashInput {
 impl HashInput {
     /// The input bytes (20 or 32 of them).
     #[inline]
+    #[must_use]
     pub fn as_bytes(&self) -> &[u8] {
         self.buf.get(..self.len).unwrap_or(&self.buf)
     }

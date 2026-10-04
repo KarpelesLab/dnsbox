@@ -36,6 +36,7 @@ impl<'a> Txt<'a> {
 
     /// The encoded RDATA.
     #[inline]
+    #[must_use]
     pub const fn as_wire(&self) -> &'a [u8] {
         self.strings.as_wire()
     }

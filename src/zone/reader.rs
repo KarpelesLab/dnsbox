@@ -144,6 +144,7 @@ pub struct ZoneError {
 
 impl ZoneError {
     /// An error at a position.
+    #[must_use]
     pub const fn new(error: Error, line: u32, column: u32) -> Self {
         ZoneError {
             error,
@@ -156,18 +157,21 @@ impl ZoneError {
 
     /// What went wrong.
     #[inline]
+    #[must_use]
     pub const fn error(&self) -> Error {
         self.error
     }
 
     /// The line (1-based).
     #[inline]
+    #[must_use]
     pub const fn line(&self) -> u32 {
         self.line
     }
 
     /// The column (1-based, in characters).
     #[inline]
+    #[must_use]
     pub const fn column(&self) -> u32 {
         self.column
     }
@@ -176,6 +180,7 @@ impl ZoneError {
     /// directive (`None` for the top-level text).
     #[cfg(feature = "alloc")]
     #[inline]
+    #[must_use]
     pub fn file(&self) -> Option<&str> {
         self.file.as_deref()
     }
@@ -311,12 +316,14 @@ impl<'a> ZoneReader<'a> {
     /// A reader over master-file text, with the root as origin, no
     /// default TTL and class IN for records that name none.
     #[inline]
+    #[must_use]
     pub fn new(text: &'a str) -> Self {
         ZoneReader::from_bytes(text.as_bytes())
     }
 
     /// Like [`new`](Self::new), for text that is not necessarily UTF-8.
     #[inline]
+    #[must_use]
     pub const fn from_bytes(text: &'a [u8]) -> Self {
         ZoneReader {
             input: text,
@@ -344,6 +351,7 @@ impl<'a> ZoneReader<'a> {
 
     /// Sets the initial origin, as if the text started with `$ORIGIN`.
     #[inline]
+    #[must_use]
     pub fn with_origin(mut self, origin: impl ToName) -> Self {
         self.st.origin = origin.to_name().to_buf();
         self
@@ -352,6 +360,7 @@ impl<'a> ZoneReader<'a> {
     /// Sets the default TTL, as if the text started with `$TTL`
     /// (RFC 2308 §4).
     #[inline]
+    #[must_use]
     pub fn with_default_ttl(mut self, ttl: u32) -> Self {
         self.st.default_ttl = Some(ttl);
         self
@@ -359,6 +368,7 @@ impl<'a> ZoneReader<'a> {
 
     /// Sets the class used until a record names one (IN by default).
     #[inline]
+    #[must_use]
     pub fn with_class(mut self, class: Class) -> Self {
         self.st.class = class;
         self
@@ -366,18 +376,21 @@ impl<'a> ZoneReader<'a> {
 
     /// The current origin (`$ORIGIN`).
     #[inline]
+    #[must_use]
     pub fn origin(&self) -> Name<'_> {
         self.st.origin.as_name()
     }
 
     /// The current default TTL (`$TTL`), if any.
     #[inline]
+    #[must_use]
     pub const fn default_ttl(&self) -> Option<u32> {
         self.st.default_ttl
     }
 
     /// The line the reader is on (1-based).
     #[inline]
+    #[must_use]
     pub const fn line(&self) -> u32 {
         self.st.cur.pos.line
     }

@@ -84,6 +84,7 @@ pub fn append_frame<O: OutBuf + ?Sized>(out: &mut O, msg: &[u8]) -> Result<()> {
 /// assert_eq!(dnsbox::tcp::frame_len(&[0x01, 0x00, 0xab]), Some(258));
 /// assert_eq!(dnsbox::tcp::frame_len(&[0x01]), None);
 /// ```
+#[must_use]
 pub const fn frame_len(buf: &[u8]) -> Option<usize> {
     match *buf {
         [a, b, ..] => Some(PREFIX_LEN + u16::from_be_bytes([a, b]) as usize),
@@ -101,6 +102,7 @@ pub const fn frame_len(buf: &[u8]) -> Option<usize> {
 /// assert_eq!((msg, rest), (&b"abc"[..], &[0, 1][..]));
 /// assert_eq!(dnsbox::tcp::split_frame(rest), None);
 /// ```
+#[must_use]
 pub fn split_frame(buf: &[u8]) -> Option<(&[u8], &[u8])> {
     let total = frame_len(buf)?;
     let frame = buf.get(PREFIX_LEN..total)?;
@@ -131,6 +133,7 @@ pub const fn frames(buf: &[u8]) -> Frames<'_> {
 ///
 /// [`remainder`]: Frames::remainder
 #[derive(Clone, Debug)]
+#[must_use = "iterators are lazy and do nothing unless consumed"]
 pub struct Frames<'a> {
     buf: &'a [u8],
     pos: usize,
@@ -139,12 +142,14 @@ pub struct Frames<'a> {
 impl<'a> Frames<'a> {
     /// The number of bytes consumed by the frames returned so far.
     #[inline]
+    #[must_use]
     pub const fn consumed(&self) -> usize {
         self.pos
     }
 
     /// The bytes after the frames returned so far.
     #[inline]
+    #[must_use]
     pub fn remainder(&self) -> &'a [u8] {
         self.buf.get(self.pos..).unwrap_or(&[])
     }
@@ -220,12 +225,14 @@ impl<'b> FrameReassembler<'b> {
 
     /// The size of the buffer.
     #[inline]
+    #[must_use]
     pub const fn capacity(&self) -> usize {
         self.buf.len()
     }
 
     /// The number of buffered bytes not yet returned as frames.
     #[inline]
+    #[must_use]
     pub const fn buffered(&self) -> usize {
         self.end - self.start
     }
@@ -233,6 +240,7 @@ impl<'b> FrameReassembler<'b> {
     /// Whether no bytes are buffered (the stream is at a frame boundary,
     /// unless a skipped frame is still being discarded).
     #[inline]
+    #[must_use]
     pub const fn is_empty(&self) -> bool {
         self.end == self.start && self.skip == 0
     }

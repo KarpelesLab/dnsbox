@@ -21,18 +21,21 @@ pub struct UnknownRdata<'a> {
 impl<'a> UnknownRdata<'a> {
     /// Wraps raw RDATA of the given type.
     #[inline]
+    #[must_use]
     pub const fn new(rtype: Rtype, data: &'a [u8]) -> Self {
         UnknownRdata { rtype, data }
     }
 
     /// The record type.
     #[inline]
+    #[must_use]
     pub const fn rtype(&self) -> Rtype {
         self.rtype
     }
 
     /// The raw RDATA.
     #[inline]
+    #[must_use]
     pub const fn data(&self) -> &'a [u8] {
         self.data
     }

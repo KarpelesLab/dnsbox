@@ -23,18 +23,21 @@ pub struct Padding<'a> {
 impl<'a> Padding<'a> {
     /// Wraps padding octets.
     #[inline]
+    #[must_use]
     pub const fn new(data: &'a [u8]) -> Self {
         Padding { data }
     }
 
     /// The number of padding octets.
     #[inline]
+    #[must_use]
     pub const fn len(&self) -> usize {
         self.data.len()
     }
 
     /// Whether the option is empty.
     #[inline]
+    #[must_use]
     pub const fn is_empty(&self) -> bool {
         self.data.is_empty()
     }

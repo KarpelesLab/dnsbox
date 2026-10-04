@@ -30,6 +30,7 @@ macro_rules! single_name_rdata {
         impl<'a> $ty<'a> {
             /// Wraps a name.
             #[inline]
+            #[must_use]
             pub const fn new($field: $crate::name::Name<'a>) -> Self {
                 $ty { $field }
             }

@@ -46,17 +46,20 @@ impl Opcode {
 
     /// Builds an opcode from its numeric value, keeping the low 4 bits.
     #[inline]
+    #[must_use]
     pub const fn new(value: u8) -> Self {
         Opcode(value & 0x0f)
     }
 
     /// The numeric value of this opcode.
     #[inline]
+    #[must_use]
     pub const fn get(self) -> u8 {
         self.0
     }
 
     /// The IANA mnemonic for this opcode, if it is assigned.
+    #[must_use]
     pub const fn mnemonic(self) -> Option<&'static str> {
         Some(match self.0 {
             0 => "QUERY",
@@ -158,35 +161,41 @@ impl Rcode {
 
     /// Builds a response code from its numeric value, keeping the low 12 bits.
     #[inline]
+    #[must_use]
     pub const fn new(value: u16) -> Self {
         Rcode(value & 0x0fff)
     }
 
     /// Combines the 4-bit header RCODE with the 8-bit EDNS extended RCODE.
     #[inline]
+    #[must_use]
     pub const fn from_parts(header: u8, extended: u8) -> Self {
         Rcode(((extended as u16) << 4) | (header as u16 & 0x0f))
     }
 
     /// The numeric value of this response code.
     #[inline]
+    #[must_use]
     pub const fn get(self) -> u16 {
         self.0
     }
 
     /// The low 4 bits, as carried in the message header.
     #[inline]
+    #[must_use]
     pub const fn header_bits(self) -> u8 {
         (self.0 & 0x0f) as u8
     }
 
     /// The high 8 bits, as carried in the EDNS OPT record's TTL field.
     #[inline]
+    #[must_use]
     pub const fn extended_bits(self) -> u8 {
         (self.0 >> 4) as u8
     }
 
     /// The IANA mnemonic for this response code, if it is assigned.
+    #[must_use]
     pub const fn mnemonic(self) -> Option<&'static str> {
         Some(match self.0 {
             0 => "NOERROR",
@@ -263,6 +272,7 @@ macro_rules! flag_bit {
     ($(#[$doc:meta])* $get:ident, $set:ident, $bit:expr) => {
         $(#[$doc])*
         #[inline]
+        #[must_use]
         pub const fn $get(self) -> bool {
             self.0 & (1 << $bit) != 0
         }
@@ -283,12 +293,14 @@ macro_rules! flag_bit {
 impl Flags {
     /// Wraps a raw 16-bit flags word.
     #[inline]
+    #[must_use]
     pub const fn from_bits(bits: u16) -> Self {
         Flags(bits)
     }
 
     /// The raw 16-bit flags word.
     #[inline]
+    #[must_use]
     pub const fn bits(self) -> u16 {
         self.0
     }
@@ -328,6 +340,7 @@ impl Flags {
 
     /// The operation code.
     #[inline]
+    #[must_use]
     pub const fn opcode(self) -> Opcode {
         Opcode::new((self.0 >> 11) as u8)
     }
@@ -342,6 +355,7 @@ impl Flags {
     /// The 4-bit header response code. Combine with the EDNS extended RCODE
     /// via [`Rcode::from_parts`] for the full value.
     #[inline]
+    #[must_use]
     pub const fn rcode(self) -> Rcode {
         Rcode::new(self.0 & 0x000f)
     }
@@ -413,6 +427,7 @@ impl Header {
     }
 
     /// Encodes the header into its 12-byte wire form.
+    #[must_use]
     pub const fn to_bytes(&self) -> [u8; Self::LEN] {
         let [a, b] = self.id.to_be_bytes();
         let [c, d] = self.flags.0.to_be_bytes();

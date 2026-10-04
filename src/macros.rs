@@ -46,17 +46,20 @@ macro_rules! open_enum {
 
             /// Builds a value from its number.
             #[inline]
+            #[must_use]
             pub const fn new(value: $int) -> Self {
                 $name(value)
             }
 
             /// The numeric value.
             #[inline]
+            #[must_use]
             pub const fn get(self) -> $int {
                 self.0
             }
 
             /// The registered mnemonic for this value, if any.
+            #[must_use]
             pub const fn mnemonic(self) -> Option<&'static str> {
                 match self.0 {
                     $( $val => Some($mn), )*
@@ -68,6 +71,7 @@ macro_rules! open_enum {
             /// not accept the generic numeric form; [`FromStr`] does.
             ///
             /// [`FromStr`]: core::str::FromStr
+            #[must_use]
             pub fn from_mnemonic(s: &str) -> Option<Self> {
                 const ALIASES: &[(&str, $name)] = &[ $( $( ($alias, $name::$target), )* )? ];
                 Self::REGISTRY

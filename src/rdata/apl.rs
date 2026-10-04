@@ -72,6 +72,7 @@ impl AplItem<'_> {
     }
 
     /// The full address (zero-filled) for the IPv4 and IPv6 families.
+    #[must_use]
     pub fn address(&self) -> Option<IpAddr> {
         let afd = self.trimmed();
         match self.family {
@@ -143,12 +144,14 @@ impl<'a> Apl<'a> {
 
     /// The encoded items.
     #[inline]
+    #[must_use]
     pub const fn as_wire(&self) -> &'a [u8] {
         self.0
     }
 
     /// Whether the list is empty.
     #[inline]
+    #[must_use]
     pub const fn is_empty(&self) -> bool {
         self.0.is_empty()
     }
@@ -199,6 +202,7 @@ fn split_item(wire: &[u8]) -> Result<(AplItem<'_>, &[u8])> {
 
 /// Iterator over the items of an [`Apl`].
 #[derive(Clone, Debug)]
+#[must_use = "iterators are lazy and do nothing unless consumed"]
 pub struct AplIter<'a>(&'a [u8]);
 
 impl<'a> Iterator for AplIter<'a> {

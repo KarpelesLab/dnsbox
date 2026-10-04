@@ -36,6 +36,7 @@ fn feed_canonical_name(name: Name<'_>, f: &mut impl FnMut(&[u8])) {
 
 impl<'a> TsigVariables<'a> {
     /// The variables of a received TSIG record owned by `key_name`.
+    #[must_use]
     pub const fn from_record(key_name: Name<'a>, tsig: &Tsig<'a>) -> Self {
         TsigVariables {
             key_name,

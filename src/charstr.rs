@@ -38,18 +38,21 @@ impl<'a> CharStr<'a> {
 
     /// The payload bytes.
     #[inline]
+    #[must_use]
     pub const fn as_bytes(&self) -> &'a [u8] {
         self.0
     }
 
     /// Payload length in bytes.
     #[inline]
+    #[must_use]
     pub const fn len(&self) -> usize {
         self.0.len()
     }
 
     /// Whether the payload is empty.
     #[inline]
+    #[must_use]
     pub const fn is_empty(&self) -> bool {
         self.0.is_empty()
     }
@@ -91,12 +94,14 @@ impl<'a> CharStrs<'a> {
 
     /// The encoded bytes (length octets included).
     #[inline]
+    #[must_use]
     pub const fn as_wire(&self) -> &'a [u8] {
         self.0
     }
 
     /// Whether the sequence holds no strings.
     #[inline]
+    #[must_use]
     pub const fn is_empty(&self) -> bool {
         self.0.is_empty()
     }
@@ -146,6 +151,7 @@ impl fmt::Debug for CharStrs<'_> {
 
 /// Iterator over a [`CharStrs`].
 #[derive(Clone, Debug)]
+#[must_use = "iterators are lazy and do nothing unless consumed"]
 pub struct CharStrIter<'a>(&'a [u8]);
 
 impl<'a> Iterator for CharStrIter<'a> {

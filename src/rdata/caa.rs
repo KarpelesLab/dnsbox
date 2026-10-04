@@ -43,6 +43,7 @@ impl<'a> Caa<'a> {
     /// Whether the Issuer Critical Flag is set: a CA that does not
     /// understand the tag must not issue (RFC 8659 §4.1).
     #[inline]
+    #[must_use]
     pub const fn is_critical(&self) -> bool {
         self.flags & Self::ISSUER_CRITICAL != 0
     }
@@ -50,6 +51,7 @@ impl<'a> Caa<'a> {
     /// Whether the tag equals `tag`, ASCII-case-insensitively
     /// (RFC 8659 §4.1: "Matching of tags is case insensitive").
     #[inline]
+    #[must_use]
     pub fn tag_is(&self, tag: &str) -> bool {
         self.tag.eq_ignore_ascii_case(tag.as_bytes())
     }

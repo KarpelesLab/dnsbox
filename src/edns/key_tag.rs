@@ -28,16 +28,19 @@ impl<'a> KeyTag<'a> {
 
     /// The encoded key tags.
     #[inline]
+    #[must_use]
     pub const fn as_wire(&self) -> &'a [u8] {
         self.raw
     }
 
     /// Iterates over the key tags.
+    #[must_use]
     pub fn iter(&self) -> impl ExactSizeIterator<Item = u16> + 'a {
         self.raw.as_chunks::<2>().0.iter().map(|&p| u16::from_be_bytes(p))
     }
 
     /// Whether `tag` is listed.
+    #[must_use]
     pub fn contains(&self, tag: u16) -> bool {
         self.iter().any(|t| t == tag)
     }

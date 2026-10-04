@@ -42,6 +42,9 @@ Every change that can break a caller is listed here:
   them with struct literals.
 - `dnssec::DenialProof` is sealed: only `NsecProof` and `Nsec3Proof` (and
   references to them) implement it.
+- `#[must_use]` on the pure functions and methods (constructors,
+  accessors, conversions, `with_*` builders) and on the iterator types:
+  ignoring their result is now a warning.
 
 
 ### Added

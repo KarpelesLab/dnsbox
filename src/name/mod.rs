@@ -73,6 +73,7 @@ pub struct Label<'a>(&'a [u8]);
 impl<'a> Label<'a> {
     /// The raw label octets.
     #[inline]
+    #[must_use]
     pub const fn as_bytes(&self) -> &'a [u8] {
         self.0
     }
@@ -80,18 +81,21 @@ impl<'a> Label<'a> {
     /// Length of the label in octets.
     #[inline]
     #[allow(clippy::len_without_is_empty)] // labels yielded by iterators are never empty
+    #[must_use]
     pub const fn len(&self) -> usize {
         self.0.len()
     }
 
     /// Whether this is the wildcard label `*` (RFC 4592 §2.1.1).
     #[inline]
+    #[must_use]
     pub const fn is_wildcard(&self) -> bool {
         matches!(self.0, [b'*'])
     }
 
     /// ASCII-case-insensitive comparison (RFC 4343 §3).
     #[inline]
+    #[must_use]
     pub fn eq_ignore_case(&self, other: &Label<'_>) -> bool {
         self.0.eq_ignore_ascii_case(other.0)
     }
@@ -191,24 +195,28 @@ impl<'a> Name<'a> {
     /// Length of the name in uncompressed wire form, root label included
     /// (1 to 255).
     #[inline]
+    #[must_use]
     pub const fn wire_len(&self) -> usize {
         self.len as usize
     }
 
     /// Number of labels, not counting the root (0 for the root name).
     #[inline]
+    #[must_use]
     pub const fn label_count(&self) -> usize {
         self.labels as usize
     }
 
     /// Whether this is the root name.
     #[inline]
+    #[must_use]
     pub const fn is_root(&self) -> bool {
         self.labels == 0
     }
 
     /// Whether the first label is the wildcard label `*` (RFC 4592).
     #[inline]
+    #[must_use]
     pub fn is_wildcard(&self) -> bool {
         self.first_label().is_some_and(|l| l.is_wildcard())
     }
@@ -217,6 +225,7 @@ impl<'a> Name<'a> {
     /// case for names from [`Name::from_wire`] and [`NameBuf`], and for
     /// message names that do not use pointers after their first label).
     #[inline]
+    #[must_use]
     pub fn as_contiguous(&self) -> Option<&'a [u8]> {
         if self.contiguous {
             self.msg.get(self.start..self.start + self.len as usize)
@@ -237,11 +246,13 @@ impl<'a> Name<'a> {
 
     /// The leftmost label, or `None` for the root.
     #[inline]
+    #[must_use]
     pub fn first_label(&self) -> Option<Label<'a>> {
         self.labels().next()
     }
 
     /// The name with its leftmost label removed, or `None` for the root.
+    #[must_use]
     pub fn parent(&self) -> Option<Name<'a>> {
         let first = self.first_label()?;
         let next = self.start + 1 + first.len();
@@ -292,6 +303,7 @@ impl<'a> Name<'a> {
 
     /// The name with its `n` leftmost labels removed, or `None` if it has
     /// fewer than `n` labels.
+    #[must_use]
     pub fn strip_labels(&self, n: usize) -> Option<Name<'a>> {
         let mut name = *self;
         for _ in 0..n {
@@ -302,6 +314,7 @@ impl<'a> Name<'a> {
 
     /// Whether `self` is `other` or a descendant of it (RFC 1034 §3.1),
     /// comparing case-insensitively. Every name is a subdomain of the root.
+    #[must_use]
     pub fn is_subdomain_of(&self, other: &Name<'_>) -> bool {
         match self.label_count().checked_sub(other.label_count()) {
             Some(extra) => self.strip_labels(extra).is_some_and(|n| n == *other),
@@ -336,11 +349,13 @@ impl<'a> Name<'a> {
 
     /// Copies the name into an owned [`NameBuf`].
     #[inline]
+    #[must_use]
     pub fn to_buf(&self) -> NameBuf {
         NameBuf::from_name(*self)
     }
 
     /// Exact (case-sensitive) comparison of the label octets.
+    #[must_use]
     pub fn eq_exact(&self, other: &Name<'_>) -> bool {
         if self.len != other.len || self.labels != other.labels {
             return false;
@@ -356,6 +371,7 @@ impl<'a> Name<'a> {
     /// Compares two names in DNSSEC canonical order (RFC 4034 §6.1): label
     /// by label from the rightmost, each label as a lowercased octet string
     /// where a shorter prefix sorts first. Equivalent to [`Ord::cmp`].
+    #[must_use]
     pub fn cmp_canonical(&self, other: &Name<'_>) -> Ordering {
         let mut a = [0u8; MAX_NAME_LEN];
         let mut b = [0u8; MAX_NAME_LEN];
@@ -477,6 +493,7 @@ impl Default for Name<'_> {
 
 /// Iterator over the labels of a [`Name`], left to right, root excluded.
 #[derive(Clone, Debug)]
+#[must_use = "iterators are lazy and do nothing unless consumed"]
 pub struct Labels<'a> {
     msg: &'a [u8],
     pos: usize,

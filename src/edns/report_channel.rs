@@ -20,6 +20,7 @@ pub struct ReportChannel<'a> {
 impl<'a> ReportChannel<'a> {
     /// Wraps an agent domain.
     #[inline]
+    #[must_use]
     pub const fn new(agent_domain: Name<'a>) -> Self {
         ReportChannel { agent_domain }
     }

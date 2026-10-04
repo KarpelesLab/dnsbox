@@ -54,6 +54,7 @@ impl TsigAlgorithm {
 
     /// The algorithm name in uncompressed, lowercase wire format (the
     /// canonical form used in MAC input, RFC 8945 §4.3.3).
+    #[must_use]
     pub const fn wire(self) -> &'static [u8] {
         match self {
             TsigAlgorithm::HmacMd5 => b"\x08hmac-md5\x07sig-alg\x03reg\x03int\x00",
@@ -69,17 +70,20 @@ impl TsigAlgorithm {
     }
 
     /// The algorithm name as a [`Name`].
+    #[must_use]
     pub fn name(self) -> Name<'static> {
         // The constants above are valid names; ROOT is unreachable.
         Name::from_wire(self.wire()).unwrap_or(Name::ROOT)
     }
 
     /// Looks up an algorithm by name (ASCII-case-insensitively).
+    #[must_use]
     pub fn from_name(name: Name<'_>) -> Option<Self> {
         Self::ALL.into_iter().find(|a| a.name() == name)
     }
 
     /// Output length of the underlying HMAC, in bytes.
+    #[must_use]
     pub const fn digest_len(self) -> usize {
         match self {
             TsigAlgorithm::HmacMd5 => 16,
@@ -93,6 +97,7 @@ impl TsigAlgorithm {
 
     /// Length of the MAC this algorithm generates: the digest length, or
     /// the truncated length for the `-128`/`-192`/`-256` variants.
+    #[must_use]
     pub const fn mac_len(self) -> usize {
         match self {
             TsigAlgorithm::HmacSha256_128 => 16,

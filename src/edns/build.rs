@@ -54,6 +54,7 @@ impl PaddingPolicy {
     /// `unpadded_len` bytes long with an empty Padding option, given the
     /// message size limit `limit`. At most 65535 (the option length is 16
     /// bits).
+    #[must_use]
     pub const fn padding_len(self, unpadded_len: usize, limit: usize) -> usize {
         let room = limit.saturating_sub(unpadded_len);
         let pad = match self {

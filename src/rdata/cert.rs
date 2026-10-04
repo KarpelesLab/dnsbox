@@ -55,6 +55,7 @@ pub struct Cert<'a> {
 impl<'a> Cert<'a> {
     /// Builds CERT data from its fields (RFC 4398 §2).
     #[inline]
+    #[must_use]
     pub const fn new(
         cert_type: CertType,
         key_tag: u16,

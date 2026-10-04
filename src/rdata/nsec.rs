@@ -25,6 +25,7 @@ pub struct Nsec<'a> {
 impl<'a> Nsec<'a> {
     /// Builds the record data.
     #[inline]
+    #[must_use]
     pub const fn new(next_domain_name: Name<'a>, types: TypeBitmap<'a>) -> Self {
         Nsec {
             next_domain_name,
@@ -39,6 +40,7 @@ impl<'a> Nsec<'a> {
     ///
     /// The caller must still check that `name` is inside the zone and that
     /// the record is authentic.
+    #[must_use]
     pub fn covers(&self, owner: &Name<'_>, name: &Name<'_>) -> bool {
         let next = &self.next_domain_name;
         let after_owner = owner.cmp_canonical(name) == Ordering::Less;

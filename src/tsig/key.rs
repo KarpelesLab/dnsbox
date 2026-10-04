@@ -150,18 +150,21 @@ impl MacBuf {
 
     /// The MAC bytes.
     #[inline]
+    #[must_use]
     pub fn as_slice(&self) -> &[u8] {
         self.buf.get(..self.len as usize).unwrap_or(&[])
     }
 
     /// The MAC length.
     #[inline]
+    #[must_use]
     pub const fn len(&self) -> usize {
         self.len as usize
     }
 
     /// Whether the MAC is empty.
     #[inline]
+    #[must_use]
     pub const fn is_empty(&self) -> bool {
         self.len == 0
     }

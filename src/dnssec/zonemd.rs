@@ -181,18 +181,21 @@ impl ZoneCollation {
 
     /// The zone apex (lowercase).
     #[inline]
+    #[must_use]
     pub fn apex(&self) -> Name<'_> {
         self.apex.as_name()
     }
 
     /// Number of RRs in the collation (after removing duplicates).
     #[inline]
+    #[must_use]
     pub fn len(&self) -> usize {
         self.entries.len()
     }
 
     /// Whether the collation holds no RR.
     #[inline]
+    #[must_use]
     pub fn is_empty(&self) -> bool {
         self.entries.is_empty()
     }
@@ -207,6 +210,7 @@ impl ZoneCollation {
 
     /// The serial of the apex SOA, or `None` unless there is exactly one
     /// (distinct) apex SOA RR.
+    #[must_use]
     pub fn soa_serial(&self) -> Option<u32> {
         let mut serials = self
             .entries
@@ -448,12 +452,14 @@ pub struct ZonemdDigest {
 impl ZonemdDigest {
     /// The hash algorithm.
     #[inline]
+    #[must_use]
     pub const fn hash_alg(&self) -> ZonemdHashAlg {
         self.hash_alg
     }
 
     /// The digest.
     #[inline]
+    #[must_use]
     pub fn as_bytes(&self) -> &[u8] {
         self.digest.get(..usize::from(self.len)).unwrap_or(&[])
     }
@@ -461,6 +467,7 @@ impl ZonemdDigest {
     /// The ZONEMD record data publishing this digest for the zone at SOA
     /// serial `serial` (RFC 8976 §3.4).
     #[inline]
+    #[must_use]
     pub fn to_zonemd(&self, serial: u32) -> Zonemd<'_> {
         Zonemd {
             serial,

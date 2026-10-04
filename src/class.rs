@@ -43,6 +43,7 @@ impl Class {
     /// Whether the value lies in the private-use range 65280–65534
     /// (RFC 6895 §3.2).
     #[inline]
+    #[must_use]
     pub const fn is_private_use(self) -> bool {
         self.0 >= 0xff00 && self.0 != 0xffff
     }

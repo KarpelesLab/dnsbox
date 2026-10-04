@@ -123,6 +123,7 @@ impl<'a> SignedData<'a> {
 
     /// The signed data as consecutive slices: SIG RDATA fields, request
     /// (empty for requests), header, rest of the message.
+    #[must_use]
     pub fn parts(&self) -> [&[u8]; 4] {
         [
             self.fields.get(..self.fields_len).unwrap_or(&[]),
@@ -133,11 +134,13 @@ impl<'a> SignedData<'a> {
     }
 
     /// Total length of the signed data.
+    #[must_use]
     pub fn len(&self) -> usize {
         self.parts().iter().map(|p| p.len()).sum()
     }
 
     /// Whether the signed data is empty (never true for a valid message).
+    #[must_use]
     pub fn is_empty(&self) -> bool {
         self.len() == 0
     }
@@ -155,6 +158,7 @@ pub struct Validity {
 impl Validity {
     /// The window `now - skew ..= now + skew` (wrapping, as RFC 1982
     /// serial arithmetic expects).
+    #[must_use]
     pub const fn around(now: u32, skew: u32) -> Self {
         Validity {
             inception: now.wrapping_sub(skew),
@@ -164,6 +168,7 @@ impl Validity {
 
     /// Whether `now` lies within the window (RFC 1982 serial arithmetic,
     /// as for RRSIG in RFC 4034 §3.1.5).
+    #[must_use]
     pub const fn contains(&self, now: u32) -> bool {
         crate::dnssec::check_validity(self.inception, self.expiration, now).is_ok()
     }

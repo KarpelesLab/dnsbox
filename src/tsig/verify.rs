@@ -32,12 +32,14 @@ pub struct TsigRecord<'a> {
 impl<'a> TsigRecord<'a> {
     /// The TSIG variables of this record (RFC 8945 §4.3.3).
     #[inline]
+    #[must_use]
     pub const fn variables(&self) -> TsigVariables<'a> {
         TsigVariables::from_record(self.key_name, &self.data)
     }
 
     /// The MAC carried by the record.
     #[inline]
+    #[must_use]
     pub const fn mac(&self) -> &'a [u8] {
         self.data.mac
     }
@@ -156,11 +158,13 @@ pub struct Verified<'a, 'k, K: TsigKey> {
 impl<'a, 'k, K: TsigKey> Verified<'a, 'k, K> {
     /// The request MAC, which the response MAC covers.
     #[inline]
+    #[must_use]
     pub const fn request_mac(&self) -> &'a [u8] {
         self.record.data.mac
     }
 
     /// A signer for the response (or response stream) to this request.
+    #[must_use]
     pub fn signer(&self) -> TsigSigner<'k, K> {
         // The MAC size was checked against MAX_MAC_LEN, so this cannot
         // fail; fall back to a request signer rather than panicking.
@@ -200,11 +204,13 @@ pub struct Rejected<'a, 'k, K: TsigKey> {
 
 impl<K: TsigKey> Rejected<'_, '_, K> {
     /// The RCODE of the error response (FORMERR or NOTAUTH).
+    #[must_use]
     pub const fn rcode(&self) -> Rcode {
         super::response_codes(self.error).0
     }
 
     /// The TSIG error of the error response.
+    #[must_use]
     pub const fn tsig_error(&self) -> TsigRcode {
         super::response_codes(self.error).1
     }
@@ -284,6 +290,7 @@ pub enum RequestStatus<'a, 'k, K: TsigKey> {
 
 impl<'a, 'k, K: TsigKey> RequestStatus<'a, 'k, K> {
     /// The verified request, if the TSIG verified.
+    #[must_use]
     pub fn verified(self) -> Option<Verified<'a, 'k, K>> {
         match self {
             RequestStatus::Verified(v) => Some(v),
@@ -292,6 +299,7 @@ impl<'a, 'k, K: TsigKey> RequestStatus<'a, 'k, K> {
     }
 
     /// The rejection, if TSIG processing failed.
+    #[must_use]
     pub fn rejected(self) -> Option<Rejected<'a, 'k, K>> {
         match self {
             RequestStatus::Rejected(r) => Some(r),
@@ -300,6 +308,7 @@ impl<'a, 'k, K: TsigKey> RequestStatus<'a, 'k, K> {
     }
 
     /// The error, if TSIG processing failed.
+    #[must_use]
     pub fn error(&self) -> Option<Error> {
         match self {
             RequestStatus::Rejected(r) => Some(r.error),

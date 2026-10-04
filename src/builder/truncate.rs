@@ -64,12 +64,14 @@ pub enum Outcome {
 impl Outcome {
     /// Whether everything was written.
     #[inline]
+    #[must_use]
     pub const fn is_added(self) -> bool {
         matches!(self, Outcome::Added)
     }
 
     /// Whether the message is now truncated (TC set).
     #[inline]
+    #[must_use]
     pub const fn is_truncated(self) -> bool {
         matches!(self, Outcome::Truncated)
     }

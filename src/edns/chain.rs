@@ -21,6 +21,7 @@ pub struct Chain<'a> {
 impl<'a> Chain<'a> {
     /// Wraps a trust point name.
     #[inline]
+    #[must_use]
     pub const fn new(closest_trust_point: Name<'a>) -> Self {
         Chain {
             closest_trust_point,

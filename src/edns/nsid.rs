@@ -23,18 +23,21 @@ impl<'a> Nsid<'a> {
 
     /// Wraps an identifier.
     #[inline]
+    #[must_use]
     pub const fn new(id: &'a [u8]) -> Self {
         Nsid { id }
     }
 
     /// Whether this is a request (empty payload).
     #[inline]
+    #[must_use]
     pub const fn is_request(&self) -> bool {
         self.id.is_empty()
     }
 
     /// The identifier as text, if it is valid UTF-8.
     #[inline]
+    #[must_use]
     pub fn as_str(&self) -> Option<&'a str> {
         core::str::from_utf8(self.id).ok()
     }

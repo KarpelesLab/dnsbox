@@ -69,6 +69,7 @@ impl<'a> Nxt<'a> {
     }
 
     /// Whether `rtype` is present in the bitmap.
+    #[must_use]
     pub fn contains(&self, rtype: Rtype) -> bool {
         let n = rtype.get() as usize;
         self.bitmap

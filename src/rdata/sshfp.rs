@@ -52,6 +52,7 @@ pub struct Sshfp<'a> {
 impl<'a> Sshfp<'a> {
     /// Builds SSHFP data from its fields (RFC 4255 §3.1).
     #[inline]
+    #[must_use]
     pub const fn new(
         algorithm: SshfpAlgorithm,
         fp_type: SshfpFpType,

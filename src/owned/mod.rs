@@ -206,18 +206,21 @@ impl OwnedRData {
 
     /// The record type.
     #[inline]
+    #[must_use]
     pub fn rtype(&self) -> Rtype {
         self.rtype
     }
 
     /// The RDATA in uncompressed wire form.
     #[inline]
+    #[must_use]
     pub fn as_wire(&self) -> &[u8] {
         &self.data
     }
 
     /// The RDATA length (RDLENGTH, with names uncompressed).
     #[inline]
+    #[must_use]
     pub fn len(&self) -> usize {
         self.data.len()
     }
@@ -225,6 +228,7 @@ impl OwnedRData {
     /// Whether the RDATA is empty (e.g. a dynamic-update deletion,
     /// RFC 2136 §2.5.2).
     #[inline]
+    #[must_use]
     pub fn is_empty(&self) -> bool {
         self.data.is_empty()
     }
@@ -239,6 +243,7 @@ impl OwnedRData {
     /// The typed view, class-independently: the typed format when the
     /// bytes decode as one (in class IN), [`RData::Unknown`] otherwise.
     /// Never fails.
+    #[must_use]
     pub fn as_rdata(&self) -> RData<'_> {
         self.parse(Class::IN)
             .unwrap_or(RData::Unknown(crate::rdata::UnknownRdata::new(
@@ -325,6 +330,7 @@ impl OwnedQuestion {
     }
 
     /// Copies a question view (decompressing its name).
+    #[must_use]
     pub fn from_question(q: &Question<'_>) -> Self {
         Self::new(q.name(), q.qtype(), q.qclass())
     }
@@ -408,6 +414,7 @@ impl OwnedRecord {
 
     /// TYPE.
     #[inline]
+    #[must_use]
     pub fn rtype(&self) -> Rtype {
         self.rdata.rtype()
     }
@@ -579,6 +586,7 @@ pub struct OwnedMessage {
 
 impl OwnedMessage {
     /// An empty message with the given ID and flags.
+    #[must_use]
     pub fn new(id: u16, flags: Flags) -> Self {
         OwnedMessage {
             id,
@@ -637,6 +645,7 @@ impl OwnedMessage {
 
     /// The records of a section (empty for [`Section::Question`]; see
     /// [`questions`](Self::questions)).
+    #[must_use]
     pub fn section(&self, section: Section) -> &[OwnedRecord] {
         match section {
             Section::Question => &[],
@@ -667,11 +676,13 @@ impl OwnedMessage {
     }
 
     /// The first OPT record of the additional section (RFC 6891 §6.1.1).
+    #[must_use]
     pub fn opt(&self) -> Option<&OwnedRecord> {
         self.additional.iter().find(|rr| rr.rtype() == Rtype::OPT)
     }
 
     /// The EDNS header fields of the first OPT record (RFC 6891 §6.1.3).
+    #[must_use]
     pub fn opt_header(&self) -> Option<OptHeader> {
         self.opt()
             .map(|rr| OptHeader::from_fields(rr.class, rr.ttl))
@@ -679,6 +690,7 @@ impl OwnedMessage {
 
     /// The full response code: the header RCODE combined with the extended
     /// RCODE of the OPT record, if any (RFC 6891 §6.1.3).
+    #[must_use]
     pub fn effective_rcode(&self) -> Rcode {
         match self.opt_header() {
             Some(h) => h.rcode(self.flags),
@@ -753,6 +765,7 @@ impl Message<'_> {
 impl Question<'_> {
     /// Copies the question into an [`OwnedQuestion`].
     #[inline]
+    #[must_use]
     pub fn to_owned_question(&self) -> OwnedQuestion {
         OwnedQuestion::from_question(self)
     }

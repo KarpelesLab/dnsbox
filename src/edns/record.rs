@@ -22,18 +22,21 @@ impl EdnsFlags {
 
     /// Wraps the raw 16-bit flags field.
     #[inline]
+    #[must_use]
     pub const fn from_bits(bits: u16) -> Self {
         EdnsFlags(bits)
     }
 
     /// The raw 16-bit flags field.
     #[inline]
+    #[must_use]
     pub const fn bits(self) -> u16 {
         self.0
     }
 
     /// Whether the DO (DNSSEC OK) bit is set (RFC 3225 §3).
     #[inline]
+    #[must_use]
     pub const fn dnssec_ok(self) -> bool {
         self.0 & Self::DO != 0
     }
@@ -47,6 +50,7 @@ impl EdnsFlags {
 
     /// Whether the CO (Compact Answers OK) bit is set (RFC 9824 §5).
     #[inline]
+    #[must_use]
     pub const fn compact_ok(self) -> bool {
         self.0 & Self::CO != 0
     }
@@ -128,6 +132,7 @@ impl OptHeader {
     /// payload size (1232 is the common choice that avoids IP
     /// fragmentation).
     #[inline]
+    #[must_use]
     pub const fn new(udp_payload_size: u16) -> Self {
         OptHeader {
             udp_payload_size,
@@ -139,6 +144,7 @@ impl OptHeader {
 
     /// Decodes the fields from an OPT record's raw CLASS and TTL.
     #[inline]
+    #[must_use]
     pub const fn from_fields(class: Class, ttl: u32) -> Self {
         OptHeader {
             udp_payload_size: class.get(),
@@ -150,12 +156,14 @@ impl OptHeader {
 
     /// The CLASS field to write: the UDP payload size.
     #[inline]
+    #[must_use]
     pub const fn class(&self) -> Class {
         Class::new(self.udp_payload_size)
     }
 
     /// The TTL field to write: extended RCODE, version and flags.
     #[inline]
+    #[must_use]
     pub const fn ttl(&self) -> u32 {
         ((self.extended_rcode as u32) << 24) | ((self.version as u32) << 16) | self.flags.0 as u32
     }
@@ -178,12 +186,14 @@ impl OptHeader {
     /// assert_eq!((r.udp_payload_size, r.version, r.dnssec_ok()), (1232, 0, true));
     /// ```
     #[inline]
+    #[must_use]
     pub const fn response_to(query: OptHeader, udp_payload_size: u16) -> Self {
         OptHeader::new(udp_payload_size).with_dnssec_ok(query.dnssec_ok())
     }
 
     /// The UDP payload size, raised to 512 if smaller (RFC 6891 §6.2.5).
     #[inline]
+    #[must_use]
     pub const fn effective_udp_payload_size(&self) -> u16 {
         if self.udp_payload_size < Self::MIN_UDP_PAYLOAD_SIZE {
             Self::MIN_UDP_PAYLOAD_SIZE
@@ -194,6 +204,7 @@ impl OptHeader {
 
     /// Whether the DO bit is set (RFC 3225 §3).
     #[inline]
+    #[must_use]
     pub const fn dnssec_ok(&self) -> bool {
         self.flags.dnssec_ok()
     }
@@ -235,6 +246,7 @@ impl OptHeader {
     /// The full 12-bit RCODE, combining the header's 4 bits with the
     /// extended RCODE (RFC 6891 §6.1.3).
     #[inline]
+    #[must_use]
     pub const fn rcode(&self, header: Flags) -> Rcode {
         Rcode::from_parts(header.rcode().header_bits(), self.extended_rcode)
     }
@@ -281,6 +293,7 @@ impl<'a> Edns<'a> {
 
     /// The fixed fields.
     #[inline]
+    #[must_use]
     pub const fn header(&self) -> OptHeader {
         self.header
     }
@@ -288,42 +301,49 @@ impl<'a> Edns<'a> {
     /// The requestor's UDP payload size, as sent (RFC 6891 §6.2.3). See
     /// [`OptHeader::effective_udp_payload_size`] for the value to honour.
     #[inline]
+    #[must_use]
     pub const fn udp_payload_size(&self) -> u16 {
         self.header.udp_payload_size
     }
 
     /// The upper 8 bits of the 12-bit RCODE (RFC 6891 §6.1.3).
     #[inline]
+    #[must_use]
     pub const fn extended_rcode(&self) -> u8 {
         self.header.extended_rcode
     }
 
     /// The EDNS version (RFC 6891 §6.1.3).
     #[inline]
+    #[must_use]
     pub const fn version(&self) -> u8 {
         self.header.version
     }
 
     /// The flags (DO and the rest, preserved).
     #[inline]
+    #[must_use]
     pub const fn flags(&self) -> EdnsFlags {
         self.header.flags
     }
 
     /// Whether the DO bit is set (RFC 3225 §3).
     #[inline]
+    #[must_use]
     pub const fn dnssec_ok(&self) -> bool {
         self.header.dnssec_ok()
     }
 
     /// The full 12-bit RCODE given the message header flags.
     #[inline]
+    #[must_use]
     pub const fn rcode(&self, header: Flags) -> Rcode {
         self.header.rcode(header)
     }
 
     /// The options.
     #[inline]
+    #[must_use]
     pub const fn opt(&self) -> Opt<'a> {
         self.opt
     }
@@ -342,12 +362,14 @@ impl<'a> Edns<'a> {
 
     /// Decodes the first option of type `T`; see [`Opt::get`].
     #[inline]
+    #[must_use]
     pub fn get<T: ParseOption<'a>>(&self) -> Option<Result<T>> {
         self.opt.get()
     }
 
     /// The underlying record (for its byte range, e.g. to strip it).
     #[inline]
+    #[must_use]
     pub const fn record(&self) -> Record<'a> {
         self.record
     }

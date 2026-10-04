@@ -97,6 +97,7 @@ pub fn build_ixfr_query<B: OutBuf>(
 }
 
 /// Whether serial `a` is newer than serial `b` (RFC 1982 §3.2).
+#[must_use]
 pub const fn serial_newer(a: u32, b: u32) -> bool {
     matches!(
         crate::dnssec::serial_cmp(a, b),
@@ -242,18 +243,21 @@ impl XfrProcessor {
 
     /// Whether the transfer is complete.
     #[inline]
+    #[must_use]
     pub fn is_done(&self) -> bool {
         self.state == State::Done
     }
 
     /// The response style, once the server's answer has revealed it.
     #[inline]
+    #[must_use]
     pub fn style(&self) -> Option<XfrStyle> {
         self.style
     }
 
     /// The serial of the version being transferred (the first SOA), once
     /// seen.
+    #[must_use]
     pub fn serial(&self) -> Option<u32> {
         match self.state {
             State::First { serial }
@@ -266,12 +270,14 @@ impl XfrProcessor {
 
     /// Number of messages processed so far.
     #[inline]
+    #[must_use]
     pub fn message_count(&self) -> u32 {
         self.messages
     }
 
     /// Number of answer records processed so far.
     #[inline]
+    #[must_use]
     pub fn record_count(&self) -> u64 {
         self.records
     }
@@ -430,6 +436,7 @@ impl fmt::Debug for XfrProcessor {
 ///
 /// Yields one event per answer record; on an error it yields the error
 /// once, marks the processor failed and stops.
+#[must_use = "iterators are lazy and do nothing unless consumed"]
 pub struct XfrEvents<'p, 'a> {
     proc: &'p mut XfrProcessor,
     answers: Records<'a>,

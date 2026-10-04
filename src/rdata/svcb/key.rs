@@ -48,6 +48,7 @@ impl SvcParamKey {
     /// Whether the key is in the private-use range 65280–65534
     /// (RFC 9460 §14.3.2).
     #[inline]
+    #[must_use]
     pub const fn is_private_use(self) -> bool {
         self.get() >= 65280 && self.get() <= 65534
     }

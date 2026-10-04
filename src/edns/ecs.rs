@@ -56,6 +56,7 @@ impl ClientSubnet {
 
     /// FAMILY: 1 for IPv4, 2 for IPv6.
     #[inline]
+    #[must_use]
     pub const fn family(&self) -> u16 {
         match self.addr {
             IpAddr::V4(_) => Self::FAMILY_IPV4,
@@ -65,18 +66,21 @@ impl ClientSubnet {
 
     /// The address, truncated to the source prefix.
     #[inline]
+    #[must_use]
     pub const fn addr(&self) -> IpAddr {
         self.addr
     }
 
     /// SOURCE PREFIX-LENGTH: the significant bits of the address.
     #[inline]
+    #[must_use]
     pub const fn source_prefix(&self) -> u8 {
         self.source_prefix
     }
 
     /// SCOPE PREFIX-LENGTH: the bits the answer covers (0 in queries).
     #[inline]
+    #[must_use]
     pub const fn scope_prefix(&self) -> u8 {
         self.scope_prefix
     }

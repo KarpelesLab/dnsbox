@@ -32,6 +32,7 @@ pub struct NameBuf {
 
 impl NameBuf {
     /// The root name.
+    #[must_use]
     pub const fn root() -> Self {
         NameBuf {
             buf: [0; MAX_NAME_LEN],
@@ -41,6 +42,7 @@ impl NameBuf {
     }
 
     /// Copies a name view (decompressing it if needed).
+    #[must_use]
     pub fn from_name(name: Name<'_>) -> Self {
         let mut out = NameBuf::root();
         out.len = name.flatten(&mut out.buf) as u8;
@@ -87,6 +89,7 @@ impl NameBuf {
 
     /// Borrows the name as a [`Name`] view.
     #[inline]
+    #[must_use]
     pub fn as_name(&self) -> Name<'_> {
         Name {
             msg: self.as_wire(),
@@ -99,24 +102,28 @@ impl NameBuf {
 
     /// The uncompressed wire form, root label included.
     #[inline]
+    #[must_use]
     pub fn as_wire(&self) -> &[u8] {
         self.buf.get(..self.len as usize).unwrap_or(&[0])
     }
 
     /// Length in uncompressed wire form (1 to 255).
     #[inline]
+    #[must_use]
     pub const fn wire_len(&self) -> usize {
         self.len as usize
     }
 
     /// Number of labels, not counting the root.
     #[inline]
+    #[must_use]
     pub const fn label_count(&self) -> usize {
         self.labels as usize
     }
 
     /// Whether this is the root name.
     #[inline]
+    #[must_use]
     pub const fn is_root(&self) -> bool {
         self.labels == 0
     }

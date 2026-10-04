@@ -46,6 +46,7 @@ impl ZoneRecordBuf {
 
     /// Borrows the record as a [`ZoneRecord`].
     #[inline]
+    #[must_use]
     pub fn as_record(&self) -> ZoneRecord<'_> {
         ZoneRecord {
             name: self.name.clone(),
@@ -190,6 +191,7 @@ struct Frame {
 /// ]);
 /// # Ok::<(), dnsbox::Error>(())
 /// ```
+#[must_use = "iterators are lazy and do nothing unless consumed"]
 pub struct Records<'a, R = NoIncludes> {
     top: Option<ZoneReader<'a>>,
     stack: Vec<Frame>,

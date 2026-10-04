@@ -169,6 +169,7 @@ impl OptionCode {
     /// Whether the code lies in the range reserved for local or
     /// experimental use, 65001–65534 (RFC 6891 §9).
     #[inline]
+    #[must_use]
     pub const fn is_local_use(self) -> bool {
         self.0 >= 65001 && self.0 <= 65534
     }
@@ -293,6 +294,7 @@ macro_rules! edns_registry {
             }
 
             /// Whether `code` has a typed implementation.
+            #[must_use]
             pub const fn is_known(code: OptionCode) -> bool {
                 match code {
                     $( $(#[$attr])* OptionCode::$code => true, )*
@@ -351,6 +353,7 @@ edns_registry! {
 impl EdnsOption<'_> {
     /// The option code.
     #[inline]
+    #[must_use]
     pub fn code(&self) -> OptionCode {
         ComposeOption::code(self)
     }

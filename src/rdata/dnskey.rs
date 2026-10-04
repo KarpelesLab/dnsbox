@@ -65,6 +65,7 @@ macro_rules! dnskey_like {
         impl<'a> $ty<'a> {
             /// Builds the record data.
             #[inline]
+            #[must_use]
             pub const fn new(flags: u16, protocol: u8, algorithm: Algorithm, public_key: &'a [u8]) -> Self {
                 $ty { flags, protocol, algorithm, public_key }
             }
@@ -72,12 +73,14 @@ macro_rules! dnskey_like {
             /// The key tag (RFC 4034 Appendix B, including the RSA/MD5
             /// special case of §B.1).
             #[inline]
+            #[must_use]
             pub fn key_tag(&self) -> u16 {
                 key_tag(self.flags, self.protocol, self.algorithm, self.public_key)
             }
 
             /// The RDATA length in octets.
             #[inline]
+            #[must_use]
             pub const fn rdata_len(&self) -> usize {
                 4 + self.public_key.len()
             }
@@ -171,6 +174,7 @@ impl Dnskey<'_> {
     /// Whether the Zone Key flag is set: only such keys may verify RRSIGs
     /// (RFC 4034 §2.1.1).
     #[inline]
+    #[must_use]
     pub const fn is_zone_key(&self) -> bool {
         self.flags & Self::ZONE != 0
     }
@@ -178,12 +182,14 @@ impl Dnskey<'_> {
     /// Whether the Secure Entry Point flag is set (a key-signing key by
     /// convention, RFC 4034 §2.1.1).
     #[inline]
+    #[must_use]
     pub const fn is_sep(&self) -> bool {
         self.flags & Self::SEP != 0
     }
 
     /// Whether the REVOKE flag is set (RFC 5011 §2.1).
     #[inline]
+    #[must_use]
     pub const fn is_revoked(&self) -> bool {
         self.flags & Self::REVOKE != 0
     }
@@ -202,6 +208,7 @@ impl Cdnskey<'_> {
     /// Whether this is the RFC 8078 §4 delete form (flags 0, protocol 3,
     /// algorithm 0, public key a single zero octet).
     #[inline]
+    #[must_use]
     pub const fn is_delete(&self) -> bool {
         self.flags == 0
             && self.protocol == 3

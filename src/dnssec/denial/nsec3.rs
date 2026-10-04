@@ -24,12 +24,14 @@ pub struct Nsec3Record<'a> {
 impl<'a> Nsec3Record<'a> {
     /// Pairs an owner name with NSEC3 data.
     #[inline]
+    #[must_use]
     pub const fn new(owner: Name<'a>, nsec3: Nsec3<'a>) -> Self {
         Nsec3Record { owner, nsec3 }
     }
 
     /// The NSEC3 record `rr`, or `None` if it is of another type or its
     /// data is malformed.
+    #[must_use]
     pub fn from_record(rr: &Record<'a>) -> Option<Self> {
         if rr.rtype() != Rtype::NSEC3 {
             return None;
@@ -138,6 +140,7 @@ impl Nsec3Limits {
     /// `bogus_above`. RFC 9276 §3.2 allows both limits to be as low as 0,
     /// the only value zones should use (RFC 9276 §3.1).
     #[inline]
+    #[must_use]
     pub const fn new(insecure_above: u16, bogus_above: u16) -> Self {
         Nsec3Limits {
             insecure_above,
@@ -146,6 +149,7 @@ impl Nsec3Limits {
     }
 
     /// The status for `iterations`, if it is over a limit.
+    #[must_use]
     pub const fn check(&self, iterations: u16) -> Option<DenialStatus> {
         if iterations > self.bogus_above {
             Some(DenialStatus::Bogus(BogusReason::Iterations))

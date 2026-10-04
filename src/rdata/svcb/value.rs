@@ -239,6 +239,7 @@ impl<'a> Mandatory<'a> {
     }
 
     /// The keys, in increasing order.
+    #[must_use]
     pub fn iter(&self) -> impl ExactSizeIterator<Item = SvcParamKey> + Clone + use<'a> {
         self.0
             .as_chunks::<2>()
@@ -248,12 +249,14 @@ impl<'a> Mandatory<'a> {
     }
 
     /// Whether `key` is listed.
+    #[must_use]
     pub fn contains(&self, key: SvcParamKey) -> bool {
         self.iter().any(|k| k == key)
     }
 
     /// The wire-format value.
     #[inline]
+    #[must_use]
     pub const fn as_wire(&self) -> &'a [u8] {
         self.0
     }
@@ -289,12 +292,14 @@ impl<'a> Alpn<'a> {
     }
 
     /// Whether `id` is listed.
+    #[must_use]
     pub fn contains(&self, id: &[u8]) -> bool {
         self.iter().any(|i| i == id)
     }
 
     /// The wire-format value.
     #[inline]
+    #[must_use]
     pub const fn as_wire(&self) -> &'a [u8] {
         self.0
     }
@@ -329,6 +334,7 @@ impl<'a> Ipv4Hint<'a> {
     }
 
     /// The addresses, in record order.
+    #[must_use]
     pub fn iter(&self) -> impl ExactSizeIterator<Item = Ipv4Addr> + Clone + use<'a> {
         self.0
             .as_chunks::<4>()
@@ -339,6 +345,7 @@ impl<'a> Ipv4Hint<'a> {
 
     /// The wire-format value.
     #[inline]
+    #[must_use]
     pub const fn as_wire(&self) -> &'a [u8] {
         self.0
     }
@@ -367,6 +374,7 @@ impl<'a> Ipv6Hint<'a> {
     }
 
     /// The addresses, in record order.
+    #[must_use]
     pub fn iter(&self) -> impl ExactSizeIterator<Item = Ipv6Addr> + Clone + use<'a> {
         self.0
             .as_chunks::<16>()
@@ -377,6 +385,7 @@ impl<'a> Ipv6Hint<'a> {
 
     /// The wire-format value.
     #[inline]
+    #[must_use]
     pub const fn as_wire(&self) -> &'a [u8] {
         self.0
     }
@@ -399,6 +408,7 @@ pub struct Ech<'a>(pub &'a [u8]);
 impl<'a> Ech<'a> {
     /// The ECHConfigList bytes.
     #[inline]
+    #[must_use]
     pub const fn as_bytes(&self) -> &'a [u8] {
         self.0
     }
@@ -432,6 +442,7 @@ impl<'a> DohPath<'a> {
 
     /// The URI template.
     #[inline]
+    #[must_use]
     pub const fn as_str(&self) -> &'a str {
         self.0
     }
@@ -481,6 +492,7 @@ impl<'a> TlsSupportedGroups<'a> {
     }
 
     /// The group code points, most preferred first.
+    #[must_use]
     pub fn iter(&self) -> impl ExactSizeIterator<Item = u16> + Clone + use<'a> {
         self.0
             .as_chunks::<2>()
@@ -491,6 +503,7 @@ impl<'a> TlsSupportedGroups<'a> {
 
     /// The wire-format value.
     #[inline]
+    #[must_use]
     pub const fn as_wire(&self) -> &'a [u8] {
         self.0
     }
@@ -524,6 +537,7 @@ impl<'a> DocPath<'a> {
 
     /// The wire-format value.
     #[inline]
+    #[must_use]
     pub const fn as_wire(&self) -> &'a [u8] {
         self.0
     }
@@ -586,6 +600,7 @@ impl<'a> Oots<'a> {
 
     /// The wire-format value.
     #[inline]
+    #[must_use]
     pub const fn as_wire(&self) -> &'a [u8] {
         self.0
     }

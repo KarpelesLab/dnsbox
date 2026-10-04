@@ -104,6 +104,7 @@ impl InfoCode {
     /// Whether the code lies in the private-use range 49152–65535
     /// (RFC 8914 §5.2).
     #[inline]
+    #[must_use]
     pub const fn is_private_use(self) -> bool {
         self.0 >= 49152
     }
@@ -125,6 +126,7 @@ pub struct ExtendedError<'a> {
 impl<'a> ExtendedError<'a> {
     /// Builds an EDE from a code and (possibly empty) text.
     #[inline]
+    #[must_use]
     pub const fn new(info_code: InfoCode, extra_text: &'a [u8]) -> Self {
         ExtendedError {
             info_code,
@@ -134,6 +136,7 @@ impl<'a> ExtendedError<'a> {
 
     /// EXTRA-TEXT as a string, if it is valid UTF-8.
     #[inline]
+    #[must_use]
     pub fn extra_text_str(&self) -> Option<&'a str> {
         core::str::from_utf8(self.extra_text).ok()
     }

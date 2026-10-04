@@ -32,17 +32,20 @@ impl<'a> SvcParam<'a> {
 
     /// The key.
     #[inline]
+    #[must_use]
     pub const fn key(&self) -> SvcParamKey {
         self.key
     }
 
     /// The wire-format value.
     #[inline]
+    #[must_use]
     pub const fn raw_value(&self) -> &'a [u8] {
         self.value
     }
 
     /// The typed value.
+    #[must_use]
     pub fn value(&self) -> SvcParamValue<'a> {
         // Validated on construction; the fallback is unreachable.
         SvcParamValue::parse(self.key, self.value).unwrap_or(SvcParamValue::Unknown(self.value))
@@ -135,17 +138,20 @@ impl<'a> SvcParams<'a> {
 
     /// The wire form.
     #[inline]
+    #[must_use]
     pub const fn as_wire(&self) -> &'a [u8] {
         self.0
     }
 
     /// Whether there are no SvcParams.
     #[inline]
+    #[must_use]
     pub const fn is_empty(&self) -> bool {
         self.0.is_empty()
     }
 
     /// The number of SvcParams (walks the list).
+    #[must_use]
     pub fn len(&self) -> usize {
         self.iter().count()
     }
@@ -157,6 +163,7 @@ impl<'a> SvcParams<'a> {
     }
 
     /// The SvcParam with `key`, if present.
+    #[must_use]
     pub fn get(&self, key: SvcParamKey) -> Option<SvcParam<'a>> {
         self.iter()
             .find(|p| p.key() >= key)
@@ -165,17 +172,20 @@ impl<'a> SvcParams<'a> {
 
     /// Whether a SvcParam with `key` is present.
     #[inline]
+    #[must_use]
     pub fn contains(&self, key: SvcParamKey) -> bool {
         self.get(key).is_some()
     }
 
     /// The typed value of `key`, if present.
     #[inline]
+    #[must_use]
     pub fn value(&self, key: SvcParamKey) -> Option<SvcParamValue<'a>> {
         self.get(key).map(|p| p.value())
     }
 
     /// The `mandatory` keys (RFC 9460 §8).
+    #[must_use]
     pub fn mandatory(&self) -> Option<Mandatory<'a>> {
         match self.value(SvcParamKey::MANDATORY)? {
             SvcParamValue::Mandatory(v) => Some(v),
@@ -184,6 +194,7 @@ impl<'a> SvcParams<'a> {
     }
 
     /// The `alpn` IDs (RFC 9460 §7.1).
+    #[must_use]
     pub fn alpn(&self) -> Option<Alpn<'a>> {
         match self.value(SvcParamKey::ALPN)? {
             SvcParamValue::Alpn(v) => Some(v),
@@ -193,11 +204,13 @@ impl<'a> SvcParams<'a> {
 
     /// Whether `no-default-alpn` is present (RFC 9460 §7.1).
     #[inline]
+    #[must_use]
     pub fn no_default_alpn(&self) -> bool {
         self.contains(SvcParamKey::NO_DEFAULT_ALPN)
     }
 
     /// The `port` (RFC 9460 §7.2).
+    #[must_use]
     pub fn port(&self) -> Option<u16> {
         match self.value(SvcParamKey::PORT)? {
             SvcParamValue::Port(v) => Some(v),
@@ -206,6 +219,7 @@ impl<'a> SvcParams<'a> {
     }
 
     /// The `ipv4hint` addresses (RFC 9460 §7.3).
+    #[must_use]
     pub fn ipv4hint(&self) -> Option<Ipv4Hint<'a>> {
         match self.value(SvcParamKey::IPV4HINT)? {
             SvcParamValue::Ipv4Hint(v) => Some(v),
@@ -214,6 +228,7 @@ impl<'a> SvcParams<'a> {
     }
 
     /// The `ech` configuration list (RFC 9848).
+    #[must_use]
     pub fn ech(&self) -> Option<Ech<'a>> {
         match self.value(SvcParamKey::ECH)? {
             SvcParamValue::Ech(v) => Some(v),
@@ -222,6 +237,7 @@ impl<'a> SvcParams<'a> {
     }
 
     /// The `ipv6hint` addresses (RFC 9460 §7.3).
+    #[must_use]
     pub fn ipv6hint(&self) -> Option<Ipv6Hint<'a>> {
         match self.value(SvcParamKey::IPV6HINT)? {
             SvcParamValue::Ipv6Hint(v) => Some(v),
@@ -230,6 +246,7 @@ impl<'a> SvcParams<'a> {
     }
 
     /// The `dohpath` URI template (RFC 9461 §5).
+    #[must_use]
     pub fn dohpath(&self) -> Option<DohPath<'a>> {
         match self.value(SvcParamKey::DOHPATH)? {
             SvcParamValue::DohPath(v) => Some(v),
@@ -239,11 +256,13 @@ impl<'a> SvcParams<'a> {
 
     /// Whether `ohttp` is present (RFC 9540 §4).
     #[inline]
+    #[must_use]
     pub fn ohttp(&self) -> bool {
         self.contains(SvcParamKey::OHTTP)
     }
 
     /// The `tls-supported-groups` (draft-ietf-tls-key-share-prediction).
+    #[must_use]
     pub fn tls_supported_groups(&self) -> Option<TlsSupportedGroups<'a>> {
         match self.value(SvcParamKey::TLS_SUPPORTED_GROUPS)? {
             SvcParamValue::TlsSupportedGroups(v) => Some(v),
@@ -252,6 +271,7 @@ impl<'a> SvcParams<'a> {
     }
 
     /// The `docpath` segments (RFC 9953 §3).
+    #[must_use]
     pub fn docpath(&self) -> Option<DocPath<'a>> {
         match self.value(SvcParamKey::DOCPATH)? {
             SvcParamValue::DocPath(v) => Some(v),
@@ -261,11 +281,13 @@ impl<'a> SvcParams<'a> {
 
     /// Whether `pvd` is present (draft-ietf-intarea-proxy-config).
     #[inline]
+    #[must_use]
     pub fn pvd(&self) -> bool {
         self.contains(SvcParamKey::PVD)
     }
 
     /// The `oots` entries (draft-johani-dnsop-svcb-oots).
+    #[must_use]
     pub fn oots(&self) -> Option<Oots<'a>> {
         match self.value(SvcParamKey::OOTS)? {
             SvcParamValue::Oots(v) => Some(v),
@@ -344,6 +366,7 @@ impl<'a> RawIter<'a> {
 
 /// Iterator over [`SvcParams`], in key order.
 #[derive(Clone, Debug)]
+#[must_use = "iterators are lazy and do nothing unless consumed"]
 pub struct SvcParamIter<'a>(RawIter<'a>);
 
 impl<'a> Iterator for SvcParamIter<'a> {

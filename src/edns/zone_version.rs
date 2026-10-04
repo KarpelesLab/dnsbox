@@ -20,6 +20,7 @@ impl ZoneVersionType {
     /// Whether the value lies in the private-use range 246–254
     /// (RFC 9660 §6.2).
     #[inline]
+    #[must_use]
     pub const fn is_private_use(self) -> bool {
         self.0 >= 246 && self.0 <= 254
     }
@@ -52,6 +53,7 @@ impl<'a> ZoneVersion<'a> {
     /// A response option for an SOA serial number (RFC 9660 §4). The
     /// version bytes borrow from `serial`.
     #[inline]
+    #[must_use]
     pub const fn soa_serial(label_count: u8, serial: &'a [u8; 4]) -> Self {
         ZoneVersion::Version {
             label_count,

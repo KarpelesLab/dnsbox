@@ -62,6 +62,7 @@ macro_rules! svcb_type {
         impl<'a> $name<'a> {
             /// Assembles record data from its fields.
             #[inline]
+            #[must_use]
             pub const fn new(priority: u16, target: Name<'a>, params: SvcParams<'a>) -> Self {
                 $name { priority, target, params }
             }
@@ -69,6 +70,7 @@ macro_rules! svcb_type {
             /// An AliasMode record (SvcPriority 0, no SvcParams) pointing
             /// at `target` (RFC 9460 §2.4.2).
             #[inline]
+            #[must_use]
             pub const fn alias(target: Name<'a>) -> Self {
                 $name { priority: 0, target, params: SvcParams::EMPTY }
             }
@@ -76,6 +78,7 @@ macro_rules! svcb_type {
             /// Whether this is an AliasMode record (SvcPriority 0,
             /// RFC 9460 §2.4.1).
             #[inline]
+            #[must_use]
             pub const fn is_alias_mode(&self) -> bool {
                 self.priority == 0
             }
@@ -83,6 +86,7 @@ macro_rules! svcb_type {
             /// Whether this is a ServiceMode record (SvcPriority > 0,
             /// RFC 9460 §2.4.1).
             #[inline]
+            #[must_use]
             pub const fn is_service_mode(&self) -> bool {
                 self.priority != 0
             }
@@ -91,6 +95,7 @@ macro_rules! svcb_type {
             /// (RFC 9460 §2.5): `None` for an AliasMode record with target
             /// `.` (the service does not exist), `owner` for a ServiceMode
             /// record with target `.`, and the target otherwise.
+            #[must_use]
             pub fn effective_target<'n>(&self, owner: Name<'n>) -> Option<Name<'n>>
             where
                 'a: 'n,

@@ -119,6 +119,7 @@ impl<'a> NotifyMessage<'a> {
 
     /// The underlying message.
     #[inline]
+    #[must_use]
     pub const fn message(&self) -> Message<'a> {
         self.msg
     }
@@ -126,12 +127,14 @@ impl<'a> NotifyMessage<'a> {
     /// The question: the zone name, the type that changed (normally SOA,
     /// §3.7) and the class.
     #[inline]
+    #[must_use]
     pub const fn zone(&self) -> Question<'a> {
         self.zone
     }
 
     /// Whether this is the response (QR set).
     #[inline]
+    #[must_use]
     pub const fn is_response(&self) -> bool {
         self.msg.flags().qr()
     }

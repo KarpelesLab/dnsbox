@@ -86,12 +86,14 @@ pub struct ZoneKey<'a> {
 impl<'a> ZoneKey<'a> {
     /// Pairs a DNSKEY with its owner name.
     #[inline]
+    #[must_use]
     pub const fn new(owner: Name<'a>, dnskey: Dnskey<'a>) -> Self {
         ZoneKey { owner, dnskey }
     }
 
     /// The key tag (RFC 4034 Appendix B).
     #[inline]
+    #[must_use]
     pub fn key_tag(&self) -> u16 {
         self.dnskey.key_tag()
     }
@@ -119,6 +121,7 @@ impl<'a> ZoneKey<'a> {
     /// leading wildcard label (RFC 4034 §3.1.3), and the signature is
     /// empty. Sign it with [`sign_rrset`] and complete it with
     /// [`Rrsig::with_signature`].
+    #[must_use]
     pub fn rrsig_template(
         &self,
         owner: Name<'_>,
