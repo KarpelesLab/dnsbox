@@ -7,6 +7,82 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Security
+
+Findings of the Milestone 9 security audit (`SECURITY.md`), each fixed
+with a regression test in `tests/security_audit.rs`:
+
+- **Medium**: ZONEMD collation and verification compared every apex
+  ZONEMD record with every other (RFC 8976 §4 duplicate removal and
+  tuple check), so a zone with tens of thousands of them took minutes of
+  CPU to reject. Both now sort: O(n log n).
+- **Low**: `tsig::find` and `sig0::find` (and so TSIG and SIG(0)
+  verification) accepted octets after the signature record, which no MAC
+  or signature covers, when the message was parsed lazily. They now
+  return `Error::TrailingData` (answered with FORMERR).
+- **Low**: an RRSIG whose labels field is smaller than the signer's label
+  count was accepted, turning an answer into the expansion of a wildcard
+  above the zone. Such signatures fail with `RrsetMismatch`, and
+  `sign_rrset` refuses to produce them.
+- **Low**: NSEC3 records with hashes shorter than the hash output (one
+  octet, say) appeared to deny almost every name. Hashes of another length
+  never match or cover; `Nsec3::covers` requires equal lengths.
+- **Low**: a LOC altitude close to 2^63 cm in presentation format
+  overflowed (a panic with overflow checks); it is now `InvalidText`.
+- **Info**: `TrustedKeys` verified RRsets of another class than its keys;
+  they are now `RrsetMismatch`.
+- **Info**: denial proofs accepted a zone's apex as one of its own
+  delegations, and the zone's own records as denying the DS at its apex;
+  both are now `Bogus(ZoneCut)`.
+- `SECURITY.md` is the final threat model: attacker model, guarantees, the
+  work bound of every operation, every authentication check, the caller
+  duties (cap records read from untrusted zone files, as one `$GENERATE`
+  yields up to 65 536; never use `FsIncludes` on untrusted input; bound
+  the RRsets handed to `TrustedKeys`) and the audit findings.
+
+### Added
+
+- Documentation (Milestone 9): an `# Errors` section on every fallible
+  public function and a runnable example on every public module, type,
+  trait and free function and on the main methods, using RFC test vectors
+  and real captures; a guided tour in the crate documentation (parse,
+  iterate, typed RDATA, build, EDNS, truncation, TCP framing, zone files,
+  DNSSEC, TSIG); the stability and MSRV policy in `README.md`.
+- Example programs (`examples/`, with `required-features`):
+  `stub_resolver` (UDP with EDNS, TCP fallback on truncation, `dig`-style
+  output), `zone2wire` (zone file to the AXFR message stream and back),
+  `dnssec_dig` (validates real captures from the IANA root anchor) and
+  `tsig_axfr` (a TSIG-signed AXFR over loopback or from a real server).
+- SIG and RRSIG presentation format accept a bare number as the type
+  covered, as BIND writes it (`SIG 0 ...`).
+- CERT presentation format reads BIND's and dnspython's spellings of the
+  algorithm.
+- Fuzzing: four targets for the trust decisions (`denial`, `dnssec`,
+  `sign`, `zone`), and the `rdata` target checks that every type
+  re-encodes to the exact octets it was parsed from; all targets run with
+  overflow checks (`-a`), in CI too.
+- Interop corpus (Milestone 8): 175 messages (from 52), with live captures
+  of more types (SVCB with dohpath, CAA, TLSA, URI, CDS/CDNSKEY, ZONEMD),
+  Extended DNS Errors, Client Subnet and compact denial; zone files,
+  signed zones for all eight algorithms (NSEC, NSEC3, Opt-Out) and 96
+  local `named` responses from BIND 9.18; ldns-rewritten and ZONEMD-signed
+  zones; 139 dnspython RDATA examples, TSIG with nine HMACs, UPDATE, EDNS
+  and ZONEMD; DNSSEC validation of the captures from the IANA root
+  anchors; an ignored test that verifies a full root zone (ZONEMD and
+  every RRSIG). `tests/corpus/README.md` documents every source.
+
+### Changed
+
+- CERT `Display` writes the algorithm as a mnemonic (`RSASHA256`,
+  `ECDSAP256SHA256`, `ED25519`, ...) where IANA, BIND and dnspython agree,
+  and as a number otherwise; it used to always write a number.
+- `tsig::find`, `sig0::find`, RRSIG checks, `Nsec3::covers`, `TrustedKeys`
+  and the denial proofs reject the inputs listed under Security.
+- Clippy's `missing_errors_doc` and `missing_panics_doc` lints are
+  enforced, and the CI docs builds deny `missing_docs`,
+  `rustdoc::private_doc_tests` and `rustdoc::unescaped_backticks`; CI also
+  runs the `alloc`-only doctests and the offline examples.
+
 ## [0.0.2](https://github.com/KarpelesLab/dnsbox/compare/v0.0.1...v0.0.2) - 2026-10-04
 
 ### Other

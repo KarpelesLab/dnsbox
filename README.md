@@ -8,10 +8,15 @@ High-performance DNS message parsing and building for Rust — queries and
 responses, zero-copy, `no_std`, with broad RFC extension coverage (EDNS(0),
 DNSSEC, SVCB/HTTPS, TSIG, and more).
 
-> **Status:** pre-1.0. Wire formats, EDNS(0), DNSSEC, SVCB/HTTPS, TSIG and
-> the long tail of record types are implemented and documented with
-> examples; the API may still change. See the [roadmap](ROADMAP.md) for
-> what is left before 1.0 (the final threat model, the stability policy).
+> **Status:** feature-complete for 1.0. Every [roadmap](ROADMAP.md)
+> milestone is done: wire formats, EDNS(0), DNSSEC (validation, denial of
+> existence, chain of trust, ZONEMD), SVCB/HTTPS, TSIG, SIG(0), UPDATE,
+> zone transfers, zone files and the long tail of record types, all
+> documented with examples, fuzzed, security-audited
+> ([SECURITY.md](SECURITY.md)) and checked against BIND, ldns, dnspython
+> and live servers. The API went through its 1.0 review; until 1.0 is
+> tagged, releases may still break it (see
+> [Stability and MSRV policy](#stability-and-msrv-policy)).
 
 ## Goals
 
@@ -195,16 +200,50 @@ See [ARCHITECTURE.md](ARCHITECTURE.md) for the design and extension guide.
 
 ## Assurance and performance
 
-dnsbox is continuously fuzzed ([`fuzz/`](fuzz)), property-tested, and
-checked against real responses from BIND, NSD, Knot, PowerDNS, Unbound and
-public resolvers ([`tests/corpus/`](tests/corpus)). The threat model —
-what is guaranteed on hostile input and what callers must do — is in
-[SECURITY.md](SECURITY.md). Benchmarks against
-`hickory-proto` and `domain` are in [BENCH.md](BENCH.md).
+dnsbox is continuously fuzzed with overflow checks (ten
+[`fuzz/`](fuzz) targets, from message parsing to the DNSSEC and TSIG trust
+decisions), property-tested, and checked against real responses from BIND,
+NSD, Knot, PowerDNS, Unbound and public resolvers, against BIND 9.18, ldns
+and dnspython (zone files, signed zones for every algorithm, TSIG, UPDATE,
+ZONEMD), and by validating the captured DNSSEC data from the IANA root
+trust anchors ([`tests/corpus/`](tests/corpus)). The threat model — what
+is guaranteed on hostile input, the work bounds, what callers must do —
+and the findings of the security audit are in [SECURITY.md](SECURITY.md).
+dnsbox parses and builds faster than `hickory-proto` and `domain` on every
+benchmark ([BENCH.md](BENCH.md)).
 
-## Minimum supported Rust version
+## Stability and MSRV policy
 
-Rust 1.89, edition 2024.
+dnsbox follows [Semantic Versioning](https://semver.org/).
+
+- **Before 1.0** (the 0.0.x releases), any release may change the public
+  API; every such change is listed under "Breaking changes" in the
+  [changelog](CHANGELOG.md). The Milestone 9 API review settled the API
+  meant for 1.0, so further breaks are expected to be rare and small.
+- **From 1.0 on**, breaking changes need a new major version. The public
+  API is everything documented on docs.rs. These are not breaking and may
+  come in minor releases:
+  - new variants of `#[non_exhaustive]` enums (including `Error`, `RData`
+    and `EdnsOption`) and new fields of `#[non_exhaustive]` structs;
+  - new methods with default bodies on the open extension traits
+    (`ParseRdata`, `ComposeRdata`, `Verifier`, `TsigKey`, ...);
+    `dnssec::DenialProof` is sealed;
+  - new registry constants, record types, EDNS options and SvcParam keys
+    (a value that used to be `Unknown` becomes typed);
+  - presentation-format (`Display`) output aligned with the RFCs or with
+    BIND where they disagree with an older dnsbox spelling; parsing keeps
+    accepting the old spelling.
+- **Security fixes** that make parsing or verification stricter (rejecting
+  input that should never have been accepted, see [SECURITY.md](SECURITY.md))
+  may land in patch releases.
+- **Features** are additive and keep their names; enabling a feature never
+  removes API. The `alloc`-free, `std`-free core stays `no_std`.
+- **MSRV:** Rust 1.89 (edition 2024), tested in CI on every push, with all
+  features (the optional `purecrypto` and `serde` dependencies included).
+  Raising the MSRV is a minor-version change, never a patch release, and
+  never to a Rust release less than six months old; the new MSRV is noted
+  in the changelog. The fuzz targets (nightly) and benchmarks (their own
+  workspace) are not covered by the MSRV.
 
 ## License
 

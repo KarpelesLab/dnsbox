@@ -77,6 +77,22 @@ to 14 %, which gives an idea of the noise).
 
 The encoded messages are byte for byte the same before and after.
 
+### Re-run on the 1.0 candidate
+
+After the Milestone 9 work (security fixes, documentation, interop), the
+same harness on the same machine (`taskset -c 40`, load average 15–20,
+criterion with 1 s warm-up and 4 s measurement) gives the same picture;
+none of that work touched the hot paths:
+
+| Benchmark            | dnsbox   | dnsbox-validate / -vec | hickory-proto | domain   |
+|----------------------|----------|------------------------|---------------|----------|
+| parse `query`        | 19.4 ns  | 17.0 ns                | 140.6 ns      | 26.8 ns  |
+| parse `large`        | 0.98 µs  | 0.96 µs                | 4.80 µs       | 1.28 µs  |
+| parse `pathological` | 42.3 µs  | 3.1 µs                 | 153.5 µs      | 90.8 µs  |
+| build `query`        | 32.0 ns  | 37.9 ns                | 129.0 ns      | 44.2 ns  |
+| build `large`        | 1.98 µs  | 1.94 µs                | 4.79 µs       | 2.93 µs  |
+| build `pathological` | 68.1 µs  | 66.9 µs                | 142.5 µs      | 278.1 µs |
+
 ## Observations
 
 - dnsbox is now ahead of both libraries on every benchmark. Against domain

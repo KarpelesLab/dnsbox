@@ -11,6 +11,13 @@ message, `#![forbid(unsafe_code)]`, zero-copy views, no allocation in the
 core, builders write into caller buffers, open newtypes for protocol
 numbers, `no_std` first, no mandatory dependencies, MSRV 1.89.
 
+The crate is feature-complete for 1.0 (every ROADMAP milestone is done).
+What counts as a breaking change, and the MSRV policy, are in README.md
+("Stability and MSRV policy"); the threat model and the caller duties are
+in SECURITY.md. Changes must keep both promises: grow `#[non_exhaustive]`
+types and open traits (with default bodies) rather than changing them, and
+use no language feature or dependency newer than the MSRV.
+
 ## Module layout
 
 ```text
@@ -928,6 +935,7 @@ common traits, `Display`/`FromStr` pairs, iteration by reference).
   ```sh
   cargo fmt --all --check
   cargo clippy --all-targets --all-features -- -D warnings
+  cargo clippy --all-targets --no-default-features -- -D warnings
   cargo test --all-features
   cargo test --no-default-features
   cargo test --no-default-features --features alloc
@@ -937,7 +945,15 @@ common traits, `Display`/`FromStr` pairs, iteration by reference).
   ```
 
   `cargo test` also builds the examples (those whose `required-features`
-  are enabled) and runs every doctest.
+  are enabled) and runs every doctest. CI additionally builds the docs
+  with `-D missing_docs -D rustdoc::private-doc-tests
+  -D rustdoc::unescaped-backticks` (stable, and nightly with
+  `--cfg docsrs` as docs.rs does), runs the offline examples, builds the
+  no_std targets with `alloc` and `tsig`, fuzzes every target for 60 s
+  with `-a`, and builds the benchmarks and checks that the three libraries
+  agree on every fixture. If you touch `fuzz/` or `benches/`, build them
+  too (`cargo +nightly fuzz build -a` in `fuzz/`, `cargo test --release`
+  and `cargo bench --no-run` in `benches/`).
 
 ## Cryptography
 
@@ -1120,5 +1136,11 @@ src/dnssec/
   `$GENERATE` follows BIND's syntax and yields at most `MAX_GENERATE`
   records. The owner field is "present" only when the line starts with a
   non-blank character (RFC 1035 §5.1).
+- Signature records must end the message: `tsig::find` and `sig0::find`
+  return `TrailingData` for octets after the TSIG / SIG(0) record, which
+  nothing authenticates (RFC 8945 §5.1, RFC 2931 §3). Verification
+  checks the RRSIG labels field against the signer's label count, the
+  RRset class against the keys' class, and NSEC3 hash lengths against
+  the hash output (SECURITY.md lists every check).
 - Do not edit `ROADMAP.md` or `CHANGELOG.md` on feature branches; the
   integrator does.

@@ -33,7 +33,8 @@ order of work. Items are checked off as they land.
   plugged in, and all wire-format work (signed data, MAC input, canonical
   forms, key tags) works without it. Other optional integrations (serde,
   async I/O) live behind features too.
-- **MSRV 1.89**, edition 2024. MSRV bumps are minor-version changes.
+- **MSRV 1.89**, edition 2024. MSRV bumps are minor-version changes
+  (see "Stability and MSRV policy" in README.md).
 
 ## Milestone 0 — Foundation
 
@@ -192,11 +193,18 @@ signatures), through the pluggable `Verifier` / `Signer` traits.
       NOTIFY, XFR and DSO views), name decompression, RDATA (every
       registered type), EDNS options, build→parse round-trip,
       presentation-format parser (whole zone files; every type's
-      displayed RDATA parses back)
+      displayed RDATA parses back), and the trust decisions (NSEC/NSEC3
+      denial, DNSSEC backend and chain of trust, TSIG/SIG(0) tampering,
+      `$INCLUDE`/`$GENERATE`/ZONEMD order independence); all run with
+      overflow checks (`-a`)
 - [x] Property tests: build→parse and parse→build→parse identity
 - [x] Interop corpus: real-world captures, plus responses from BIND,
       Unbound, Knot and PowerDNS (also NSD, Knot Resolver, PowerDNS
-      Recursor, public resolvers)
+      Recursor, public resolvers); tool-level interop with BIND 9.18
+      (zone files, signers for every algorithm, a local `named`), ldns
+      and dnspython (RDATA text and wire, TSIG, UPDATE, EDNS, ZONEMD),
+      and DNSSEC validation of the corpus from the IANA root anchors
+      (`tests/corpus/README.md`)
 - [x] Allocation-free hot path verified in CI (no-alloc build + tests)
 - [x] Hot-path tuning: name decoder and suffix cache, fixed-field
       parsing, label-trie compression table (`BENCH.md`: faster than
@@ -207,9 +215,36 @@ signatures), through the pluggable `Verifier` / `Signer` traits.
 - [x] API review: naming, error granularity, feature layout (the
       conventions are in `ARCHITECTURE.md`, the breaking changes in
       `CHANGELOG.md`)
-- [ ] Complete rustdoc with examples on every public item
-- [ ] SECURITY.md threat model finalized after a fuzzing campaign
-- [ ] Stability commitment and MSRV policy documented
+- [x] Complete rustdoc with examples on every public item: every public
+      item is documented (`missing_docs`, denied in CI), every fallible
+      public function has an `# Errors` section
+      (`clippy::missing_errors_doc`), and every public module, type, trait
+      and free function, plus the main methods, has a runnable doctest
+      (trivial accessors such as `Record::ttl` are shown in their type's
+      example rather than their own); a guided tour opens the crate docs
+      and `examples/` holds four complete programs. The nightly-only
+      `rustdoc::missing_doc_code_examples` lint is not enforced
+- [x] SECURITY.md threat model finalized after a fuzzing campaign (attacker
+      model, guarantees, work bounds, caller duties; seven findings, all
+      fixed with regression tests in `tests/security_audit.rs`)
+- [x] Stability commitment and MSRV policy documented (README.md,
+      "Stability and MSRV policy")
+
+## Known gaps
+
+Nothing above is open; these are the limits to know about before 1.0:
+
+- AMTRELAY (RFC 8777), DSYNC (RFC 9859) and TKEY (RFC 2930) have
+  mnemonics but no typed RDATA: they round-trip as RFC 3597 opaque data.
+- Knot (`kdig`, `kzonecheck`) and Unbound tools were not available for
+  tool-level interop; their servers are covered by captured responses only.
+- Work limits that depend on the caller's context are caller duties, not
+  library limits (SECURITY.md): capping the records read from an untrusted
+  zone file (one `$GENERATE` line yields up to 65 536 records), and
+  bounding the RRsets, RRSIGs and keys handed to `TrustedKeys` per
+  response. `FsIncludes` must not be used with untrusted zone files.
+- `cargo doc` without `--all-features` reports broken intra-doc links to
+  feature-gated items; docs.rs and CI build with all features.
 
 ## Out of scope
 
