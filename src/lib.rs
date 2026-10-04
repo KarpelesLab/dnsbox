@@ -86,8 +86,8 @@ pub mod sig0;
 pub mod tcp;
 pub mod text;
 pub mod tsig;
-mod util;
 pub mod update;
+mod util;
 pub mod wire;
 pub mod xfr;
 
