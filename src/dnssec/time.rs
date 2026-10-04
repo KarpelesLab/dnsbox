@@ -186,7 +186,7 @@ impl FromStr for Timestamp {
 }
 
 const fn is_leap(y: u32) -> bool {
-    (y % 4 == 0 && y % 100 != 0) || y % 400 == 0
+    (y.is_multiple_of(4) && !y.is_multiple_of(100)) || y.is_multiple_of(400)
 }
 
 const fn days_in_month(y: u32, m: u32) -> u32 {
@@ -278,7 +278,10 @@ mod tests {
         assert_eq!(t.to_string(), "20030322173103");
         assert_eq!(Timestamp::new(0).to_string(), "19700101000000");
         assert_eq!(Timestamp::new(u32::MAX).to_string(), "21060207062815");
-        assert_eq!("20000229000000".parse::<Timestamp>().unwrap().get(), 951_782_400);
+        assert_eq!(
+            "20000229000000".parse::<Timestamp>().unwrap().get(),
+            951_782_400
+        );
         assert_eq!("1048354263".parse(), Ok(t));
         // 2106-02-07 06:28:16 wraps to 0.
         assert_eq!("21060207062816".parse(), Ok(Timestamp::new(0)));

@@ -33,13 +33,11 @@ pub fn key_tag(flags: u16, protocol: u8, algorithm: Algorithm, public_key: &[u8]
     let [f0, f1] = flags.to_be_bytes();
     let mut acc: u64 = (u64::from(f0) << 8) + u64::from(f1);
     acc += (u64::from(protocol) << 8) + u64::from(algorithm.get());
-    let mut pairs = public_key.chunks_exact(2);
-    for pair in &mut pairs {
-        if let [hi, lo] = pair {
-            acc += (u64::from(*hi) << 8) + u64::from(*lo);
-        }
+    let (pairs, rest) = public_key.as_chunks::<2>();
+    for [hi, lo] in pairs {
+        acc += (u64::from(*hi) << 8) + u64::from(*lo);
     }
-    if let [last] = pairs.remainder() {
+    if let [last] = rest {
         acc += u64::from(*last) << 8;
     }
     acc += (acc >> 16) & 0xffff;
@@ -146,9 +144,15 @@ mod tests {
         assert_eq!(key_tag(0, 0, Algorithm::new(0), &[1]), 0x100);
         assert_eq!(key_tag(0, 0, Algorithm::new(0), &[1, 2, 3]), 0x0402);
         // Carry folding.
-        assert_eq!(key_tag(0xffff, 0xff, Algorithm::new(0xff), &[0xff; 4]), 0xffff);
+        assert_eq!(
+            key_tag(0xffff, 0xff, Algorithm::new(0xff), &[0xff; 4]),
+            0xffff
+        );
         // RSA/MD5 special case: bits 8..24 from the end of the modulus.
-        assert_eq!(key_tag(256, 3, Algorithm::RSAMD5, &[1, 3, 0xaa, 0xbb, 0xcc, 0xdd]), 0xbbcc);
+        assert_eq!(
+            key_tag(256, 3, Algorithm::RSAMD5, &[1, 3, 0xaa, 0xbb, 0xcc, 0xdd]),
+            0xbbcc
+        );
         assert_eq!(key_tag(256, 3, Algorithm::RSAMD5, &[1, 3]), 0);
         assert_eq!(key_tag(256, 3, Algorithm::RSAMD5, &[1, 3, 7]), 0x0103);
     }
@@ -183,10 +187,19 @@ mod tests {
             &[1, 0, 5],
             &[1, 3, 0, 5],
         ] {
-            assert_eq!(RsaPublicKey::from_dnskey(bad), Err(Error::InvalidKey), "{bad:?}");
+            assert_eq!(
+                RsaPublicKey::from_dnskey(bad),
+                Err(Error::InvalidKey),
+                "{bad:?}"
+            );
         }
         let mut w = WireWriter::new(&mut buf);
-        for (e, n) in [(&[][..], &[1][..]), (&[1], &[]), (&[0, 1], &[1]), (&[1], &[0, 1])] {
+        for (e, n) in [
+            (&[][..], &[1][..]),
+            (&[1], &[]),
+            (&[0, 1], &[1]),
+            (&[1], &[0, 1]),
+        ] {
             let k = RsaPublicKey {
                 exponent: e,
                 modulus: n,
@@ -199,6 +212,13 @@ mod tests {
             modulus: &[1],
         };
         assert_eq!(k.compose(&mut w), Err(Error::InvalidKey));
-        assert_eq!(RsaPublicKey { exponent: &[], modulus: &[] }.modulus_bits(), 0);
+        assert_eq!(
+            RsaPublicKey {
+                exponent: &[],
+                modulus: &[]
+            }
+            .modulus_bits(),
+            0
+        );
     }
 }

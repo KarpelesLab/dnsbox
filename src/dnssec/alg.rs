@@ -145,7 +145,10 @@ mod tests {
         assert_eq!(Algorithm::RSASHA256.get(), 8);
         assert_eq!(Algorithm::ED448.to_string(), "ED448");
         assert_eq!(Algorithm::new(200).to_string(), "200");
-        assert_eq!("rsasha1-nsec3-sha1".parse(), Ok(Algorithm::RSASHA1_NSEC3_SHA1));
+        assert_eq!(
+            "rsasha1-nsec3-sha1".parse(),
+            Ok(Algorithm::RSASHA1_NSEC3_SHA1)
+        );
         assert_eq!("13".parse(), Ok(Algorithm::ECDSAP256SHA256));
         assert!(Algorithm::RSASHA512.is_rsa() && !Algorithm::ED25519.is_rsa());
         assert_eq!(Algorithm::ED25519.public_key_len(), Some(32));

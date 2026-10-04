@@ -16,3 +16,27 @@ pub(crate) const RFC4034_DSKEY: &str = "
     62a512763326980a615ddbf17a05ddfcce7e5fb3abcca05a31b0957452d4521e
     83870789063115bf97f6c308ccf57cdc9ce7fe10f6ed1bd0cc0660038c50dcdb
     0feb963c2f17";
+
+/// Decodes base64 (whitespace ignored), for RFC presentation-format vectors.
+pub(crate) fn b64(s: &str) -> std::vec::Vec<u8> {
+    const ALPHABET: &[u8] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+    let mut out = std::vec::Vec::new();
+    let (mut acc, mut bits) = (0u32, 0);
+    for c in s.bytes().filter(|c| !c.is_ascii_whitespace() && *c != b'=') {
+        let v = ALPHABET.iter().position(|&a| a == c).expect("base64 digit") as u32;
+        acc = (acc << 6) | v;
+        bits += 6;
+        if bits >= 8 {
+            bits -= 8;
+            out.push((acc >> bits) as u8);
+            acc &= (1 << bits) - 1;
+        }
+    }
+    out
+}
+
+#[test]
+fn b64_decodes() {
+    assert_eq!(b64("Zm9v YmE="), b"fooba");
+    assert_eq!(b64("AA=="), [0]);
+}

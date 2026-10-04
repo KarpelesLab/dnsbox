@@ -92,10 +92,10 @@ pub use ds::ds_digest_input;
 #[cfg_attr(docsrs, doc(cfg(feature = "dnssec-digest")))]
 pub use ds::{DsDigest, verify_ds};
 pub use keys::{RsaPublicKey, key_tag};
+pub use nsec3::Nsec3Hash;
 #[cfg(feature = "dnssec-digest")]
 #[cfg_attr(docsrs, doc(cfg(feature = "dnssec-digest")))]
 pub use nsec3::nsec3_hash;
-pub use nsec3::Nsec3Hash;
 pub use rrsig::{
     RecordRdata, Rrset, ZoneKey, check_rrsig, rrsig_owner, sign_rrset, signed_data, verify_rrsig,
 };

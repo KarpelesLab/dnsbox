@@ -1,10 +1,10 @@
 //! DS digests (RFC 4034 §5.1.4, RFC 4509, RFC 6605 §6.2).
 
 use super::canonical_name;
+use crate::Result;
 use crate::name::{MAX_NAME_LEN, Name};
 use crate::rdata::{ComposeRdata, Dnskey};
 use crate::wire::Composer;
-use crate::Result;
 #[cfg(feature = "dnssec-digest")]
 use {
     super::{Algorithm, DigestType},
@@ -111,7 +111,12 @@ impl DsDigest {
     /// The DS record data for this digest (convert with `.into()` for CDS).
     #[inline]
     pub fn to_ds(&self) -> Ds<'_> {
-        Ds::new(self.key_tag, self.algorithm, self.digest_type, self.digest())
+        Ds::new(
+            self.key_tag,
+            self.algorithm,
+            self.digest_type,
+            self.digest(),
+        )
     }
 
     /// Whether `ds` matches this digest: same key tag, algorithm, digest
@@ -168,7 +173,6 @@ mod tests {
     use crate::rdata::ParseRdata;
     use crate::testutil::hex;
     use crate::{NameBuf, WireReader};
-    use std::vec::Vec;
 
     #[test]
     fn digest_input() {
@@ -177,11 +181,12 @@ mod tests {
         let key = Dnskey::parse_rdata(&mut WireReader::new(&key_wire)).unwrap();
         assert_eq!(key.key_tag(), 60485);
         let owner = NameBuf::from_text(b"DSKEY.example.COM").unwrap();
-        let mut out = Vec::new();
+        let mut buf = [0u8; 256];
+        let mut out = crate::WireWriter::new(&mut buf);
         ds_digest_input(owner.as_name(), &key, &mut out).unwrap();
         let mut expected = b"\x05dskey\x07example\x03com\x00".to_vec();
         expected.extend(&key_wire);
-        assert_eq!(out, expected);
+        assert_eq!(out.written(), expected);
     }
 
     #[cfg(feature = "dnssec-digest")]
@@ -203,14 +208,23 @@ mod tests {
         let upper = NameBuf::from_text(b"DSKEY.EXAMPLE.COM").unwrap();
         assert_eq!(verify_ds(&ds, upper.as_name(), &key), Ok(()));
         let other = NameBuf::from_text(b"other.example.com").unwrap();
-        assert_eq!(verify_ds(&ds, other.as_name(), &key), Err(Error::BadSignature));
+        assert_eq!(
+            verify_ds(&ds, other.as_name(), &key),
+            Err(Error::BadSignature)
+        );
         let wrong_tag = Ds { key_tag: 1, ..ds };
-        assert_eq!(verify_ds(&wrong_tag, owner.as_name(), &key), Err(Error::KeyMismatch));
+        assert_eq!(
+            verify_ds(&wrong_tag, owner.as_name(), &key),
+            Err(Error::KeyMismatch)
+        );
         let wrong_alg = Ds {
             algorithm: Algorithm::RSASHA256,
             ..ds
         };
-        assert_eq!(verify_ds(&wrong_alg, owner.as_name(), &key), Err(Error::KeyMismatch));
+        assert_eq!(
+            verify_ds(&wrong_alg, owner.as_name(), &key),
+            Err(Error::KeyMismatch)
+        );
         let gost = Ds {
             digest_type: DigestType::GOST,
             ..ds
@@ -220,6 +234,9 @@ mod tests {
             Err(Error::UnsupportedAlgorithm)
         );
         assert!(!d.matches(&Ds { digest: &[], ..ds }));
-        assert!(!d.matches(&Ds { digest_type: DigestType::SHA256, ..ds }));
+        assert!(!d.matches(&Ds {
+            digest_type: DigestType::SHA256,
+            ..ds
+        }));
     }
 }

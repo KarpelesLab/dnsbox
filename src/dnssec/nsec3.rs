@@ -2,6 +2,7 @@
 
 use core::fmt;
 
+#[cfg(feature = "dnssec-digest")]
 use super::Nsec3HashAlgorithm;
 use crate::name::{Name, NameBuf};
 use crate::text::Base32Hex;
@@ -211,9 +212,16 @@ mod tests {
             assert_eq!(&out[..n], dec.as_bytes(), "{enc}");
         }
         for bad in ["C", "CPN", "CPNMUO", "CP", "W0", "C=", "CPNMUOJ1E9"] {
-            assert_eq!(decode_base32hex(bad.as_bytes(), &mut out), Err(Error::InvalidText), "{bad}");
+            assert_eq!(
+                decode_base32hex(bad.as_bytes(), &mut out),
+                Err(Error::InvalidText),
+                "{bad}"
+            );
         }
-        assert_eq!(decode_base32hex(b"00", &mut [0u8; 0]), Err(Error::InvalidText));
+        assert_eq!(
+            decode_base32hex(b"00", &mut [0u8; 0]),
+            Err(Error::InvalidText)
+        );
     }
 
     #[test]
@@ -223,18 +231,29 @@ mod tests {
         let h = Nsec3Hash::from_owner(owner.as_name()).unwrap();
         assert_eq!(h.as_bytes().len(), 20);
         assert_eq!(h.to_string(), "0P9MHAVEQVM6T7VBL5LOP2U3T2RP3TOM");
-        assert_eq!(std::format!("{h:?}"), "Nsec3Hash(0P9MHAVEQVM6T7VBL5LOP2U3T2RP3TOM)");
+        assert_eq!(
+            std::format!("{h:?}"),
+            "Nsec3Hash(0P9MHAVEQVM6T7VBL5LOP2U3T2RP3TOM)"
+        );
         assert_eq!(
             h.owner_name(zone.as_name()).unwrap().to_string(),
             "0p9mhaveqvm6t7vbl5lop2u3t2rp3tom.example."
         );
         assert_eq!(Nsec3Hash::from_owner(Name::ROOT), Err(Error::InvalidRdata));
         let bad = NameBuf::from_text(b"xyz.example").unwrap();
-        assert_eq!(Nsec3Hash::from_owner(bad.as_name()), Err(Error::InvalidText));
+        assert_eq!(
+            Nsec3Hash::from_owner(bad.as_name()),
+            Err(Error::InvalidText)
+        );
         assert_eq!(Nsec3Hash::new(&[]), Err(Error::InvalidRdata));
         assert_eq!(Nsec3Hash::new(&[0; 40]), Err(Error::InvalidRdata));
         assert_eq!(Nsec3Hash::new(&[0; 39]).unwrap().to_string().len(), 63);
-        assert!(Nsec3Hash::new(&[1; 39]).unwrap().owner_name(zone.as_name()).is_ok());
+        assert!(
+            Nsec3Hash::new(&[1; 39])
+                .unwrap()
+                .owner_name(zone.as_name())
+                .is_ok()
+        );
     }
 
     #[cfg(feature = "dnssec-digest")]
@@ -254,7 +273,10 @@ mod tests {
             ("y.w.example", "ji6neoaepv8b5o6k4ev33abha8ht9fgc"),
             ("x.y.w.example", "2vptu5timamqttgl4luu9kg21e0aor3s"),
             ("xx.example", "t644ebqk9bibcna874givr6joj62mlhv"),
-            ("2t7b4g4vsa5smi47k61mv5bv1a22bojr.example", "kohar7mbb8dc2ce8a9qvl8hon4k53uhi"),
+            (
+                "2t7b4g4vsa5smi47k61mv5bv1a22bojr.example",
+                "kohar7mbb8dc2ce8a9qvl8hon4k53uhi",
+            ),
             ("X.W.Example", "b4um86eghhds6nea196smvmlo4ors995"),
         ] {
             let n = NameBuf::from_text(name.as_bytes()).unwrap();

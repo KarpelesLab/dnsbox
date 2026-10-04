@@ -4,7 +4,8 @@
 //!   [`canonical_name`] writes one.
 //! - Canonical **RDATA** is what [`ComposeRdata`] writes through
 //!   [`Canonical`]: no compression, and the names of the types listed in
-//!   §6.2 (as corrected by RFC 6840 §5.1, which removes NSEC) lowercased.
+//!   §6.2 lowercased, as corrected by RFC 6840 §5.1 (NSEC next names keep
+//!   their case, RRSIG signer names are lowercased, HINFO holds no names).
 //!   Each record type declares this with its
 //!   [`NameEncoding`](crate::NameEncoding).
 //! - Canonical **RRset order** sorts records by their canonical RDATA as
@@ -227,7 +228,8 @@ mod tests {
     fn rrset_order() {
         // RFC 4034 §6.3: ordering by RDATA octets, shorter prefix first.
         let owner = name("Owner.Example");
-        let mut out = Vec::new();
+        let mut buf = [0u8; 256];
+        let mut out = WireWriter::new(&mut buf);
         let mut set = CanonicalRrset::new(&mut out, owner.as_name(), Rtype::new(999), Class::IN, 7);
         let datas: [&[u8]; 6] = [b"\x02\x01", b"\x01", b"\x02", b"", b"\x01\x00", b"\x02"];
         let mut fresh = Vec::new();
@@ -250,7 +252,7 @@ mod tests {
             expected.extend_from_slice(&(d.len() as u16).to_be_bytes());
             expected.extend_from_slice(d);
         }
-        assert_eq!(out, expected);
+        assert_eq!(out.written(), expected);
     }
 
     #[test]
@@ -271,6 +273,15 @@ mod tests {
         set.push(&Nsec::new(ex.as_name(), TypeBitmap::default()))
             .unwrap();
         assert!(set.as_bytes().ends_with(b"\x04MAIL\x07Example\x00"));
+        // HINFO holds no names and keeps its case (RFC 6840 §5.1).
+        let mut w = WireWriter::new(&mut buf);
+        let mut set = CanonicalRrset::new(&mut w, Name::ROOT, Rtype::HINFO, Class::IN, 0);
+        set.push(&crate::rdata::Hinfo {
+            cpu: crate::CharStr::new(b"KLH-10").unwrap(),
+            os: crate::CharStr::new(b"ITS").unwrap(),
+        })
+        .unwrap();
+        assert!(set.as_bytes().ends_with(b"\x06KLH-10\x03ITS"));
     }
 
     #[test]

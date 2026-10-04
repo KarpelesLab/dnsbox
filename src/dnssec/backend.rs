@@ -307,7 +307,9 @@ impl SigningKey {
         let key = match algorithm {
             Algorithm::ECDSAP256SHA256 => {
                 let b: &[u8; 32] = bytes.try_into().map_err(|_| Error::InvalidKey)?;
-                PrivateKey::EcdsaP256(EcdsaPrivateKey::from_bytes(b).map_err(|_| Error::InvalidKey)?)
+                PrivateKey::EcdsaP256(
+                    EcdsaPrivateKey::from_bytes(b).map_err(|_| Error::InvalidKey)?,
+                )
             }
             Algorithm::ECDSAP384SHA384 => {
                 if bytes.len() != 48 {
@@ -401,7 +403,7 @@ impl SigningKey {
         if !algorithm.is_rsa() || algorithm == Algorithm::RSAMD5 {
             return Err(Error::UnsupportedAlgorithm);
         }
-        if !(1024..=MAX_RSA_BITS).contains(&bits) || bits % 2 != 0 {
+        if !(1024..=MAX_RSA_BITS).contains(&bits) || !bits.is_multiple_of(2) {
             return Err(Error::InvalidKey);
         }
         // purecrypto raises the Miller-Rabin count to the FIPS 186-5

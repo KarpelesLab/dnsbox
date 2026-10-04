@@ -201,8 +201,7 @@ pub fn check_rrsig(rrsig: &Rrsig<'_>, owner: Name<'_>, now: u32) -> Result<()> {
 
 /// The time-independent part of [`check_rrsig`].
 fn check_coverage(rrsig: &Rrsig<'_>, owner: Name<'_>) -> Result<()> {
-    if usize::from(rrsig.labels) > owner.label_count()
-        || !owner.is_subdomain_of(&rrsig.signer_name)
+    if usize::from(rrsig.labels) > owner.label_count() || !owner.is_subdomain_of(&rrsig.signer_name)
     {
         return Err(Error::RrsetMismatch);
     }
