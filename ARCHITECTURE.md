@@ -52,9 +52,18 @@ src/
     raw.rs        push_raw_records (pre-encoded records)
     framing.rs    new_tcp / from_buf_tcp (length-prefixed messages)
     tests.rs
+  tsig/           TSIG (RFC 8945): MAC input, signer/verifier, key traits,
+                  hmac.rs = purecrypto HMAC backend (feature `tsig`)
+  sig0.rs         SIG(0) (RFC 2931): signed data, Sig0Signer/Sig0Verifier
+  update.rs       dynamic UPDATE (RFC 2136): UpdateBuilder, UpdateMessage
+  notify.rs       NOTIFY (RFC 1996)
+  xfr.rs, xfr/    AXFR/IXFR (RFC 5936, RFC 1995): queries, XfrProcessor
+  dso.rs          DNS Stateful Operations (RFC 8490): TLVs, DsoBuilder
 tests/
   captures.rs     real wire captures, truncation and mutation tests
   builder_truncation.rs  truncation / TCP stream tests on captures
+  *_named.rs      BIND 9.18 interop (TSIG, SIG(0), UPDATE, XFR); the
+                  binary captures live in tests/data/named/
 ```
 
 Everything public is re-exported at the crate root when it is used often
@@ -637,6 +646,37 @@ src/dnssec/
 - Canonical RDATA comes from each type's `NameEncoding` through
   `wire::Canonical`; NSEC next names are `Plain` (RFC 6840 §5.1).
 - The type bitmap shared with CSYNC is `rdata::TypeBitmap` (`bitmap.rs`).
+## Transactions, updates and zone transfers (Milestone 6)
+
+- **TSIG** (`tsig`): the MAC is behind two traits, `TsigKey` (name,
+  algorithm, digest length, generated/required MAC length, `new_mac()`)
+  and `TsigMac` (`update`, `finalize`, constant-time `verify` of a possibly
+  truncated MAC). `HmacKey` implements them with purecrypto (feature
+  `tsig`); everything else (MAC input, placement, size/truncation/time
+  rules, error responses, streams) is crypto-free. `TsigSigner` signs a
+  request, a response or a TCP stream (first MAC: prior MAC + message +
+  all variables; later ones: prior MAC + messages since + timers, up to 99
+  unsigned messages in between); `verify_request` (server) returns
+  `RequestStatus::{Unsigned, Verified, Rejected}`, and `Rejected` knows
+  the RCODE/TSIG error and writes the RFC-mandated error TSIG;
+  `TsigVerifier` (client) checks responses and streams. Time is always
+  passed in (`now`, seconds since the epoch). The TSIG owner name is
+  written uncompressed, like BIND. Replay caching is the caller's job.
+- **SIG(0)** (`sig0`): `SignedData` builds the exact signed byte stream
+  as a few slices; signing/verification go through the minimal
+  `Sig0Signer`/`Sig0Verifier` traits. `Sig.algorithm` is a raw `u8` until
+  the DNSSEC algorithm newtype exists (TODO for the integrator: wire the
+  DNSSEC signer/verifier backends to these traits).
+- **UPDATE** (`update`): section aliases `ZONE`, `PREREQUISITE`,
+  `UPDATE`, `ADDITIONAL`; `UpdateBuilder` has one method per RFC 2136
+  §2.4/§2.5 form; `UpdateMessage` classifies prerequisites and updates and
+  reports FORMERR conditions as `Error::MalformedUpdate` (NOTZONE is left
+  to the caller via `in_zone`).
+- **XFR** (`xfr`): `XfrProcessor` is fed one message at a time and keeps
+  only integers between messages; events borrow from the current message.
+- **DSO** (`dso`): its own builder (`DsoBuilder`, not `MessageBuilder`),
+  because DSO messages carry TLVs instead of RRs. New DSO TLVs follow the
+  EDNS-option shape: `ParseDsoTlv<'a>` / `ComposeDsoTlv`.
 
 ## Decisions and limitations to know
 

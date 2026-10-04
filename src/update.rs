@@ -45,6 +45,16 @@ use crate::rdata::{ComposeRdata, UnknownRdata};
 use crate::wire::OutBuf;
 use crate::{Class, Error, Opcode, Result, Rtype};
 
+/// The Zone section of an UPDATE: the question section (RFC 2136 §2.3).
+pub const ZONE: Section = Section::Question;
+/// The Prerequisite section of an UPDATE: the answer section (RFC 2136
+/// §2.4).
+pub const PREREQUISITE: Section = Section::Answer;
+/// The Update section of an UPDATE: the authority section (RFC 2136 §2.5).
+pub const UPDATE: Section = Section::Authority;
+/// The Additional Data section of an UPDATE (RFC 2136 §2.6).
+pub const ADDITIONAL: Section = Section::Additional;
+
 /// Builds an UPDATE message (RFC 2136 §2) on top of a [`MessageBuilder`].
 ///
 /// Prerequisites must be added before updates, and updates before
@@ -122,7 +132,7 @@ impl<B: OutBuf> UpdateBuilder<B> {
     pub fn require_rrset_exists(&mut self, name: impl ToName, rtype: Rtype) -> Result<()> {
         Self::rrset_type(rtype)?;
         self.inner
-            .push_record(Section::Answer, name, Class::ANY, 0, &empty(rtype))
+            .push_record(PREREQUISITE, name, Class::ANY, 0, &empty(rtype))
     }
 
     /// Prerequisite: the RRset at `name` contains this RR (§2.4.2: zone
@@ -136,7 +146,7 @@ impl<B: OutBuf> UpdateBuilder<B> {
     ) -> Result<()> {
         Self::rrset_type(data.rtype())?;
         self.inner
-            .push_record(Section::Answer, name, self.class, 0, data)
+            .push_record(PREREQUISITE, name, self.class, 0, data)
     }
 
     /// Prerequisite: no RRset of `rtype` exists at `name` (§2.4.3: CLASS
@@ -144,20 +154,20 @@ impl<B: OutBuf> UpdateBuilder<B> {
     pub fn require_rrset_absent(&mut self, name: impl ToName, rtype: Rtype) -> Result<()> {
         Self::rrset_type(rtype)?;
         self.inner
-            .push_record(Section::Answer, name, Class::NONE, 0, &empty(rtype))
+            .push_record(PREREQUISITE, name, Class::NONE, 0, &empty(rtype))
     }
 
     /// Prerequisite: `name` owns at least one RR (§2.4.4: CLASS ANY, TYPE
     /// ANY).
     pub fn require_name_in_use(&mut self, name: impl ToName) -> Result<()> {
         self.inner
-            .push_record(Section::Answer, name, Class::ANY, 0, &empty(Rtype::ANY))
+            .push_record(PREREQUISITE, name, Class::ANY, 0, &empty(Rtype::ANY))
     }
 
     /// Prerequisite: `name` owns no RR (§2.4.5: CLASS NONE, TYPE ANY).
     pub fn require_name_absent(&mut self, name: impl ToName) -> Result<()> {
         self.inner
-            .push_record(Section::Answer, name, Class::NONE, 0, &empty(Rtype::ANY))
+            .push_record(PREREQUISITE, name, Class::NONE, 0, &empty(Rtype::ANY))
     }
 
     /// Update: add an RR to an RRset (§2.5.1: zone class).
@@ -168,8 +178,7 @@ impl<B: OutBuf> UpdateBuilder<B> {
         data: &D,
     ) -> Result<()> {
         Self::rrset_type(data.rtype())?;
-        self.inner
-            .push_record(Section::Authority, name, self.class, ttl, data)
+        self.inner.push_record(UPDATE, name, self.class, ttl, data)
     }
 
     /// Update: delete the RRset of `rtype` at `name` (§2.5.2: CLASS ANY,
@@ -177,13 +186,13 @@ impl<B: OutBuf> UpdateBuilder<B> {
     pub fn delete_rrset(&mut self, name: impl ToName, rtype: Rtype) -> Result<()> {
         Self::rrset_type(rtype)?;
         self.inner
-            .push_record(Section::Authority, name, Class::ANY, 0, &empty(rtype))
+            .push_record(UPDATE, name, Class::ANY, 0, &empty(rtype))
     }
 
     /// Update: delete every RRset at `name` (§2.5.3: CLASS ANY, TYPE ANY).
     pub fn delete_name(&mut self, name: impl ToName) -> Result<()> {
         self.inner
-            .push_record(Section::Authority, name, Class::ANY, 0, &empty(Rtype::ANY))
+            .push_record(UPDATE, name, Class::ANY, 0, &empty(Rtype::ANY))
     }
 
     /// Update: delete one RR from an RRset (§2.5.4: CLASS NONE, TTL 0).
@@ -193,8 +202,7 @@ impl<B: OutBuf> UpdateBuilder<B> {
         data: &D,
     ) -> Result<()> {
         Self::rrset_type(data.rtype())?;
-        self.inner
-            .push_record(Section::Authority, name, Class::NONE, 0, data)
+        self.inner.push_record(UPDATE, name, Class::NONE, 0, data)
     }
 
     /// Additional data (§2.6), e.g. glue for added NS records.

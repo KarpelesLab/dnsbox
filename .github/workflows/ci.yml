@@ -80,6 +80,9 @@ jobs:
       - name: Build no_std + alloc (Cortex-M)
         run: cargo build --target thumbv7em-none-eabi --no-default-features --features alloc
 
+      - name: Build no_std + TSIG HMAC backend (Cortex-M)
+        run: cargo build --target thumbv7em-none-eabi --no-default-features --features tsig
+
   docs:
     name: Docs build (warnings denied)
     runs-on: ubuntu-latest
