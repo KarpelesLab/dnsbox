@@ -142,9 +142,12 @@ www  300  CNAME @
   HTTPS (all RFC 9460 SvcParams), the DNSSEC types and the legacy types —
   each with presentation-format `Display`; unknown types round-trip.
 - **DNSSEC** (RFC 4033–4035, 5155, 6840): canonical form and RRset order,
-  key tags, DS digests, NSEC3 hashing, RRSIG validation logic, and with the
-  `dnssec` feature RSA, ECDSA P-256/P-384, Ed25519 and Ed448 verification
-  and signing.
+  key tags, DS digests, NSEC3 hashing, RRSIG validation logic, the chain of
+  trust (DS → DNSKEY → RRset, wildcard expansions), NSEC/NSEC3
+  denial-of-existence proofs (NXDOMAIN, NODATA, wildcards, unsigned
+  delegations, Opt-Out, RFC 9276 iteration limits), ZONEMD zone digests
+  (RFC 8976), and with the `dnssec` feature RSA, ECDSA P-256/P-384,
+  Ed25519 and Ed448 verification and signing.
 - **Zone files** (RFC 1035 §5): a streaming, allocation-free master-file
   reader (`$ORIGIN`, `$TTL`, `$INCLUDE`, BIND's `$GENERATE`, TTL units,
   RFC 3597 generic RDATA, errors with line and column) and
@@ -162,7 +165,7 @@ www  300  CNAME @
 |------------------|---------|--------------|
 | `std`            | yes     | `std::error::Error`, `std::io` TCP helpers (implies `alloc`) |
 | `alloc`          |         | `Vec`-backed builders, owned message types (`OwnedMessage`, ...) |
-| `dnssec-digest`  |         | DS digests and NSEC3 hashing (no `alloc`) |
+| `dnssec-digest`  |         | DS digests and NSEC3 hashing (no `alloc`); ZONEMD digests (with `alloc`) |
 | `dnssec`         |         | DNSSEC and SIG(0) signature verification and signing (implies `alloc`, `dnssec-digest`) |
 | `tsig`           |         | TSIG HMAC backend (HMAC-MD5/SHA-1/SHA-2) |
 | `cookie-siphash` |         | RFC 9018 server cookie generation and verification |

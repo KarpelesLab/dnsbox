@@ -846,6 +846,13 @@ src/dnssec/
                 check_rrsig, signed_data, verify_rrsig, sign_rrset
   crypto.rs     Verifier / Signer traits (pluggable backends)
   backend.rs    PurecryptoVerifier, SigningKey        [dnssec]
+  chain.rs      TrustedKeys (DS/anchors -> DNSKEY -> RRsets, wildcard
+                answers), Verified, Answer, MAX_CRYPTO_OPERATIONS
+  denial.rs     DenialProof, DenialStatus (Secure/Insecure/Bogus), Denial,
+                ClosestEncloser; denial/nsec.rs NsecProof, denial/nsec3.rs
+                Nsec3Proof, Nsec3Hasher, Nsec3Limits (RFC 9276)
+  zonemd.rs     ZoneCollation (SIMPLE scheme)          [alloc]
+                zonemd_digest, verify_zonemd    [alloc + dnssec-digest]
 ```
 
 - Features: `dnssec-digest` (= `purecrypto/hash`, no `alloc`) for DS
@@ -859,6 +866,19 @@ src/dnssec/
   signer zone, key tag/algorithm/zone flag/protocol, validity window with
   serial arithmetic) and reconstructs wildcard owners (§5.3.2). Callers
   select the RRset (owner, class, type) and authenticate the key.
+- `TrustedKeys` does the key selection on top of it: RRSIGs of other
+  types/signers/unknown keys are skipped, one valid signature suffices,
+  revoked keys are never used, and every call is capped at
+  `MAX_CRYPTO_OPERATIONS` verifications and DS digests (KeyTrap).
+- Denial proofs take records the caller has already authenticated (one
+  zone per proof, any re-iterable source: slices, cloneable iterators over
+  a message section) and never allocate. Results are `DenialStatus`:
+  `Secure(Denial)`, `Insecure(InsecureReason)` (NSEC3 Opt-Out, iteration
+  count over `Nsec3Limits`) or `Bogus(BogusReason)`. NSEC3 checks hash at
+  most one name per query-name label plus one wildcard, and only after the
+  iteration limits are checked.
+- ZONEMD collation copies each RR once in canonical form into one buffer
+  and sorts an index of it; the digest is streamed over the sorted RRs.
 - Canonical RDATA comes from each type's `NameEncoding` through
   `wire::Canonical`; NSEC next names are `Plain` (RFC 6840 §5.1).
 - The type bitmap shared with CSYNC is `rdata::TypeBitmap` (`bitmap.rs`).
