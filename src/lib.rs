@@ -73,6 +73,7 @@ pub mod builder;
 pub mod charstr;
 pub mod class;
 pub mod dnssec;
+pub mod dso;
 pub mod edns;
 mod error;
 pub mod header;

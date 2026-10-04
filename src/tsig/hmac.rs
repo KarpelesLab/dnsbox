@@ -57,7 +57,8 @@ impl<'s> HmacKey<'s> {
 
     /// Sets the generated MAC length (truncation, RFC 8945 §5.2.2.1); it
     /// is also the shortest MAC accepted (BADTRUNC policy, §5.2.4). Fails
-    /// with [`Error::BadMacSize`] outside the range the RFC allows.
+    /// with [`Error::BadMacSize`](crate::Error::BadMacSize) outside the range
+    /// the RFC allows.
     pub fn with_mac_len(mut self, len: usize) -> Result<Self> {
         check_mac_size(len, self.algorithm.digest_len())?;
         self.mac_len = len;
