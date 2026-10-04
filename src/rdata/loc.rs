@@ -229,6 +229,8 @@ impl Loc {
     }
 }
 
+impl super::ParseRdataText for Loc {}
+
 impl<'a> ParseRdata<'a> for Loc {
     const RTYPE: Rtype = Rtype::LOC;
 

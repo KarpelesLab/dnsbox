@@ -15,6 +15,8 @@ pub struct NsapPtr<'a> {
     pub ptrdname: Name<'a>,
 }
 
+impl super::ParseRdataText for NsapPtr<'_> {}
+
 impl<'a> ParseRdata<'a> for NsapPtr<'a> {
     const RTYPE: Rtype = Rtype::NSAP_PTR;
     const CLASS: Option<Class> = Some(Class::IN);

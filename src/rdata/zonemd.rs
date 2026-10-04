@@ -75,6 +75,8 @@ impl Zonemd<'_> {
     }
 }
 
+impl super::ParseRdataText for Zonemd<'_> {}
+
 impl<'a> ParseRdata<'a> for Zonemd<'a> {
     const RTYPE: Rtype = Rtype::ZONEMD;
 

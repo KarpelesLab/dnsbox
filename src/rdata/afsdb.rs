@@ -25,6 +25,8 @@ impl Afsdb<'_> {
     pub const DCE: u16 = 2;
 }
 
+impl super::ParseRdataText for Afsdb<'_> {}
+
 impl<'a> ParseRdata<'a> for Afsdb<'a> {
     const RTYPE: Rtype = Rtype::AFSDB;
 

@@ -21,6 +21,68 @@ pub(crate) const fn max_decoded_len(len: usize) -> usize {
     len / 4 * 3 + 2
 }
 
+/// Incremental base64 decoder (RFC 4648 §4): feed it characters one at a
+/// time with [`push`](Self::push) (e.g. from several zone-file tokens) and
+/// call [`finish`](Self::finish) at the end.
+#[derive(Clone, Copy, Debug, Default)]
+pub(crate) struct Decoder {
+    quad: [u8; 4],
+    filled: usize,
+    pad: usize,
+    done: bool,
+}
+
+impl Decoder {
+    /// Feeds one character (ASCII whitespace is ignored). Returns the
+    /// bytes completed by it: up to three, once per four characters.
+    ///
+    /// Fails with [`Error::InvalidText`] on characters outside the
+    /// alphabet, misplaced padding, or data after the padding.
+    pub(crate) fn push(&mut self, c: u8) -> Result<([u8; 3], usize)> {
+        if c.is_ascii_whitespace() {
+            return Ok(([0; 3], 0));
+        }
+        if self.done {
+            return Err(Error::InvalidText);
+        }
+        let v = if c == b'=' {
+            self.pad += 1;
+            0
+        } else if self.pad > 0 {
+            return Err(Error::InvalidText);
+        } else {
+            sextet(c).ok_or(Error::InvalidText)?
+        };
+        if let Some(slot) = self.quad.get_mut(self.filled) {
+            *slot = v;
+        }
+        self.filled += 1;
+        if self.filled < 4 {
+            return Ok(([0; 3], 0));
+        }
+        if self.pad > 2 {
+            return Err(Error::InvalidText);
+        }
+        let q = self.quad;
+        let bits = (u32::from(q[0]) << 18)
+            | (u32::from(q[1]) << 12)
+            | (u32::from(q[2]) << 6)
+            | u32::from(q[3]);
+        let [_, a, b, c] = bits.to_be_bytes();
+        self.filled = 0;
+        self.done = self.pad > 0;
+        Ok(([a, b, c], 3 - self.pad))
+    }
+
+    /// Checks that the input ended on a group boundary.
+    pub(crate) fn finish(&self) -> Result<()> {
+        if self.filled != 0 {
+            return Err(Error::InvalidText);
+        }
+        Ok(())
+    }
+}
+
 /// Decodes padded base64 (RFC 4648 §4) from `input` into `out`, returning
 /// the number of bytes written. ASCII whitespace is ignored (zone files
 /// may split base64 across tokens and lines); empty input decodes to
@@ -31,52 +93,19 @@ pub(crate) const fn max_decoded_len(len: usize) -> usize {
 /// [`Error::BufferTooSmall`] if `out` is too short. Non-zero bits in the
 /// last character before padding are accepted.
 pub(crate) fn decode(input: &[u8], out: &mut [u8]) -> Result<usize> {
-    let mut quad = [0u8; 4];
-    let mut filled = 0usize;
-    let mut pad = 0usize;
-    let mut done = false;
+    let mut d = Decoder::default();
     let mut len = 0usize;
     for &c in input {
-        if c.is_ascii_whitespace() {
+        let (bytes, n) = d.push(c)?;
+        if n == 0 {
             continue;
         }
-        if done {
-            return Err(Error::InvalidText);
-        }
-        let v = if c == b'=' {
-            pad += 1;
-            0
-        } else if pad > 0 {
-            return Err(Error::InvalidText);
-        } else {
-            sextet(c).ok_or(Error::InvalidText)?
-        };
-        if let Some(slot) = quad.get_mut(filled) {
-            *slot = v;
-        }
-        filled += 1;
-        if filled < 4 {
-            continue;
-        }
-        if pad > 2 {
-            return Err(Error::InvalidText);
-        }
-        let bits = (u32::from(quad[0]) << 18)
-            | (u32::from(quad[1]) << 12)
-            | (u32::from(quad[2]) << 6)
-            | u32::from(quad[3]);
-        let bytes = bits.to_be_bytes();
-        let n = 3 - pad;
         out.get_mut(len..len + n)
             .ok_or(Error::BufferTooSmall)?
-            .copy_from_slice(bytes.get(1..1 + n).unwrap_or(&[]));
+            .copy_from_slice(bytes.get(..n).unwrap_or(&[]));
         len += n;
-        filled = 0;
-        done = pad > 0;
     }
-    if filled != 0 {
-        return Err(Error::InvalidText);
-    }
+    d.finish()?;
     Ok(len)
 }
 

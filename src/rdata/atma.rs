@@ -41,6 +41,8 @@ impl Atma<'_> {
     }
 }
 
+impl super::ParseRdataText for Atma<'_> {}
+
 impl<'a> ParseRdata<'a> for Atma<'a> {
     const RTYPE: Rtype = Rtype::ATMA;
     const CLASS: Option<Class> = Some(Class::IN);

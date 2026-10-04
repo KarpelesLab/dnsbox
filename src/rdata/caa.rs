@@ -70,6 +70,8 @@ const fn valid_tag(tag: &[u8]) -> bool {
     true
 }
 
+impl super::ParseRdataText for Caa<'_> {}
+
 impl<'a> ParseRdata<'a> for Caa<'a> {
     const RTYPE: Rtype = Rtype::CAA;
 

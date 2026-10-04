@@ -19,6 +19,8 @@ pub struct Px<'a> {
     pub mapx400: Name<'a>,
 }
 
+impl super::ParseRdataText for Px<'_> {}
+
 impl<'a> ParseRdata<'a> for Px<'a> {
     const RTYPE: Rtype = Rtype::PX;
     const CLASS: Option<Class> = Some(Class::IN);

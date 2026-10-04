@@ -22,6 +22,8 @@ pub struct Rkey<'a> {
     pub public_key: &'a [u8],
 }
 
+impl super::ParseRdataText for Rkey<'_> {}
+
 impl<'a> ParseRdata<'a> for Rkey<'a> {
     const RTYPE: Rtype = Rtype::RKEY;
 

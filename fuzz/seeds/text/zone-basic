@@ -1,0 +1,14 @@
+$ORIGIN example.
+$TTL 1h
+@ IN SOA ns1 hostmaster ( 2024010101 2h 15m 2w 1h )
+  NS ns1
+  MX 10 mail
+ns1 A 192.0.2.1
+mail 300 AAAA 2001:db8::25
+txt TXT "hello world" \065 "" ; comment
+wks WKS 192.0.2.1 TCP smtp 53
+hi HINFO x86 Linux
+mi MINFO a b
+null NULL \# 2 0102
+svc HTTPS 1 . alpn=h2,h3 port=443
+x TYPE65280 \# 2 abcd

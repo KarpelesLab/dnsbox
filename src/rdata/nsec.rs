@@ -50,6 +50,8 @@ impl<'a> Nsec<'a> {
     }
 }
 
+impl super::ParseRdataText for Nsec<'_> {}
+
 impl<'a> ParseRdata<'a> for Nsec<'a> {
     const RTYPE: Rtype = Rtype::NSEC;
 

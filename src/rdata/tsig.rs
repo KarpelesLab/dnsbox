@@ -106,6 +106,8 @@ pub struct Tsig<'a> {
     pub other: &'a [u8],
 }
 
+impl super::ParseRdataText for Tsig<'_> {}
+
 impl<'a> ParseRdata<'a> for Tsig<'a> {
     const RTYPE: Rtype = Rtype::TSIG;
 

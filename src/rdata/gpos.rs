@@ -22,6 +22,8 @@ pub struct Gpos<'a> {
     pub altitude: CharStr<'a>,
 }
 
+impl super::ParseRdataText for Gpos<'_> {}
+
 impl<'a> ParseRdata<'a> for Gpos<'a> {
     const RTYPE: Rtype = Rtype::GPOS;
 

@@ -24,6 +24,8 @@ impl<'a> Openpgpkey<'a> {
     }
 }
 
+impl super::ParseRdataText for Openpgpkey<'_> {}
+
 impl<'a> ParseRdata<'a> for Openpgpkey<'a> {
     const RTYPE: Rtype = Rtype::OPENPGPKEY;
 

@@ -42,3 +42,23 @@ impl fmt::Display for Null<'_> {
         crate::text::fmt_generic_rdata(f, self.data)
     }
 }
+
+/// NULL has no presentation format (RFC 1035 §3.3.10 defines none); only
+/// the RFC 3597 §5 generic form `\# <length> <hex>` is accepted, as in
+/// BIND.
+impl super::ParseRdataText for Null<'_> {}
+
+#[cfg(test)]
+mod tests {
+    use crate::rdata::tests::{text_error, text_round_trip};
+    use crate::{Error, Rtype};
+
+    #[test]
+    fn text() {
+        text_round_trip(Rtype::NULL, "\\# 3 ABCDEF", b"\xab\xcd\xef", "\\# 3 ABCDEF");
+        text_round_trip(Rtype::NULL, "\\# 0", b"", "\\# 0");
+        assert_eq!(text_error(Rtype::NULL, "abcdef"), Error::NoTextFormat);
+        assert_eq!(text_error(Rtype::NULL, ""), Error::NoTextFormat);
+        assert_eq!(text_error(Rtype::NULL, "\\# 2 ABCDEF"), Error::InvalidText);
+    }
+}

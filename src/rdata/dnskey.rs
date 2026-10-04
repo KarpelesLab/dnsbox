@@ -48,6 +48,8 @@ macro_rules! dnskey_like {
             }
         }
 
+        impl super::ParseRdataText for $ty<'_> {}
+
         impl<'a> ParseRdata<'a> for $ty<'a> {
             const RTYPE: Rtype = Rtype::$rt;
 

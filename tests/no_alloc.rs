@@ -199,3 +199,41 @@ fn text_parsing() {
         assert_eq!(text.as_str(), "a\\.b.Example.COM.");
     });
 }
+
+#[test]
+fn zone_file_reading() {
+    const ZONE: &str = "\
+$ORIGIN example.
+$TTL 1h
+@ SOA ns1 hostmaster ( 1 2h 15m 2w 1h )
+  NS ns1
+  MX 10 mail
+ns1 A 192.0.2.1
+mail AAAA 2001:db8::25
+txt TXT \"hello world\" more ; comment
+$GENERATE 1-3 h$ CNAME ns1
+svc HTTPS 1 . alpn=h2 port=443
+bad A 300.1.1.1
+";
+    no_alloc("zone-file reading", || {
+        let mut zone = dnsbox::zone::ZoneReader::new(ZONE);
+        let mut buf = [0u8; 1024];
+        let (mut records, mut errors) = (0, 0);
+        loop {
+            match zone.next_record(&mut buf) {
+                Ok(Some(rr)) => {
+                    let mut text = StackText::new();
+                    write!(text, "{rr}").unwrap();
+                    rr.data().unwrap();
+                    records += 1;
+                }
+                Ok(None) => break,
+                Err(_) => errors += 1,
+            }
+        }
+        assert_eq!((records, errors), (10, 1));
+        let mut buf = [0u8; 64];
+        let mx = <Mx<'_> as dnsbox::ParseRdataText>::from_text("10 mx.example.", &mut buf).unwrap();
+        assert_eq!(mx.preference, 10);
+    });
+}

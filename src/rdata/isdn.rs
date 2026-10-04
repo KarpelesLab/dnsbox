@@ -17,6 +17,8 @@ pub struct Isdn<'a> {
     pub subaddress: Option<CharStr<'a>>,
 }
 
+impl super::ParseRdataText for Isdn<'_> {}
+
 impl<'a> ParseRdata<'a> for Isdn<'a> {
     const RTYPE: Rtype = Rtype::ISDN;
 

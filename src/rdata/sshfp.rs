@@ -64,6 +64,8 @@ impl<'a> Sshfp<'a> {
     }
 }
 
+impl super::ParseRdataText for Sshfp<'_> {}
+
 impl<'a> ParseRdata<'a> for Sshfp<'a> {
     const RTYPE: Rtype = Rtype::SSHFP;
 

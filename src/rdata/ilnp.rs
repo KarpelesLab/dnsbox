@@ -33,6 +33,8 @@ macro_rules! pref_u64_rdata {
             pub $field: u64,
         }
 
+        impl super::ParseRdataText for $ty {}
+
         impl<'a> ParseRdata<'a> for $ty {
             const RTYPE: Rtype = Rtype::$rt;
 
@@ -89,6 +91,8 @@ pub struct L32 {
     pub locator: Ipv4Addr,
 }
 
+impl super::ParseRdataText for L32 {}
+
 impl<'a> ParseRdata<'a> for L32 {
     const RTYPE: Rtype = Rtype::L32;
 
@@ -131,6 +135,8 @@ pub struct Lp<'a> {
     /// The name with the locator records.
     pub fqdn: Name<'a>,
 }
+
+impl super::ParseRdataText for Lp<'_> {}
 
 impl<'a> ParseRdata<'a> for Lp<'a> {
     const RTYPE: Rtype = Rtype::LP;

@@ -74,6 +74,8 @@ impl Nsec3<'_> {
     }
 }
 
+impl super::ParseRdataText for Nsec3<'_> {}
+
 impl<'a> ParseRdata<'a> for Nsec3<'a> {
     const RTYPE: Rtype = Rtype::NSEC3;
 
@@ -152,6 +154,8 @@ pub struct Nsec3param<'a> {
     /// The salt, 0–255 octets (RFC 5155 §4.1.5).
     pub salt: &'a [u8],
 }
+
+impl super::ParseRdataText for Nsec3param<'_> {}
 
 impl<'a> ParseRdata<'a> for Nsec3param<'a> {
     const RTYPE: Rtype = Rtype::NSEC3PARAM;

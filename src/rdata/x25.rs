@@ -34,6 +34,8 @@ impl<'a> X25<'a> {
     }
 }
 
+impl super::ParseRdataText for X25<'_> {}
+
 impl<'a> ParseRdata<'a> for X25<'a> {
     const RTYPE: Rtype = Rtype::X25;
 

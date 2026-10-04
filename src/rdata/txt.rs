@@ -2,9 +2,10 @@
 
 use core::fmt;
 
-use super::{ComposeRdata, ParseRdata};
+use super::{ComposeRdata, ParseRdata, ParseRdataText};
 use crate::charstr::{CharStrIter, CharStrs};
-use crate::wire::{Composer, WireReader};
+use crate::wire::{Composer, OutBuf, WireReader};
+use crate::zone::Scanner;
 use crate::{Error, Result, Rtype};
 
 /// `TXT` record data: one or more `<character-string>`s
@@ -66,6 +67,14 @@ impl fmt::Display for Txt<'_> {
     }
 }
 
+impl ParseRdataText for Txt<'_> {
+    /// One or more `<character-string>`s, quoted or not
+    /// (RFC 1035 §3.3.14, §5.1).
+    fn parse_text<B: OutBuf + ?Sized>(s: &mut Scanner<'_>, out: &mut B) -> Result<()> {
+        s.char_strings_into(out)
+    }
+}
+
 /// Compose-only `TXT` data built from separate strings, each at most 255
 /// bytes (there must be at least one).
 ///
@@ -92,5 +101,52 @@ impl ComposeRdata for TxtParts<'_> {
             return Err(Error::InvalidRdata);
         }
         self.0.iter().try_for_each(|s| c.put_char_string(s))
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::rdata::tests::{text_error, text_round_trip};
+    use crate::{Error, Rtype};
+    use std::string::String;
+    use std::vec::Vec;
+
+    #[test]
+    fn text() {
+        text_round_trip(
+            Rtype::TXT,
+            r#""v=spf1 -all""#,
+            b"\x0bv=spf1 -all",
+            r#""v=spf1 -all""#,
+        );
+        // Unquoted strings, escapes, empty strings, several strings over
+        // several lines.
+        text_round_trip(
+            Rtype::TXT,
+            "( hello \"\" \"a\\\"b\\\\c\" \\065\\066\\067 \"tab\\009\" ; comment\n  \"multi\nline\" )",
+            b"\x05hello\x00\x05a\"b\\c\x03ABC\x04tab\x09\x0amulti\nline",
+            r#""hello" "" "a\"b\\c" "ABC" "tab\009" "multi\010line""#,
+        );
+        // Bytes above 0x7e and the full 255-octet string.
+        text_round_trip(Rtype::TXT, "\"\\255\\128 \"", b"\x03\xff\x80 ", r#""\255\128 ""#);
+        let long = "x".repeat(255);
+        let mut wire = Vec::from([255u8]);
+        wire.extend_from_slice(long.as_bytes());
+        text_round_trip(Rtype::TXT, &long, &wire, &std::format!("\"{long}\""));
+        // UTF-8 text is kept as its octets.
+        text_round_trip(Rtype::TXT, "\"é\"", b"\x02\xc3\xa9", r#""\195\169""#);
+
+        assert_eq!(text_error(Rtype::TXT, ""), Error::UnexpectedEof);
+        assert_eq!(
+            text_error(Rtype::TXT, &"x".repeat(256)),
+            Error::CharStringTooLong
+        );
+        assert_eq!(text_error(Rtype::TXT, "\"abc"), Error::InvalidText);
+        assert_eq!(text_error(Rtype::TXT, "a\\25"), Error::InvalidText);
+        assert_eq!(text_error(Rtype::TXT, "a\\256"), Error::InvalidText);
+        assert_eq!(text_error(Rtype::TXT, "a )"), Error::InvalidText);
+        // Many strings: the RDATA limit (65535 octets) still applies.
+        let many: String = core::iter::repeat_n("\"\" ", 65536).collect();
+        assert_eq!(text_error(Rtype::TXT, &many), Error::InvalidRdata);
     }
 }

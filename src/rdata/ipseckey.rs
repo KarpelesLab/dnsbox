@@ -83,6 +83,8 @@ pub struct Ipseckey<'a> {
     pub public_key: &'a [u8],
 }
 
+impl super::ParseRdataText for Ipseckey<'_> {}
+
 impl<'a> ParseRdata<'a> for Ipseckey<'a> {
     const RTYPE: Rtype = Rtype::IPSECKEY;
 

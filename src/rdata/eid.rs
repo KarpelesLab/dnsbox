@@ -22,6 +22,8 @@ macro_rules! hex_rdata {
             pub data: &'a [u8],
         }
 
+        impl super::ParseRdataText for $ty<'_> {}
+
         impl<'a> ParseRdata<'a> for $ty<'a> {
             const RTYPE: Rtype = Rtype::$rt;
             const CLASS: Option<Class> = Some(Class::IN);

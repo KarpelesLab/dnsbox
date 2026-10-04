@@ -4,6 +4,7 @@
 use super::*;
 use crate::name::NameBuf;
 use crate::wire::{Canonical, WireWriter};
+use crate::zone::Scanner;
 use crate::{Error, Record};
 use std::string::{String, ToString};
 use std::vec::Vec;
@@ -287,4 +288,71 @@ fn single_name_macro_is_reusable() {
         reuse::Dn::parse_rdata(&mut r),
         Err(Error::UnexpectedPointer)
     );
+}
+
+// ---------------------------------------------------------------------------
+// Presentation-format parsing helpers (`ParseRdataText`).
+// ---------------------------------------------------------------------------
+
+/// The origin relative names are completed with by [`text_parse`].
+pub(crate) const TEXT_ORIGIN: &str = "example.";
+
+/// Parses presentation-format `text` as `rtype` RDATA (class IN, relative
+/// names completed with [`TEXT_ORIGIN`]) and returns the wire form. Checks
+/// that a failed parse leaves the output buffer untouched.
+pub(crate) fn text_parse(rtype: Rtype, text: &str) -> Result<Vec<u8>> {
+    let origin: NameBuf = TEXT_ORIGIN.parse().unwrap();
+    let mut s = Scanner::new(text).with_origin(origin.as_name());
+    let mut buf = std::vec![0u8; 6 + 65536];
+    let mut out = WireWriter::new(&mut buf);
+    out.put_bytes(b"prefix").unwrap();
+    let res = RData::parse_text(rtype, Class::IN, &mut s, &mut out);
+    let out = out.written();
+    match res {
+        Ok(()) => {
+            assert!(out.starts_with(b"prefix"), "{rtype} {text:?}");
+            Ok(out[6..].to_vec())
+        }
+        Err(e) => {
+            assert_eq!(out, b"prefix", "{rtype} {text:?}: output not rolled back");
+            Err(e)
+        }
+    }
+}
+
+/// Checks the presentation-format round trip of one RDATA: `text` parses
+/// to `wire`; `wire` passes [`round_trip`] (displays as `display`,
+/// re-composes, survives truncation); `display` and the RFC 3597 generic
+/// form parse back to `wire`; and no prefix of `text` makes the parser
+/// panic.
+pub(crate) fn text_round_trip(rtype: Rtype, text: &str, wire: &[u8], display: &str) {
+    assert_eq!(
+        text_parse(rtype, text).as_deref(),
+        Ok(wire),
+        "{rtype} {text:?}"
+    );
+    round_trip(rtype, wire, display);
+    assert_eq!(
+        text_parse(rtype, display).as_deref(),
+        Ok(wire),
+        "{rtype}: display {display:?} does not parse back"
+    );
+    let mut generic = String::new();
+    crate::text::fmt_generic_rdata(&mut generic, wire).unwrap();
+    assert_eq!(
+        text_parse(rtype, &generic).as_deref(),
+        Ok(wire),
+        "{generic}"
+    );
+    for (i, _) in text.char_indices() {
+        let _ = text_parse(rtype, &text[..i]);
+    }
+}
+
+/// Asserts that `text` is rejected as `rtype` RDATA and returns the error.
+pub(crate) fn text_error(rtype: Rtype, text: &str) -> Error {
+    match text_parse(rtype, text) {
+        Ok(wire) => panic!("{rtype} {text:?} parsed as {wire:02x?}"),
+        Err(e) => e,
+    }
 }

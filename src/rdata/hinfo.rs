@@ -2,9 +2,10 @@
 
 use core::fmt;
 
-use super::{ComposeRdata, ParseRdata};
+use super::{ComposeRdata, ParseRdata, ParseRdataText};
 use crate::charstr::CharStr;
-use crate::wire::{Composer, WireReader};
+use crate::wire::{Composer, OutBuf, WireReader};
+use crate::zone::Scanner;
 use crate::{Result, Rtype};
 
 /// `HINFO` record data: host information (RFC 1035 §3.3.2). Also used in
@@ -42,5 +43,28 @@ impl ComposeRdata for Hinfo<'_> {
 impl fmt::Display for Hinfo<'_> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{} {}", self.cpu, self.os)
+    }
+}
+
+impl ParseRdataText for Hinfo<'_> {
+    /// `<cpu> <os>`, two `<character-string>`s (RFC 1035 §3.3.2).
+    fn parse_text<B: OutBuf + ?Sized>(s: &mut Scanner<'_>, out: &mut B) -> Result<()> {
+        s.char_string_into(out)?;
+        s.char_string_into(out)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::rdata::tests::{text_error, text_round_trip};
+    use crate::{Error, Rtype};
+
+    #[test]
+    fn text() {
+        // RFC 1035 §5.3 style, and RFC 8482 §4.2's minimal ANY answer.
+        text_round_trip(Rtype::HINFO, "DEC-2060 TOPS20", b"\x08DEC-2060\x06TOPS20", r#""DEC-2060" "TOPS20""#);
+        text_round_trip(Rtype::HINFO, "\"RFC8482\" \"\"", b"\x07RFC8482\x00", r#""RFC8482" """#);
+        assert_eq!(text_error(Rtype::HINFO, "x86"), Error::UnexpectedEof);
+        assert_eq!(text_error(Rtype::HINFO, "a b c"), Error::InvalidText);
     }
 }

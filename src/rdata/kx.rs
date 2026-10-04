@@ -17,6 +17,8 @@ pub struct Kx<'a> {
     pub exchanger: Name<'a>,
 }
 
+impl super::ParseRdataText for Kx<'_> {}
+
 impl<'a> ParseRdata<'a> for Kx<'a> {
     const RTYPE: Rtype = Rtype::KX;
     const CLASS: Option<Class> = Some(Class::IN);

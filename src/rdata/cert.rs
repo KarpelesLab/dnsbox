@@ -69,6 +69,8 @@ impl<'a> Cert<'a> {
     }
 }
 
+impl super::ParseRdataText for Cert<'_> {}
+
 impl<'a> ParseRdata<'a> for Cert<'a> {
     const RTYPE: Rtype = Rtype::CERT;
 

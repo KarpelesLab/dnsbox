@@ -70,6 +70,18 @@ pub enum Error {
     UnknownMnemonic,
     /// A character-string exceeds 255 octets (RFC 1035 §3.3).
     CharStringTooLong,
+    /// The record type has no type-specific presentation format (or none
+    /// is implemented, or its format is not defined for the record's
+    /// class): only the generic `\# <length> <hex>` form of RFC 3597 §5 is
+    /// accepted.
+    NoTextFormat,
+    /// A zone-file record has no TTL and none can be inferred: no `$TTL`
+    /// directive (RFC 2308 §4) and no earlier explicit TTL (RFC 1035 §5.1).
+    MissingTtl,
+    /// A zone-file `$INCLUDE` directive (RFC 1035 §5.1) could not be
+    /// processed: includes are unsupported here (no resolver, or no `std`),
+    /// the nesting or count limit was reached, or the file failed to load.
+    BadInclude,
 
     /// A builder section was written out of order: question → answer →
     /// authority → additional (RFC 1035 §4.1).
@@ -154,6 +166,11 @@ impl fmt::Display for Error {
             Error::InvalidText => "malformed presentation-format text",
             Error::UnknownMnemonic => "unknown mnemonic",
             Error::CharStringTooLong => "character-string longer than 255 octets",
+            Error::NoTextFormat => {
+                "no presentation format for this record type (use \\# generic form)"
+            }
+            Error::MissingTtl => "no TTL given and no default TTL",
+            Error::BadInclude => "$INCLUDE failed",
             Error::SectionOrder => "message section written out of order",
             Error::CountOverflow => "section count overflow",
             Error::MessageTooLong => "message longer than 65535 octets",

@@ -14,6 +14,8 @@ pub struct Nsap<'a> {
     pub address: &'a [u8],
 }
 
+impl super::ParseRdataText for Nsap<'_> {}
+
 impl<'a> ParseRdata<'a> for Nsap<'a> {
     const RTYPE: Rtype = Rtype::NSAP;
     const CLASS: Option<Class> = Some(Class::IN);

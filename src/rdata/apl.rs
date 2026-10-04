@@ -202,6 +202,8 @@ impl<'a> Iterator for AplIter<'a> {
 
 impl core::iter::FusedIterator for AplIter<'_> {}
 
+impl super::ParseRdataText for Apl<'_> {}
+
 impl<'a> ParseRdata<'a> for Apl<'a> {
     const RTYPE: Rtype = Rtype::APL;
     const CLASS: Option<Class> = Some(Class::IN);

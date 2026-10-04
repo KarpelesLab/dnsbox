@@ -37,6 +37,8 @@ pub struct Naptr<'a> {
     pub replacement: Name<'a>,
 }
 
+impl super::ParseRdataText for Naptr<'_> {}
+
 impl<'a> ParseRdata<'a> for Naptr<'a> {
     const RTYPE: Rtype = Rtype::NAPTR;
 

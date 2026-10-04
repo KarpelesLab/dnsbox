@@ -42,6 +42,8 @@ impl Csync<'_> {
     }
 }
 
+impl super::ParseRdataText for Csync<'_> {}
+
 impl<'a> ParseRdata<'a> for Csync<'a> {
     const RTYPE: Rtype = Rtype::CSYNC;
 

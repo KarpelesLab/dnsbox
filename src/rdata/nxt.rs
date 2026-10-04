@@ -85,6 +85,8 @@ impl<'a> Nxt<'a> {
     }
 }
 
+impl super::ParseRdataText for Nxt<'_> {}
+
 impl<'a> ParseRdata<'a> for Nxt<'a> {
     const RTYPE: Rtype = Rtype::NXT;
 

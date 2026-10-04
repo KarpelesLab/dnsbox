@@ -90,6 +90,7 @@ pub mod update;
 mod util;
 pub mod wire;
 pub mod xfr;
+pub mod zone;
 
 pub use builder::{Checkpoint, MessageBuilder};
 pub use charstr::CharStr;
@@ -98,7 +99,7 @@ pub use error::{Error, Result};
 pub use header::{Flags, Header, Opcode, Rcode};
 pub use message::{Message, Question, Record, Section};
 pub use name::{Label, Name, NameBuf, ToName};
-pub use rdata::{ComposeRdata, ParseRdata, RData};
+pub use rdata::{ComposeRdata, ParseRdata, ParseRdataText, RData};
 pub use rtype::Rtype;
 pub use wire::{Composer, NameEncoding, OutBuf, WireReader, WireWriter};
 

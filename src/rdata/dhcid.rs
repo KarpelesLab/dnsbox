@@ -73,6 +73,8 @@ impl<'a> Dhcid<'a> {
     }
 }
 
+impl super::ParseRdataText for Dhcid<'_> {}
+
 impl<'a> ParseRdata<'a> for Dhcid<'a> {
     const RTYPE: Rtype = Rtype::DHCID;
 

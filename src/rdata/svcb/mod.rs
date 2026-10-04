@@ -16,9 +16,10 @@
 
 use core::fmt;
 
-use super::{ComposeRdata, ParseRdata};
+use super::{ComposeRdata, ParseRdata, ParseRdataText};
 use crate::name::Name;
-use crate::wire::{Composer, NameEncoding, WireReader};
+use crate::wire::{Composer, NameEncoding, OutBuf, WireReader};
+use crate::zone::Scanner;
 use crate::{Class, Result, Rtype};
 
 mod builder;
@@ -111,7 +112,9 @@ macro_rules! svcb_type {
             /// `ech` is base64, and parentheses and `;` comments are
             /// accepted as in zone files. Fails with
             /// [`Error::InvalidText`](crate::Error::InvalidText) on syntax
-            /// errors, [`Error::UnknownMnemonic`](crate::Error::UnknownMnemonic)
+            /// errors, [`Error::UnexpectedEof`](crate::Error::UnexpectedEof)
+            /// if the priority or target is missing,
+            /// [`Error::UnknownMnemonic`](crate::Error::UnknownMnemonic)
             /// for unknown key names,
             /// [`Error::InvalidRdata`](crate::Error::InvalidRdata) for
             /// values or combinations RFC 9460 forbids (repeated keys,
@@ -119,7 +122,15 @@ macro_rules! svcb_type {
             /// and [`Error::BufferTooSmall`](crate::Error::BufferTooSmall)
             /// if `buf` is too short.
             pub fn from_text(text: &str, buf: &'a mut [u8]) -> Result<Self> {
-                text::parse(text, buf).map($name::from)
+                text::parse(&mut Scanner::new(text), buf).map($name::from)
+            }
+        }
+
+        impl ParseRdataText for $name<'_> {
+            /// `SvcPriority TargetName SvcParams` (RFC 9460 §2.1); see
+            #[doc = concat!("[`", stringify!($name), "::from_text`].")]
+            fn parse_text<B: OutBuf + ?Sized>(s: &mut Scanner<'_>, out: &mut B) -> Result<()> {
+                text::parse_into(s, out)
             }
         }
 

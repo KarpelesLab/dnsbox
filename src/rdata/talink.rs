@@ -17,6 +17,8 @@ pub struct Talink<'a> {
     pub next: Name<'a>,
 }
 
+impl super::ParseRdataText for Talink<'_> {}
+
 impl<'a> ParseRdata<'a> for Talink<'a> {
     const RTYPE: Rtype = Rtype::TALINK;
 

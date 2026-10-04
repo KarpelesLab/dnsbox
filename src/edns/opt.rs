@@ -87,6 +87,8 @@ impl<'a> Opt<'a> {
     }
 }
 
+impl crate::rdata::ParseRdataText for Opt<'_> {}
+
 impl<'a> ParseRdata<'a> for Opt<'a> {
     const RTYPE: Rtype = Rtype::OPT;
 

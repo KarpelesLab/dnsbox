@@ -38,6 +38,8 @@ impl<'a> Uri<'a> {
     }
 }
 
+impl super::ParseRdataText for Uri<'_> {}
+
 impl<'a> ParseRdata<'a> for Uri<'a> {
     const RTYPE: Rtype = Rtype::URI;
 

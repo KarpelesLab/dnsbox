@@ -2,9 +2,10 @@
 
 use core::fmt;
 
-use super::{ComposeRdata, ParseRdata};
+use super::{ComposeRdata, ParseRdata, ParseRdataText};
 use crate::name::Name;
-use crate::wire::{Composer, NameEncoding, WireReader};
+use crate::wire::{Composer, NameEncoding, OutBuf, WireReader};
+use crate::zone::Scanner;
 use crate::{Result, Rtype};
 
 /// `SOA` record data: start of a zone of authority (RFC 1035 §3.3.13).
@@ -70,5 +71,54 @@ impl fmt::Display for Soa<'_> {
             "{} {} {} {} {} {} {}",
             self.mname, self.rname, self.serial, self.refresh, self.retry, self.expire, self.minimum
         )
+    }
+}
+
+impl ParseRdataText for Soa<'_> {
+    /// `<mname> <rname> <serial> <refresh> <retry> <expire> <minimum>`
+    /// (RFC 1035 §3.3.13, §5.3). The four timers accept TTL units
+    /// (`1h30m`, as BIND does); the serial is a plain number.
+    fn parse_text<B: OutBuf + ?Sized>(s: &mut Scanner<'_>, out: &mut B) -> Result<()> {
+        s.name_into(out, NameEncoding::Compressible)?;
+        s.name_into(out, NameEncoding::Compressible)?;
+        out.put_u32(s.u32()?)?;
+        for _ in 0..4 {
+            out.put_u32(s.ttl()?)?;
+        }
+        Ok(())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::rdata::tests::{text_error, text_round_trip};
+    use crate::{Error, Rtype};
+
+    #[test]
+    fn text() {
+        // RFC 1035 §5.3, with origin "example." instead of ISI.EDU.
+        text_round_trip(
+            Rtype::SOA,
+            "VENERA      Action\\.domains (\n\
+             \x20                            20     ; SERIAL\n\
+             \x20                            7200   ; REFRESH\n\
+             \x20                            600    ; RETRY\n\
+             \x20                            3600000; EXPIRE\n\
+             \x20                            60)    ; MINIMUM",
+            b"\x06VENERA\x07example\x00\x0eAction.domains\x07example\x00\
+              \x00\x00\x00\x14\x00\x00\x1c\x20\x00\x00\x02\x58\x00\x36\xee\x80\x00\x00\x00\x3c",
+            "VENERA.example. Action\\.domains.example. 20 7200 600 3600000 60",
+        );
+        text_round_trip(
+            Rtype::SOA,
+            "ns. host. 4294967295 1h 15M 2w 1d1s",
+            b"\x02ns\x00\x04host\x00\xff\xff\xff\xff\x00\x00\x0e\x10\x00\x00\x03\x84\
+              \x00\x12\x75\x00\x00\x01\x51\x81",
+            "ns. host. 4294967295 3600 900 1209600 86401",
+        );
+        assert_eq!(text_error(Rtype::SOA, "ns. host. 1h 1 2 3 4"), Error::InvalidText);
+        assert_eq!(text_error(Rtype::SOA, "ns. host. 1 2 3 4"), Error::UnexpectedEof);
+        assert_eq!(text_error(Rtype::SOA, "ns. host. 1 2 3 4 5 6"), Error::InvalidText);
+        assert_eq!(text_error(Rtype::SOA, "ns. host. 4294967296 2 3 4 5"), Error::InvalidText);
     }
 }

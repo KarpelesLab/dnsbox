@@ -1,0 +1,7 @@
+$ORIGIN 2.0.192.in-addr.arpa.
+$TTL 300
+$GENERATE 1-4/2 $ PTR host-${0,3,x}.example.
+$GENERATE 0-1 ${0,2,n} CNAME x$
+bad A 1.2.3
+  ( unbalanced
+ok CH 60 TXT "a\"b"

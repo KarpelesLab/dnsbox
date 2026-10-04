@@ -113,6 +113,8 @@ fn compose_head<C: Composer + ?Sized>(
     c.put_bytes(public_key)
 }
 
+impl super::ParseRdataText for Hip<'_> {}
+
 impl<'a> ParseRdata<'a> for Hip<'a> {
     const RTYPE: Rtype = Rtype::HIP;
 

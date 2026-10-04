@@ -47,6 +47,8 @@ impl<'a> Srv<'a> {
     }
 }
 
+impl super::ParseRdataText for Srv<'_> {}
+
 impl<'a> ParseRdata<'a> for Srv<'a> {
     const RTYPE: Rtype = Rtype::SRV;
 

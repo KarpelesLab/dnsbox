@@ -46,6 +46,8 @@ impl A6<'_> {
     }
 }
 
+impl super::ParseRdataText for A6<'_> {}
+
 impl<'a> ParseRdata<'a> for A6<'a> {
     const RTYPE: Rtype = Rtype::A6;
     const CLASS: Option<Class> = Some(Class::IN);

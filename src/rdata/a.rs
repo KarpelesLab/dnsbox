@@ -3,8 +3,9 @@
 use core::fmt;
 use core::net::Ipv4Addr;
 
-use super::{ComposeRdata, ParseRdata};
-use crate::wire::{Composer, WireReader};
+use super::{ComposeRdata, ParseRdata, ParseRdataText};
+use crate::wire::{Composer, OutBuf, WireReader};
+use crate::zone::Scanner;
 use crate::{Class, Result, Rtype};
 
 /// `A` record data: an IPv4 host address (RFC 1035 §3.4.1). Class IN only.
@@ -54,5 +55,27 @@ impl ComposeRdata for A {
 impl fmt::Display for A {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         fmt::Display::fmt(&self.addr, f)
+    }
+}
+
+impl ParseRdataText for A {
+    /// A dotted-decimal IPv4 address (RFC 1035 §3.4.1).
+    fn parse_text<B: OutBuf + ?Sized>(s: &mut Scanner<'_>, out: &mut B) -> Result<()> {
+        out.put_bytes(&s.ipv4()?.octets())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::Rtype;
+    use crate::rdata::tests::{text_error, text_round_trip};
+
+    #[test]
+    fn text() {
+        text_round_trip(Rtype::A, "192.0.2.1", &[192, 0, 2, 1], "192.0.2.1");
+        text_round_trip(Rtype::A, "\\# 4 0a000001", &[10, 0, 0, 1], "10.0.0.1");
+        for bad in ["192.0.2", "192.0.2.256", "192.0.2.1 x", "\"192.0.2.1\"", "::1", ""] {
+            text_error(Rtype::A, bad);
+        }
     }
 }

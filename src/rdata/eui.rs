@@ -24,6 +24,8 @@ macro_rules! eui_rdata {
             }
         }
 
+        impl super::ParseRdataText for $ty {}
+
         impl<'a> ParseRdata<'a> for $ty {
             const RTYPE: Rtype = Rtype::$rt;
 

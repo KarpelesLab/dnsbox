@@ -17,6 +17,8 @@ pub struct Rt<'a> {
     pub intermediate: Name<'a>,
 }
 
+impl super::ParseRdataText for Rt<'_> {}
+
 impl<'a> ParseRdata<'a> for Rt<'a> {
     const RTYPE: Rtype = Rtype::RT;
 

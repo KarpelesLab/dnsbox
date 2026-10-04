@@ -6,27 +6,61 @@ use core::str::FromStr;
 
 use super::builder::Out;
 use super::{SvcParamKey, Svcb, SvcbBuilder};
-use crate::name::NameBuf;
 use crate::util::base64;
+use crate::wire::OutBuf;
+use crate::zone::{Scanner, Unescape};
 use crate::{Error, Result};
 
-/// Parses `SvcPriority TargetName SvcParams` into `buf` (see
-/// [`Svcb::from_text`]).
-pub(super) fn parse<'b>(text: &str, buf: &'b mut [u8]) -> Result<Svcb<'b>> {
-    let mut tokens = Tokens(text.as_bytes());
-    let priority = tokens.next().ok_or(Error::InvalidText)??;
-    let priority = parse_u16(priority)?;
-    let target = tokens.next().ok_or(Error::InvalidText)??;
-    // Domain names are never quoted (RFC 1035 §5.1).
-    if unquote(target)? != target {
-        return Err(Error::InvalidText);
-    }
-    let target = NameBuf::from_text(target)?;
+/// The largest RDATA a record can carry (RDLENGTH is 16 bits).
+const MAX_RDATA: usize = u16::MAX as usize;
+
+/// Parses `SvcPriority TargetName SvcParams` (RFC 9460 §2.1) from the
+/// remaining tokens of `s` into `buf` (see [`Svcb::from_text`]). The
+/// TargetName is completed with the scanner's origin if relative.
+pub(super) fn parse<'b>(s: &mut Scanner<'_>, buf: &'b mut [u8]) -> Result<Svcb<'b>> {
+    let priority = s.u16()?;
+    let target = s.name()?;
     let mut b = SvcbBuilder::new(buf, priority, &target)?;
-    for token in tokens {
-        param(&mut b, token?)?;
+    while let Some(token) = s.next_token()? {
+        // `key="value"` is one unquoted token; a quoted key is not.
+        if token.is_quoted() {
+            return Err(Error::InvalidText);
+        }
+        param(&mut b, token.as_bytes())?;
     }
     b.finish()
+}
+
+/// [`parse`] appending the wire form to `out`
+/// ([`ParseRdataText`](crate::rdata::ParseRdataText) for SVCB and HTTPS).
+///
+/// SvcParams are sorted as they are inserted, which needs random access to
+/// the output: the room the RDATA may take is reserved in `out` first,
+/// then trimmed. Nothing is allocated beyond what `out` itself does.
+pub(super) fn parse_into<B: OutBuf + ?Sized>(s: &mut Scanner<'_>, out: &mut B) -> Result<()> {
+    const ZEROS: [u8; 256] = [0; 256];
+    let start = out.as_bytes().len();
+    let mut room = out.capacity_limit().saturating_sub(start).min(MAX_RDATA);
+    while room > 0 {
+        let n = room.min(ZEROS.len());
+        out.append(ZEROS.get(..n).unwrap_or(&[]))?;
+        room -= n;
+    }
+    let res = match out.as_bytes_mut().get_mut(start..) {
+        Some(buf) => parse(s, buf)
+            .map(|svcb| 2 + svcb.target.wire_len() + svcb.params.as_wire().len()),
+        None => Err(Error::BufferTooSmall),
+    };
+    match res {
+        Ok(len) => {
+            out.truncate(start + len);
+            Ok(())
+        }
+        Err(e) => {
+            out.truncate(start);
+            Err(e)
+        }
+    }
 }
 
 /// Parses one `key[=value]` token and adds it to `b`.
@@ -114,7 +148,7 @@ fn param(b: &mut SvcbBuilder<'_>, token: &[u8]) -> Result<()> {
         // the builder then checks it against the key's format.
         _ => {
             b.insert(key, |o| {
-                for c in Unescape(value) {
+                for c in Unescape::new(value) {
                     o.push(c?)?;
                 }
                 Ok(())
@@ -171,7 +205,7 @@ fn decode_list(
     let mut start = o.len();
     o.push(0)?;
     let mut escaped = false;
-    for c in Unescape(value) {
+    for c in Unescape::new(value) {
         let c = c?;
         if escaped {
             if c != b',' && c != b'\\' {
@@ -239,90 +273,4 @@ fn parse_addr<A: FromStr>(text: &[u8]) -> Result<A> {
         .ok()
         .and_then(|s| s.parse().ok())
         .ok_or(Error::InvalidText)
-}
-
-/// Character-string decoding (RFC 1035 §5.1, RFC 9460 Appendix A): `\DDD`
-/// is the octet DDD, `\X` is X; other octets stand for themselves.
-struct Unescape<'t>(&'t [u8]);
-
-impl Iterator for Unescape<'_> {
-    type Item = Result<u8>;
-
-    fn next(&mut self) -> Option<Result<u8>> {
-        let (&c, rest) = self.0.split_first()?;
-        if c != b'\\' {
-            self.0 = rest;
-            return Some(Ok(c));
-        }
-        let (byte, used) = match rest {
-            [a, b, c, ..] if a.is_ascii_digit() && b.is_ascii_digit() && c.is_ascii_digit() => {
-                let v = u16::from(a - b'0') * 100 + u16::from(b - b'0') * 10 + u16::from(c - b'0');
-                match u8::try_from(v) {
-                    Ok(v) => (v, 3),
-                    Err(_) => return self.fail(),
-                }
-            }
-            [a, ..] if a.is_ascii_digit() => return self.fail(),
-            [x, ..] => (*x, 1),
-            [] => return self.fail(),
-        };
-        self.0 = rest.get(used..).unwrap_or(&[]);
-        Some(Ok(byte))
-    }
-}
-
-impl Unescape<'_> {
-    /// Reports a bad escape once, then ends.
-    fn fail(&mut self) -> Option<Result<u8>> {
-        self.0 = &[];
-        Some(Err(Error::InvalidText))
-    }
-}
-
-/// Splits presentation-format RDATA into tokens: runs of non-blank
-/// characters, where a backslash escapes the next character and quotes
-/// group blanks. Parentheses (line continuation) count as blanks and `;`
-/// starts a comment up to the end of the line (RFC 1035 §5.1).
-struct Tokens<'t>(&'t [u8]);
-
-impl<'t> Iterator for Tokens<'t> {
-    type Item = Result<&'t [u8]>;
-
-    fn next(&mut self) -> Option<Result<&'t [u8]>> {
-        // Skip blanks, parentheses and comments.
-        loop {
-            match self.0.split_first() {
-                Some((c, rest)) if c.is_ascii_whitespace() || matches!(c, b'(' | b')') => {
-                    self.0 = rest;
-                }
-                Some((b';', rest)) => {
-                    let eol = rest.iter().position(|&c| c == b'\n').unwrap_or(rest.len());
-                    self.0 = rest.get(eol..).unwrap_or(&[]);
-                }
-                Some(_) => break,
-                None => return None,
-            }
-        }
-        let mut quoted = false;
-        let mut i = 0;
-        while let Some(&c) = self.0.get(i) {
-            match c {
-                b'\\' => i += 1,
-                b'"' => quoted = !quoted,
-                c if !quoted && (c.is_ascii_whitespace() || matches!(c, b'(' | b')' | b';')) => {
-                    break;
-                }
-                _ => {}
-            }
-            i += 1;
-        }
-        if quoted || i > self.0.len() {
-            // Unterminated quote, or a trailing lone backslash.
-            self.0 = &[];
-            return Some(Err(Error::InvalidText));
-        }
-        let (token, rest) = self.0.split_at(i);
-        self.0 = rest;
-        Some(Ok(token))
-    }
 }

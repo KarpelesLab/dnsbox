@@ -40,6 +40,8 @@ macro_rules! rrsig_like {
             pub signature: &'a [u8],
         }
 
+        impl super::ParseRdataText for $ty<'_> {}
+
         impl<'a> ParseRdata<'a> for $ty<'a> {
             const RTYPE: Rtype = Rtype::$rt;
 

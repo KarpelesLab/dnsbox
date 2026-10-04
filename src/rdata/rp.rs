@@ -18,6 +18,8 @@ pub struct Rp<'a> {
     pub txt: Name<'a>,
 }
 
+impl super::ParseRdataText for Rp<'_> {}
+
 impl<'a> ParseRdata<'a> for Rp<'a> {
     const RTYPE: Rtype = Rtype::RP;
 

@@ -12,8 +12,9 @@
 //!   including types registered after this file was written;
 //! - [`roundtrip`]: build → parse identity of builder-generated messages, plus
 //!   atomic pushes and checkpoint rollback;
-//! - [`text`]: presentation-format parsing (names, types, classes, and
-//!   SVCB/HTTPS RDATA, RFC 9460 Appendix A);
+//! - [`text`]: presentation-format parsing (names, types, classes,
+//!   SVCB/HTTPS RDATA, RFC 9460 Appendix A, and whole master files,
+//!   RFC 1035 §5);
 //! - [`edns`]: OPT RDATA framing and every typed EDNS(0) option
 //!   (RFC 6891 §6.1.2), including options registered after this file was
 //!   written.
@@ -430,6 +431,7 @@ fn compose_plain<D: ComposeRdata + ?Sized>(
 pub fn check_rdata(rtype: Rtype, class: Class, d: &RData<'_>) {
     assert_eq!(d.rtype(), rtype);
     let text = d.to_string();
+    check_text_round_trip(rtype, class, &text);
 
     // Plain composition is valid standalone RDATA equal to the original.
     let mut wire = Vec::new();
@@ -1141,7 +1143,52 @@ pub fn text(data: &[u8]) {
         assert_eq!(std::format!("CLASS{}", c.get()).parse::<Class>(), Ok(c));
     }
     check_svcb_text(s);
+    check_zone(data);
     let _: String = s.to_string();
+}
+
+/// Master-file parsing (RFC 1035 §5): the reader terminates, and every
+/// record it yields is valid RDATA that passes [`check_rdata`] (which
+/// includes the presentation-format round trip).
+fn check_zone(data: &[u8]) {
+    let origin: NameBuf = "example.".parse().expect("static name");
+    let mut zone = dnsbox::zone::ZoneReader::from_bytes(data).with_origin(&origin);
+    let mut buf = std::vec![0u8; MAX_MESSAGE];
+    // One `$GENERATE` may yield many records: cap the work per input.
+    for _ in 0..4096 {
+        match zone.next_record(&mut buf) {
+            Ok(Some(rr)) => {
+                let d = rr
+                    .data()
+                    .unwrap_or_else(|e| panic!("{}: zone RDATA invalid: {e}", rr.owner));
+                check_rdata(rr.rtype, rr.class, &d);
+            }
+            Ok(None) => return,
+            Err(_) => {}
+        }
+    }
+}
+
+/// Presentation format parses back (RFC 1035 §5.1, RFC 3597 §5): the
+/// displayed RDATA reads back as RDATA displaying the same, unless the
+/// type has no text format (yet).
+fn check_text_round_trip(rtype: Rtype, class: Class, text: &str) {
+    let mut buf = std::vec![0u8; MAX_MESSAGE];
+    let mut w = WireWriter::new(&mut buf);
+    let mut s = dnsbox::zone::Scanner::new(text);
+    match RData::parse_text(rtype, class, &mut s, &mut w) {
+        Ok(()) => {
+            let again = RData::parse(rtype, class, WireReader::new(w.written()))
+                .unwrap_or_else(|e| panic!("{rtype} {text:?}: parse_text output invalid: {e}"));
+            assert_eq!(again.to_string(), text, "{rtype}: text does not round-trip");
+        }
+        Err(Error::NoTextFormat) => {}
+        // The SvcParamKey 65535 is reserved as "invalid" (RFC 9460
+        // §14.3.2): tolerated on the wire, refused when building.
+        Err(Error::InvalidRdata)
+            if (rtype == Rtype::SVCB || rtype == Rtype::HTTPS) && text.contains(" key65535") => {}
+        Err(e) => panic!("{rtype} {text:?}: display does not parse back: {e}"),
+    }
 }
 
 /// SVCB / HTTPS presentation format (RFC 9460 §2.1, Appendix A): anything

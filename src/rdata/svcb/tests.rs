@@ -564,8 +564,8 @@ fn presentation_parsing_details() {
     // Case is preserved in the TargetName.
     assert_eq!(from_text("1 Foo.").unwrap(), b"\x00\x01\x03Foo\x00");
     for (text, err) in [
-        ("", Error::InvalidText),
-        ("1", Error::InvalidText),
+        ("", Error::UnexpectedEof),
+        ("1", Error::UnexpectedEof),
         ("65536 .", Error::InvalidText),
         ("+1 .", Error::InvalidText),
         ("1 \"foo\"", Error::InvalidText),
@@ -1000,4 +1000,26 @@ fn random_text_never_panics() {
             assert!(parse(Rtype::SVCB, Class::IN, &wire).is_ok(), "{text}");
         }
     }
+}
+
+#[test]
+fn parse_rdata_text() {
+    use crate::rdata::tests::{text_error, text_parse, text_round_trip};
+    // Through the generic dispatch (zone files): the TargetName is
+    // completed with the origin, and the parameters are sorted.
+    for t in [Rtype::SVCB, Rtype::HTTPS] {
+        text_round_trip(
+            t,
+            "1 svc ( port=8443 ; comment\n alpn=h2 )",
+            &hex("0001 03737663076578616d706c6500 0001000302683200030002 20fb"),
+            "1 svc.example. alpn=\"h2\" port=8443",
+        );
+        text_round_trip(t, "0 @", b"\x00\x00\x07example\x00", "0 example.");
+        assert_eq!(text_error(t, "1 . port=1 port=2"), Error::InvalidRdata);
+        assert_eq!(text_error(t, "1 . \"port=1\""), Error::InvalidText);
+        assert_eq!(text_error(t, "1"), Error::UnexpectedEof);
+    }
+    // The room reserved for sorting never leaks into the output.
+    let wire = text_parse(Rtype::HTTPS, "1 . ech=AAEC").unwrap();
+    assert_eq!(wire, hex("0001 00 0005 0003 000102"));
 }

@@ -21,6 +21,8 @@ pub struct Sink<'a> {
     pub data: &'a [u8],
 }
 
+impl super::ParseRdataText for Sink<'_> {}
+
 impl<'a> ParseRdata<'a> for Sink<'a> {
     const RTYPE: Rtype = Rtype::SINK;
 
