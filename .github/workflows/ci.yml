@@ -82,6 +82,8 @@ jobs:
 
       - name: Build no_std + TSIG HMAC backend (Cortex-M)
         run: cargo build --target thumbv7em-none-eabi --no-default-features --features tsig
+      - name: Allocation-free hot path (no_std, no alloc)
+        run: cargo test --no-default-features --test no_alloc
 
   docs:
     name: Docs build (warnings denied)
