@@ -25,7 +25,8 @@ src/
     reader.rs     WireReader: bounds-checked read cursor
     writer.rs     OutBuf, WireWriter, Composer, NameEncoding, Canonical
   name/
-    mod.rs        Name<'a>, Label, Labels, ToName, limits, hardening
+    mod.rs        Name<'a>, Label, Labels, ToName, limits
+    decode.rs     the wire decoder (hardening) and its suffix cache
     buf.rs        NameBuf (inline 255-byte owned name), text parsing
     tests.rs
   charstr.rs      CharStr, CharStrs (<character-string>, RFC 1035 §3.3)
@@ -57,7 +58,7 @@ src/
     tests.rs      shared test helpers (round_trip, parse, compose)
   builder/
     mod.rs        MessageBuilder, Checkpoint
-    compress.rs   fixed-size suffix table for name compression
+    compress.rs   fixed-size label trie for name compression
     truncate.rs   Truncation policy, Outcome, push_rrset(_with),
                   copy_section, copy_message, reserve (RFC 2181 §9)
     query.rs      start_query / start_response, response_flags
@@ -191,12 +192,24 @@ canonical order (RFC 4034 §6.1). `Display` is presentation format with a
 trailing dot, `\.`, `\\`, `\"`, `\(`, `\)`, `\;`, `\@`, `\$` and `\DDD`
 escapes; `FromStr` accepts `\X` and `\DDD`.
 
-Hardening on the wire (all in `Name::parse_bounded`, used by the reader):
-labels ≤ 63, names ≤ 255 octets uncompressed, label types `0b01`/`0b10`
-rejected (`BadLabelType`), a pointer must point **strictly before the start
-of the current run of labels** (rejects forward pointers, self pointers and
-all loops — `BadPointer`), at most `MAX_POINTERS` (128) hops per name
+Hardening on the wire (all in `name/decode.rs`, behind
+`Name::parse_bounded`, used by the reader): labels ≤ 63, names ≤ 255 octets
+uncompressed, label types `0b01`/`0b10` rejected (`BadLabelType`), a
+pointer must point **strictly before the start of the current run of
+labels** (rejects forward pointers, self pointers and all loops —
+`BadPointer`), at most `MAX_POINTERS` (128) hops per name
 (`TooManyPointers`).
+
+The record iterators decode owner names through a small suffix cache
+(`NameCache`, 16 entries, no allocation): what decoding from an offset
+produced is remembered, so a pointer to an offset already decoded in this
+message costs one lookup instead of a walk (every owner name of a large
+response points at the question; chains of names each one label longer
+than the previous one would otherwise be re-walked). A cached suffix is
+only used when the combined name provably passes the checks the walk would
+make; otherwise the decoder walks, so results and errors are identical with
+and without the cache (unit-tested differentially, and checked by the
+`message` fuzz target).
 
 ## Messages (`message`)
 
@@ -205,7 +218,8 @@ all loops — `BadPointer`), at most `MAX_POINTERS` (128) hops per name
   `authority()`, `additional()`, `section(Section)` → `Result<Record>`;
   `msg.records()` → `Result<(Section, Record)>` over all three RR sections
   in one pass. Iterators yield exactly the header count, then stop; on
-  error they yield the error once and then end (fused). Locating a later
+  error they yield the error once and then end (fused). Iterating never
+  looks at RDATA (only RDLENGTH); `data()` decodes it. Locating a later
   section skips the earlier ones cheaply (no pointer following).
 - `msg.validate()` / `Message::parse_validated(buf)` walk everything once:
   names with full hardening, counts, typed RDATA of every registered type,
@@ -727,22 +741,38 @@ let frame = b.finish();                         // prefix + message
 
 ### Name compression
 
-`builder/compress.rs` keeps a fixed table of `CAPACITY` (128) entries
-`(suffix hash, offset)` — 768 bytes, no allocation. Writing a
-`Compressible` name: flatten it, hash every suffix right-to-left (FNV-1a,
-chained), look the suffixes up longest-first, verify a candidate by
-decoding the name at that offset in the output, write the unmatched labels
-plus a pointer, and register the newly written labels whose offset is
-`< 0x4000`. Properties:
+`builder/compress.rs` keeps a fixed trie of up to `CAPACITY` (128) labels
+already written, with a hash index — under 1 KiB, all zero when empty
+(so starting a message is a `memset`), no allocation. Each entry is one
+label written at some offset `< 0x4000` and links to its *parent* (the
+entry for the rest of the name, or the root). Writing a `Compressible`
+name:
+
+1. if the name, or the name minus its first label, is the last name
+   written, confirm that label by label against the message (no hashing:
+   RRsets share owners, and names often grow one label at a time);
+2. otherwise walk the trie from the root: look up the last label under the
+   root, the one before it under that entry, and so on (one hash probe per
+   label, keyed by (parent, label));
+3. write the unmatched labels plus a pointer to the deepest match, and
+   enter the new labels right to left (so a parent always precedes its
+   children and a full table drops the leftmost labels, never orphaning
+   one).
+
+Every entry a lookup returns is checked against the output bytes: the
+label must be there byte for byte, followed by the root octet, the
+parent's label (contiguous) or a pointer to the parent's offset. Properties:
 
 - matching is **exact (case-sensitive)**, so the case of every name is
   preserved (0x20 randomisation, case-sensitive applications);
 - only `Compressible` names are compressed **or registered as targets** —
   `Lowercase`/`Plain` names are never compressed and never pointed into;
-- a full table only means less compression; verification work is capped at
-  `MAX_PROBES` (32) candidates per name, so hash collisions cannot blow up
-  the cost;
-- entries are appended in offset order, so rollback is a truncation.
+- a pointer always decodes to exactly the matched suffix, even if record
+  data rewrote earlier bytes with `Composer::patch`;
+- a full table only means less compression; lookups cost one verified
+  entry per label plus at most `MAX_PROBES` (32) false candidates per name,
+  so hash collisions cannot blow up the cost;
+- entries are appended in order, so rollback is a truncation.
 
 ## Error handling conventions
 

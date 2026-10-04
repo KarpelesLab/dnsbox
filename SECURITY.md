@@ -11,9 +11,11 @@ captures, zone data). Its parsers are written to that bar:
 - **Bounded work per message.** Name decompression only accepts pointers
   that point strictly before the run of labels they terminate (which rejects
   forward pointers, self pointers and every loop) and caps the number of
-  hops per name, so a small message cannot cause unbounded CPU use. The
-  builder's compression lookup likewise verifies a bounded number of
-  candidates per name.
+  hops per name, so a small message cannot cause unbounded CPU use (the
+  suffix cache the record iterators use to avoid re-walking pointer chains
+  never skips one of these checks). The builder's compression lookup
+  likewise verifies one table entry per label and a bounded number of
+  false candidates per name.
 
 These properties are checked by cargo-fuzz targets (`fuzz/`, run on every
 push and pull request), property tests, and a corpus of real responses
