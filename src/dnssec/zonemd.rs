@@ -114,6 +114,7 @@ impl ZoneCollation {
         for rr in records {
             c.push(rr)?;
         }
+        c.dedup_zonemd();
         let data = &c.data;
         c.entries.sort_by(|a, b| cmp_entries(data, a, b));
         c.entries
@@ -142,13 +143,8 @@ impl ZoneCollation {
             {
                 self.zonemd.truncate(start);
             }
-            let new = self.zonemd.get(start..).unwrap_or(&[]);
-            if self.zonemd_rdata().any(|old| old == new) {
-                // A duplicate RR (RFC 2181 §5).
-                self.zonemd.truncate(start);
-            } else {
-                self.zonemd_ranges.push(start..self.zonemd.len());
-            }
+            // Duplicates are dropped once all are in (`dedup_zonemd`).
+            self.zonemd_ranges.push(start..self.zonemd.len());
             return Ok(());
         }
         let start = self.data.len();
@@ -177,6 +173,34 @@ impl ZoneCollation {
             len,
         });
         Ok(())
+    }
+
+    /// Drops duplicate apex ZONEMD RRs (RFC 2181 §5), keeping the first of
+    /// each in input order. A sort, not a comparison of every pair: a
+    /// hostile zone may hold any number of them.
+    fn dedup_zonemd(&mut self) {
+        let zonemd = &self.zonemd;
+        let ranges = &self.zonemd_ranges;
+        let rdata = |i: usize| {
+            ranges
+                .get(i)
+                .and_then(|r| zonemd.get(r.clone()))
+                .unwrap_or(&[])
+        };
+        let mut order: Vec<usize> = (0..ranges.len()).collect();
+        // Stable: equal RDATA stay in input order, the first one first.
+        order.sort_by(|&a, &b| rdata(a).cmp(rdata(b)));
+        let mut keep = alloc::vec![true; ranges.len()];
+        for pair in order.windows(2) {
+            if let [a, b] = *pair
+                && rdata(a) == rdata(b)
+                && let Some(k) = keep.get_mut(b)
+            {
+                *k = false;
+            }
+        }
+        let mut keep = keep.into_iter();
+        self.zonemd_ranges.retain(|_| keep.next().unwrap_or(true));
     }
 
     /// The zone apex (lowercase).
@@ -553,8 +577,17 @@ impl ZoneCollation {
         let serial = self.soa_serial().ok_or(ZonemdFailure::NoSoa)?;
         let mut failure = ZonemdFailure::NoZonemd;
         let mut computed: [Option<ZonemdDigest>; 2] = [None, None];
+        // The (scheme, hash algorithm) tuples, sorted, so that checking one
+        // for uniqueness (step 4) is a binary search rather than a pass
+        // over every other ZONEMD RR.
+        let mut tuples: Vec<(u8, u8)> = self
+            .zonemd_rdata()
+            .filter_map(zonemd_fields)
+            .map(|z| (z.scheme.get(), z.hash_alg.get()))
+            .collect();
+        tuples.sort_unstable();
         for rdata in self.zonemd_rdata() {
-            let outcome = self.check(rdata, serial, &mut computed);
+            let outcome = self.check(rdata, serial, &tuples, &mut computed);
             match outcome {
                 Ok(v) => return Ok(v),
                 Err(f) if f.rank() >= failure.rank() => failure = f,
@@ -569,14 +602,16 @@ impl ZoneCollation {
         &self,
         rdata: &[u8],
         serial: u32,
+        tuples: &[(u8, u8)],
         computed: &mut [Option<ZonemdDigest>; 2],
     ) -> core::result::Result<ZonemdVerified, ZonemdFailure> {
         let z = zonemd_fields(rdata).ok_or(ZonemdFailure::BadZonemd)?;
-        let same_tuple = self
-            .zonemd_rdata()
-            .filter_map(zonemd_fields)
-            .filter(|o| o.scheme == z.scheme && o.hash_alg == z.hash_alg)
-            .count();
+        let tuple = (z.scheme.get(), z.hash_alg.get());
+        let first = tuples.partition_point(|t| *t < tuple);
+        let same_tuple = tuples
+            .get(first..)
+            .unwrap_or(&[])
+            .partition_point(|t| *t == tuple);
         if same_tuple > 1 {
             return Err(ZonemdFailure::DuplicateTuple);
         }

@@ -85,7 +85,8 @@ impl<'a> TsigRecord<'a> {
 /// record of the additional section, or more than one TSIG, yields
 /// [`Error::MisplacedSignature`] (RFC 8945 §5.1: the message is answered
 /// with FORMERR); a TSIG whose CLASS is not ANY or TTL not 0 (§4.2)
-/// yields [`Error::InvalidRdata`]. Walks every record once.
+/// yields [`Error::InvalidRdata`], and octets after the TSIG (which no MAC
+/// covers) yield [`Error::TrailingData`]. Walks every record once.
 pub fn find<'a>(msg: &Message<'a>) -> Result<Option<TsigRecord<'a>>> {
     let arcount = msg.header().arcount;
     let mut additional = 0u16;
@@ -103,6 +104,9 @@ pub fn find<'a>(msg: &Message<'a>) -> Result<Option<TsigRecord<'a>>> {
         }
         if rr.class() != Class::ANY || rr.ttl() != 0 {
             return Err(Error::InvalidRdata);
+        }
+        if rr.end() != msg.as_bytes().len() {
+            return Err(Error::TrailingData);
         }
         found = Some(TsigRecord {
             key_name: rr.name(),
@@ -192,9 +196,10 @@ impl<K: TsigKey> fmt::Debug for Verified<'_, '_, K> {
 /// A request that failed TSIG processing; see [`verify_request`]. It knows
 /// how the server must answer (RFC 8945 §5.2, §5.3.2).
 pub struct Rejected<'a, 'k, K: TsigKey> {
-    /// Why: [`Error::MisplacedSignature`], [`Error::BadMacSize`] or any
-    /// parse error (FORMERR), or [`Error::BadKey`], [`Error::BadSignature`],
-    /// [`Error::BadTime`], [`Error::BadTrunc`] (NOTAUTH).
+    /// Why: [`Error::MisplacedSignature`], [`Error::TrailingData`],
+    /// [`Error::BadMacSize`] or any parse error (FORMERR), or
+    /// [`Error::BadKey`], [`Error::BadSignature`], [`Error::BadTime`],
+    /// [`Error::BadTrunc`] (NOTAUTH).
     pub error: Error,
     /// The TSIG record, if one could be located.
     pub record: Option<TsigRecord<'a>>,

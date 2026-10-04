@@ -178,10 +178,11 @@ impl Default for Nsec3Limits {
 /// §8.2, records are ignored when their flags are not 0 or 1, their hash
 /// algorithm is not supported by the hasher, their owner is not a single
 /// base32hex label directly below `zone`, or their next hashed owner name
-/// is not as long as their own hash. The remaining records must agree on
-/// algorithm, iterations and salt ([`BogusReason::InconsistentParameters`]
-/// otherwise), and the iteration count is checked against the
-/// [`Nsec3Limits`] before anything is hashed.
+/// is not as long as their own hash; a record whose hashes are not as long
+/// as the hasher's output matches and covers nothing. The remaining
+/// records must agree on algorithm, iterations and salt
+/// ([`BogusReason::InconsistentParameters`] otherwise), and the iteration
+/// count is checked against the [`Nsec3Limits`] before anything is hashed.
 ///
 /// RFC 6840 §4.1 and RFC 5155 §8.3 are enforced: the closest encloser's
 /// record must have neither DNAME nor NS without SOA, and a parent-side
@@ -354,7 +355,9 @@ where
         self.iter().find(|u| u.hash == *hash).map(|u| u.record)
     }
 
-    /// A record covering `hash` (RFC 5155 §8.3).
+    /// A record covering `hash` (RFC 5155 §8.3). A record whose hashes are
+    /// not as long as `hash` covers nothing ([`Nsec3::covers`]): a
+    /// one-octet span `00`..`ff` would otherwise cover almost every hash.
     fn find_cover(&self, hash: &Nsec3Hash) -> Option<Nsec3Record<'a>> {
         self.iter()
             .find(|u| u.record.nsec3.covers(u.hash.as_bytes(), hash.as_bytes()))
@@ -466,6 +469,9 @@ where
     /// NSEC3 record, RFC 5155 Errata 3441; [`BogusReason::NoOptOut`] for
     /// DS without Opt-Out).
     pub fn no_data(&self, qname: Name<'_>, qtype: Rtype) -> DenialStatus {
+        if super::ds_at_apex(self.zone, qname, qtype) {
+            return DenialStatus::Bogus(BogusReason::ZoneCut);
+        }
         status(self.checked(qname, |p| {
             let qhash = self.hash(p, qname)?;
             if let Some(m) = self.find_match(&qhash) {
@@ -526,8 +532,12 @@ where
     /// §4.4): the record matching `delegation` has NS but neither DS nor
     /// SOA, or, with no such record, a closest provable encloser proof
     /// whose next closer record has Opt-Out
-    /// ([`InsecureReason::OptOut`]).
+    /// ([`InsecureReason::OptOut`]). The zone's own apex is never one of
+    /// its delegations ([`BogusReason::ZoneCut`]).
     pub fn unsigned_delegation(&self, delegation: Name<'_>) -> DenialStatus {
+        if delegation == self.zone {
+            return DenialStatus::Bogus(BogusReason::ZoneCut);
+        }
         status(self.checked(delegation, |p| {
             let hash = self.hash(p, delegation)?;
             if let Some(m) = self.find_match(&hash) {

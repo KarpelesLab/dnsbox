@@ -112,7 +112,9 @@ pub enum BogusReason {
     /// ancestor delegation (NS without SOA) or a DNAME owner used to deny
     /// names below it (RFC 6840 §4.1, RFC 5155 §8.3), a parent-side record
     /// used for anything but DS, or a child-apex record (SOA set) used for
-    /// DS (RFC 4035 §5.2, RFC 6840 §4.4).
+    /// DS (RFC 4035 §5.2, RFC 6840 §4.4); also the zone's own apex taken
+    /// for one of its delegations, or its own records used to deny the DS
+    /// RRset at its apex (which lives in the parent).
     ZoneCut,
     /// The record matching a referral's delegation name has no NS bit
     /// (RFC 6840 §4.4).
@@ -359,6 +361,13 @@ impl<P: DenialProof + ?Sized> DenialProof for &P {
 /// DNAME (RFC 6840 §4.1, RFC 5155 §8.3).
 fn cuts_below(types: &TypeBitmap<'_>) -> bool {
     (types.contains(Rtype::NS) && !types.contains(Rtype::SOA)) || types.contains(Rtype::DNAME)
+}
+
+/// Whether a NODATA check asks about the DS RRset at the apex of `zone`
+/// itself: that RRset lives in the parent zone, so the zone's own records
+/// cannot deny it (RFC 4035 §5.2, RFC 6840 §4.4; the root has no parent).
+fn ds_at_apex(zone: Name<'_>, qname: Name<'_>, qtype: Rtype) -> bool {
+    qtype == Rtype::DS && qname == zone && !zone.is_root()
 }
 
 /// The NODATA check on the bitmap of a record matching `qname` (RFC 4035

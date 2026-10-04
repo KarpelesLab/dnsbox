@@ -189,11 +189,13 @@ pub fn rrsig_owner(rrsig: &Rrsig<'_>, owner: Name<'_>) -> Result<NameBuf> {
 }
 
 /// Checks the parts of RFC 4035 §5.3.1 that depend only on the RRSIG and
-/// the RRset owner: the labels field does not exceed the owner's label
-/// count and the owner is inside the signer's zone
-/// ([`Error::RrsetMismatch`]), and `now` (seconds since 1970, modulo
-/// 2^32) is within the validity period ([`Error::SignatureExpired`],
-/// [`Error::SignatureNotYetValid`]; serial arithmetic, RFC 4034 §3.1.5).
+/// the RRset owner, failing with [`Error::RrsetMismatch`] unless the
+/// labels field lies between the signer name's label count and the
+/// owner's (so a wildcard it designates is inside the signer's zone) and
+/// the owner is inside the signer's zone; and that `now` (seconds since
+/// 1970, modulo 2^32) is within the validity period
+/// ([`Error::SignatureExpired`], [`Error::SignatureNotYetValid`]; serial
+/// arithmetic, RFC 4034 §3.1.5).
 ///
 /// The RRSIG's class and owner must equal the RRset's and its type
 /// covered must be the RRset type; the caller selects records that way.
@@ -204,7 +206,13 @@ pub fn check_rrsig(rrsig: &Rrsig<'_>, owner: Name<'_>, now: u32) -> Result<()> {
 
 /// The time-independent part of [`check_rrsig`].
 fn check_coverage(rrsig: &Rrsig<'_>, owner: Name<'_>) -> Result<()> {
-    if usize::from(rrsig.labels) > owner.label_count() || !owner.is_subdomain_of(&rrsig.signer_name)
+    let labels = usize::from(rrsig.labels);
+    // A labels field below the signer's label count would make the RRset
+    // an expansion of a wildcard above the signer's zone (`*.` for 0),
+    // which the zone cannot sign for.
+    if labels > owner.label_count()
+        || labels < rrsig.signer_name.label_count()
+        || !owner.is_subdomain_of(&rrsig.signer_name)
     {
         return Err(Error::RrsetMismatch);
     }

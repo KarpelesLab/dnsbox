@@ -224,6 +224,9 @@ where
         if !qname.is_subdomain_of(&self.zone) {
             return DenialStatus::Bogus(BogusReason::OutOfZone);
         }
+        if super::ds_at_apex(self.zone, qname, qtype) {
+            return DenialStatus::Bogus(BogusReason::ZoneCut);
+        }
         if let Some(m) = self.find_match(qname) {
             if qtype == Rtype::NSEC || qtype == Rtype::RRSIG {
                 return DenialStatus::Bogus(BogusReason::TypeExists);
@@ -281,10 +284,14 @@ where
 
     /// Checks a referral to an unsigned zone (RFC 4035 §5.2, RFC 6840
     /// §4.4): the record matching `delegation` has NS, but neither DS nor
-    /// SOA.
+    /// SOA. The zone's own apex is never one of its delegations
+    /// ([`BogusReason::ZoneCut`]).
     pub fn unsigned_delegation(&self, delegation: Name<'_>) -> DenialStatus {
         if !delegation.is_subdomain_of(&self.zone) {
             return DenialStatus::Bogus(BogusReason::OutOfZone);
+        }
+        if delegation == self.zone {
+            return DenialStatus::Bogus(BogusReason::ZoneCut);
         }
         match self.find_match(delegation) {
             Some(m) => delegation_bitmap(&m.nsec.types),

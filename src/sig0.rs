@@ -235,8 +235,9 @@ pub struct Sig0Record<'a> {
 /// record of the additional section (or more than one) yields
 /// [`Error::MisplacedSignature`] (RFC 2931 §3); one whose owner is not the
 /// root, CLASS not ANY, TTL not 0, or labels / original TTL not 0 yields
-/// [`Error::InvalidRdata`]. SIG records covering a real type (legacy
-/// DNSSEC, RFC 2535) are ignored.
+/// [`Error::InvalidRdata`], and octets after it (which the signature does
+/// not cover) yield [`Error::TrailingData`]. SIG records covering a real
+/// type (legacy DNSSEC, RFC 2535) are ignored.
 pub fn find<'a>(msg: &Message<'a>) -> Result<Option<Sig0Record<'a>>> {
     let arcount = msg.header().arcount;
     let mut additional = 0u16;
@@ -263,6 +264,9 @@ pub fn find<'a>(msg: &Message<'a>) -> Result<Option<Sig0Record<'a>>> {
             || data.original_ttl != 0
         {
             return Err(Error::InvalidRdata);
+        }
+        if rr.end() != msg.as_bytes().len() {
+            return Err(Error::TrailingData);
         }
         found = Some(Sig0Record {
             data,

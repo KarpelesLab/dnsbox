@@ -43,7 +43,10 @@ pub const MAX_CRYPTO_OPERATIONS: usize = 16;
 ///
 /// Revoked keys (RFC 5011 §2.1) are never used. Work is bounded by
 /// [`MAX_CRYPTO_OPERATIONS`] per call: once it is spent, the call fails
-/// with [`Error::BadSignature`] (if it had not failed otherwise).
+/// with [`Error::BadSignature`] (if it had not failed otherwise). Besides
+/// that, a call computes one key tag per (RRSIG by the zone over the type,
+/// key) pair; a validator should still bound the RRSIGs, keys and calls it
+/// spends on one response.
 ///
 /// [`Denial::UnsignedDelegation`]: super::Denial::UnsignedDelegation
 #[derive(Clone, Copy, Debug)]
@@ -320,7 +323,8 @@ where
     /// (RFC 6840 §5.12); one valid signature suffices (RFC 6840 §5.11).
     ///
     /// Fails with [`Error::RrsetMismatch`] for an empty RRset or one
-    /// outside the zone, [`Error::Unsigned`] if no RRSIG is by the zone,
+    /// outside the zone or of another class (RFC 4035 §5.3.1),
+    /// [`Error::Unsigned`] if no RRSIG is by the zone,
     /// [`Error::KeyMismatch`] if no key matches one, and otherwise with
     /// the error of the last signature check. The result says whether the
     /// RRset was synthesized from a wildcard, which then still needs a
@@ -444,7 +448,7 @@ where
             .next()
             .map(|d| d.rtype())
             .ok_or(Error::RrsetMismatch)?;
-        if !rrset.owner.is_subdomain_of(&self.zone) {
+        if !rrset.owner.is_subdomain_of(&self.zone) || rrset.class != self.class {
             return Err(Error::RrsetMismatch);
         }
         let mut err = Error::Unsigned;

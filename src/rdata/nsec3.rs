@@ -86,13 +86,17 @@ impl Nsec3<'_> {
     /// Whether this NSEC3 record, whose owner name's first label decodes
     /// to `owner_hash`, covers `hash`: `owner_hash < hash < next`, or, for
     /// the last NSEC3 of the chain, `hash > owner_hash` or `hash < next`
-    /// (RFC 5155 §8.3, §7.2.1).
+    /// (RFC 5155 §8.3, §7.2.1). Hashes are fixed-length strings: if the
+    /// three are not all the same length, nothing is covered.
     ///
     /// Use [`dnssec::Nsec3Hash::from_owner`](crate::dnssec) to decode the
     /// owner's hash and [`dnssec::nsec3_hash`](crate::dnssec) to hash a name.
     #[must_use]
     pub fn covers(&self, owner_hash: &[u8], hash: &[u8]) -> bool {
         let next = self.next_hashed_owner;
+        if owner_hash.len() != hash.len() || next.len() != hash.len() {
+            return false;
+        }
         let after_owner = owner_hash.cmp(hash) == Ordering::Less;
         let before_next = hash.cmp(next) == Ordering::Less;
         if owner_hash.cmp(next) == Ordering::Less {
@@ -376,6 +380,10 @@ mod tests {
         assert!(n.covers(&[0x60], &[0x70]));
         assert!(n.covers(&[0x60], &[0x01]));
         assert!(!n.covers(&[0x60], &[0x55]));
+        // Hashes of another length are never covered.
+        assert!(!n.covers(&[0x10], &[0x20, 0x00]));
+        assert!(!n.covers(&[0x10, 0x00], &[0x20, 0x00]));
+        assert!(!n.covers(&[0x60], &[]));
     }
 
     #[test]

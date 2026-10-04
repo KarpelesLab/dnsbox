@@ -330,7 +330,9 @@ fn read_altitude(s: &mut Scanner<'_>) -> Result<u32> {
     };
     let cm = i64::try_from(parse_fixed(strip_metres(raw), 2)?).map_err(|_| Error::InvalidText)?;
     let cm = if negative { -cm } else { cm };
-    u32::try_from(cm + ALTITUDE_BASE).map_err(|_| Error::InvalidText)
+    cm.checked_add(ALTITUDE_BASE)
+        .and_then(|raw| u32::try_from(raw).ok())
+        .ok_or(Error::InvalidText)
 }
 
 /// Largest size or precision BIND accepts, in centimetres: up to
