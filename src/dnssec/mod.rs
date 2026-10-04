@@ -1,6 +1,7 @@
 //! DNSSEC (RFC 4033, RFC 4034, RFC 4035, RFC 5155, RFC 6840): algorithm
 //! registries, canonical forms, key tags, DS digests, NSEC3 hashing, RRSIG
-//! validation and signing.
+//! validation and signing, the chain of trust and authenticated denial of
+//! existence.
 //!
 //! The record types themselves live in [`crate::rdata`]: [`Dnskey`],
 //! [`Rrsig`], [`Nsec`], [`Ds`], [`Nsec3`], [`Nsec3param`], [`Cds`],
@@ -25,12 +26,25 @@
 //!   [`Timestamp`]).
 //! - [`Verifier`] / [`Signer`]: the traits a crypto backend implements;
 //!   [`verify_rrsig`] and [`sign_rrset`] tie everything together.
+//! - [`TrustedKeys`]: the chain of trust (RFC 4035 §5): a DNSKEY RRset
+//!   authenticated by trust anchors ([`TrustedKeys::from_anchors`]) or by
+//!   the parent's DS RRset (`TrustedKeys::from_ds`), which then verifies
+//!   the zone's RRsets, wildcard expansions included
+//!   ([`TrustedKeys::verify_answer`]), with bounded work
+//!   ([`MAX_CRYPTO_OPERATIONS`]).
+//! - [`NsecProof`], [`Nsec3Proof`] ([`DenialProof`]): NSEC and NSEC3
+//!   proofs for NXDOMAIN, NODATA, wildcard answers, wildcard NODATA and
+//!   unsigned delegations, with closest encloser proofs, Opt-Out, the
+//!   RFC 6840 §4 corrections and RFC 9276 iteration limits
+//!   ([`Nsec3Limits`]); the outcome is a [`DenialStatus`]. NSEC3 hashing
+//!   is pluggable ([`Nsec3Hasher`]).
 //!
 //! Cryptography comes from the optional `purecrypto` dependency:
 //!
 //! - feature `dnssec-digest` (no `alloc` needed): `DsDigest`,
-//!   `verify_ds`, `ZoneKey::ds` (SHA-1, SHA-256, SHA-384) and
-//!   `nsec3_hash` (SHA-1, RFC 5155 §5);
+//!   `verify_ds`, `ZoneKey::ds` (SHA-1, SHA-256, SHA-384),
+//!   `TrustedKeys::from_ds`, `nsec3_hash` (SHA-1, RFC 5155 §5) and
+//!   `PurecryptoNsec3Hasher`;
 //! - feature `dnssec`: `PurecryptoVerifier` and `SigningKey`, verifying and
 //!   signing RSA/SHA-1, RSA/SHA-256, RSA/SHA-512, ECDSA P-256/SHA-256,
 //!   ECDSA P-384/SHA-384, Ed25519 and Ed448.
@@ -69,7 +83,9 @@ mod alg;
 #[cfg(feature = "dnssec")]
 mod backend;
 mod canonical;
+mod chain;
 mod crypto;
+mod denial;
 mod ds;
 mod keys;
 mod nsec3;
@@ -86,7 +102,15 @@ pub use canonical::{CanonicalRrset, canonical_name};
 #[cfg(feature = "alloc")]
 #[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
 pub use canonical::{canonical_rdata, sort_rrset};
+pub use chain::{Answer, MAX_CRYPTO_OPERATIONS, TrustedKeys, Verified};
 pub use crypto::{Signer, Verifier};
+#[cfg(feature = "dnssec-digest")]
+#[cfg_attr(docsrs, doc(cfg(feature = "dnssec-digest")))]
+pub use denial::PurecryptoNsec3Hasher;
+pub use denial::{
+    BogusReason, ClosestEncloser, Denial, DenialProof, DenialStatus, InsecureReason, Nsec3Hasher,
+    Nsec3Limits, Nsec3Proof, Nsec3Record, NsecProof, NsecRecord,
+};
 pub use ds::ds_digest_input;
 #[cfg(feature = "dnssec-digest")]
 #[cfg_attr(docsrs, doc(cfg(feature = "dnssec-digest")))]
