@@ -28,6 +28,10 @@ dnssec-digest = ["dep:purecrypto", "purecrypto/hash"]
 dnssec = ["alloc", "dnssec-digest", "purecrypto/alloc", "purecrypto/rsa", "purecrypto/ec"]
 # RFC 9018 interoperable DNS server cookies (SipHash-2-4 from purecrypto).
 cookie-siphash = ["dep:purecrypto", "purecrypto/mac"]
+# TSIG (RFC 8945) HMAC backend: HMAC-MD5/SHA-1/SHA-224/SHA-256/SHA-384/SHA-512
+# from purecrypto. The TSIG wire format, MAC input construction and the
+# pluggable `TsigKey`/`TsigMac` traits work without it.
+tsig = ["dep:purecrypto", "purecrypto/hash"]
 
 [lints.rust]
 unsafe_code = "forbid"
@@ -41,3 +45,6 @@ missing_docs = "warn"
 purecrypto = { version = "0.9", default-features = false, optional = true }
 
 [dev-dependencies]
+# Signature verification of real SIG(0) captures in tests (Ed25519, ECDSA
+# P-256, RSA/SHA-256); never a dependency of the library itself.
+purecrypto = { version = "0.9", default-features = false, features = ["hash", "ec", "rsa", "alloc"] }

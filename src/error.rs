@@ -85,6 +85,46 @@ pub enum Error {
     DuplicateOpt,
     /// An OPT record's owner name is not the root (RFC 6891 §6.1.2).
     OptNotRoot,
+
+    /// A TSIG or SIG(0) record is not the last record of the additional
+    /// section, or appears more than once (RFC 8945 §5.1, RFC 2931 §3).
+    /// Servers answer FORMERR.
+    MisplacedSignature,
+    /// A TSIG MAC size is longer than the algorithm's output or shorter than
+    /// the truncation floor (RFC 8945 §5.2.2.1). Servers answer FORMERR.
+    BadMacSize,
+    /// The TSIG key or algorithm is unknown (TSIG error BADKEY, RFC 8945
+    /// §5.2.1).
+    BadKey,
+    /// A TSIG MAC or SIG(0) signature does not verify (TSIG error BADSIG,
+    /// RFC 8945 §5.2.2; RFC 2931 §3.1).
+    BadSig,
+    /// The signature time is outside the allowed window (TSIG error
+    /// BADTIME, RFC 8945 §5.2.3; SIG(0) validity period, RFC 2931 §3.1).
+    BadTime,
+    /// A TSIG MAC is truncated below local policy (TSIG error BADTRUNC,
+    /// RFC 8945 §5.2.4).
+    BadTrunc,
+    /// A message that must be signed carries no TSIG, or too many unsigned
+    /// messages follow each other in a TSIG stream (RFC 8945 §5.3.1, §5.4).
+    Unsigned,
+    /// The peer reported a TSIG error (BADKEY, BADSIG, ...) in an unsigned
+    /// response; it cannot be authenticated and must be discarded
+    /// (RFC 8945 §5.3.2, §5.4.1).
+    TsigErrorResponse,
+    /// A dynamic-update prerequisite or update RR has an invalid
+    /// class/type/TTL/RDATA combination (RFC 2136 §3.2.4, §3.4.1.3), or the
+    /// zone section is malformed (RFC 2136 §3.1.1). Servers answer FORMERR.
+    MalformedUpdate,
+    /// A zone-transfer response stream violates RFC 5936 §2.2 / RFC 1995 §4
+    /// (bad SOA sequence, records after the end, question mismatch).
+    MalformedXfr,
+    /// A response carries an error RCODE where success was required (e.g. a
+    /// refused zone transfer, RFC 5936 §2.2.1).
+    ErrorResponse,
+    /// A DNS Stateful Operations message is malformed: non-zero section
+    /// counts, bad TLV framing or placement (RFC 8490 §5.4, §7.3).
+    MalformedDso,
 }
 
 /// Shorthand for `core::result::Result<T, dnsbox::Error>`.
@@ -121,6 +161,18 @@ impl fmt::Display for Error {
             Error::InvalidOption => "malformed EDNS option",
             Error::DuplicateOpt => "more than one OPT record",
             Error::OptNotRoot => "OPT record owner is not the root",
+            Error::MisplacedSignature => "TSIG/SIG(0) record is not last in the message",
+            Error::BadMacSize => "invalid TSIG MAC size",
+            Error::BadKey => "unknown TSIG key or algorithm",
+            Error::BadSig => "signature verification failed",
+            Error::BadTime => "signature time outside the allowed window",
+            Error::BadTrunc => "TSIG MAC truncated below policy",
+            Error::Unsigned => "message is not signed",
+            Error::TsigErrorResponse => "peer reported a TSIG error in an unsigned response",
+            Error::MalformedUpdate => "malformed dynamic update",
+            Error::MalformedXfr => "malformed zone transfer stream",
+            Error::ErrorResponse => "response carries an error RCODE",
+            Error::MalformedDso => "malformed DSO message",
         })
     }
 }

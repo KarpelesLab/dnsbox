@@ -258,4 +258,58 @@ mod tests {
             Err(Error::UnexpectedEof)
         );
     }
+    // SIG(0) RDATA from an `nsupdate -k` (Ed25519) request captured from
+    // BIND 9.18 (tests/data/named/sig0-ed25519.query.bin).
+    const ED25519_SIG0: &str = "00000f00000000006ac216736ac2141ba898\
+        0473696730076578616d706c6503636f6d00\
+        a613d9eefcc566c0cd1d342d1a536cc338588d6b6fe01b120608a67f4b3b50b9\
+        56b380b1ddfd71202b83cac241ae907342407af499359896fc6c8bfa6bad9c05";
+
+    #[test]
+    fn sig0_capture_round_trip() {
+        let wire = hex(ED25519_SIG0);
+        round_trip(
+            Rtype::SIG,
+            &wire,
+            "TYPE0 15 0 0 20261004090347 20261004085347 43160 sig0.example.com. \
+             phPZ7vzFZsDNHTQtGlNswzhYjWtv4BsSBgimf0s7ULlWs4Cx3f1xICuDysJBrpBzQkB69Jk1mJb8bIv6a62cBQ==",
+        );
+    }
+
+    #[test]
+    fn sig0_unsigned_fields_are_canonical() {
+        // RFC 2931 §3.1: the signed SIG RDATA has the signer name
+        // uncompressed and lowercased.
+        let signer = crate::NameBuf::from_text(b"SIG0.Example.COM").unwrap();
+        let sig = Sig {
+            type_covered: Rtype::new(0),
+            algorithm: Algorithm::ED25519,
+            labels: 0,
+            original_ttl: 0,
+            expiration: 2,
+            inception: 1,
+            key_tag: 7,
+            signer_name: signer.as_name(),
+            signature: &[1, 2, 3],
+        };
+        let mut buf = [0u8; 64];
+        let mut w = WireWriter::new(&mut buf);
+        sig.compose_unsigned(&mut Canonical::new(&mut w)).unwrap();
+        assert_eq!(
+            w.written(),
+            b"\x00\x00\x0f\x00\x00\x00\x00\x00\x00\x00\x00\x02\x00\x00\x00\x01\x00\x07\
+              \x04sig0\x07example\x03com\x00"
+        );
+    }
+
+    #[test]
+    fn sig_minimal() {
+        assert_eq!(
+            parse(Rtype::SIG, Class::IN, &[0; 17]),
+            Err(Error::UnexpectedEof)
+        );
+        // Minimal: root signer, empty signature.
+        let d = parse(Rtype::SIG, Class::IN, &[0; 19]).unwrap();
+        assert!(matches!(d, RData::Sig(s) if s.signature.is_empty()));
+    }
 }

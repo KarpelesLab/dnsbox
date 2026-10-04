@@ -82,6 +82,7 @@ pub mod rdata;
 pub mod rtype;
 pub mod tcp;
 pub mod text;
+pub mod tsig;
 mod util;
 pub mod wire;
 
