@@ -85,6 +85,7 @@ pub mod tcp;
 pub mod text;
 pub mod tsig;
 mod util;
+pub mod update;
 pub mod wire;
 
 pub use builder::{Checkpoint, MessageBuilder};
