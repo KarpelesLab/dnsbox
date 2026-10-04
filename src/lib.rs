@@ -78,6 +78,7 @@ mod error;
 pub mod header;
 pub mod message;
 pub mod name;
+pub mod notify;
 pub mod rdata;
 pub mod rtype;
 pub mod sig0;
