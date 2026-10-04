@@ -51,12 +51,13 @@ open_enum! {
 /// ```
 /// use dnsbox::rdata::{Cert, CertType, ParseRdataText};
 ///
-/// // A certificate type and algorithm may be given as mnemonics.
+/// // A certificate type and algorithm may be given as mnemonics, and are
+/// // written as mnemonics too (as BIND and dnspython write them).
 /// let mut buf = [0u8; 64];
 /// let cert = Cert::from_text("IPKIX 12345 RSASHA256 aHR0cHM6Ly9leGFtcGxlLmNvbS9jLmRlcg==", &mut buf)?;
 /// assert_eq!(cert.cert_type, CertType::IPKIX);
 /// assert_eq!(cert.certificate, b"https://example.com/c.der");
-/// assert_eq!(cert.to_string(), "IPKIX 12345 8 aHR0cHM6Ly9leGFtcGxlLmNvbS9jLmRlcg==");
+/// assert_eq!(cert.to_string(), "IPKIX 12345 RSASHA256 aHR0cHM6Ly9leGFtcGxlLmNvbS9jLmRlcg==");
 /// # Ok::<(), dnsbox::Error>(())
 /// ```
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
