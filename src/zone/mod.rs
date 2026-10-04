@@ -40,20 +40,23 @@
 //!
 //! # Hostile input
 //!
-//! Every step does work linear in the text it consumes; parenthesis
-//! nesting is bounded, a `$GENERATE` directive yields at most
-//! [`MAX_GENERATE`] records, and `$INCLUDE` nesting and counts are
-//! limited. Errors carry the line and column ([`ZoneError`]); after an
-//! error the reader resynchronises on the next entry, so all errors of a
-//! file can be reported in one pass.
+//! Every step does work linear in the text it consumes, and parenthesis
+//! nesting is bounded. What a file can make the reader do beyond its own
+//! length is bounded by [`ZoneLimits`], which are on by default: the
+//! number of records (`$GENERATE` turns one short line into up to
+//! [`MAX_GENERATE`] records), the `$INCLUDE` nesting, count and total
+//! size, and the length of the text, its lines and its tokens. A limit
+//! reached is an [`Error::LimitExceeded`](crate::Error::LimitExceeded)
+//! with its position; raise the limits for large trusted zones.
 //!
-//! `$GENERATE` amplifies: one short line yields up to [`MAX_GENERATE`]
-//! records (each costing work linear in the directive), so the number of
-//! records is not bounded by the size of the text. When reading files from
-//! untrusted sources, bound the records you consume (e.g. with
-//! `Iterator::take`) rather than collecting everything ([`parse`]), and
-//! never follow their `$INCLUDE`s with [`FsIncludes`] (it opens any path
-//! named): use an [`IncludeResolver`] that only serves what you allow.
+//! Errors carry the line and column ([`ZoneError`]); after an error the
+//! reader resynchronises on the next entry, so all errors of a file can be
+//! reported in one pass.
+//!
+//! `$INCLUDE` paths come from the file: [`FsIncludes::new`] serves only
+//! regular files inside one directory (no absolute paths, no `..`, no
+//! symbolic link leading out), [`FsIncludes::unconfined`] any file, for
+//! trusted zone files.
 //!
 //! # Example
 //!
@@ -91,19 +94,21 @@
 
 mod generate;
 mod lexer;
+mod limits;
 mod reader;
 #[cfg(feature = "alloc")]
 mod records;
 mod scanner;
 
 pub use generate::MAX_GENERATE;
+pub use limits::ZoneLimits;
 pub use reader::{Entry, Include, ZoneError, ZoneReader, ZoneRecord};
 #[cfg(feature = "std")]
 pub use records::FsIncludes;
 #[cfg(feature = "alloc")]
 pub use records::{
     DEFAULT_MAX_INCLUDE_DEPTH, DEFAULT_MAX_INCLUDES, IncludeResolver, NoIncludes, Records,
-    ZoneRecordBuf, parse,
+    ZoneRecordBuf, parse, parse_with_limits,
 };
 pub(crate) use scanner::decimal;
 pub use scanner::{Scanner, Token, Unescape, parse_ttl};

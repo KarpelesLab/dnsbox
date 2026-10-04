@@ -234,6 +234,8 @@ pub struct Scanner<'a> {
     multiline: bool,
     /// Lexing failed (the reader must resynchronise on the next line).
     lex_error: bool,
+    /// Line and token length limits.
+    limits: lexer::Limits,
 }
 
 impl<'a> Scanner<'a> {
@@ -260,11 +262,17 @@ impl<'a> Scanner<'a> {
             end: false,
             multiline: true,
             lex_error: false,
+            limits: lexer::Limits::NONE,
         }
     }
 
     /// A scanner over the master-file entry starting at `cur`.
-    pub(crate) fn entry(input: &'a [u8], cur: Cursor, origin: Name<'a>) -> Self {
+    pub(crate) fn entry(
+        input: &'a [u8],
+        cur: Cursor,
+        origin: Name<'a>,
+        limits: lexer::Limits,
+    ) -> Self {
         Scanner {
             input,
             cur,
@@ -273,6 +281,7 @@ impl<'a> Scanner<'a> {
             end: false,
             multiline: false,
             lex_error: false,
+            limits,
         }
     }
 
@@ -316,12 +325,15 @@ impl<'a> Scanner<'a> {
     /// # Errors
     ///
     /// Fails with [`Error::InvalidText`] on a lexical error: an unbalanced
-    /// parenthesis, an unterminated quoted string, or a trailing backslash.
+    /// parenthesis, an unterminated quoted string, or a trailing backslash;
+    /// in a master file read by a [`ZoneReader`](super::ZoneReader), with
+    /// [`Error::LimitExceeded`] for a line or token over its
+    /// [`ZoneLimits`](super::ZoneLimits).
     pub fn next_token(&mut self) -> Result<Option<Token<'a>>> {
         if self.end {
             return Ok(None);
         }
-        match lexer::next(self.input, &mut self.cur, self.multiline) {
+        match lexer::next(self.input, &mut self.cur, self.multiline, self.limits) {
             Ok(Lexeme::Token { start, end, quoted }) => {
                 self.last = start;
                 let range = if quoted {

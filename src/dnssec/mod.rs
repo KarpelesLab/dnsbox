@@ -30,8 +30,10 @@
 //!   authenticated by trust anchors ([`TrustedKeys::from_anchors`]) or by
 //!   the parent's DS RRset (`TrustedKeys::from_ds`), which then verifies
 //!   the zone's RRsets, wildcard expansions included
-//!   ([`TrustedKeys::verify_answer`]), with bounded work
-//!   ([`MAX_CRYPTO_OPERATIONS`]).
+//!   ([`TrustedKeys::verify_answer`]), with bounded work: a
+//!   [`ValidationBudget`] caps signature verifications, RRSIGs, key tag
+//!   collisions, keys and NSEC3 hashes per call and per response
+//!   ([`ValidationLimits`], the KeyTrap defences).
 //! - [`NsecProof`], [`Nsec3Proof`] ([`DenialProof`]): NSEC and NSEC3
 //!   proofs for NXDOMAIN, NODATA, wildcard answers, wildcard NODATA and
 //!   unsigned delegations, with closest encloser proofs, Opt-Out, the
@@ -85,6 +87,7 @@
 mod alg;
 #[cfg(feature = "dnssec")]
 mod backend;
+mod budget;
 mod canonical;
 mod chain;
 mod crypto;
@@ -103,11 +106,12 @@ pub use alg::{Algorithm, DigestType, Nsec3HashAlgorithm};
 #[cfg(feature = "dnssec")]
 #[cfg_attr(docsrs, doc(cfg(feature = "dnssec")))]
 pub use backend::{PrivateKey, PurecryptoVerifier, SigningKey};
+pub use budget::{BudgetedNsec3Hasher, MAX_CRYPTO_OPERATIONS, ValidationBudget, ValidationLimits};
 pub use canonical::{CanonicalRrset, canonical_name};
 #[cfg(feature = "alloc")]
 #[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
 pub use canonical::{canonical_rdata, sort_rrset};
-pub use chain::{Answer, MAX_CRYPTO_OPERATIONS, TrustedKeys, Verified};
+pub use chain::{Answer, TrustedKeys, Verified};
 pub use crypto::{Signer, Verifier};
 #[cfg(feature = "dnssec-digest")]
 #[cfg_attr(docsrs, doc(cfg(feature = "dnssec-digest")))]

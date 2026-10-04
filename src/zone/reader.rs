@@ -3,6 +3,7 @@
 
 use core::fmt;
 
+use super::ZoneLimits;
 use super::generate::{self, Range};
 use super::lexer::{self, Cursor, Pos, is_blank};
 use super::scanner::{Scanner, Token, parse_ttl, resolve_name};
@@ -344,6 +345,10 @@ impl State {
 /// error the reader skips to the next entry, so it can be called again to
 /// find further errors.
 ///
+/// Work is bounded by [`ZoneLimits`] ([`with_limits`](Self::with_limits);
+/// on by default): the records read, the size of each `$GENERATE`, the
+/// length of the text, its lines and tokens.
+///
 /// ```
 /// use dnsbox::zone::ZoneReader;
 /// use dnsbox::Error;
@@ -362,6 +367,13 @@ impl State {
 pub struct ZoneReader<'a> {
     input: &'a [u8],
     st: State,
+    /// The limits.
+    pub(super) limits: ZoneLimits,
+    /// Records read so far (by this reader and, for the readers of
+    /// [`Records`](super::Records), the files read before).
+    pub(super) records: u64,
+    /// Whether the input length was checked.
+    input_checked: bool,
 }
 
 impl<'a> ZoneReader<'a> {
@@ -380,13 +392,28 @@ impl<'a> ZoneReader<'a> {
         ZoneReader {
             input: text,
             st: State::new(),
+            limits: ZoneLimits::DEFAULT,
+            records: 0,
+            input_checked: false,
         }
     }
 
-    /// Resumes parsing `input` from a saved state.
+    /// Resumes parsing `input` (already counted against the input limit)
+    /// from a saved state, `records` records having been read before.
     #[cfg(feature = "alloc")]
-    pub(super) const fn resume(input: &'a [u8], st: State) -> Self {
-        ZoneReader { input, st }
+    pub(super) const fn resume(
+        input: &'a [u8],
+        st: State,
+        limits: ZoneLimits,
+        records: u64,
+    ) -> Self {
+        ZoneReader {
+            input,
+            st,
+            limits,
+            records,
+            input_checked: true,
+        }
     }
 
     /// The state, for [`resume`](Self::resume).
@@ -399,6 +426,12 @@ impl<'a> ZoneReader<'a> {
     #[cfg(feature = "alloc")]
     pub(super) const fn state(&self) -> &State {
         &self.st
+    }
+
+    /// The length of the text.
+    #[cfg(feature = "alloc")]
+    pub(super) const fn input_len(&self) -> usize {
+        self.input.len()
     }
 
     /// Sets the initial origin, as if the text started with `$ORIGIN`.
@@ -442,6 +475,29 @@ impl<'a> ZoneReader<'a> {
         self
     }
 
+    /// Replaces the work and size limits ([`ZoneLimits::DEFAULT`] by
+    /// default). See the [`ZoneLimits`] example.
+    #[inline]
+    #[must_use]
+    pub const fn with_limits(mut self, limits: ZoneLimits) -> Self {
+        self.limits = limits;
+        self
+    }
+
+    /// The work and size limits.
+    #[inline]
+    #[must_use]
+    pub const fn limits(&self) -> &ZoneLimits {
+        &self.limits
+    }
+
+    /// The number of records read so far.
+    #[inline]
+    #[must_use]
+    pub const fn record_count(&self) -> u64 {
+        self.records
+    }
+
     /// The current origin (`$ORIGIN`).
     #[inline]
     #[must_use]
@@ -472,10 +528,12 @@ impl<'a> ZoneReader<'a> {
     /// A [`ZoneError`] with the position of the faulty entry: the RDATA
     /// parse errors ([`Error::InvalidText`], [`Error::UnknownMnemonic`],
     /// ...), [`Error::MissingTtl`], [`Error::BufferTooSmall`] for RDATA
-    /// that does not fit in `buf`, and [`Error::BadInclude`] for an
+    /// that does not fit in `buf`, [`Error::LimitExceeded`] for a
+    /// [limit](ZoneLimits) reached, and [`Error::BadInclude`] for an
     /// `$INCLUDE` (use [`next_entry`](Self::next_entry) or
     /// [`records`](Self::records) with a resolver to follow it). The reader
-    /// then skips to the next entry.
+    /// then skips to the next entry, or, once the record or input limit is
+    /// reached, stops (later calls return `Ok(None)`).
     pub fn next_record<'b>(
         &mut self,
         buf: &'b mut [u8],
@@ -501,6 +559,13 @@ impl<'a> ZoneReader<'a> {
         buf: &'b mut [u8],
     ) -> core::result::Result<Option<Entry<'a, 'b>>, ZoneError> {
         let input = self.input;
+        if !self.input_checked {
+            self.input_checked = true;
+            if input.len() > self.limits.max_input_len {
+                self.stop();
+                return Err(ZoneError::new(Error::LimitExceeded, 1, 1));
+            }
+        }
         loop {
             if self.st.generate.is_some() {
                 return self.generated(buf).map(|r| Some(Entry::Record(r)));
@@ -514,7 +579,7 @@ impl<'a> ZoneReader<'a> {
             let owner_field = input
                 .get(start.pos.offset)
                 .is_some_and(|&c| !is_blank(c) && !matches!(c, b'\n' | b';' | b'(' | b')'));
-            let mut s = Scanner::entry(input, start, Name::ROOT);
+            let mut s = Scanner::entry(input, start, Name::ROOT, self.lex_limits());
             let first = match s.peek() {
                 Ok(Some(t)) => t,
                 Ok(None) => {
@@ -541,10 +606,37 @@ impl<'a> ZoneReader<'a> {
                     Err(e) => return Err(self.fail(s, e)),
                 }
             }
-            return self
-                .record(s, owner_field, buf)
-                .map(|r| Some(Entry::Record(r)));
+            self.count(start.pos)?;
+            let rr = self.record(s, owner_field, buf)?;
+            self.records += 1;
+            return Ok(Some(Entry::Record(rr)));
         }
+    }
+
+    /// The line and token limits.
+    const fn lex_limits(&self) -> lexer::Limits {
+        lexer::Limits {
+            line: self.limits.max_line_len,
+            token: self.limits.max_token_len,
+        }
+    }
+
+    /// Checks that one more record may be read (the entry at `pos`), and
+    /// stops the reader if not.
+    fn count(&mut self, pos: Pos) -> core::result::Result<(), ZoneError> {
+        if self.records >= self.limits.max_records {
+            let err = self.error_at(Error::LimitExceeded, pos);
+            self.stop();
+            return Err(err);
+        }
+        Ok(())
+    }
+
+    /// Skips the rest of the input.
+    fn stop(&mut self) {
+        self.st.generate = None;
+        self.st.cur.pos.offset = self.input.len();
+        self.st.cur.paren = 0;
     }
 
     /// Follows `$INCLUDE` directives through `resolver` while iterating;
@@ -626,7 +718,7 @@ impl<'a> ZoneReader<'a> {
     /// Parses `$GENERATE range lhs [ttl] [class] type rhs`.
     fn start_generate(&mut self, s: &mut Scanner<'a>) -> Result<()> {
         let pos = self.st.cur.pos;
-        let range = Range::parse(s.word()?.as_bytes())?;
+        let range = Range::parse(s.word()?.as_bytes(), self.limits.max_generate)?;
         let lhs = s.word()?;
         let at = s.last_pos().offset;
         let lhs = (at, at + lhs.as_bytes().len());
@@ -670,15 +762,19 @@ impl<'a> ZoneReader<'a> {
         let Some(mut g) = self.st.generate else {
             return Err(ZoneError::new(Error::InvalidText, self.line(), 1));
         };
+        self.count(g.pos)?;
         let value = g.next;
         self.st.generate = g.range.after(value).map(|next| {
             g.next = next;
             g
         });
-        generate_one(self.input, self.st.origin.as_name(), &g, value, buf).map_err(|e| {
-            self.st.generate = None;
-            self.error_at(e, g.pos)
-        })
+        let rr =
+            generate_one(self.input, self.st.origin.as_name(), &g, value, buf).map_err(|e| {
+                self.st.generate = None;
+                self.error_at(e, g.pos)
+            })?;
+        self.records += 1;
+        Ok(rr)
     }
 
     /// Parses a resource-record entry.
@@ -716,7 +812,12 @@ impl<'a> ZoneReader<'a> {
         let class = class.unwrap_or(self.st.class);
         let type_pos = s.last_pos();
         let mut w = WireWriter::new(buf);
-        let mut rs = Scanner::entry(self.input, s.cursor(), self.st.origin.as_name());
+        let mut rs = Scanner::entry(
+            self.input,
+            s.cursor(),
+            self.st.origin.as_name(),
+            self.lex_limits(),
+        );
         let rdata_start = rs.last_pos();
         if let Err(e) = RData::parse_text(rtype, class, &mut rs, &mut w) {
             // Errors before the first RDATA token (no RDATA, no text

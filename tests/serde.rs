@@ -509,4 +509,24 @@ mod owned {
             "invalid length 65536, expected at most 65535 octets",
         );
     }
+
+    #[test]
+    fn sections_are_bounded() {
+        // A section holds at most 65535 entries (16-bit header counts):
+        // longer input is refused while it is read.
+        let question = r#"{"name":".","type":"A","class":"IN"}"#;
+        let message = |n: usize| {
+            let list = vec![question; n].join(",");
+            format!(r#"{{"id":1,"flags":{{}},"questions":[{list}]}}"#)
+        };
+        let msg: OwnedMessage = from_json(&message(65535)).unwrap();
+        assert_eq!(msg.questions.len(), 65535);
+        assert_eq!(msg.header().unwrap().qdcount, 65535);
+        let err = from_json::<OwnedMessage>(&message(65536)).unwrap_err();
+        assert!(
+            err.to_string()
+                .contains("invalid length 65536, expected a sequence of at most 65535 entries"),
+            "{err}"
+        );
+    }
 }

@@ -273,6 +273,15 @@ enum State {
 /// OPT records elsewhere are ignored. After an error the processor stays
 /// failed.
 ///
+/// The server decides how long a transfer is: an AXFR may be any size and
+/// an IXFR may chain any number of difference sequences. Each message
+/// costs work linear in its size and the processor keeps no state that
+/// grows, but whoever stores the events grows with the transfer: bound it
+/// with [`with_max_records`](Self::with_max_records) and
+/// [`with_max_messages`](Self::with_max_messages) when the server is not
+/// trusted (beyond them, [`Error::LimitExceeded`]). There is no default
+/// limit, as zones legitimately range from a few records to many millions.
+///
 /// ```
 /// use dnsbox::rdata::{A, ParseRdataText, Soa};
 /// use dnsbox::xfr::{XfrEvent, XfrProcessor, XfrStyle};
@@ -317,6 +326,8 @@ pub struct XfrProcessor {
     style: Option<XfrStyle>,
     messages: u32,
     records: u64,
+    max_messages: u32,
+    max_records: u64,
 }
 
 impl XfrProcessor {
@@ -331,6 +342,8 @@ impl XfrProcessor {
             style: None,
             messages: 0,
             records: 0,
+            max_messages: u32::MAX,
+            max_records: u64::MAX,
         }
     }
 
@@ -348,6 +361,48 @@ impl XfrProcessor {
     #[must_use]
     pub fn with_id(mut self, id: u16) -> Self {
         self.id = Some(id);
+        self
+    }
+
+    /// Fails the transfer with [`Error::LimitExceeded`] at its answer
+    /// record number `max + 1` (no limit by default).
+    ///
+    /// ```
+    /// use dnsbox::rdata::{A, ParseRdataText, Soa};
+    /// use dnsbox::xfr::XfrProcessor;
+    /// use dnsbox::{Class, Error, Message, MessageBuilder, NameBuf, Rtype};
+    ///
+    /// // A server that streams records without ever ending the transfer.
+    /// let zone: NameBuf = "example.".parse()?;
+    /// let mut sbuf = [0u8; 64];
+    /// let soa = Soa::from_text("ns. host. 1 2 3 4 5", &mut sbuf)?;
+    /// let mut buf = [0u8; 512];
+    /// let mut b = MessageBuilder::new(&mut buf)?;
+    /// b.set_flags(dnsbox::Flags::default().with_qr(true));
+    /// b.push_answer(&zone, Class::IN, 60, &soa)?;
+    /// for i in 0..10u8 {
+    ///     b.push_answer(&zone, Class::IN, 60, &A::new([192, 0, 2, i].into()))?;
+    /// }
+    /// let msg = Message::parse(b.finish())?;
+    ///
+    /// let mut xfr = XfrProcessor::axfr(&zone).with_max_records(8);
+    /// let results: Vec<_> = xfr.process(&msg)?.collect();
+    /// assert_eq!(results.len(), 9);
+    /// assert_eq!(results[8].as_ref().err(), Some(&Error::LimitExceeded));
+    /// assert!(xfr.process(&msg).is_err()); // the transfer has failed
+    /// # Ok::<(), dnsbox::Error>(())
+    /// ```
+    #[must_use]
+    pub fn with_max_records(mut self, max: u64) -> Self {
+        self.max_records = max;
+        self
+    }
+
+    /// Fails the transfer with [`Error::LimitExceeded`] at its message
+    /// number `max + 1` (no limit by default).
+    #[must_use]
+    pub fn with_max_messages(mut self, max: u32) -> Self {
+        self.max_messages = max;
         self
     }
 
@@ -401,8 +456,12 @@ impl XfrProcessor {
     /// [`Error::ErrorResponse`] for an error RCODE (e.g. a refused
     /// transfer), [`Error::InvalidXfr`] for a message that is not a
     /// response to the transfer (QR, opcode, ID, question) or for any
-    /// message after an error or after the end, and the parse error of a
-    /// malformed question. Errors in the records are yielded by the
+    /// message after an error or after the end,
+    /// [`Error::LimitExceeded`] for a message beyond
+    /// [`with_max_messages`](Self::with_max_messages), and the parse error
+    /// of a malformed question. Errors in the records (including
+    /// [`Error::LimitExceeded`] beyond
+    /// [`with_max_records`](Self::with_max_records)) are yielded by the
     /// iterator.
     pub fn process<'p, 'a>(&'p mut self, msg: &Message<'a>) -> Result<XfrEvents<'p, 'a>> {
         match self.check_message(msg) {
@@ -425,6 +484,9 @@ impl XfrProcessor {
         match self.state {
             State::Done | State::Failed => return Err(Error::InvalidXfr),
             _ => {}
+        }
+        if self.messages >= self.max_messages {
+            return Err(Error::LimitExceeded);
         }
         let flags = msg.flags();
         if flags.rcode() != Rcode::NOERROR {
@@ -454,6 +516,9 @@ impl XfrProcessor {
     /// Advances the state machine by one answer record. `only_record` is
     /// whether this is the sole answer of the message.
     fn step<'a>(&mut self, rr: Record<'a>, only_record: bool) -> Result<XfrEvent<'a>> {
+        if self.records >= self.max_records {
+            return Err(Error::LimitExceeded);
+        }
         self.records = self.records.saturating_add(1);
         let soa = if rr.rtype() == Rtype::SOA {
             if rr.name() != self.zone.as_name() {
@@ -548,6 +613,8 @@ impl fmt::Debug for XfrProcessor {
             .field("style", &self.style)
             .field("messages", &self.messages)
             .field("records", &self.records)
+            .field("max_messages", &self.max_messages)
+            .field("max_records", &self.max_records)
             .finish()
     }
 }

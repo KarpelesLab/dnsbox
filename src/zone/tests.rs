@@ -555,7 +555,7 @@ after A 192.0.2.99
     // The iteration count is bounded.
     assert_eq!(
         read_all("$GENERATE 0-4294967295 $ 1 A 192.0.2.1\n", "x."),
-        [Err((Error::InvalidText, 1, 11))]
+        [Err((Error::LimitExceeded, 1, 11))]
     );
     let mut r = ZoneReader::new("$GENERATE 0-65535 $ 1 TXT x\n");
     let mut buf = [0u8; 8];
@@ -621,7 +621,7 @@ end A 192.0.2.102
             ok("ok.example. 1 IN A 192.0.2.3"),
             Err((Error::InvalidText, 2, Some("bad.inc".to_string()))),
             // loop.inc includes itself until the depth limit.
-            Err((Error::BadInclude, 1, Some("loop.inc".to_string()))),
+            Err((Error::LimitExceeded, 1, Some("loop.inc".to_string()))),
             ok("end.example. 60 IN A 192.0.2.102"),
         ]
     );
@@ -635,7 +635,10 @@ end A 192.0.2.102
         .collect();
     assert_eq!(
         res,
-        [Ok(". 1 IN A 192.0.2.2".to_string()), Err(Error::BadInclude)]
+        [
+            Ok(". 1 IN A 192.0.2.2".to_string()),
+            Err(Error::LimitExceeded)
+        ]
     );
     // Depth 0 forbids includes.
     let res: Vec<_> = ZoneReader::new("$INCLUDE b.inc\n")
@@ -645,7 +648,7 @@ end A 192.0.2.102
         .max_include_depth(0)
         .collect();
     assert_eq!(res.len(), 1);
-    assert_eq!(res[0].as_ref().unwrap_err().error(), Error::BadInclude);
+    assert_eq!(res[0].as_ref().unwrap_err().error(), Error::LimitExceeded);
     // Errors in included files name the file.
     let e = ZoneError::new(Error::InvalidText, 2, 5).in_file("x.inc");
     assert_eq!(
@@ -754,4 +757,328 @@ fn hostile_input() {
         }
     }
     assert_eq!(r.next_record(&mut buf), Ok(None));
+}
+
+/// Reads every entry of `text` under `limits`, as [`read_all`] does.
+fn read_limited(
+    text: &str,
+    limits: ZoneLimits,
+) -> Vec<core::result::Result<String, (Error, u32, u32)>> {
+    let mut r = ZoneReader::new(text).with_limits(limits);
+    let mut buf = [0u8; 65535];
+    let mut out = Vec::new();
+    for _ in 0..10_000 {
+        match r.next_record(&mut buf) {
+            Ok(Some(rr)) => out.push(Ok(rr.to_string())),
+            Ok(None) => return out,
+            Err(e) => out.push(Err((e.error(), e.line(), e.column()))),
+        }
+    }
+    panic!("reader does not terminate");
+}
+
+#[test]
+fn record_limit() {
+    let ok = |s: &str| Ok(s.to_string());
+    let text = "$TTL 1\na A 192.0.2.1\nb A 192.0.2.2\nc A 192.0.2.3\nd A 192.0.2.4\n";
+    let limits = ZoneLimits::DEFAULT.with_max_records(2);
+    // The third record stops the reader.
+    assert_eq!(
+        read_limited(text, limits),
+        [
+            ok("a. 1 IN A 192.0.2.1"),
+            ok("b. 1 IN A 192.0.2.2"),
+            Err((Error::LimitExceeded, 4, 1)),
+        ]
+    );
+    assert_eq!(read_limited(text, limits.with_max_records(4)).len(), 4);
+    assert_eq!(
+        read_limited(text, limits.with_max_records(0)),
+        [Err((Error::LimitExceeded, 2, 1))]
+    );
+    // Failed entries do not count; generated records do.
+    let text = "$TTL 1\nbad A x\n$GENERATE 1-3 g$ A 192.0.2.$\nz A 192.0.2.9\n";
+    assert_eq!(
+        read_limited(text, limits),
+        [
+            Err((Error::InvalidText, 2, 7)),
+            ok("g1. 1 IN A 192.0.2.1"),
+            ok("g2. 1 IN A 192.0.2.2"),
+            Err((Error::LimitExceeded, 3, 1)),
+        ]
+    );
+    let mut r = ZoneReader::new(text).with_limits(limits.with_max_records(3));
+    let mut buf = [0u8; 64];
+    let mut n = 0;
+    while let Ok(Some(_)) | Err(_) = r.next_record(&mut buf) {
+        n += 1;
+    }
+    assert_eq!((n, r.record_count()), (5, 3));
+    // A hostile file: each line yields MAX_GENERATE records.
+    let line = "$GENERATE 0-65535 h$ TXT x\n";
+    let text = format!("$TTL 1\n{}", line.repeat(64));
+    let mut r = ZoneReader::new(&text).with_limits(limits.with_max_records(70_000));
+    let mut seen = 0u64;
+    let err = loop {
+        match r.next_record(&mut buf) {
+            Ok(Some(_)) => seen += 1,
+            Ok(None) => panic!("not stopped"),
+            Err(e) => break e,
+        }
+    };
+    assert_eq!(seen, 70_000);
+    assert_eq!((err.error(), err.line()), (Error::LimitExceeded, 3));
+    assert_eq!(r.next_record(&mut buf), Ok(None));
+}
+
+#[test]
+fn generate_limit() {
+    let ok = |s: &str| Ok(s.to_string());
+    let text = "$TTL 1\n$GENERATE 1-3 g$ A 192.0.2.$\n$GENERATE 1-2 h$ A 192.0.2.$\n";
+    let limits = ZoneLimits::DEFAULT.with_max_generate(2);
+    // The directive over the limit is skipped; reading goes on.
+    assert_eq!(
+        read_limited(text, limits),
+        [
+            Err((Error::LimitExceeded, 2, 11)),
+            ok("h1. 1 IN A 192.0.2.1"),
+            ok("h2. 1 IN A 192.0.2.2"),
+        ]
+    );
+    assert_eq!(read_limited(text, limits.with_max_generate(3)).len(), 5);
+    assert_eq!(
+        read_limited(text, limits.with_max_generate(0)),
+        [
+            Err((Error::LimitExceeded, 2, 11)),
+            Err((Error::LimitExceeded, 3, 11)),
+        ]
+    );
+    // Steps count iterations, not the span.
+    let stepped = "$TTL 1\n$GENERATE 0-1000/500 g$ A 192.0.2.1\n";
+    assert_eq!(read_limited(stepped, limits.with_max_generate(3)).len(), 3);
+    // Raised above MAX_GENERATE.
+    let mut r = ZoneReader::new("$GENERATE 1-65537 $ 1 TXT x\n").with_limits(ZoneLimits::UNLIMITED);
+    let mut buf = [0u8; 8];
+    let mut n = 0u32;
+    while r.next_record(&mut buf).unwrap().is_some() {
+        n += 1;
+    }
+    assert_eq!(n, MAX_GENERATE + 1);
+}
+
+#[test]
+fn input_limit() {
+    let text = "a 1 A 192.0.2.1\n";
+    let limits = ZoneLimits::DEFAULT.with_max_input_len(text.len());
+    assert_eq!(read_limited(text, limits).len(), 1);
+    assert_eq!(
+        read_limited(text, limits.with_max_input_len(text.len() - 1)),
+        [Err((Error::LimitExceeded, 1, 1))]
+    );
+}
+
+#[test]
+fn line_and_token_limits() {
+    let ok = |s: &str| Ok(s.to_string());
+    let limits = ZoneLimits::DEFAULT.with_max_line_len(20);
+    // 21 characters on line 2: reported at the 21st, the entry skipped.
+    let text = "a 1 A 192.0.2.1\nb 1 TXT \"01234567890\"\nc 1 A 192.0.2.3\n";
+    assert_eq!(
+        read_limited(text, limits),
+        [
+            ok("a. 1 IN A 192.0.2.1"),
+            Err((Error::LimitExceeded, 2, 21)),
+            ok("c. 1 IN A 192.0.2.3"),
+        ]
+    );
+    assert_eq!(read_limited(text, limits.with_max_line_len(21)).len(), 3);
+    // Lines inside parentheses, comments, quoted strings, escaped
+    // newlines and the last line are measured too.
+    for text in [
+        "a 1 TXT ( x\n                       y )\nc 1 A 192.0.2.3\n",
+        "a 1 TXT x ; a long comment here\nc 1 A 192.0.2.3\n",
+        "a 1 TXT \"x\n123456789012345678901234\"\nc 1 A 192.0.2.3\n",
+        "a 1 TXT x\\\n123456789012345678901234\nc 1 A 192.0.2.3\n",
+    ] {
+        let res = read_limited(text, limits);
+        assert!(
+            matches!(res[0], Err((Error::LimitExceeded, _, 21))),
+            "{text:?}: {res:?}"
+        );
+        assert_eq!(res.last(), Some(&ok("c. 1 IN A 192.0.2.3")), "{text:?}");
+    }
+    assert_eq!(
+        read_limited("c 1 A 192.0.2.3\n; 1234567890123456789012", limits),
+        [
+            ok("c. 1 IN A 192.0.2.3"),
+            Err((Error::LimitExceeded, 2, 21))
+        ]
+    );
+    // Tokens: reported at their start.
+    let limits = ZoneLimits::DEFAULT.with_max_token_len(5);
+    assert_eq!(
+        read_limited("a 1 TXT abcde \"abc\"\nb 1 TXT abcdef\n", limits),
+        [
+            ok("a. 1 IN TXT \"abcde\" \"abc\""),
+            Err((Error::LimitExceeded, 2, 9))
+        ]
+    );
+    assert_eq!(
+        read_limited("b 1 TXT \"abcd\"\n", limits),
+        [Err((Error::LimitExceeded, 1, 9))]
+    );
+    // The default token limit fits the largest RDATA in hex.
+    let hex = format!("a 1 TYPE65280 \\# 65535 {}\n", "ab".repeat(65535));
+    let res = read_all(&hex, "x.");
+    assert_eq!(res.len(), 1);
+    assert!(res[0].is_ok());
+}
+
+#[cfg(feature = "alloc")]
+#[test]
+fn limits_across_includes() {
+    let resolver = |path: &str| match path {
+        "two.inc" => Ok("x A 192.0.2.1\ny A 192.0.2.2\n".to_string()),
+        "big.inc" => Ok(format!("z TXT \"{}\"\n", "a".repeat(100))),
+        _ => Err(Error::BadInclude),
+    };
+    type Item = core::result::Result<String, (Error, u32, Option<String>)>;
+    let collect = |text: &str, limits: ZoneLimits| -> Vec<Item> {
+        ZoneReader::new(text)
+            .with_default_ttl(1)
+            .records()
+            .with_includes(resolver)
+            .with_limits(limits)
+            .map(|r| {
+                r.map(|rr| rr.name.to_string())
+                    .map_err(|e| (e.error(), e.line(), e.file().map(String::from)))
+            })
+            .collect()
+    };
+    // The record limit counts every file and ends the iteration.
+    let text = "a A 192.0.2.10\n$INCLUDE two.inc\nb A 192.0.2.11\n$INCLUDE two.inc\n";
+    let limits = ZoneLimits::DEFAULT.with_max_records(2);
+    assert_eq!(
+        collect(text, limits),
+        [
+            Ok("a.".to_string()),
+            Ok("x.".to_string()),
+            Err((Error::LimitExceeded, 2, Some("two.inc".to_string()))),
+        ]
+    );
+    assert_eq!(collect(text, limits.with_max_records(6)).len(), 6);
+    // The input limit counts the included text; a file over what is left
+    // fails its directive.
+    let text = "$INCLUDE big.inc\n$INCLUDE two.inc\n";
+    let limits = ZoneLimits::DEFAULT.with_max_input_len(text.len() + 50);
+    assert_eq!(
+        collect(text, limits),
+        [
+            Err((Error::LimitExceeded, 1, None)),
+            Ok("x.".to_string()),
+            Ok("y.".to_string()),
+        ]
+    );
+    // The default `load_limited` checks resolvers that do not.
+    let mut r = resolver;
+    assert_eq!(r.load_limited("two.inc", 10), Err(Error::LimitExceeded));
+    assert!(r.load_limited("two.inc", 28).is_ok());
+    // Line limits apply in included files.
+    let limits = ZoneLimits::DEFAULT.with_max_line_len(20);
+    assert_eq!(
+        collect("$INCLUDE big.inc\n", limits),
+        [Err((Error::LimitExceeded, 1, Some("big.inc".to_string())))]
+    );
+    // parse_with_limits.
+    let one = ZoneLimits::DEFAULT.with_max_records(1);
+    let err = parse_with_limits("$TTL 1\na A 192.0.2.1\nb A 192.0.2.2\n", one).unwrap_err();
+    assert_eq!((err.error(), err.line()), (Error::LimitExceeded, 3));
+}
+
+#[cfg(feature = "std")]
+#[test]
+fn fs_includes() {
+    use std::fs;
+    use std::path::PathBuf;
+
+    // A fresh directory: zone/ (served) next to secret (not served).
+    let root: PathBuf = std::env::temp_dir().join(format!(
+        "dnsbox-fs-includes-{}-{:?}",
+        std::process::id(),
+        std::thread::current().id()
+    ));
+    let _ = fs::remove_dir_all(&root);
+    let zone = root.join("zone");
+    fs::create_dir_all(zone.join("sub")).unwrap();
+    fs::write(root.join("secret"), "s A 192.0.2.66\n").unwrap();
+    fs::write(zone.join("a.inc"), "a A 192.0.2.1\n").unwrap();
+    fs::write(zone.join("sub").join("b.inc"), "b A 192.0.2.2\n").unwrap();
+    fs::write(zone.join("big.inc"), "x".repeat(1000)).unwrap();
+    fs::write(zone.join("bad.inc"), [0xff, 0xfe]).unwrap();
+
+    let mut inc = FsIncludes::new(&zone);
+    assert!(inc.is_confined());
+    assert_eq!(inc.base(), zone.as_path());
+    assert_eq!(inc.load("a.inc").unwrap(), "a A 192.0.2.1\n");
+    assert_eq!(inc.load("./sub/b.inc").unwrap(), "b A 192.0.2.2\n");
+    let secret = root.join("secret");
+    for path in [
+        "../secret",
+        "sub/../../secret",
+        "sub/../a.inc",
+        secret.to_str().unwrap(),
+        "",
+        ".",
+        "sub",
+        "missing.inc",
+        "bad.inc",
+    ] {
+        assert_eq!(inc.load(path), Err(Error::BadInclude), "{path:?}");
+    }
+    assert_eq!(inc.load_limited("big.inc", 999), Err(Error::LimitExceeded));
+    assert_eq!(inc.load_limited("big.inc", 1000).unwrap().len(), 1000);
+    #[cfg(unix)]
+    {
+        // Symbolic links may not lead out of the directory.
+        use std::os::unix::fs::symlink;
+        symlink(&secret, zone.join("escape.inc")).unwrap();
+        symlink(&root, zone.join("up")).unwrap();
+        symlink(zone.join("a.inc"), zone.join("sub").join("link.inc")).unwrap();
+        assert_eq!(inc.load("escape.inc"), Err(Error::BadInclude));
+        assert_eq!(inc.load("up/secret"), Err(Error::BadInclude));
+        assert_eq!(inc.load("sub/link.inc").unwrap(), "a A 192.0.2.1\n");
+        // Devices are not read, even unconfined.
+        let mut any = FsIncludes::unconfined(&zone);
+        assert_eq!(any.load("/dev/zero"), Err(Error::BadInclude));
+    }
+    // Unconfined: any path, as BIND does.
+    let mut any = FsIncludes::unconfined(&zone);
+    assert!(!any.is_confined());
+    assert_eq!(any.load("../secret").unwrap(), "s A 192.0.2.66\n");
+    assert_eq!(
+        any.load(secret.to_str().unwrap()).unwrap(),
+        "s A 192.0.2.66\n"
+    );
+
+    // Through Records: errors at the directives, the rest is read.
+    let text = "$TTL 1\n$INCLUDE a.inc\n$INCLUDE ../secret\n$INCLUDE big.inc\nend A 192.0.2.9\n";
+    let res: Vec<_> = ZoneReader::new(text)
+        .records()
+        .with_includes(FsIncludes::new(&zone))
+        .with_limits(ZoneLimits::DEFAULT.with_max_input_len(text.len() + 100))
+        .map(|r| {
+            r.map(|rr| rr.name.to_string())
+                .map_err(|e| (e.error(), e.line()))
+        })
+        .collect();
+    assert_eq!(
+        res,
+        [
+            Ok("a.".to_string()),
+            Err((Error::BadInclude, 3)),
+            Err((Error::LimitExceeded, 4)),
+            Ok("end.".to_string()),
+        ]
+    );
+    fs::remove_dir_all(&root).unwrap();
 }

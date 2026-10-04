@@ -21,14 +21,18 @@
 //! capture time: the root DNSKEY RRset against the IANA root trust anchor,
 //! and the SOA of `ed25519.nl` (Ed25519 signatures).
 //!
-//! What it shows: [`TrustedKeys::from_ds`] (DS → DNSKEY, RFC 4035 §5.2),
-//! [`TrustedKeys::verify_rrset`] (RFC 4035 §5.3) over RRsets taken from a
-//! message without copying ([`RecordRdata`]), DS records read with the
-//! zone-file parser, and the [`PurecryptoVerifier`] backend.
+//! What it shows: [`TrustedKeys::from_ds_with_budget`] (DS → DNSKEY,
+//! RFC 4035 §5.2), [`TrustedKeys::verify_rrset_with_budget`] (RFC 4035
+//! §5.3) over RRsets taken from a message without copying
+//! ([`RecordRdata`]), one [`ValidationBudget`] per response (the KeyTrap
+//! bounds), DS records read with the zone-file parser, and the
+//! [`PurecryptoVerifier`] backend.
 
 use std::error::Error as StdError;
 
-use dnsbox::dnssec::{PurecryptoVerifier, RecordRdata, Rrset, Timestamp, TrustedKeys, Verified};
+use dnsbox::dnssec::{
+    PurecryptoVerifier, RecordRdata, Rrset, Timestamp, TrustedKeys, ValidationBudget, Verified,
+};
 use dnsbox::rdata::{Dnskey, Ds, RData, Rrsig};
 use dnsbox::zone::{ZoneReader, ZoneRecordBuf};
 use dnsbox::{Class, Message, Name, Record, Rtype, Section};
@@ -200,13 +204,17 @@ fn validate_and_print(
         return Ok(());
     }
     let mut scratch = Vec::new();
-    let keys = match TrustedKeys::from_ds(
+    // One budget for everything validated for this response: however many
+    // keys, signatures and RRsets it carries, the work stays bounded.
+    let budget = ValidationBudget::new();
+    let keys = match TrustedKeys::from_ds_with_budget(
         &PurecryptoVerifier,
         Rrset::new(zone, Class::IN, dnskeys.clone()),
         ds,
         key_sigs,
         now,
         &mut scratch,
+        &budget,
     ) {
         Ok(keys) => keys,
         Err(e) => {
@@ -234,12 +242,13 @@ fn validate_and_print(
                 .filter(|rr| rr.name() == owner && rr.class() == class)
                 .filter_map(|rr| rr.data_as::<Rrsig<'_>>().ok())
                 .filter(|sig| sig.type_covered == rtype);
-            let verdict = match keys.verify_rrset(
+            let verdict = match keys.verify_rrset_with_budget(
                 &PurecryptoVerifier,
                 Rrset::new(owner, class, &records),
                 sigs,
                 now,
                 &mut scratch,
+                &budget,
             ) {
                 Ok(v) => secure(&v),
                 Err(e) if !owner.is_subdomain_of(&zone) => format!("not in zone {zone} ({e})"),

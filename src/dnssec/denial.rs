@@ -162,6 +162,11 @@ pub enum BogusReason {
     /// The NSEC3 iteration count is above the configured bogus limit
     /// (RFC 9276 §3.2).
     Iterations,
+    /// The NSEC3 hashes of a [`ValidationBudget`](super::ValidationBudget)
+    /// ran out before the proof was complete (CVE-2023-50868: a name with
+    /// many labels costs one hash per label). The proof is not known to
+    /// fail, but cannot be afforded: treat it as bogus.
+    LimitExceeded,
 }
 
 impl fmt::Display for BogusReason {
@@ -179,6 +184,7 @@ impl fmt::Display for BogusReason {
             BogusReason::InconsistentParameters => "inconsistent NSEC3 parameters",
             BogusReason::UnusableRecords => "no usable denial-of-existence record",
             BogusReason::Iterations => "NSEC3 iteration count above limit",
+            BogusReason::LimitExceeded => "validation work limit exceeded",
         })
     }
 }
@@ -334,7 +340,10 @@ impl ClosestEncloser<'_> {
 /// records; NSEC3 checks hash at most one name per label of the query name
 /// plus one wildcard (each hash costing `iterations + 1` digest
 /// computations, capped by [`Nsec3Limits`]), and make one pass over the
-/// records per hashed name.
+/// records per hashed name. A hasher from
+/// [`ValidationBudget::nsec3_hasher`](super::ValidationBudget::nsec3_hasher)
+/// also caps the hashes of all the checks of a response
+/// ([`BogusReason::LimitExceeded`] beyond).
 ///
 /// ```
 /// use dnsbox::dnssec::{Denial, DenialStatus, NsecProof, NsecRecord};

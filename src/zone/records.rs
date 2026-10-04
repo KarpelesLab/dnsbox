@@ -6,17 +6,20 @@ use alloc::vec;
 use alloc::vec::Vec;
 use core::fmt;
 
+use super::ZoneLimits;
 use super::reader::{Entry, State, ZoneError, ZoneReader, ZoneRecord, write_record};
 use crate::name::NameBuf;
 use crate::rdata::RData;
 use crate::wire::WireReader;
 use crate::{Class, Error, Result, Rtype};
 
-/// Default limit on `$INCLUDE` nesting for [`Records`].
-pub const DEFAULT_MAX_INCLUDE_DEPTH: usize = 8;
+/// Default limit on `$INCLUDE` nesting for [`Records`]
+/// ([`ZoneLimits::max_include_depth`]).
+pub const DEFAULT_MAX_INCLUDE_DEPTH: usize = ZoneLimits::DEFAULT.max_include_depth;
 
-/// Default limit on the number of `$INCLUDE`d files for [`Records`].
-pub const DEFAULT_MAX_INCLUDES: usize = 256;
+/// Default limit on the number of `$INCLUDE`d files for [`Records`]
+/// ([`ZoneLimits::max_includes`]).
+pub const DEFAULT_MAX_INCLUDES: usize = ZoneLimits::DEFAULT.max_includes;
 
 /// An owned resource record read from a master file: a [`ZoneRecord`]
 /// with its RDATA in a `Vec`.
@@ -111,6 +114,12 @@ impl fmt::Display for ZoneRecordBuf {
 /// `FnMut(&str) -> Result<String>`. Return [`Error::BadInclude`] for a
 /// file that cannot be loaded. See the [`Records`] example for a closure.
 ///
+/// The path comes from the zone file: a resolver for untrusted zone files
+/// must decide which files it serves (as [`FsIncludes::new`](super::FsIncludes::new)
+/// does, confining them to a directory), and should implement
+/// [`load_limited`](Self::load_limited) to stop reading a file that is too
+/// large.
+///
 /// ```
 /// use dnsbox::zone::IncludeResolver;
 /// use dnsbox::Error;
@@ -141,6 +150,26 @@ pub trait IncludeResolver {
     /// [`Error::BadInclude`] (or another error) if the file cannot be
     /// loaded; it is reported at the `$INCLUDE` directive.
     fn load(&mut self, path: &str) -> Result<String>;
+
+    /// Returns the text of the file named `path`, if it is at most
+    /// `max_len` octets long: what is left of
+    /// [`ZoneLimits::max_input_len`]. [`Records`] calls this method.
+    ///
+    /// The default calls [`load`](Self::load) and checks the length
+    /// afterwards; resolvers reading from a source of unknown size should
+    /// stop reading after `max_len + 1` octets instead.
+    ///
+    /// # Errors
+    ///
+    /// [`Error::LimitExceeded`] for a file longer than `max_len`, and the
+    /// errors of [`load`](Self::load).
+    fn load_limited(&mut self, path: &str, max_len: usize) -> Result<String> {
+        let text = self.load(path)?;
+        if text.len() > max_len {
+            return Err(Error::LimitExceeded);
+        }
+        Ok(text)
+    }
 }
 
 impl<F: FnMut(&str) -> Result<String>> IncludeResolver for F {
@@ -169,42 +198,147 @@ impl IncludeResolver for NoIncludes {
     }
 }
 
-/// An [`IncludeResolver`] reading files from the file system, relative
-/// paths being resolved against a base directory (BIND resolves them
-/// against its working directory, usually the zone directory).
+/// An [`IncludeResolver`] reading files from the file system.
 ///
-/// It opens whatever path the zone file names, absolute paths and `..`
-/// included: only use it for trusted zone files.
+/// [`new`](Self::new) confines the included files to a directory, which
+/// makes it usable for zone files from untrusted sources: a path must be
+/// relative and contain no `..` (nor a root or a drive prefix), and must
+/// name a regular file inside the directory once symbolic links are
+/// resolved, so that no link leads out of it. Anything else is
+/// [`Error::BadInclude`].
+///
+/// [`unconfined`](Self::unconfined) resolves relative paths against a base
+/// directory and opens whatever path the zone file names, absolute paths
+/// and `..` included, as BIND does (relative to its working directory,
+/// usually the zone directory): only for trusted zone files.
+///
+/// Both read regular files only (no devices or pipes), and at most what is
+/// left of [`ZoneLimits::max_input_len`] ([`Error::LimitExceeded`] for a
+/// longer file). The checks are made when the file is opened: they hold
+/// against the content of the zone file, not against someone changing
+/// the directory at the same time (replacing a checked file with a link).
 ///
 /// ```no_run
 /// use dnsbox::zone::{FsIncludes, ZoneReader};
 ///
-/// let text = std::fs::read_to_string("/etc/bind/db.example")?;
+/// let text = std::fs::read_to_string("/var/zones/customer/db.example")?;
 /// let records = ZoneReader::new(&text)
 ///     .records()
-///     .with_includes(FsIncludes::new("/etc/bind"))
+///     .with_includes(FsIncludes::new("/var/zones/customer"))
 ///     .collect::<Result<Vec<_>, _>>()?;
 /// println!("{} records", records.len());
 /// # Ok::<(), Box<dyn std::error::Error>>(())
+/// ```
+///
+/// ```
+/// use dnsbox::Error;
+/// use dnsbox::zone::{FsIncludes, IncludeResolver};
+///
+/// let dir = std::env::temp_dir();
+/// let mut includes = FsIncludes::new(&dir);
+/// for path in ["/etc/passwd", "../etc/passwd", "a/../../etc/passwd"] {
+///     assert_eq!(includes.load(path), Err(Error::BadInclude));
+/// }
 /// ```
 #[cfg(feature = "std")]
 #[derive(Clone, Debug)]
 pub struct FsIncludes {
     base: std::path::PathBuf,
+    confined: bool,
 }
 
 #[cfg(feature = "std")]
 impl FsIncludes {
-    /// Resolves relative paths against `base`.
+    /// Serves the regular files inside `base` (and its subdirectories),
+    /// named by relative paths without `..`.
     pub fn new(base: impl Into<std::path::PathBuf>) -> Self {
-        FsIncludes { base: base.into() }
+        FsIncludes {
+            base: base.into(),
+            confined: true,
+        }
+    }
+
+    /// Serves any regular file, resolving relative paths against `base`:
+    /// for trusted zone files only.
+    pub fn unconfined(base: impl Into<std::path::PathBuf>) -> Self {
+        FsIncludes {
+            base: base.into(),
+            confined: false,
+        }
+    }
+
+    /// The base directory.
+    #[must_use]
+    pub fn base(&self) -> &std::path::Path {
+        &self.base
+    }
+
+    /// Whether files are confined to the base directory
+    /// ([`new`](Self::new)).
+    #[must_use]
+    pub const fn is_confined(&self) -> bool {
+        self.confined
+    }
+
+    /// The file `path` names, if it may be served.
+    fn resolve(&self, path: &str) -> Result<std::path::PathBuf> {
+        use std::path::{Component, Path};
+        let rel = Path::new(path);
+        if !self.confined {
+            return Ok(self.base.join(rel));
+        }
+        let plain = rel
+            .components()
+            .all(|c| matches!(c, Component::Normal(_) | Component::CurDir));
+        if path.is_empty() || !plain {
+            return Err(Error::BadInclude);
+        }
+        // Resolving symbolic links on both sides: a link inside the
+        // directory must not lead out of it.
+        let base = self.base.canonicalize().map_err(|_| Error::BadInclude)?;
+        let full = base
+            .join(rel)
+            .canonicalize()
+            .map_err(|_| Error::BadInclude)?;
+        if !full.starts_with(&base) {
+            return Err(Error::BadInclude);
+        }
+        Ok(full)
     }
 }
 
 #[cfg(feature = "std")]
 impl IncludeResolver for FsIncludes {
     fn load(&mut self, path: &str) -> Result<String> {
-        std::fs::read_to_string(self.base.join(path)).map_err(|_| Error::BadInclude)
+        self.load_limited(path, usize::MAX)
+    }
+
+    fn load_limited(&mut self, path: &str, max_len: usize) -> Result<String> {
+        use std::io::Read;
+        let file = self.resolve(path)?;
+        // Regular files only: a device or a pipe could block or never end.
+        let meta = std::fs::metadata(&file).map_err(|_| Error::BadInclude)?;
+        if !meta.is_file() {
+            return Err(Error::BadInclude);
+        }
+        let max = u64::try_from(max_len).unwrap_or(u64::MAX);
+        if meta.len() > max {
+            return Err(Error::LimitExceeded);
+        }
+        let f = std::fs::File::open(&file).map_err(|_| Error::BadInclude)?;
+        if !f.metadata().is_ok_and(|m| m.is_file()) {
+            return Err(Error::BadInclude);
+        }
+        // The file may have grown since: read one octet more than allowed
+        // at most.
+        let mut bytes = Vec::new();
+        f.take(max.saturating_add(1))
+            .read_to_end(&mut bytes)
+            .map_err(|_| Error::BadInclude)?;
+        if bytes.len() > max_len {
+            return Err(Error::LimitExceeded);
+        }
+        String::from_utf8(bytes).map_err(|_| Error::BadInclude)
     }
 }
 
@@ -228,11 +362,16 @@ struct Frame {
 /// the included file starts with the including file's state (owner,
 /// class, TTLs) and the directive's origin, and when it ends the
 /// including file continues with its own state, unchanged (RFC 1035 §5.1).
-/// Nesting is limited to [`DEFAULT_MAX_INCLUDE_DEPTH`] levels and
-/// [`DEFAULT_MAX_INCLUDES`] files in total (see
-/// [`max_include_depth`](Self::max_include_depth) and
-/// [`max_includes`](Self::max_includes)); beyond that, and when the
-/// resolver fails, the directive yields [`Error::BadInclude`].
+/// When the resolver fails, the directive yields its error
+/// ([`Error::BadInclude`]).
+///
+/// The reader's [`ZoneLimits`] apply to all files together (see
+/// [`with_limits`](Self::with_limits)): the records read, the total length
+/// of the text, and the `$INCLUDE` nesting ([`DEFAULT_MAX_INCLUDE_DEPTH`]
+/// levels) and count ([`DEFAULT_MAX_INCLUDES`] files); a directive over
+/// the nesting, count or length limit yields [`Error::LimitExceeded`], and
+/// so does the record after the last one allowed, which ends the
+/// iteration.
 ///
 /// ```
 /// use dnsbox::zone::ZoneReader;
@@ -260,9 +399,13 @@ pub struct Records<'a, R = NoIncludes> {
     stack: Vec<Frame>,
     resolver: R,
     buf: Vec<u8>,
-    max_depth: usize,
-    max_includes: usize,
+    limits: ZoneLimits,
+    /// Records read so far, in all files.
+    records: u64,
+    /// Files included so far.
     includes: usize,
+    /// Octets of text so far, in all files.
+    input: usize,
 }
 
 impl<R> fmt::Debug for Records<'_, R> {
@@ -270,7 +413,10 @@ impl<R> fmt::Debug for Records<'_, R> {
         f.debug_struct("Records")
             .field("top", &self.top)
             .field("depth", &self.stack.len())
+            .field("limits", &self.limits)
+            .field("records", &self.records)
             .field("includes", &self.includes)
+            .field("input", &self.input)
             .finish_non_exhaustive()
     }
 }
@@ -279,12 +425,13 @@ impl<'a> Records<'a, NoIncludes> {
     /// Iterates over `reader`'s records.
     pub(super) fn new(reader: ZoneReader<'a>) -> Self {
         Records {
+            limits: reader.limits,
+            records: reader.records,
+            input: reader.input_len(),
             top: Some(reader),
             stack: Vec::new(),
             resolver: NoIncludes,
             buf: Vec::new(),
-            max_depth: DEFAULT_MAX_INCLUDE_DEPTH,
-            max_includes: DEFAULT_MAX_INCLUDES,
             includes: 0,
         }
     }
@@ -298,21 +445,47 @@ impl<'a, R: IncludeResolver> Records<'a, R> {
             stack: self.stack,
             resolver,
             buf: self.buf,
-            max_depth: self.max_depth,
-            max_includes: self.max_includes,
+            limits: self.limits,
+            records: self.records,
             includes: self.includes,
+            input: self.input,
         }
     }
 
-    /// Sets the deepest `$INCLUDE` nesting allowed (0 forbids includes).
-    pub fn max_include_depth(mut self, depth: usize) -> Self {
-        self.max_depth = depth;
+    /// Replaces the work and size limits (by default those of the
+    /// [`ZoneReader`], [`ZoneLimits::DEFAULT`] unless set with
+    /// [`ZoneReader::with_limits`]).
+    pub fn with_limits(mut self, limits: ZoneLimits) -> Self {
+        self.limits = limits;
+        if let Some(top) = self.top.as_mut() {
+            top.limits = limits;
+        }
         self
     }
 
-    /// Sets the most files that may be included in total.
+    /// The work and size limits.
+    #[must_use]
+    pub const fn limits(&self) -> &ZoneLimits {
+        &self.limits
+    }
+
+    /// The number of records read so far, in all files.
+    #[must_use]
+    pub const fn record_count(&self) -> u64 {
+        self.records
+    }
+
+    /// Sets the deepest `$INCLUDE` nesting allowed (0 forbids includes):
+    /// [`ZoneLimits::max_include_depth`].
+    pub fn max_include_depth(mut self, depth: usize) -> Self {
+        self.limits.max_include_depth = depth;
+        self
+    }
+
+    /// Sets the most files that may be included in total:
+    /// [`ZoneLimits::max_includes`].
     pub fn max_includes(mut self, count: usize) -> Self {
-        self.max_includes = count;
+        self.limits.max_includes = count;
         self
     }
 
@@ -324,8 +497,9 @@ impl<'a, R: IncludeResolver> Records<'a, R> {
         }
         if let Some(frame) = self.stack.last_mut() {
             let state = core::mem::replace(&mut frame.state, State::new());
-            let mut r = ZoneReader::resume(frame.text.as_bytes(), state);
+            let mut r = ZoneReader::resume(frame.text.as_bytes(), state, self.limits, self.records);
             let res = r.next_entry(&mut self.buf);
+            self.records = r.records;
             let step = match res {
                 Ok(Some(e)) => Ok(Some(Step::from_entry(e, r.state())?)),
                 Ok(None) => Ok(None),
@@ -337,7 +511,10 @@ impl<'a, R: IncludeResolver> Records<'a, R> {
         let Some(r) = self.top.as_mut() else {
             return Ok(None);
         };
-        match r.next_entry(&mut self.buf)? {
+        r.records = self.records;
+        let res = r.next_entry(&mut self.buf);
+        self.records = r.records;
+        match res? {
             Some(e) => Ok(Some(Step::from_entry(e, r.state())?)),
             None => {
                 self.top = None;
@@ -355,13 +532,19 @@ impl<'a, R: IncludeResolver> Records<'a, R> {
                 None => err,
             }
         };
-        if self.stack.len() >= self.max_depth || self.includes >= self.max_includes {
-            return Err(fail(Error::BadInclude));
+        if self.stack.len() >= self.limits.max_include_depth
+            || self.includes >= self.limits.max_includes
+        {
+            return Err(fail(Error::LimitExceeded));
         }
-        let text = match self.resolver.load(&inc.path) {
+        let left = self.limits.max_input_len.saturating_sub(self.input);
+        let text = match self.resolver.load_limited(&inc.path, left) {
+            // The resolver may not have checked.
+            Ok(text) if text.len() > left => return Err(fail(Error::LimitExceeded)),
             Ok(text) => text,
             Err(e) => return Err(fail(e)),
         };
+        self.input += text.len();
         self.includes += 1;
         self.stack.push(Frame {
             name: inc.path,
@@ -427,7 +610,15 @@ impl<R: IncludeResolver> Iterator for Records<'_, R> {
                 Ok(None) => {
                     self.stack.pop()?;
                 }
-                Err(e) => return Some(Err(e)),
+                Err(e) => {
+                    // The record limit ends the iteration.
+                    if e.error() == Error::LimitExceeded && self.records >= self.limits.max_records
+                    {
+                        self.top = None;
+                        self.stack.clear();
+                    }
+                    return Some(Err(e));
+                }
             }
         }
     }
@@ -436,16 +627,13 @@ impl<R: IncludeResolver> Iterator for Records<'_, R> {
 impl<R: IncludeResolver> core::iter::FusedIterator for Records<'_, R> {}
 
 /// Parses a whole master file (no `$INCLUDE`), stopping at the first
-/// error.
-///
-/// Every record is collected, and `$GENERATE` lets a short text yield many
-/// records: for untrusted text, iterate [`ZoneReader::records`] and stop
-/// at a limit of your own instead (see the [module docs](super)).
+/// error, under [`ZoneLimits::DEFAULT`] (see [`parse_with_limits`]).
 ///
 /// # Errors
 ///
 /// The first [`ZoneError`] (see [`ZoneReader::next_record`]); an
-/// `$INCLUDE` fails with [`Error::BadInclude`].
+/// `$INCLUDE` fails with [`Error::BadInclude`], a limit reached with
+/// [`Error::LimitExceeded`].
 ///
 /// ```
 /// let zone = dnsbox::zone::parse(
@@ -456,5 +644,33 @@ impl<R: IncludeResolver> core::iter::FusedIterator for Records<'_, R> {}
 /// # Ok::<(), dnsbox::Error>(())
 /// ```
 pub fn parse(text: &str) -> core::result::Result<Vec<ZoneRecordBuf>, ZoneError> {
-    ZoneReader::new(text).records().collect()
+    parse_with_limits(text, ZoneLimits::DEFAULT)
+}
+
+/// Parses a whole master file (no `$INCLUDE`) like [`parse`], under
+/// `limits`.
+///
+/// # Errors
+///
+/// As [`parse`].
+///
+/// ```
+/// use dnsbox::Error;
+/// use dnsbox::zone::{ZoneLimits, parse_with_limits};
+///
+/// let text = "$TTL 60\n$GENERATE 1-200 host$ A 192.0.2.$\n";
+/// let limits = ZoneLimits::DEFAULT.with_max_records(100);
+/// let err = parse_with_limits(text, limits).unwrap_err();
+/// assert_eq!((err.error(), err.line()), (Error::LimitExceeded, 2));
+/// assert_eq!(parse_with_limits(text, limits.with_max_records(200))?.len(), 200);
+/// # Ok::<(), dnsbox::Error>(())
+/// ```
+pub fn parse_with_limits(
+    text: &str,
+    limits: ZoneLimits,
+) -> core::result::Result<Vec<ZoneRecordBuf>, ZoneError> {
+    ZoneReader::new(text)
+        .with_limits(limits)
+        .records()
+        .collect()
 }

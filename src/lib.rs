@@ -6,8 +6,10 @@
 //! The design goals, in order:
 //!
 //! 1. **Safe on hostile input.** Parsing never panics and never reads out of
-//!    bounds; malformed messages are rejected with an [`Error`]. The crate is
-//!    `#![forbid(unsafe_code)]`.
+//!    bounds; malformed messages are rejected with an [`Error`]. Work is
+//!    bounded by default where input could amplify it (zone files:
+//!    [`zone::ZoneLimits`]; DNSSEC validation: [`dnssec::ValidationBudget`]).
+//!    The crate is `#![forbid(unsafe_code)]`.
 //! 2. **Zero-copy, allocation-free parsing.** Messages are parsed as views
 //!    over the caller's buffer; names and record data are decoded lazily.
 //! 3. **Fast building.** Messages are written straight into a caller-supplied
@@ -313,7 +315,7 @@
 //! signature verification and signing (`dnssec`) and digests
 //! (`dnssec-digest`). [`dnssec::TrustedKeys`] walks the chain of trust:
 //! DS (or a trust anchor) → DNSKEY RRset → the zone's RRsets, with bounded
-//! work per call.
+//! work per call and per response ([`dnssec::ValidationBudget`]).
 //!
 //! ```
 //! # #[cfg(feature = "dnssec")] {

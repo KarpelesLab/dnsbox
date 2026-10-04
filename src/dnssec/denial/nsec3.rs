@@ -9,7 +9,7 @@ use crate::dnssec::{Nsec3Hash, Nsec3HashAlgorithm};
 use crate::message::Record;
 use crate::name::Name;
 use crate::rdata::Nsec3;
-use crate::{Result, Rtype};
+use crate::{Error, Result, Rtype};
 
 /// An authenticated NSEC3 record: its hashed owner name and data.
 ///
@@ -97,7 +97,11 @@ pub trait Nsec3Hasher {
     /// # Errors
     ///
     /// [`Error::UnsupportedAlgorithm`](crate::Error::UnsupportedAlgorithm)
-    /// for an algorithm the hasher does not implement.
+    /// for an algorithm the hasher does not implement;
+    /// [`Error::LimitExceeded`](crate::Error::LimitExceeded) when a work
+    /// budget is spent, which [`Nsec3Proof`] reports as
+    /// [`BogusReason::LimitExceeded`] (any other error makes the records
+    /// [unusable](BogusReason::UnusableRecords)).
     fn hash(
         &self,
         name: Name<'_>,
@@ -243,7 +247,11 @@ impl Default for Nsec3Limits {
 /// record (NS without SOA) denies nothing at its owner but DS.
 ///
 /// A check hashes at most one name per label of the query name plus one
-/// wildcard, and makes one pass over the records per hash.
+/// wildcard, and makes one pass over the records per hash. To bound the
+/// hashes of all the checks of a response, hash with
+/// [`ValidationBudget::nsec3_hasher`](crate::dnssec::ValidationBudget::nsec3_hasher):
+/// once its hashes are spent, checks are
+/// [`BogusReason::LimitExceeded`].
 ///
 /// ```
 /// # #[cfg(feature = "dnssec-digest")] {
@@ -401,7 +409,10 @@ where
     fn hash(&self, p: &Params<'_>, name: Name<'_>) -> Check<Nsec3Hash> {
         self.hasher
             .hash(name, p.algorithm, p.iterations, p.salt)
-            .map_err(|_| BogusReason::UnusableRecords)
+            .map_err(|e| match e {
+                Error::LimitExceeded => BogusReason::LimitExceeded,
+                _ => BogusReason::UnusableRecords,
+            })
     }
 
     /// The record whose owner hash is `hash`.

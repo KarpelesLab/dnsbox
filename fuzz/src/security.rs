@@ -334,7 +334,7 @@ mod chain {
 
     use dnsbox::dnssec::{
         Algorithm, Answer, Nsec3Proof, Nsec3Record, NsecProof, NsecRecord, PurecryptoVerifier,
-        RecordRdata, Rrset, TrustedKeys, Verifier, check_validity, key_tag,
+        RecordRdata, Rrset, TrustedKeys, ValidationBudget, Verifier, check_validity, key_tag,
     };
     use dnsbox::rdata::{Dnskey, Ds, Rrsig};
     use dnsbox::{Class, Message, Name, Rtype};
@@ -390,7 +390,9 @@ mod chain {
     /// question name; its DNSKEYs are the keys, every RRSIG in the message
     /// is a candidate, and every RRset of the message is verified with
     /// [`AcceptAll`], then as an answer with the message's NSEC and NSEC3
-    /// records as the wildcard proof.
+    /// records as the wildcard proof. A [`ValidationBudget`] shared by all
+    /// the RRsets never allows more than its limits, and changes a verdict
+    /// only into `LimitExceeded`.
     pub(super) fn trust(data: &[u8]) {
         let mut b = Bytes(data);
         let now = b.u32();
@@ -430,6 +432,8 @@ mod chain {
         let nsec_proof = NsecProof::new(zone, &nsec);
         let nsec3_proof = Nsec3Proof::new(zone, &nsec3, super::fake_hash);
         let mut scratch = Vec::new();
+        let budget = ValidationBudget::new();
+        let limits = *budget.limits();
 
         // Every RRset (owner, type, class) of the message, up to 16.
         let mut done: Vec<(Name<'_>, Rtype, Class)> = Vec::new();
@@ -451,6 +455,22 @@ mod chain {
             let res =
                 trusted.verify_rrset(&AcceptAll, rrset, rrsigs.iter().copied(), now, &mut scratch);
             assert!(scratch.is_empty(), "scratch space not released");
+            let rrset = Rrset::new(rr.name(), rr.class(), rdata.iter().copied());
+            let before = budget.verifications();
+            let shared = trusted.verify_rrset_with_budget(
+                &AcceptAll,
+                rrset,
+                rrsigs.iter().copied(),
+                now,
+                &mut scratch,
+                &budget,
+            );
+            let spent = budget.verifications() - before;
+            assert!(spent <= limits.max_verifications_per_rrset);
+            assert!(budget.verifications() <= limits.max_verifications);
+            if shared != Err(dnsbox::Error::LimitExceeded) {
+                assert_eq!(shared, res, "a shared budget changed the verdict");
+            }
             let Ok(v) = res else { continue };
             // Some RRSIG justifies the verdict, and it passes every
             // non-cryptographic check of RFC 4035 §5.3.1.
@@ -500,6 +520,32 @@ mod chain {
                     }
                     Ok(_) => {}
                     Err(e) => panic!("verify_answer failed after verify_rrset: {e}"),
+                }
+            }
+        }
+
+        // NSEC3 proofs hashing through a budget: never more hashes than
+        // its limit, and the verdicts of an unlimited proof unless spent.
+        let hashes = ValidationBudget::new();
+        let budgeted = Nsec3Proof::new(zone, &nsec3, hashes.nsec3_hasher(super::fake_hash));
+        for (_, rr) in records.iter().take(8) {
+            let name = rr.name();
+            for (a, b) in [
+                (budgeted.name_error(name), nsec3_proof.name_error(name)),
+                (
+                    budgeted.no_data(name, rr.rtype()),
+                    nsec3_proof.no_data(name, rr.rtype()),
+                ),
+                (
+                    budgeted.unsigned_delegation(name),
+                    nsec3_proof.unsigned_delegation(name),
+                ),
+            ] {
+                assert!(hashes.nsec3_hashes() <= hashes.limits().max_nsec3_hashes);
+                if a != dnsbox::dnssec::DenialStatus::Bogus(
+                    dnsbox::dnssec::BogusReason::LimitExceeded,
+                ) {
+                    assert_eq!(a, b, "a hash budget changed the verdict");
                 }
             }
         }

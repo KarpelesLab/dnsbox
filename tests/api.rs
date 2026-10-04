@@ -31,6 +31,7 @@ use dnsbox::{
 };
 
 fn send_sync<T: Send + Sync>() {}
+fn send<T: Send>() {}
 
 /// Every public type is `Send` and `Sync` (views hold only shared borrows;
 /// builders own or exclusively borrow their buffers).
@@ -93,6 +94,12 @@ fn send_and_sync() {
     send_sync::<Include<'static>>();
     send_sync::<Scanner<'static>>();
     send_sync::<Token<'static>>();
+    send_sync::<dnsbox::zone::ZoneLimits>();
+    send_sync::<dnsbox::dnssec::ValidationLimits>();
+    // The one exception: a validation budget is per-response state whose
+    // counters are `Cell`s, shared by reference between the calls of one
+    // validation. It can move to another thread, not be shared by two.
+    send::<dnsbox::dnssec::ValidationBudget>();
     #[cfg(feature = "alloc")]
     {
         send_sync::<MessageBuilder<Vec<u8>>>();
@@ -163,6 +170,8 @@ fn common_traits() {
     common::<XfrStyle>();
     common::<TsigAlgorithm>();
     common::<ZoneError>();
+    common::<dnsbox::zone::ZoneLimits>();
+    common::<dnsbox::dnssec::ValidationLimits>();
 }
 
 #[test]

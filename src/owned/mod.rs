@@ -66,7 +66,9 @@
 //! with the root), parsed as [`OwnedRData::from_text`] does; byte strings
 //! are checked like [`OwnedRData::from_wire`]. Either way typed formats
 //! must be valid for the record's class. Missing sections of a message are
-//! empty.
+//! empty, and a section holds at most 65535 entries (the header counts
+//! are 16-bit, RFC 1035 §4.1.1): longer input is refused while it is read,
+//! so its size is bounded by the format, not only by the input.
 //!
 //! # Master files
 //!
@@ -650,6 +652,22 @@ pub struct OwnedMessage {
     pub additional: Vec<OwnedRecord>,
 }
 
+/// The shortest question in wire form: the root name, type and class.
+const MIN_QUESTION_LEN: usize = 5;
+
+/// The shortest record in wire form: the root name, type, class, TTL and
+/// RDLENGTH, no RDATA.
+const MIN_RECORD_LEN: usize = 11;
+
+/// The entries to reserve for a section whose header count is `count`, in
+/// a message of `len` octets. The count is the sender's claim: reserve no
+/// more than the message can hold, so that a 12-octet header cannot make
+/// us allocate room for 4 x 65535 entries (some 70 MB).
+fn reserve(count: u16, len: usize, min_entry_len: usize) -> usize {
+    let room = len.saturating_sub(Header::LEN);
+    usize::from(count).min(room / min_entry_len)
+}
+
 impl OwnedMessage {
     /// An empty message with the given ID and flags.
     #[must_use]
@@ -672,13 +690,14 @@ impl OwnedMessage {
     /// The first parse error met while walking the message.
     pub fn from_message(msg: &Message<'_>) -> Result<Self> {
         let h = msg.header();
+        let len = msg.as_bytes().len();
         let mut m = OwnedMessage {
             id: h.id,
             flags: h.flags,
-            questions: Vec::with_capacity(h.qdcount.into()),
-            answers: Vec::with_capacity(h.ancount.into()),
-            authority: Vec::with_capacity(h.nscount.into()),
-            additional: Vec::with_capacity(h.arcount.into()),
+            questions: Vec::with_capacity(reserve(h.qdcount, len, MIN_QUESTION_LEN)),
+            answers: Vec::with_capacity(reserve(h.ancount, len, MIN_RECORD_LEN)),
+            authority: Vec::with_capacity(reserve(h.nscount, len, MIN_RECORD_LEN)),
+            additional: Vec::with_capacity(reserve(h.arcount, len, MIN_RECORD_LEN)),
         };
         for q in msg.questions() {
             m.questions.push(OwnedQuestion::from_question(&q?));

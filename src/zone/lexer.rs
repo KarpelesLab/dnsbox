@@ -60,6 +60,34 @@ impl Cursor {
     };
 }
 
+/// Length limits on lines and tokens ([`ZoneLimits`](super::ZoneLimits)).
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub(crate) struct Limits {
+    /// The most octets on one line.
+    pub(crate) line: usize,
+    /// The most octets in one token.
+    pub(crate) token: usize,
+}
+
+impl Limits {
+    /// No limits (standalone RDATA text).
+    pub(crate) const NONE: Limits = Limits {
+        line: usize::MAX,
+        token: usize::MAX,
+    };
+
+    /// The error for a line ending at `end` (exclusive) that started at
+    /// `pos.line_start`, if it is too long: reported at the first octet
+    /// beyond the limit.
+    fn check_line(&self, pos: Pos, end: usize) -> core::result::Result<(), (Error, Pos)> {
+        if end.saturating_sub(pos.line_start) > self.line {
+            let offset = pos.line_start.saturating_add(self.line);
+            return Err((Error::LimitExceeded, Pos { offset, ..pos }));
+        }
+        Ok(())
+    }
+}
+
 /// One lexical item.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub(crate) enum Lexeme {
@@ -86,15 +114,27 @@ pub(crate) const fn is_blank(c: u8) -> bool {
 ///
 /// On error the cursor is left where it was and the error position is
 /// returned: an unbalanced parenthesis, a quote or escape cut off by the
-/// end of the input, or parentheses nested too deeply.
+/// end of the input, or parentheses nested too deeply
+/// ([`Error::InvalidText`]), or a line or token longer than `limits`
+/// ([`Error::LimitExceeded`]). Line lengths are checked as the lexer
+/// passes each newline, and for the current line at the end of the
+/// lexeme, so no line is ever scanned twice.
 pub(crate) fn next(
     input: &[u8],
     cur: &mut Cursor,
     multiline: bool,
+    limits: Limits,
 ) -> core::result::Result<Lexeme, (Error, Pos)> {
     let mut c2 = *cur;
-    let res = lex(input, &mut c2, multiline);
+    let res = lex(input, &mut c2, multiline, limits);
+    if let Ok(Lexeme::Token { start, end, .. }) = res
+        && end.saturating_sub(start.offset) > limits.token
+    {
+        return Err((Error::LimitExceeded, start));
+    }
     if res.is_ok() {
+        // The line the lexeme ends on, so far.
+        limits.check_line(c2.pos, c2.pos.offset)?;
         *cur = c2;
     }
     res
@@ -104,6 +144,7 @@ fn lex(
     input: &[u8],
     cur: &mut Cursor,
     multiline: bool,
+    limits: Limits,
 ) -> core::result::Result<Lexeme, (Error, Pos)> {
     loop {
         let i = cur.pos.offset;
@@ -115,6 +156,7 @@ fn lex(
         };
         match c {
             b'\n' => {
+                limits.check_line(cur.pos, i)?;
                 cur.pos.offset = i + 1;
                 cur.pos.newline(i);
                 if cur.paren == 0 && !multiline {
@@ -141,15 +183,19 @@ fn lex(
                 cur.paren -= 1;
                 cur.pos.offset = i + 1;
             }
-            b'"' => return quoted(input, cur),
-            _ => return word(input, cur),
+            b'"' => return quoted(input, cur, limits),
+            _ => return word(input, cur, limits),
         }
     }
 }
 
 /// A quoted string, from the opening quote at the cursor to the matching
 /// closing one. Newlines inside are part of the string.
-fn quoted(input: &[u8], cur: &mut Cursor) -> core::result::Result<Lexeme, (Error, Pos)> {
+fn quoted(
+    input: &[u8],
+    cur: &mut Cursor,
+    limits: Limits,
+) -> core::result::Result<Lexeme, (Error, Pos)> {
     let start = cur.pos;
     let mut pos = start;
     let mut j = start.offset + 1;
@@ -160,12 +206,16 @@ fn quoted(input: &[u8], cur: &mut Cursor) -> core::result::Result<Lexeme, (Error
             Some(b'\\') => {
                 match input.get(j + 1) {
                     None => return Err((Error::InvalidText, start)),
-                    Some(b'\n') => pos.newline(j + 1),
+                    Some(b'\n') => {
+                        limits.check_line(pos, j + 1)?;
+                        pos.newline(j + 1);
+                    }
                     Some(_) => {}
                 }
                 j += 2;
             }
             Some(b'\n') => {
+                limits.check_line(pos, j)?;
                 pos.newline(j);
                 j += 1;
             }
@@ -186,7 +236,11 @@ fn quoted(input: &[u8], cur: &mut Cursor) -> core::result::Result<Lexeme, (Error
 /// comment. A backslash escapes the next character, and a quote inside the
 /// token groups up to the next quote (as in SVCB `key="a b"` values,
 /// RFC 9460 Appendix A).
-fn word(input: &[u8], cur: &mut Cursor) -> core::result::Result<Lexeme, (Error, Pos)> {
+fn word(
+    input: &[u8],
+    cur: &mut Cursor,
+    limits: Limits,
+) -> core::result::Result<Lexeme, (Error, Pos)> {
     let start = cur.pos;
     let mut pos = start;
     let mut j = start.offset;
@@ -198,7 +252,10 @@ fn word(input: &[u8], cur: &mut Cursor) -> core::result::Result<Lexeme, (Error, 
             Some(b'\\') => {
                 match input.get(j + 1) {
                     None => return Err((Error::InvalidText, start)),
-                    Some(b'\n') => pos.newline(j + 1),
+                    Some(b'\n') => {
+                        limits.check_line(pos, j + 1)?;
+                        pos.newline(j + 1);
+                    }
                     Some(_) => {}
                 }
                 j += 2;
@@ -208,6 +265,7 @@ fn word(input: &[u8], cur: &mut Cursor) -> core::result::Result<Lexeme, (Error, 
                 j += 1;
             }
             Some(b'\n') if in_quote => {
+                limits.check_line(pos, j)?;
                 pos.newline(j);
                 j += 1;
             }
@@ -256,7 +314,7 @@ mod tests {
         let mut cur = Cursor::START;
         let mut out = Vec::new();
         loop {
-            match next(b, &mut cur, multiline) {
+            match next(b, &mut cur, multiline, Limits::NONE) {
                 Ok(Lexeme::Token { start, end, .. }) => {
                     out.push((&input[start.offset..end], start.line, start.column(b)));
                 }

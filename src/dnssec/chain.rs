@@ -3,21 +3,16 @@
 //! RRsets with those keys, including wildcard expansions (RFC 4035
 //! §5.3.4).
 
-use super::{Algorithm, DenialProof, DenialStatus, Rrset, Verifier, ZoneKey, verify_rrsig};
+use super::budget::CallBudget;
+use super::{
+    Algorithm, DenialProof, DenialStatus, Rrset, ValidationBudget, Verifier, ZoneKey, verify_rrsig,
+};
 use crate::name::Name;
 use crate::rdata::{ComposeRdata, Dnskey, Rrsig};
 use crate::wire::OutBuf;
 use crate::{Class, Error, Result};
 #[cfg(feature = "dnssec-digest")]
 use {super::DigestType, crate::rdata::Ds};
-
-/// The most cryptographic operations (signature verifications and DS
-/// digests) one [`TrustedKeys`] call performs before giving up.
-///
-/// Legitimate RRsets need one or two; the cap keeps a response with many
-/// colliding key tags and signatures from costing quadratic work (the
-/// "KeyTrap" attack, CVE-2023-50387).
-pub const MAX_CRYPTO_OPERATIONS: usize = 16;
 
 /// A zone's DNSKEY RRset, authenticated through the chain of trust
 /// (RFC 4035 §5.2) or configured as trusted: the keys that validate the
@@ -41,12 +36,26 @@ pub const MAX_CRYPTO_OPERATIONS: usize = 16;
 ///    responses by verifying the NSEC/NSEC3 RRsets and checking them with
 ///    a [`DenialProof`].
 ///
-/// Revoked keys (RFC 5011 §2.1) are never used. Work is bounded by
-/// [`MAX_CRYPTO_OPERATIONS`] per call: once it is spent, the call fails
-/// with [`Error::BadSignature`] (if it had not failed otherwise). Besides
-/// that, a call computes one key tag per (RRSIG by the zone over the type,
-/// key) pair; a validator should still bound the RRSIGs, keys and calls it
-/// spends on one response.
+/// Revoked keys (RFC 5011 §2.1) are never used.
+///
+/// # Bounded work
+///
+/// Every method spends from a [`ValidationBudget`]: the `*_with_budget`
+/// methods from one the caller passes (use one per response, so that the
+/// whole response is bounded), the others from a fresh default budget per
+/// call. A call tries at most
+/// [`max_rrsigs_per_rrset`](super::ValidationLimits::max_rrsigs_per_rrset)
+/// RRSIGs by the zone over the RRset's type, for each at most
+/// [`max_keys_per_rrsig`](super::ValidationLimits::max_keys_per_rrsig) keys
+/// with its algorithm and key tag among the first
+/// [`max_dnskeys`](super::ValidationLimits::max_dnskeys) keys of the set,
+/// and performs at most
+/// [`max_verifications_per_rrset`](super::ValidationLimits::max_verifications_per_rrset)
+/// signature verifications and DS digests, which also count against the
+/// budget's total. Besides those, it computes one key tag per (RRSIG, key)
+/// pair it looks at. When a limit stops the search before a signature
+/// verifies, the call fails with [`Error::LimitExceeded`] (the KeyTrap
+/// case, CVE-2023-50387: see the [`ValidationBudget`] example).
 ///
 /// # Examples
 ///
@@ -223,22 +232,13 @@ fn worse(current: Error, new: Error) -> Error {
         Error::Unsigned => 0,
         Error::KeyMismatch => 1,
         Error::UnsupportedAlgorithm => 2,
+        Error::LimitExceeded => 4,
         _ => 3,
     };
     if rank(new) >= rank(current) {
         new
     } else {
         current
-    }
-}
-
-/// A budget of cryptographic operations.
-struct Budget(usize);
-
-impl Budget {
-    fn spend(&mut self) -> Result<()> {
-        self.0 = self.0.checked_sub(1).ok_or(Error::BadSignature)?;
-        Ok(())
     }
 }
 
@@ -272,12 +272,13 @@ where
         self.keys.clone()
     }
 
-    /// The keys that may verify signatures: zone keys, protocol 3, not
-    /// revoked (RFC 4034 §2.1.1, RFC 5011 §2.1).
-    fn usable(&self) -> impl Iterator<Item = Dnskey<'a>> {
+    /// The keys among the first `max` that may verify signatures: zone
+    /// keys, protocol 3, not revoked (RFC 4034 §2.1.1, RFC 5011 §2.1).
+    fn usable(&self, max: usize) -> impl Iterator<Item = Dnskey<'a>> {
         self.keys
             .clone()
             .into_iter()
+            .take(max)
             .filter(|k| k.is_zone_key() && k.protocol == 3 && !k.is_revoked())
     }
 
@@ -300,12 +301,15 @@ where
     ///
     /// `now` is the current time in seconds since 1970 (modulo 2^32); the
     /// signed data is built at the end of `scratch` and removed again.
+    /// Work is bounded by a fresh default [`ValidationBudget`]
+    /// ([`from_ds_with_budget`](Self::from_ds_with_budget) takes one).
     ///
     /// # Errors
     ///
     /// As described above: [`Error::UnsupportedAlgorithm`] (insecure),
     /// or [`Error::Unsigned`], [`Error::KeyMismatch`],
-    /// [`Error::BadSignature`], [`Error::SignatureExpired`], ... (bogus).
+    /// [`Error::BadSignature`], [`Error::SignatureExpired`], ... (bogus),
+    /// and [`Error::LimitExceeded`] when the budget ran out first.
     /// See the [type-level example](TrustedKeys#examples).
     #[cfg(feature = "dnssec-digest")]
     #[cfg_attr(docsrs, doc(cfg(feature = "dnssec-digest")))]
@@ -316,6 +320,34 @@ where
         rrsigs: S,
         now: u32,
         scratch: &mut B,
+    ) -> Result<Self>
+    where
+        V: Verifier + ?Sized,
+        B: OutBuf,
+        D: IntoIterator<Item = Ds<'d>> + Clone,
+        S: IntoIterator<Item = Rrsig<'s>>,
+    {
+        let budget = ValidationBudget::new();
+        Self::from_ds_with_budget(verifier, dnskeys, ds, rrsigs, now, scratch, &budget)
+    }
+
+    /// [`from_ds`](Self::from_ds), spending from `budget`: DS digests and
+    /// signature verifications both count.
+    ///
+    /// # Errors
+    ///
+    /// As [`from_ds`](Self::from_ds).
+    #[cfg(feature = "dnssec-digest")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "dnssec-digest")))]
+    #[allow(clippy::too_many_arguments)]
+    pub fn from_ds_with_budget<'d, 's, V, B, D, S>(
+        verifier: &V,
+        dnskeys: Rrset<'a, K>,
+        ds: D,
+        rrsigs: S,
+        now: u32,
+        scratch: &mut B,
+        budget: &ValidationBudget,
     ) -> Result<Self>
     where
         V: Verifier + ?Sized,
@@ -338,9 +370,8 @@ where
         let candidate =
             move |d: &Ds<'_>| usable_ds(d) && !(strong && d.digest_type == DigestType::SHA1);
         let keys = Self::assume_trusted(dnskeys.owner, dnskeys.class, dnskeys.rdata);
-        let mut budget = Budget(MAX_CRYPTO_OPERATIONS);
         // Whether a DS authenticates `key` (RFC 4035 §5.2).
-        let mut authenticated = |key: &Dnskey<'_>, budget: &mut Budget| -> Result<bool> {
+        let mut authenticated = |key: &Dnskey<'_>, budget: &mut CallBudget<'_>| -> Result<bool> {
             let tag = key.key_tag();
             for d in ds.clone().into_iter().filter(|d| candidate(d)) {
                 if d.key_tag != tag || d.algorithm != key.algorithm {
@@ -361,7 +392,7 @@ where
             rrsigs,
             now,
             scratch,
-            &mut budget,
+            budget,
             &mut authenticated,
         )
         .map(|_| keys)
@@ -390,9 +421,33 @@ where
         T: IntoIterator<Item = Dnskey<'t>> + Clone,
         S: IntoIterator<Item = Rrsig<'s>>,
     {
+        let budget = ValidationBudget::new();
+        Self::from_anchors_with_budget(verifier, dnskeys, anchors, rrsigs, now, scratch, &budget)
+    }
+
+    /// [`from_anchors`](Self::from_anchors), spending from `budget`.
+    ///
+    /// # Errors
+    ///
+    /// As [`from_anchors`](Self::from_anchors).
+    #[allow(clippy::too_many_arguments)]
+    pub fn from_anchors_with_budget<'t, 's, V, B, T, S>(
+        verifier: &V,
+        dnskeys: Rrset<'a, K>,
+        anchors: T,
+        rrsigs: S,
+        now: u32,
+        scratch: &mut B,
+        budget: &ValidationBudget,
+    ) -> Result<Self>
+    where
+        V: Verifier + ?Sized,
+        B: OutBuf,
+        T: IntoIterator<Item = Dnskey<'t>> + Clone,
+        S: IntoIterator<Item = Rrsig<'s>>,
+    {
         let keys = Self::assume_trusted(dnskeys.owner, dnskeys.class, dnskeys.rdata);
-        let mut budget = Budget(MAX_CRYPTO_OPERATIONS);
-        let mut anchored = |key: &Dnskey<'_>, _: &mut Budget| -> Result<bool> {
+        let mut anchored = |key: &Dnskey<'_>, _: &mut CallBudget<'_>| -> Result<bool> {
             Ok(anchors
                 .clone()
                 .into_iter()
@@ -404,7 +459,7 @@ where
             rrsigs,
             now,
             scratch,
-            &mut budget,
+            budget,
             &mut anchored,
         )
         .map(|_| keys)
@@ -416,15 +471,21 @@ where
     /// types, signers, or without a matching key are disregarded
     /// (RFC 6840 §5.12); one valid signature suffices (RFC 6840 §5.11).
     ///
+    /// Work is bounded by a fresh default [`ValidationBudget`]
+    /// ([`verify_rrset_with_budget`](Self::verify_rrset_with_budget) takes
+    /// one).
+    ///
     /// # Errors
     ///
     /// Fails with [`Error::RrsetMismatch`] for an empty RRset or one
     /// outside the zone or of another class (RFC 4035 §5.3.1),
     /// [`Error::Unsigned`] if no RRSIG is by the zone,
-    /// [`Error::KeyMismatch`] if no key matches one, and otherwise with
-    /// the error of the last signature check. The result says whether the
-    /// RRset was synthesized from a wildcard, which then still needs a
-    /// proof (see [`verify_answer`](Self::verify_answer)).
+    /// [`Error::KeyMismatch`] if no key matches one,
+    /// [`Error::LimitExceeded`] if the budget ran out before a signature
+    /// verified, and otherwise with the error of the last signature check.
+    /// The result says whether the RRset was synthesized from a wildcard,
+    /// which then still needs a proof (see
+    /// [`verify_answer`](Self::verify_answer)).
     pub fn verify_rrset<'s, V, B, I, S>(
         &self,
         verifier: &V,
@@ -440,14 +501,45 @@ where
         I::Item: ComposeRdata,
         S: IntoIterator<Item = Rrsig<'s>>,
     {
-        let mut budget = Budget(MAX_CRYPTO_OPERATIONS);
+        self.verify_rrset_with_budget(
+            verifier,
+            rrset,
+            rrsigs,
+            now,
+            scratch,
+            &ValidationBudget::new(),
+        )
+    }
+
+    /// [`verify_rrset`](Self::verify_rrset), spending from `budget` (see
+    /// the [`ValidationBudget`] example).
+    ///
+    /// # Errors
+    ///
+    /// As [`verify_rrset`](Self::verify_rrset).
+    pub fn verify_rrset_with_budget<'s, V, B, I, S>(
+        &self,
+        verifier: &V,
+        rrset: Rrset<'_, I>,
+        rrsigs: S,
+        now: u32,
+        scratch: &mut B,
+        budget: &ValidationBudget,
+    ) -> Result<Verified>
+    where
+        V: Verifier + ?Sized,
+        B: OutBuf,
+        I: IntoIterator + Clone,
+        I::Item: ComposeRdata,
+        S: IntoIterator<Item = Rrsig<'s>>,
+    {
         self.verify_with(
             verifier,
             rrset,
             rrsigs,
             now,
             scratch,
-            &mut budget,
+            budget,
             &mut |_, _| Ok(true),
         )
     }
@@ -509,8 +601,39 @@ where
         S: IntoIterator<Item = Rrsig<'s>>,
         P: DenialProof + ?Sized,
     {
+        let budget = ValidationBudget::new();
+        self.verify_answer_with_budget(verifier, rrset, rrsigs, proof, now, scratch, &budget)
+    }
+
+    /// [`verify_answer`](Self::verify_answer), spending from `budget`. To
+    /// bound the proof's NSEC3 hashes too, build it with the budget's
+    /// [`nsec3_hasher`](ValidationBudget::nsec3_hasher).
+    ///
+    /// # Errors
+    ///
+    /// As [`verify_rrset`](Self::verify_rrset).
+    #[allow(clippy::too_many_arguments)]
+    pub fn verify_answer_with_budget<'s, V, B, I, S, P>(
+        &self,
+        verifier: &V,
+        rrset: Rrset<'_, I>,
+        rrsigs: S,
+        proof: &P,
+        now: u32,
+        scratch: &mut B,
+        budget: &ValidationBudget,
+    ) -> Result<Answer>
+    where
+        V: Verifier + ?Sized,
+        B: OutBuf,
+        I: IntoIterator + Clone,
+        I::Item: ComposeRdata,
+        S: IntoIterator<Item = Rrsig<'s>>,
+        P: DenialProof + ?Sized,
+    {
         let owner = rrset.owner;
-        let verified = self.verify_rrset(verifier, rrset, rrsigs, now, scratch)?;
+        let verified =
+            self.verify_rrset_with_budget(verifier, rrset, rrsigs, now, scratch, budget)?;
         Ok(match verified.wildcard {
             None => Answer::Exact(verified),
             Some(labels) => Answer::Wildcard {
@@ -522,7 +645,7 @@ where
 
     /// The common verification loop: tries every RRSIG of the zone over
     /// the RRset's type with every usable key it designates that `accept`
-    /// approves, within `budget`.
+    /// approves, within the limits of `budget`.
     #[allow(clippy::too_many_arguments)]
     fn verify_with<'s, V, B, I, S, F>(
         &self,
@@ -531,7 +654,7 @@ where
         rrsigs: S,
         now: u32,
         scratch: &mut B,
-        budget: &mut Budget,
+        budget: &ValidationBudget,
         accept: &mut F,
     ) -> Result<Verified>
     where
@@ -540,7 +663,7 @@ where
         I: IntoIterator + Clone,
         I::Item: ComposeRdata,
         S: IntoIterator<Item = Rrsig<'s>>,
-        F: FnMut(&Dnskey<'a>, &mut Budget) -> Result<bool>,
+        F: FnMut(&Dnskey<'a>, &mut CallBudget<'_>) -> Result<bool>,
     {
         let rtype = rrset
             .rdata
@@ -552,22 +675,43 @@ where
         if !rrset.owner.is_subdomain_of(&self.zone) || rrset.class != self.class {
             return Err(Error::RrsetMismatch);
         }
+        let mut call = CallBudget::new(budget);
+        let limits = *call.limits();
+        let max_keys = usize::try_from(limits.max_dnskeys).unwrap_or(usize::MAX);
+        // Keys beyond the limit are never looked at.
+        let keys_cut = self.keys.clone().into_iter().nth(max_keys).is_some();
         let mut err = Error::Unsigned;
+        // Whether a limit left something untried.
+        let mut cut = false;
+        let mut rrsigs_tried = 0u32;
         for rrsig in rrsigs {
             if rrsig.type_covered != rtype || rrsig.signer_name != self.zone {
                 continue;
             }
+            if rrsigs_tried >= limits.max_rrsigs_per_rrset {
+                cut = true;
+                break;
+            }
+            rrsigs_tried += 1;
+            cut |= keys_cut;
             err = worse(err, Error::KeyMismatch);
-            for dnskey in self.usable() {
+            let mut keys_tried = 0u32;
+            for dnskey in self.usable(max_keys) {
                 if dnskey.algorithm != rrsig.algorithm || dnskey.key_tag() != rrsig.key_tag {
                     continue;
                 }
-                match accept(&dnskey, budget) {
+                // A key tag collision beyond the limit (KeyTrap).
+                if keys_tried >= limits.max_keys_per_rrsig {
+                    cut = true;
+                    break;
+                }
+                keys_tried += 1;
+                match accept(&dnskey, &mut call) {
                     Ok(true) => {}
                     Ok(false) => continue,
                     Err(e) => return Err(worse(err, e)),
                 }
-                budget.spend().map_err(|e| worse(err, e))?;
+                call.spend()?;
                 let key = ZoneKey::new(self.zone, dnskey);
                 let set = Rrset::new(rrset.owner, rrset.class, rrset.rdata.clone());
                 match verify_rrsig(verifier, &key, &rrsig, set, now, scratch) {
@@ -576,7 +720,7 @@ where
                 }
             }
         }
-        Err(err)
+        Err(if cut { Error::LimitExceeded } else { err })
     }
 }
 

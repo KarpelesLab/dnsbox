@@ -120,8 +120,20 @@ pub enum Error {
     MissingTtl,
     /// A zone-file `$INCLUDE` directive (RFC 1035 §5.1) could not be
     /// processed: includes are unsupported here (no resolver, or no `std`),
-    /// the nesting or count limit was reached, or the file failed to load.
+    /// the file was refused (outside the include directory) or failed to
+    /// load.
     BadInclude,
+    /// A configured work or size limit was reached before the input could
+    /// be fully processed: zone-file limits
+    /// ([`ZoneLimits`](crate::zone::ZoneLimits): records, `$GENERATE`
+    /// size, `$INCLUDE` nesting, count and size, line, token and input
+    /// length), DNSSEC validation budgets (`dnssec::ValidationBudget`,
+    /// the KeyTrap bounds of CVE-2023-50387) and zone-transfer limits
+    /// ([`XfrProcessor::with_max_records`](crate::xfr::XfrProcessor::with_max_records)).
+    /// The input is neither accepted nor proven wrong: treat it as
+    /// unusable (a validator answers SERVFAIL, as for bogus data), or
+    /// raise the limit for trusted input.
+    LimitExceeded,
 
     /// A builder section was written out of order: question → answer →
     /// authority → additional (RFC 1035 §4.1).
@@ -224,6 +236,7 @@ impl fmt::Display for Error {
             }
             Error::MissingTtl => "no TTL given and no default TTL",
             Error::BadInclude => "$INCLUDE failed",
+            Error::LimitExceeded => "work or size limit exceeded",
             Error::SectionOrder => "message section written out of order",
             Error::CountOverflow => "section count overflow",
             Error::MessageTooLong => "message longer than 65535 octets",

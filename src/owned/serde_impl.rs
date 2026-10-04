@@ -4,6 +4,7 @@
 use alloc::string::String;
 use alloc::vec::Vec;
 use core::fmt;
+use core::marker::PhantomData;
 
 use serde::de::{self, Deserializer, SeqAccess, Visitor};
 use serde::ser::Serializer;
@@ -261,13 +262,53 @@ struct MessageDe {
     id: u16,
     flags: Flags,
     #[serde(default)]
-    questions: Vec<OwnedQuestion>,
+    questions: Section<OwnedQuestion>,
     #[serde(default)]
-    answers: Vec<OwnedRecord>,
+    answers: Section<OwnedRecord>,
     #[serde(default)]
-    authority: Vec<OwnedRecord>,
+    authority: Section<OwnedRecord>,
     #[serde(default)]
-    additional: Vec<OwnedRecord>,
+    additional: Section<OwnedRecord>,
+}
+
+/// The most entries of a section: its header count is 16-bit (RFC 1035
+/// §4.1.1).
+const MAX_SECTION: usize = u16::MAX as usize;
+
+/// A deserialized message section, refused as soon as it holds more than
+/// [`MAX_SECTION`] entries.
+struct Section<T>(Vec<T>);
+
+impl<T> Default for Section<T> {
+    fn default() -> Self {
+        Section(Vec::new())
+    }
+}
+
+impl<'de, T: Deserialize<'de>> Deserialize<'de> for Section<T> {
+    fn deserialize<D: Deserializer<'de>>(d: D) -> Result<Self, D::Error> {
+        struct V<T>(PhantomData<T>);
+        impl<'de, T: Deserialize<'de>> Visitor<'de> for V<T> {
+            type Value = Section<T>;
+
+            fn expecting(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+                f.write_str("a sequence of at most 65535 entries")
+            }
+
+            fn visit_seq<A: SeqAccess<'de>>(self, mut seq: A) -> Result<Section<T>, A::Error> {
+                // The size hint is the input's claim: trust it only a little.
+                let mut out = Vec::with_capacity(seq.size_hint().unwrap_or(0).min(256));
+                while let Some(entry) = seq.next_element()? {
+                    if out.len() == MAX_SECTION {
+                        return Err(de::Error::invalid_length(out.len() + 1, &self));
+                    }
+                    out.push(entry);
+                }
+                Ok(Section(out))
+            }
+        }
+        d.deserialize_seq(V(PhantomData))
+    }
 }
 
 impl Serialize for OwnedMessage {
@@ -287,16 +328,17 @@ impl Serialize for OwnedMessage {
 }
 
 impl<'de> Deserialize<'de> for OwnedMessage {
-    /// The form [`Serialize`] writes; missing sections are empty.
+    /// The form [`Serialize`] writes; missing sections are empty, and a
+    /// section of more than 65535 entries is an error.
     fn deserialize<D: Deserializer<'de>>(d: D) -> Result<Self, D::Error> {
         let m = MessageDe::deserialize(d)?;
         Ok(OwnedMessage {
             id: m.id,
             flags: m.flags,
-            questions: m.questions,
-            answers: m.answers,
-            authority: m.authority,
-            additional: m.additional,
+            questions: m.questions.0,
+            answers: m.answers.0,
+            authority: m.authority.0,
+            additional: m.additional.0,
         })
     }
 }

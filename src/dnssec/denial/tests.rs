@@ -931,6 +931,61 @@ fn nsec3_bounded_work() {
 }
 
 #[test]
+fn nsec3_hash_budget() {
+    // CVE-2023-50868: a deep name costs one hash per label in every
+    // check; a budget bounds the hashes of all the checks of a response.
+    use crate::dnssec::{ValidationBudget, ValidationLimits};
+    let zone = name("example");
+    let records = rfc5155(&["0p9m", "b4um", "35mt"], 0);
+    let records: Vec<_> = records.iter().map(OwnedNsec3::record).collect();
+    let mut deep = std::string::String::new();
+    for _ in 0..123 {
+        deep.push_str("a.");
+    }
+    deep.push_str("example");
+    let q = name(&deep);
+    let calls = Cell::new(0usize);
+    let counting = |_: Name<'_>, _: Nsec3HashAlgorithm, _: u16, _: &[u8]| -> Result<Nsec3Hash> {
+        calls.set(calls.get() + 1);
+        Nsec3Hash::new(&[0xff; 20])
+    };
+    let budget = ValidationBudget::new();
+    let max = ValidationLimits::DEFAULT.max_nsec3_hashes;
+    let p = Nsec3Proof::new(zone.as_name(), &records, budget.nsec3_hasher(&counting));
+    assert_eq!(p.name_error(q.as_name()), Bogus(B::LimitExceeded));
+    assert_eq!(calls.get(), max as usize);
+    assert_eq!(budget.nsec3_hashes(), max);
+    assert!(budget.is_exhausted());
+    // Spent: later checks hash nothing.
+    assert_eq!(p.no_data(q.as_name(), Rtype::A), Bogus(B::LimitExceeded));
+    assert_eq!(p.unsigned_delegation(q.as_name()), Bogus(B::LimitExceeded));
+    assert_eq!(p.wildcard_answer(q.as_name(), 1), Bogus(B::LimitExceeded));
+    assert_eq!(calls.get(), max as usize);
+    // A legitimate proof fits: RFC 5155 Appendix B.1 takes four hashes.
+    let budget = ValidationBudget::new();
+    let p = Nsec3Proof::new(zone.as_name(), &records, budget.nsec3_hasher(table_hasher));
+    let q = name("a.c.x.w.example");
+    assert_eq!(p.name_error(q.as_name()), Secure(Denial::NameError));
+    assert_eq!(budget.nsec3_hashes(), 4);
+    // With a tighter limit it does not.
+    let mut limits = ValidationLimits::DEFAULT;
+    limits.max_nsec3_hashes = 3;
+    let budget = ValidationBudget::with_limits(limits);
+    let p = Nsec3Proof::new(zone.as_name(), &records, budget.nsec3_hasher(table_hasher));
+    assert_eq!(p.name_error(q.as_name()), Bogus(B::LimitExceeded));
+    assert_eq!(
+        B::LimitExceeded.to_string(),
+        "validation work limit exceeded"
+    );
+    // Over-limit iteration counts are refused before any hash is spent.
+    let budget = ValidationBudget::new();
+    let p = Nsec3Proof::new(zone.as_name(), &records, budget.nsec3_hasher(table_hasher))
+        .with_limits(Nsec3Limits::new(5, 10));
+    assert_eq!(p.name_error(q.as_name()), Bogus(B::Iterations));
+    assert_eq!(budget.nsec3_hashes(), 0);
+}
+
+#[test]
 fn status_accessors_and_display() {
     let s = Secure(Denial::NameError);
     assert!(s.is_secure() && !s.is_insecure() && !s.is_bogus());

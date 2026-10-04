@@ -26,7 +26,7 @@ as authenticated (or a negative answer accepted as proven) that the
 signer did not vouch for.
 
 Out of scope: denial of service by volume (the caller decides how much
-input to accept), side channels of the private-key operations in
+input to accept; dnsbox bounds what one input can cost), side channels of the private-key operations in
 `purecrypto` (signing is done on the caller's own data), and what a
 holder of a zone's keys can sign about that zone's own names (DNSSEC
 trusts the zone for them; dnsbox still rejects records no correct signer
@@ -49,7 +49,13 @@ produces, as defence in depth).
 
 ### Bounded work
 
-Every operation does work proportional to its input, with these limits:
+Every operation does work proportional to its input, with these limits.
+Where an input could make dnsbox work or allocate out of proportion to
+its size (`$GENERATE`, `$INCLUDE`, colliding DNSSEC keys, NSEC3 proofs for
+deep names), the bound is a library limit that is **on by default** and
+that callers can raise for trusted input; going over it is
+`Error::LimitExceeded` (or `BogusReason::LimitExceeded` for a denial
+proof), never unbounded work.
 
 | Area | Bound |
 |------|-------|
@@ -57,14 +63,17 @@ Every operation does work proportional to its input, with these limits:
 | Message iteration | linear in the message; `answers()` / `additional()` re-skip the earlier sections once per call (use `records()` to walk everything in one pass) |
 | Building | name compression verifies one table entry per label and at most 32 false candidates per name (the table holds 128 labels); messages stop at 65535 octets; RDLENGTH and section counts are never truncated (`BufferTooSmall`, `CountOverflow`) |
 | Presentation text | linear in the text; parentheses nest at most 16 deep |
-| Zone files | linear in the text, except that each `$GENERATE` directive yields at most 65536 records (`MAX_GENERATE`) of at most 1024 characters each; `$INCLUDE` at most 8 deep and 256 files per `Records` iterator (both configurable) |
+| Zone files | linear in the text, within `ZoneLimits` (defaults): at most 1 000 000 records in all (`$GENERATE`d and `$INCLUDE`d ones included; the reader then stops), 65 536 per `$GENERATE` directive (`MAX_GENERATE`) of at most 1024 characters each, `$INCLUDE` 8 deep and 256 files, 256 MiB of text in all files together, lines of 1 MiB and tokens of 256 KiB; errors carry line and column |
+| `$INCLUDE` from files | `FsIncludes::new` serves only regular files inside its directory: relative paths without `..`, root or drive prefix, and no symbolic link leading out (checked on the canonical path); no devices or pipes (both constructors), and never more than the input limit left (read with a bound, not after the fact) |
 | Canonical RRsets | heapsort in the output buffer: O(n log n) comparisons, no allocation |
-| `TrustedKeys` (chain of trust) | at most 16 signature verifications and DS digests per call (`MAX_CRYPTO_OPERATIONS`, the KeyTrap bound), plus one key-tag computation per (RRSIG, key) pair |
+| `TrustedKeys` (chain of trust) | a `ValidationBudget` (KeyTrap, CVE-2023-50387): per call at most 8 RRSIGs over the RRset's type, 4 keys per RRSIG (key tag collisions), the first 32 DNSKEYs and 16 signature verifications and DS digests (`MAX_CRYPTO_OPERATIONS`), plus one key-tag computation per (RRSIG, key) pair looked at; per budget (one per response, `*_with_budget`) at most 32 verifications and DS digests in all. All configurable (`ValidationLimits`) |
 | Signature backend | RSA moduli of 512–4096 bits (1024–4096 for RSASHA512) and public exponents of at most 256 bits; ECDSA points must be on the curve |
 | NSEC proofs | a constant number of passes over the records |
-| NSEC3 proofs | at most one hash per label of the name plus one wildcard, each after the iteration count was checked against `Nsec3Limits` (default: insecure above 100, bogus above 500, RFC 9276); one pass over the records per hash |
+| NSEC3 proofs | at most one hash per label of the name plus one wildcard, each after the iteration count was checked against `Nsec3Limits` (default: insecure above 100, bogus above 500, RFC 9276); one pass over the records per hash; with `ValidationBudget::nsec3_hasher`, at most 64 hashes per budget across all checks (CVE-2023-50868) |
 | ZONEMD | collation and verification in O(n log n), however many apex ZONEMD records there are |
 | TSIG streams | at most 99 unsigned messages in a row |
+| Zone transfers | constant state per transfer, linear work per message; `XfrProcessor::with_max_records` / `with_max_messages` bound the stream (no default: zones range from one record to millions) |
+| Owned messages | `OwnedMessage::from_message` reserves no more entries than the message can hold, whatever its header counts claim; `serde` refuses sections of more than 65535 entries while reading them, and RDATA of more than 65535 octets |
 
 ### Strict parsing and one encoding per value
 
@@ -111,7 +120,12 @@ Every operation does work proportional to its input, with these limits:
   child-apex records never deny DS; a zone's apex is never its own
   delegation; NSEC3 records must agree on parameters and have hashes of
   the hash function's length (a short hash covers nothing); Opt-Out and
-  over-limit iteration counts give `Insecure`, never `Secure`.
+  over-limit iteration counts give `Insecure`, never `Secure`; a spent
+  hash budget gives `Bogus`, never `Insecure` or `Secure`.
+- **Work limits** never turn a failure into a success: a limit reached
+  before a valid signature is found is `Error::LimitExceeded`, which a
+  validator treats like bogus (SERVFAIL), not as insecure; a valid
+  signature found within the limits is accepted as before.
 - **ZONEMD** (RFC 8976 §4): SOA and ZONEMD serials, unique (scheme,
   algorithm) tuples, digest length, then the digest.
 - **Cookies** (RFC 7873, RFC 9018): server cookies are checked in constant
@@ -142,22 +156,31 @@ caller's job:
   chain (high iteration count or Opt-Out); use `Nsec3Limits::new(n, n)` to
   turn over-limit iteration counts into `Bogus` if you prefer to fail
   closed.
-- **Bound work per response.** Each `TrustedKeys` call is bounded, but a
-  validator calls it once per RRset: limit the RRsets, RRSIGs and keys
-  (and so the calls) you process per response.
+- **Use one `ValidationBudget` per response.** Each `TrustedKeys` call is
+  bounded on its own, but a validator calls it once per RRset: pass the
+  same budget to the `*_with_budget` methods for every RRset of a
+  response, and hash NSEC3 proofs with its `nsec3_hasher`, so that the
+  whole response is bounded. Treat `Error::LimitExceeded` and
+  `BogusReason::LimitExceeded` as bogus (SERVFAIL), never as insecure.
 - **TSIG**: replay protection beyond the time window (remember the last
   Time Signed per key), and matching responses to queries (ID, question)
   are yours. A custom `TsigMac::verify` must compare in constant time.
 - **Validate early** when you need to: `Message::parse` is lazy and reports
   an error only when the faulty part is reached; `parse_validated` checks
   everything up front.
-- **Zone files from untrusted sources**: bound the records you consume
-  (`$GENERATE` amplifies, see above), do not collect them all with
-  `zone::parse`, and never resolve their `$INCLUDE`s with `FsIncludes`
-  (it opens any path named, `..` and absolute paths included): use an
-  `IncludeResolver` that serves only what you allow.
+- **Zone files**: the default `ZoneLimits` suit untrusted files; raise
+  them (or use `ZoneLimits::UNLIMITED`) only for trusted ones. Resolve
+  `$INCLUDE`s of untrusted files with `FsIncludes::new` (confined to one
+  directory, which must hold nothing the uploader may not read) or with an
+  `IncludeResolver` of your own that decides which paths it serves and
+  implements `load_limited`; `FsIncludes::unconfined` opens any path, as
+  BIND does, and is for trusted files only. The confinement holds against
+  the zone file, not against someone changing the directory concurrently.
+- **Zone transfers from servers you do not trust**: set
+  `XfrProcessor::with_max_records` / `with_max_messages`.
 - **Cap input sizes** for the allocating conveniences (`OwnedMessage`,
-  `serde`, `Records`), which allocate in proportion to their input.
+  `serde`, `Records`), which allocate in proportion to their input (never
+  more than it can hold).
 - **Custom backends** (`Verifier`, `Signer`, `TsigKey`/`TsigMac`,
   `Nsec3Hasher`, `Sig0Verifier`) must not panic and must bound their own
   work; the RSA and exponent limits above are the bundled backend's.
@@ -181,6 +204,25 @@ caller's job:
   and one regression test per audit finding (`tests/security_audit.rs`).
 
 ## Audit history
+
+### Work-limits round (October 2026)
+
+The caller duties of the Milestone 9 policy that concerned work were
+turned into library limits, on by default, and the remaining APIs were
+reviewed for work or allocation an attacker controls. Each change has
+regression tests next to the code (`zone/tests.rs`, `dnssec/chain/tests.rs`,
+`dnssec/denial/tests.rs`, `owned/tests.rs`, `xfr/tests.rs`,
+`tests/serde.rs`) and the `dnssec` fuzz target checks the budgets.
+
+| Severity | Finding | Fix |
+|----------|---------|-----|
+| Medium | KeyTrap (CVE-2023-50387): the 16 verifications per `TrustedKeys` call bounded each RRset, but not a response (the caller's duty), and every (RRSIG, key) pair of a response cost a key tag computation | `ValidationBudget` shared by the calls of a response; RRSIGs per RRset, keys per RRSIG and DNSKEYs looked at are capped (`ValidationLimits`); `Error::LimitExceeded` |
+| Medium | NSEC3 closest-encloser proofs (CVE-2023-50868): one hash per label of the name, in every check of a response | `ValidationBudget::nsec3_hasher` caps the hashes of all checks; `BogusReason::LimitExceeded` |
+| Medium | `$GENERATE` let a short zone file yield 65 536 records per line, which `zone::parse` collected without limit (the caller's duty) | `ZoneLimits` on `ZoneReader`, `Records` and `zone::parse_with_limits`, with a default record limit |
+| Medium | `FsIncludes` opened any path a zone file named: absolute paths, `..`, symbolic links, and devices or pipes (`/dev/zero` read until memory ran out, a FIFO blocked forever) | confined to its directory by default (`FsIncludes::unconfined` for trusted files), regular files only, read with the input limit as bound |
+| Low | `OwnedMessage::from_message` reserved room for the entries the header counts claimed: a 12-octet header made it allocate some 70 MB before failing | room reserved for what the message can hold |
+| Low | `serde` read message sections of any length (a section has at most 65535 entries) | refused beyond 65535 entries while reading |
+| Info | The length of a zone transfer was unbounded | opt-in `XfrProcessor::with_max_records` / `with_max_messages` |
 
 ### Milestone 9 audit (October 2026)
 

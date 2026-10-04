@@ -9,6 +9,7 @@ use core::cell::Cell;
 use super::*;
 use crate::dnssec::denial::tests::{OwnedNsec, name};
 use crate::dnssec::{Denial, DenialStatus, NsecProof, NsecRecord};
+use crate::dnssec::{MAX_CRYPTO_OPERATIONS, ValidationBudget, ValidationLimits};
 use crate::rdata::{A, Mx};
 use crate::wire::WireWriter;
 use crate::{NameBuf, Rtype};
@@ -222,20 +223,218 @@ fn work_is_bounded() {
     let v = Fake::default();
     assert_eq!(
         keys.verify_rrset(&v, rrset, sigs, NOW, &mut scratch),
-        Err(Error::BadSignature)
+        Err(Error::LimitExceeded)
     );
     assert_eq!(v.calls.get(), MAX_CRYPTO_OPERATIONS);
     assert!(scratch.is_empty());
-    // A good signature within the budget is found.
+    // A good signature among the first RRSIGs is found; one further away
+    // is not tried.
+    let rrsigs = ValidationLimits::DEFAULT.max_rrsigs_per_rrset as usize;
     let keys = TrustedKeys::assume_trusted(zone.as_name(), Class::IN, [ZSK]);
     let mut sigs = [bad; 50];
-    sigs[MAX_CRYPTO_OPERATIONS - 1] = good;
+    sigs[rrsigs - 1] = good;
     let v = Fake::default();
     assert!(
         keys.verify_rrset(&v, rrset, sigs, NOW, &mut scratch)
             .is_ok()
     );
+    assert_eq!(v.calls.get(), rrsigs);
+    let mut sigs = [bad; 50];
+    sigs[rrsigs] = good;
+    let v = Fake::default();
+    assert_eq!(
+        keys.verify_rrset(&v, rrset, sigs, NOW, &mut scratch),
+        Err(Error::LimitExceeded)
+    );
+    assert_eq!(v.calls.get(), rrsigs);
+    // RRSIGs of other types or signers do not count.
+    let other = fake_rrsig(&zone, ZSK, &www, Rtype::AAAA);
+    let mut sigs = [other; 50];
+    sigs[49] = good;
+    assert!(
+        keys.verify_rrset(&v, rrset, sigs, NOW, &mut scratch)
+            .is_ok()
+    );
+    // Without any candidate, the verdict is unchanged.
+    assert_eq!(
+        keys.verify_rrset(&v, rrset, [other; 50], NOW, &mut scratch),
+        Err(Error::Unsigned)
+    );
+}
+
+/// `n` distinct Ed25519-sized keys sharing one key tag: the key tag is a
+/// checksum of 16-bit words, so moving one unit between the high octets
+/// of two words keeps it.
+fn colliding_keys(n: u8) -> Vec<[u8; 32]> {
+    (0..n)
+        .map(|i| {
+            let mut k = [100; 32];
+            k[0] += i;
+            k[2] -= i;
+            k
+        })
+        .collect()
+}
+
+#[test]
+fn keytrap_key_tag_collisions() {
+    let zone = name("example");
+    let www = name("www.example");
+    let rdata = a_rdata();
+    let rrset = Rrset::new(www.as_name(), Class::IN, &rdata);
+    let mut buf = scratch_buf();
+    let mut scratch = WireWriter::new(&mut buf);
+    let material = colliding_keys(60);
+    let keys: Vec<Dnskey<'_>> = material
+        .iter()
+        .map(|k| Dnskey::new(256, 3, Algorithm::ED25519, k))
+        .collect();
+    let tag = keys[0].key_tag();
+    assert!(keys.iter().all(|k| k.key_tag() == tag));
+    let trusted = TrustedKeys::assume_trusted(zone.as_name(), Class::IN, keys.iter().copied());
+    let per_rrsig = ValidationLimits::DEFAULT.max_keys_per_rrsig as usize;
+    // Signed by the last key tried for an RRSIG: found.
+    let sig = |k: usize| fake_rrsig(&zone, keys[k], &www, Rtype::A);
+    let v = Fake::default();
+    assert!(
+        trusted
+            .verify_rrset(&v, rrset, [sig(per_rrsig - 1)], NOW, &mut scratch)
+            .is_ok()
+    );
+    assert_eq!(v.calls.get(), per_rrsig);
+    // Signed by the next one: not tried.
+    let v = Fake::default();
+    assert_eq!(
+        trusted.verify_rrset(&v, rrset, [sig(per_rrsig)], NOW, &mut scratch),
+        Err(Error::LimitExceeded)
+    );
+    assert_eq!(v.calls.get(), per_rrsig);
+    // A caller may allow more.
+    let mut limits = ValidationLimits::DEFAULT;
+    limits.max_keys_per_rrsig = 5;
+    let budget = ValidationBudget::with_limits(limits);
+    assert!(
+        trusted
+            .verify_rrset_with_budget(&v, rrset, [sig(4)], NOW, &mut scratch, &budget)
+            .is_ok()
+    );
+    assert_eq!(budget.verifications(), 5);
+    // The full attack: 60 colliding keys, 60 RRSIGs, none valid. A naive
+    // validator tries 3600 verifications; the default budget, 16.
+    let forged = sig(0).with_signature(&[9; 32]);
+    let v = Fake::default();
+    let budget = ValidationBudget::new();
+    assert_eq!(
+        trusted.verify_rrset_with_budget(&v, rrset, [forged; 60], NOW, &mut scratch, &budget),
+        Err(Error::LimitExceeded)
+    );
     assert_eq!(v.calls.get(), MAX_CRYPTO_OPERATIONS);
+    // The second RRset of the response spends the rest of the budget, the
+    // third nothing at all.
+    let v = Fake::default();
+    for expected in [Err(Error::LimitExceeded), Err(Error::LimitExceeded)] {
+        assert_eq!(
+            trusted.verify_rrset_with_budget(&v, rrset, [forged; 60], NOW, &mut scratch, &budget),
+            expected
+        );
+    }
+    let total = ValidationLimits::DEFAULT.max_verifications;
+    assert_eq!(v.calls.get(), total as usize - MAX_CRYPTO_OPERATIONS);
+    assert_eq!(budget.verifications(), total);
+    assert!(budget.is_exhausted());
+    // Even a valid signature is not checked once the budget is spent ...
+    let v = Fake::default();
+    assert_eq!(
+        trusted.verify_rrset_with_budget(&v, rrset, [sig(0)], NOW, &mut scratch, &budget),
+        Err(Error::LimitExceeded)
+    );
+    assert_eq!(v.calls.get(), 0);
+    // ... until the budget is reset for the next response.
+    let mut budget = budget;
+    budget.reset();
+    assert!(
+        trusted
+            .verify_rrset_with_budget(&v, rrset, [sig(0)], NOW, &mut scratch, &budget)
+            .is_ok()
+    );
+    // Unsigned data needs no work and is reported as such.
+    let none: [Rrsig<'_>; 0] = [];
+    assert_eq!(
+        trusted.verify_rrset_with_budget(&v, rrset, none, NOW, &mut scratch, &budget),
+        Err(Error::Unsigned)
+    );
+    assert!(scratch.is_empty());
+}
+
+#[test]
+fn dnskey_limit() {
+    let zone = name("example");
+    let www = name("www.example");
+    let rdata = a_rdata();
+    let rrset = Rrset::new(www.as_name(), Class::IN, &rdata);
+    let mut buf = scratch_buf();
+    let mut scratch = WireWriter::new(&mut buf);
+    // Distinct key tags.
+    let max = ValidationLimits::DEFAULT.max_dnskeys as usize;
+    let material: Vec<[u8; 32]> = (0..=max)
+        .map(|i| {
+            let mut k = [3; 32];
+            k[1] = i as u8;
+            k
+        })
+        .collect();
+    let keys: Vec<Dnskey<'_>> = material
+        .iter()
+        .map(|k| Dnskey::new(256, 3, Algorithm::ED25519, k))
+        .collect();
+    let trusted = TrustedKeys::assume_trusted(zone.as_name(), Class::IN, keys.iter().copied());
+    let v = Fake::default();
+    let last_allowed = fake_rrsig(&zone, keys[max - 1], &www, Rtype::A);
+    assert!(
+        trusted
+            .verify_rrset(&v, rrset, [last_allowed], NOW, &mut scratch)
+            .is_ok()
+    );
+    // Keys beyond the limit are not looked at.
+    let beyond = fake_rrsig(&zone, keys[max], &www, Rtype::A);
+    assert_eq!(
+        trusted.verify_rrset(&v, rrset, [beyond], NOW, &mut scratch),
+        Err(Error::LimitExceeded)
+    );
+    let mut limits = ValidationLimits::DEFAULT;
+    limits.max_dnskeys = max as u32 + 1;
+    let budget = ValidationBudget::with_limits(limits);
+    assert!(
+        trusted
+            .verify_rrset_with_budget(&v, rrset, [beyond], NOW, &mut scratch, &budget)
+            .is_ok()
+    );
+}
+
+#[test]
+fn verify_answer_with_budget() {
+    let zone = name("example");
+    let www = name("www.example");
+    let rdata = a_rdata();
+    let rrset = Rrset::new(www.as_name(), Class::IN, &rdata);
+    let mut buf = scratch_buf();
+    let mut scratch = WireWriter::new(&mut buf);
+    let keys = TrustedKeys::assume_trusted(zone.as_name(), Class::IN, [ZSK]);
+    let no_nsec: [NsecRecord<'_>; 0] = [];
+    let proof = NsecProof::new(zone.as_name(), &no_nsec);
+    let v = Fake::default();
+    let good = fake_rrsig(&zone, ZSK, &www, Rtype::A);
+    let mut limits = ValidationLimits::DEFAULT;
+    limits.max_verifications = 1;
+    let budget = ValidationBudget::with_limits(limits);
+    let answer = keys
+        .verify_answer_with_budget(&v, rrset, [good], &proof, NOW, &mut scratch, &budget)
+        .unwrap();
+    assert!(answer.is_secure());
+    assert_eq!(
+        keys.verify_answer_with_budget(&v, rrset, [good], &proof, NOW, &mut scratch, &budget),
+        Err(Error::LimitExceeded)
+    );
 }
 
 #[test]
@@ -413,9 +612,90 @@ fn from_ds_work_is_bounded() {
     // Each (RRSIG, key) pair costs a DS digest and a verification.
     assert_eq!(
         TrustedKeys::from_ds(&v, rrset, [ds.to_ds(); 40], [bad; 40], NOW, &mut scratch).err(),
-        Some(Error::BadSignature)
+        Some(Error::LimitExceeded)
     );
     assert!(v.calls.get() <= MAX_CRYPTO_OPERATIONS / 2);
+    // Many DS records with the key's tag and a wrong digest: each costs a
+    // digest, within the same per-call cap.
+    let mut digest = ds.digest().to_vec();
+    digest[0] ^= 1;
+    let wrong = crate::rdata::Ds::new(
+        ds.to_ds().key_tag,
+        Algorithm::ED25519,
+        DigestType::SHA256,
+        &digest,
+    );
+    let v = Fake::default();
+    let budget = ValidationBudget::new();
+    let rrset = Rrset::new(zone.as_name(), Class::IN, [KSK]);
+    assert_eq!(
+        TrustedKeys::from_ds_with_budget(
+            &v,
+            rrset,
+            [wrong; 100],
+            [by_ksk],
+            NOW,
+            &mut scratch,
+            &budget
+        )
+        .err(),
+        Some(Error::LimitExceeded)
+    );
+    assert_eq!(v.calls.get(), 0);
+    assert_eq!(budget.verifications(), MAX_CRYPTO_OPERATIONS as u32);
+    // The same with the right DS last: found within a larger budget.
+    let mut many = [wrong; 20];
+    many[19] = ds.to_ds();
+    let mut limits = ValidationLimits::DEFAULT;
+    limits.max_verifications_per_rrset = 21;
+    let budget = ValidationBudget::with_limits(limits);
+    assert!(
+        TrustedKeys::from_ds_with_budget(&v, rrset, many, [by_ksk], NOW, &mut scratch, &budget)
+            .is_ok()
+    );
+    assert_eq!(budget.verifications(), 21);
+}
+
+#[test]
+fn from_anchors_with_budget() {
+    let zone = name("example");
+    let rrset = Rrset::new(zone.as_name(), Class::IN, [KSK, ZSK]);
+    let by_ksk = fake_rrsig(&zone, KSK, &zone, Rtype::DNSKEY);
+    let mut buf = scratch_buf();
+    let mut scratch = WireWriter::new(&mut buf);
+    let v = Fake::default();
+    let budget = ValidationBudget::new();
+    assert!(
+        TrustedKeys::from_anchors_with_budget(
+            &v,
+            rrset,
+            [KSK],
+            [by_ksk],
+            NOW,
+            &mut scratch,
+            &budget
+        )
+        .is_ok()
+    );
+    assert_eq!(budget.verifications(), 1);
+    let bad = by_ksk.with_signature(&[0; 32]);
+    let mut limits = ValidationLimits::DEFAULT;
+    limits.max_verifications_per_rrset = 3;
+    let budget = ValidationBudget::with_limits(limits);
+    assert_eq!(
+        TrustedKeys::from_anchors_with_budget(
+            &v,
+            rrset,
+            [KSK],
+            [bad; 5],
+            NOW,
+            &mut scratch,
+            &budget
+        )
+        .err(),
+        Some(Error::LimitExceeded)
+    );
+    assert_eq!(budget.verifications(), 3);
 }
 
 /// The NSEC chain of a zone with a wildcard: `example.`, `*.example.`,

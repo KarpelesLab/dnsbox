@@ -92,7 +92,9 @@ fn run() -> Result<(), Box<dyn StdError>> {
     let mut records = Vec::new();
     let mut errors = 0;
     // `Records` reports each bad entry and carries on with the next one,
-    // so every error of the file is shown in one run.
+    // so every error of the file is shown in one run. Includes are served
+    // from the zone file's directory only (`FsIncludes::unconfined` also
+    // follows absolute paths and `..`, as BIND does).
     for item in reader.records().with_includes(FsIncludes::new(base)) {
         match item {
             Ok(rr) => records.push(rr),

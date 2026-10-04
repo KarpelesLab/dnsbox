@@ -11,9 +11,10 @@
 
 use crate::{Error, Result};
 
-/// Most records one `$GENERATE` directive may produce (a hostile zone file
-/// must not turn one line into billions of records). 65536 covers a whole
-/// `/16` of reverse entries.
+/// The default of [`ZoneLimits::max_generate`](super::ZoneLimits::max_generate):
+/// the most records one `$GENERATE` directive may produce (a hostile zone
+/// file must not turn one line into billions of records). 65536 covers a
+/// whole `/16` of reverse entries.
 ///
 /// ```
 /// use dnsbox::zone::ZoneReader;
@@ -28,8 +29,9 @@ use crate::{Error, Result};
 /// assert_eq!(lines[2], "3.2.0.192.in-addr.arpa. 3600 IN PTR host-03.example.");
 ///
 /// // A range above the limit is refused rather than expanded.
-/// let mut reader = ZoneReader::new("$GENERATE 0-100000 h$ A 192.0.2.1\n");
-/// assert!(reader.next_record(&mut buf).is_err());
+/// let mut reader = ZoneReader::new("$TTL 1\n$GENERATE 0-100000 h$ A 192.0.2.1\n");
+/// let err = reader.next_record(&mut buf).unwrap_err();
+/// assert_eq!((err.error(), err.line(), err.column()), (dnsbox::Error::LimitExceeded, 2, 11));
 /// # Ok::<(), dnsbox::Error>(())
 /// ```
 pub const MAX_GENERATE: u32 = 65536;
@@ -46,9 +48,10 @@ pub(super) struct Range {
 }
 
 impl Range {
-    /// Parses `start-stop[/step]`: `start <= stop`, `step >= 1`, and at
-    /// most [`MAX_GENERATE`] iterations.
-    pub(super) fn parse(text: &[u8]) -> Result<Range> {
+    /// Parses `start-stop[/step]`: `start <= stop`, `step >= 1`
+    /// ([`Error::InvalidText`] otherwise), and at most `max` iterations
+    /// ([`Error::LimitExceeded`] otherwise).
+    pub(super) fn parse(text: &[u8], max: u32) -> Result<Range> {
         let (range, step) = match text.iter().position(|&c| c == b'/') {
             Some(i) => (
                 text.get(..i).unwrap_or(&[]),
@@ -62,8 +65,11 @@ impl Range {
             .ok_or(Error::InvalidText)?;
         let start = number(range.get(..dash).unwrap_or(&[]))?;
         let stop = number(range.get(dash + 1..).unwrap_or(&[]))?;
-        if start > stop || step == 0 || (stop - start) / step >= MAX_GENERATE {
+        if start > stop || step == 0 {
             return Err(Error::InvalidText);
+        }
+        if u64::from((stop - start) / step) >= u64::from(max) {
+            return Err(Error::LimitExceeded);
         }
         Ok(Range { start, stop, step })
     }
@@ -223,20 +229,23 @@ mod tests {
     #[test]
     fn ranges() {
         assert_eq!(
-            Range::parse(b"1-10"),
+            Range::parse(b"1-10", MAX_GENERATE),
             Ok(Range {
                 start: 1,
                 stop: 10,
                 step: 1
             })
         );
-        let r = Range::parse(b"0-255/16").unwrap();
+        let r = Range::parse(b"0-255/16", MAX_GENERATE).unwrap();
         assert_eq!((r.start, r.stop, r.step), (0, 255, 16));
         assert_eq!(r.after(240), None);
         assert_eq!(r.after(224), Some(240));
-        assert_eq!(Range::parse(b"0-65535").map(|r| r.stop), Ok(65535));
         assert_eq!(
-            Range::parse(b"0-4294967295/65536").map(|r| r.step),
+            Range::parse(b"0-65535", MAX_GENERATE).map(|r| r.stop),
+            Ok(65535)
+        );
+        assert_eq!(
+            Range::parse(b"0-4294967295/65536", MAX_GENERATE).map(|r| r.step),
             Ok(65536)
         );
         for bad in [
@@ -246,14 +255,30 @@ mod tests {
             b"1",
             b"1-2/0",
             b"1-2/",
-            b"0-65536",
             b"0-4294967296",
             b"a-b",
             b"1--2",
         ] {
-            assert_eq!(Range::parse(bad), Err(Error::InvalidText), "{bad:?}");
+            assert_eq!(
+                Range::parse(bad, MAX_GENERATE),
+                Err(Error::InvalidText),
+                "{bad:?}"
+            );
         }
-        let r = Range::parse(b"4294967290-4294967295/3").unwrap();
+        // The iteration limit.
+        assert_eq!(
+            Range::parse(b"0-65536", MAX_GENERATE),
+            Err(Error::LimitExceeded)
+        );
+        assert_eq!(Range::parse(b"1-10", 9), Err(Error::LimitExceeded));
+        assert!(Range::parse(b"1-10", 10).is_ok());
+        assert!(Range::parse(b"1-1", 0).is_err());
+        assert_eq!(
+            Range::parse(b"0-4294967295", u32::MAX),
+            Err(Error::LimitExceeded)
+        );
+        assert!(Range::parse(b"1-4294967295", u32::MAX).is_ok());
+        let r = Range::parse(b"4294967290-4294967295/3", MAX_GENERATE).unwrap();
         assert_eq!(r.after(4294967293), None);
     }
 

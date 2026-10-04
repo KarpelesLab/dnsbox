@@ -467,3 +467,21 @@ fn record_from_str() {
         assert_eq!(text.parse::<OwnedRecord>(), Err(err), "{text:?}");
     }
 }
+
+#[test]
+fn reserve_is_bounded_by_the_message() {
+    use super::{MIN_QUESTION_LEN, MIN_RECORD_LEN, reserve};
+    // A bare header claiming 65535 entries per section.
+    assert_eq!(reserve(u16::MAX, 12, MIN_RECORD_LEN), 0);
+    assert_eq!(reserve(u16::MAX, 0, MIN_RECORD_LEN), 0);
+    assert_eq!(reserve(u16::MAX, 12 + 55, MIN_RECORD_LEN), 5);
+    assert_eq!(reserve(2, 12 + 55, MIN_RECORD_LEN), 2);
+    assert_eq!(reserve(u16::MAX, 65535, MIN_QUESTION_LEN), 13104);
+    let hostile = [
+        0x12, 0x34, 0x81, 0x80, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+    ];
+    assert_eq!(
+        super::OwnedMessage::from_message(&crate::Message::parse(&hostile).unwrap()),
+        Err(crate::Error::UnexpectedEof)
+    );
+}

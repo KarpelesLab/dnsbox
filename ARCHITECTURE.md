@@ -87,14 +87,16 @@ src/
   dso.rs          DNS Stateful Operations (RFC 8490): TLVs, DsoBuilder
   zone/           presentation format and master files (RFC 1035 §5):
     lexer.rs      tokenizer: blanks, comments, parentheses, quotes,
-                  escapes, positions                    [crate-internal]
+                  escapes, positions, line/token limits [crate-internal]
     scanner.rs    Scanner (RDATA field reader + shared field parsers),
                   Token, Unescape, parse_ttl
     reader.rs     ZoneReader (streaming, allocation-free), ZoneRecord,
                   Entry/Include, ZoneError (line/column)
     generate.rs   BIND $GENERATE ranges and substitutions
+    limits.rs     ZoneLimits (records, $GENERATE, $INCLUDE, lengths)
     records.rs    alloc: Records iterator, ZoneRecordBuf, $INCLUDE via
-                  IncludeResolver (FsIncludes with std), parse()
+                  IncludeResolver (FsIncludes with std, confined to a
+                  directory by default), parse(), parse_with_limits()
     tests.rs      RFC 1035 §5.3 zone, signed zone, directives, errors
 tests/
   captures.rs     real wire captures, truncation and mutation tests
@@ -841,7 +843,8 @@ common traits, `Display`/`FromStr` pairs, iteration by reference).
   `set_*(&mut self, ..)` configures in place, `with_*(self, ..) -> Self`
   is builder style (and `#[must_use]`); `finish(self)` ends the build.
 - **Common traits.** Every public type is `Debug`, `Send` and `Sync`
-  (when its parameters are). Views are `Copy`; value types derive
+  (when its parameters are), except `dnssec::ValidationBudget`, whose
+  per-response counters are `Cell`s (`Send` only). Views are `Copy`; value types derive
   `Clone, PartialEq, Eq, Hash` where meaningful, `Default` where a natural
   empty value exists, `Ord` only with a meaningful order (registries by
   number, names in canonical DNSSEC order; `Timestamp` is only
@@ -997,8 +1000,10 @@ src/dnssec/
                 check_rrsig, signed_data, verify_rrsig, sign_rrset
   crypto.rs     Verifier / Signer traits (pluggable backends)
   backend.rs    PurecryptoVerifier, SigningKey        [dnssec]
+  budget.rs     ValidationBudget, ValidationLimits, MAX_CRYPTO_OPERATIONS,
+                BudgetedNsec3Hasher (KeyTrap bounds)
   chain.rs      TrustedKeys (DS/anchors -> DNSKEY -> RRsets, wildcard
-                answers), Verified, Answer, MAX_CRYPTO_OPERATIONS
+                answers), Verified, Answer
   denial.rs     DenialProof, DenialStatus (Secure/Insecure/Bogus), Denial,
                 ClosestEncloser; denial/nsec.rs NsecProof, denial/nsec3.rs
                 Nsec3Proof, Nsec3Hasher, Nsec3Limits (RFC 9276)
@@ -1019,8 +1024,15 @@ src/dnssec/
   select the RRset (owner, class, type) and authenticate the key.
 - `TrustedKeys` does the key selection on top of it: RRSIGs of other
   types/signers/unknown keys are skipped, one valid signature suffices,
-  revoked keys are never used, and every call is capped at
-  `MAX_CRYPTO_OPERATIONS` verifications and DS digests (KeyTrap).
+  revoked keys are never used, and the work is bounded by a
+  `ValidationBudget` (KeyTrap): RRSIGs per RRset, keys per RRSIG (key tag
+  collisions), DNSKEYs looked at, verifications and DS digests per call
+  and per budget. The budget's counters are `Cell`s, so one budget is
+  shared by reference by every call of a response (`*_with_budget`) and
+  by the NSEC3 hasher a proof holds (`nsec3_hasher`); the methods without
+  a budget use a fresh default one. A limit reached before a signature
+  verifies is `Error::LimitExceeded` (`BogusReason::LimitExceeded` in
+  denial proofs), never a weaker verdict.
 - Denial proofs take records the caller has already authenticated (one
   zone per proof, any re-iterable source: slices, cloneable iterators over
   a message section) and never allocate. Results are `DenialStatus`:
@@ -1141,8 +1153,11 @@ src/dnssec/
   (depth- and count-limited). Without `$TTL` and without an earlier
   explicit TTL, an SOA's MINIMUM is the default TTL (BIND's behaviour);
   `$GENERATE` follows BIND's syntax and yields at most `MAX_GENERATE`
-  records. The owner field is "present" only when the line starts with a
-  non-blank character (RFC 1035 §5.1).
+  records by default. The owner field is "present" only when the line
+  starts with a non-blank character (RFC 1035 §5.1). Every limit of
+  zone-file reading is in `ZoneLimits`, on by default: new directives or
+  features that let a short text cost much work or memory get a limit
+  there, reported as `Error::LimitExceeded` with the position.
 - Signature records must end the message: `tsig::find` and `sig0::find`
   return `TrailingData` for octets after the TSIG / SIG(0) record, which
   nothing authenticates (RFC 8945 §5.1, RFC 2931 §3). Verification

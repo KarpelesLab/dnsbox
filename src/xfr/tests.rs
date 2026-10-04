@@ -192,6 +192,43 @@ fn axfr_across_messages() {
 }
 
 #[test]
+fn limits() {
+    let msgs = [
+        message(
+            Z,
+            Some(Rtype::AXFR),
+            7,
+            Rcode::NOERROR,
+            &[Rr::Soa(Z, 9), Rr::Ns(Z, "NS.JAIN.AD.JP")],
+        ),
+        message(Z, None, 7, Rcode::NOERROR, &[]),
+        message(
+            Z,
+            None,
+            7,
+            Rcode::NOERROR,
+            &[Rr::A("NS.JAIN.AD.JP", [133, 69, 136, 1]), Rr::Soa(Z, 9)],
+        ),
+    ];
+    // Exactly enough.
+    let mut p = XfrProcessor::axfr(n(Z))
+        .with_max_records(4)
+        .with_max_messages(3);
+    assert_eq!(run(&mut p, &msgs).unwrap().len(), 4);
+    assert!(p.is_done());
+    // One record too many: the transfer fails at it.
+    let mut p = XfrProcessor::axfr(n(Z)).with_max_records(3);
+    assert_eq!(run(&mut p, &msgs).err(), Some(Error::LimitExceeded));
+    assert_eq!(p.record_count(), 3);
+    assert_eq!(run(&mut p, &msgs[2..]).err(), Some(Error::InvalidXfr));
+    // One message too many.
+    let mut p = XfrProcessor::axfr(n(Z)).with_max_messages(2);
+    assert_eq!(run(&mut p, &msgs).err(), Some(Error::LimitExceeded));
+    assert_eq!(p.message_count(), 2);
+    assert!(!p.is_done());
+}
+
+#[test]
 fn soa_only_zone_and_axfr_style_ixfr() {
     let msg = message(
         Z,
