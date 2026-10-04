@@ -16,7 +16,15 @@ captures, zone data). Its parsers are written to that bar:
   candidates per name.
 
 The crate does **not** claim any cryptographic property of its own; DNSSEC
-and TSIG verification, when added, delegate to pluggable crypto backends.
+and TSIG verification delegate to pluggable crypto backends.
+
+DNSSEC hardening: the bundled `purecrypto` backend accepts RSA moduli of
+512–4096 bits (1024–4096 for RSASHA512) and public exponents of at most
+256 bits, so a hostile key cannot make a signature check arbitrarily
+expensive; ECDSA points are checked to be on the curve; RSA/MD5 is never
+validated (RFC 8624). NSEC3 hashing costs one hash per iteration (at most
+65536): callers should apply an iteration limit before hashing
+(RFC 9276).
 
 ## Reporting a vulnerability
 

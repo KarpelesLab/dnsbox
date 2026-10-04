@@ -214,6 +214,9 @@ fn check_coverage(rrsig: &Rrsig<'_>, owner: Name<'_>) -> Result<()> {
 /// RRSIG's original TTL and the owner from [`rrsig_owner`] (wildcard
 /// reconstruction, RFC 4035 §5.3.2).
 ///
+/// While sorting the RRset, `out` temporarily needs room for a second copy
+/// of it (see [`CanonicalRrset`]).
+///
 /// Fails with [`Error::RrsetMismatch`] if a record is not of the type
 /// covered, if the RRset is empty, or if the labels field exceeds the
 /// owner's label count. On error, `out` is left as it was.
@@ -269,7 +272,7 @@ where
     if set.is_empty() {
         return Err(Error::RrsetMismatch);
     }
-    Ok(())
+    set.finish().map(|_| ())
 }
 
 /// Validates `rrsig` over `rrset` with `key` (RFC 4035 §5.3): runs

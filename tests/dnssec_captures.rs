@@ -249,3 +249,47 @@ fn tampering_is_detected() {
         }
     }
 }
+
+/// Parses `msg` fully: every record's typed data and presentation form.
+fn walk(msg: &[u8]) {
+    let Ok(m) = Message::parse(msg) else {
+        return;
+    };
+    let _ = m.validate();
+    for item in m.records() {
+        let Ok((_, rr)) = item else {
+            break;
+        };
+        if let Ok(data) = rr.data() {
+            let _ = data.to_string();
+        }
+        let _ = rr.to_string();
+    }
+}
+
+#[test]
+fn truncation_and_mutation() {
+    let mut state = 0x9e37_79b9_7f4a_7c15u64;
+    let mut next = move || {
+        state ^= state << 13;
+        state ^= state >> 7;
+        state ^= state << 17;
+        state
+    };
+    for cap in CAPTURES {
+        let m = hex(cap);
+        for end in 0..m.len() {
+            walk(&m[..end]);
+        }
+        for _ in 0..2000 {
+            let mut bad = m.clone();
+            for _ in 0..1 + next() % 4 {
+                let at = (next() % bad.len() as u64) as usize;
+                bad[at] = next() as u8;
+            }
+            walk(&bad);
+            // Verification of mutated data must not panic.
+            let _ = verify_answers(&bad, &bad, NOW);
+        }
+    }
+}

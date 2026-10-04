@@ -285,6 +285,40 @@ fn record_rdata_adapter() {
 }
 
 #[test]
+#[cfg(feature = "alloc")]
+fn large_rrsets_are_cheap() {
+    // Thousands of distinct records with long RDATA: the canonical sort is
+    // O(n log n), so this stays fast.
+    use crate::rdata::UnknownRdata;
+    let apex = NameBuf::root();
+    let pk = [1u8; 32];
+    let k = key(&apex, Dnskey::ZONE, &pk);
+    let owner = name("x");
+    let t = k.rrsig_template(owner.as_name(), Rtype::new(65000), 60, 0, 1);
+    let datas: Vec<Vec<u8>> = (0..4000u32)
+        .map(|i| {
+            let mut d = std::vec![0x55u8; 250];
+            d.extend(i.wrapping_mul(2_654_435_761).to_be_bytes());
+            d
+        })
+        .collect();
+    let rdata: Vec<_> = datas
+        .iter()
+        .map(|d| UnknownRdata::new(Rtype::new(65000), d))
+        .collect();
+    let mut out = Vec::new();
+    signed_data(&mut out, &t, Rrset::new(owner.as_name(), Class::IN, &rdata)).unwrap();
+    let prefix = 18 + 1;
+    let rr_len = 3 + 10 + 254;
+    assert_eq!(out.len(), prefix + 4000 * rr_len);
+    // Sorted: each RDATA's last four octets increase.
+    let tails: Vec<&[u8]> = (0..4000)
+        .map(|i| &out[prefix + (i + 1) * rr_len - 4..prefix + (i + 1) * rr_len])
+        .collect();
+    assert!(tails.windows(2).all(|w| w[0] < w[1]));
+}
+
+#[test]
 fn record_rdata_errors() {
     // A message whose MX answer has one byte of RDATA: the record parses,
     // its data does not, and composing reports the error.

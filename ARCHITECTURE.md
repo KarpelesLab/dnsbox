@@ -584,6 +584,42 @@ with explicit `dep:` syntax, for example:
 dnssec-verify = ["dep:purecrypto", "purecrypto/hash", "purecrypto/rsa", "purecrypto/ec"]
 ```
 
+### DNSSEC (`src/dnssec/`)
+
+Record types are ordinary `rdata` files (`dnskey.rs`: DNSKEY/CDNSKEY/KEY,
+`ds.rs`: DS/CDS/DLV/TA, `rrsig.rs`: RRSIG/SIG, `nsec.rs`, `nsec3.rs`:
+NSEC3/NSEC3PARAM); the protocol logic lives in `src/dnssec/`:
+
+```text
+src/dnssec/
+  alg.rs        Algorithm, DigestType, Nsec3HashAlgorithm (open_enum!)
+  time.rs       serial_cmp / check_validity (RFC 1982), Timestamp
+  keys.rs       key_tag (RFC 4034 App. B), RsaPublicKey (RFC 3110)
+  canonical.rs  canonical_name, CanonicalRrset (sorted, deduplicated,
+                in the caller's OutBuf; no allocation)
+  ds.rs         ds_digest_input; DsDigest, verify_ds   [dnssec-digest]
+  nsec3.rs      Nsec3Hash (base32hex); nsec3_hash      [dnssec-digest]
+  rrsig.rs      Rrset, RecordRdata, ZoneKey, rrsig_owner (wildcards),
+                check_rrsig, signed_data, verify_rrsig, sign_rrset
+  crypto.rs     Verifier / Signer traits (pluggable backends)
+  backend.rs    PurecryptoVerifier, SigningKey        [dnssec]
+```
+
+- Features: `dnssec-digest` (= `purecrypto/hash`, no `alloc`) for DS
+  digests and NSEC3 hashing; `dnssec` (adds `alloc`, `purecrypto/rsa`,
+  `purecrypto/ec`) for signature verification and signing.
+- Signed data is built into a caller-supplied scratch `OutBuf` (removed
+  again after use); backends see `(algorithm, DNSKEY public key, data,
+  RRSIG signature)` in wire format, so any crypto library can implement
+  `Verifier`/`Signer`.
+- `verify_rrsig` performs the RFC 4035 §5.3.1 checks itself (labels,
+  signer zone, key tag/algorithm/zone flag/protocol, validity window with
+  serial arithmetic) and reconstructs wildcard owners (§5.3.2). Callers
+  select the RRset (owner, class, type) and authenticate the key.
+- Canonical RDATA comes from each type's `NameEncoding` through
+  `wire::Canonical`; NSEC next names are `Plain` (RFC 6840 §5.1).
+- The type bitmap shared with CSYNC is `rdata::TypeBitmap` (`bitmap.rs`).
+
 ## Decisions and limitations to know
 
 - `Name` equality/hash are case-insensitive; use `eq_exact` for byte

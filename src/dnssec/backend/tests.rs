@@ -170,6 +170,7 @@ fn rfc8080_published(key: &SigningKey, signature: &str) {
     let mut set =
         crate::dnssec::CanonicalRrset::new(&mut data, zone.as_name(), Rtype::MX, Class::IN, 3600);
     set.push(&mx).unwrap();
+    set.finish().unwrap();
     let expected = b64(signature);
     let mut sig = [0u8; 114];
     let len = key.sign(&data, &mut sig).unwrap();
@@ -879,4 +880,49 @@ fn signed_data_from_rdata_enum() {
         Err(Error::BufferTooSmall)
     );
     assert!(w.is_empty());
+}
+
+#[test]
+fn hostile_keys_and_signatures() {
+    // Random keys and signatures of every size around the expected ones,
+    // for every algorithm: verification fails cleanly, never panics.
+    let mut state = 0x2545_f491_4f6c_dd1du64;
+    let mut next = move || {
+        state ^= state << 13;
+        state ^= state >> 7;
+        state ^= state << 17;
+        state
+    };
+    let v = PurecryptoVerifier;
+    let rsa = rfc5702_key_256(Algorithm::RSASHA256);
+    let real_rsa = rsa.public_key().to_vec();
+    for round in 0..600 {
+        let alg = [5u8, 7, 8, 10, 13, 14, 15, 16][round % 8];
+        let alg = Algorithm::new(alg);
+        let key_len = match alg.public_key_len() {
+            Some(l) => l + (next() % 3) as usize - 1,
+            None => (next() % 140) as usize,
+        };
+        let sig_len = match alg.signature_len() {
+            Some(l) => l + (next() % 3) as usize - 1,
+            None => (next() % 140) as usize,
+        };
+        let mut key: Vec<u8> = (0..key_len).map(|_| next() as u8).collect();
+        if alg.is_rsa() && round % 3 == 0 {
+            // A valid RSA key with a random signature.
+            key = real_rsa.clone();
+        } else if alg.is_rsa() && key.len() > 2 {
+            // Plausible RFC 3110 layouts: short exponent, odd modulus.
+            key[0] = (next() % 4) as u8;
+            if let Some(last) = key.last_mut() {
+                *last |= 1;
+            }
+        }
+        let sig: Vec<u8> = (0..sig_len).map(|_| next() as u8).collect();
+        let r = v.verify(alg, &key, b"data", &sig);
+        assert!(
+            matches!(r, Err(Error::InvalidKey | Error::BadSignature)),
+            "{alg} {r:?}"
+        );
+    }
 }
