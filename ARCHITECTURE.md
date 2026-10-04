@@ -108,6 +108,8 @@ tests/
   proptest_roundtrip.rs, no_alloc.rs   property tests, allocation check
   dig_display.rs  Message Display vs BIND dig 9.18 output (tests/data/dig/)
   serde.rs        serde forms and corpus round trips (serde_json, serde_test)
+examples/         small complete programs (stub_resolver, zone2wire,
+                  dnssec_dig, tsig_axfr); `required-features` in Cargo.toml
 fuzz/             cargo-fuzz targets (own workspace, nightly)
 benches/          criterion benchmarks (own package; see BENCH.md)
 ```
@@ -867,6 +869,19 @@ common traits, `Display`/`FromStr` pairs, iteration by reference).
   the owned types, the wire traits, ...); there is no separate prelude.
   Everything else is reached through its module (`dnsbox::rdata::Mx`,
   `dnsbox::edns::Cookie`, `dnsbox::dnssec::TrustedKeys`).
+- **Documentation.** Every public item has a doc comment citing its RFC
+  section (`missing_docs`); every fallible public function has an
+  `# Errors` section naming the `Error` variants it returns
+  (`clippy::missing_errors_doc`); every public type and module has a
+  runnable example, written as a doctest that builds its input (or embeds
+  a real capture) and asserts the result. Examples that need a feature
+  are wrapped in `# #[cfg(feature = "...")] { ... }` (not just on gated
+  items: the doctests run in every feature combination of the check
+  list), and use a `WireWriter` rather than `Vec<u8>` as `OutBuf` unless
+  `alloc` is required. Examples go where rustdoc renders them: on the
+  public item, not on a private module (`rustdoc::private_doc_tests`).
+  The crate docs (`src/lib.rs`) hold the guided tour; `examples/` holds
+  complete programs.
 
 ## Testing conventions
 
@@ -915,10 +930,14 @@ common traits, `Display`/`FromStr` pairs, iteration by reference).
   cargo clippy --all-targets --all-features -- -D warnings
   cargo test --all-features
   cargo test --no-default-features
+  cargo test --no-default-features --features alloc
   cargo +1.89 test --all-features
   cargo build --target thumbv7em-none-eabi --no-default-features
   RUSTDOCFLAGS="-D warnings" cargo doc --no-deps --all-features
   ```
+
+  `cargo test` also builds the examples (those whose `required-features`
+  are enabled) and runs every doctest.
 
 ## Cryptography
 

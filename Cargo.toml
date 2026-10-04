@@ -42,6 +42,12 @@ serde = ["dep:serde"]
 unsafe_code = "forbid"
 missing_docs = "warn"
 
+[lints.clippy]
+# Every fallible public function documents its errors, and nothing in the
+# library may panic (CI denies warnings).
+missing_errors_doc = "warn"
+missing_panics_doc = "warn"
+
 [dependencies]
 # Cryptographic primitives (digests, HMAC, signatures) for DNSSEC, TSIG and
 # friends. Optional: dnsbox never implements crypto itself, and the wire-format

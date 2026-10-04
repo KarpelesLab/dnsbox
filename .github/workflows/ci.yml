@@ -45,6 +45,17 @@ jobs:
       - name: Test (no default features)
         run: cargo test --no-default-features
 
+      - name: Doctests (alloc only)
+        if: runner.os == 'Linux' # doctest feature gating is platform-independent
+        run: cargo test --doc --no-default-features --features alloc
+
+      - name: Run the offline examples
+        if: runner.os == 'Linux'
+        run: |
+          cargo run --example zone2wire
+          cargo run --example dnssec_dig --features dnssec
+          cargo run --example tsig_axfr --features tsig
+
   msrv:
     name: MSRV (1.89)
     runs-on: ubuntu-latest
@@ -89,7 +100,9 @@ jobs:
     name: Docs build (warnings denied)
     runs-on: ubuntu-latest
     env:
-      RUSTDOCFLAGS: -D warnings -D rustdoc::broken-intra-doc-links
+      # Every public item documented (`missing_docs`), examples only where
+      # they are rendered (`private_doc_tests`).
+      RUSTDOCFLAGS: -D warnings -D missing_docs -D rustdoc::broken-intra-doc-links -D rustdoc::private-doc-tests -D rustdoc::unescaped-backticks
     steps:
       - uses: actions/checkout@v6
 
@@ -106,7 +119,7 @@ jobs:
     name: Docs build (docs.rs config)
     runs-on: ubuntu-latest
     env:
-      RUSTDOCFLAGS: --cfg docsrs -D warnings -D rustdoc::broken-intra-doc-links
+      RUSTDOCFLAGS: --cfg docsrs -D warnings -D missing_docs -D rustdoc::broken-intra-doc-links -D rustdoc::private-doc-tests -D rustdoc::unescaped-backticks
     steps:
       - uses: actions/checkout@v6
 
