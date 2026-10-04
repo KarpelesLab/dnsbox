@@ -559,7 +559,7 @@ fn sign_raw_buffer() {
         TsigSigner::request(&key).sign_buf(&mut w, 0, NOW),
         Err(Error::BufferTooSmall)
     );
-    assert_eq!(w.written(), &q[..]);
+    assert_eq!(w.as_bytes(), &q[..]);
     // Not a message.
     let mut tiny = [0u8; 300];
     let mut w = WireWriter::new(&mut tiny);

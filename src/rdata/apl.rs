@@ -321,7 +321,7 @@ impl fmt::Display for Apl<'_> {
 /// let mut buf = [0u8; 32];
 /// let mut w = WireWriter::new(&mut buf);
 /// AplItems(&items).compose_rdata(&mut w)?;
-/// assert_eq!(w.written(), b"\x00\x01\x15\x03\xc0\xa8\x20");
+/// assert_eq!(w.as_bytes(), b"\x00\x01\x15\x03\xc0\xa8\x20");
 /// # Ok::<(), dnsbox::Error>(())
 /// ```
 #[derive(Clone, Copy, Debug)]

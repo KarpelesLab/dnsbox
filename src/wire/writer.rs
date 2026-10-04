@@ -97,13 +97,14 @@ impl<'b> WireWriter<'b> {
         self.buf.len() - self.len
     }
 
-    /// The bytes written so far.
+    /// The bytes written so far (also [`OutBuf::as_bytes`]).
     #[inline]
-    pub fn written(&self) -> &[u8] {
+    pub fn as_bytes(&self) -> &[u8] {
         self.buf.get(..self.len).unwrap_or(&[])
     }
 
-    /// Consumes the writer, returning the written prefix of the buffer.
+    /// Consumes the writer, returning the written prefix of the buffer
+    /// (also [`OutBuf::into_output`]).
     #[inline]
     pub fn into_written(self) -> &'b mut [u8] {
         let len = self.len.min(self.buf.len());
@@ -116,7 +117,7 @@ impl<'b> OutBuf for WireWriter<'b> {
 
     #[inline]
     fn as_bytes(&self) -> &[u8] {
-        self.written()
+        self.as_bytes()
     }
 
     #[inline]
@@ -327,7 +328,7 @@ impl<T: OutBuf + ?Sized> Composer for T {
 /// let mut buf = [0u8; 64];
 /// let mut w = WireWriter::new(&mut buf);
 /// mx.compose_rdata(&mut Canonical::new(&mut w))?;
-/// assert_eq!(w.written(), b"\x00\x0a\x04mail\x07example\x00");
+/// assert_eq!(w.as_bytes(), b"\x00\x0a\x04mail\x07example\x00");
 /// # Ok::<(), dnsbox::Error>(())
 /// ```
 #[derive(Debug)]
@@ -384,7 +385,7 @@ mod tests {
         assert_eq!(w.put_u16(0), Err(Error::BufferTooSmall));
         w.patch(0, &[9]).unwrap();
         assert_eq!(w.patch(6, &[9, 9]), Err(Error::BufferTooSmall));
-        assert_eq!(w.written(), &[9, 2, 3, 4, 5, 6, 7]);
+        assert_eq!(w.as_bytes(), &[9, 2, 3, 4, 5, 6, 7]);
         w.truncate(2);
         assert_eq!(w.into_written(), &[9, 2]);
     }
@@ -394,7 +395,7 @@ mod tests {
         let mut buf = [0u8; 300];
         let mut w = WireWriter::new(&mut buf);
         w.put_u16_prefixed(|w| w.put_char_string(b"hi")).unwrap();
-        assert_eq!(w.written(), &[0, 3, 2, b'h', b'i']);
+        assert_eq!(w.as_bytes(), &[0, 3, 2, b'h', b'i']);
         assert_eq!(
             w.put_char_string(&[0u8; 256]),
             Err(Error::CharStringTooLong)
@@ -416,7 +417,7 @@ mod tests {
             .put_name(n.as_name(), NameEncoding::Plain)
             .unwrap();
         assert_eq!(
-            w.written(),
+            w.as_bytes(),
             b"\x03WWW\x07Example\x00\x03www\x07example\x00\x03WWW\x07Example\x00"
         );
     }

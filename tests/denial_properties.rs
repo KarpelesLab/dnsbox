@@ -111,7 +111,7 @@ fn bitmap(types: &[Rtype]) -> Vec<u8> {
     let mut buf = [0u8; 64];
     let mut w = WireWriter::new(&mut buf);
     TypeBitmap::compose(types, &mut w).unwrap();
-    w.written().to_vec()
+    w.as_bytes().to_vec()
 }
 
 /// The types at an explicit name or the apex, and at an empty

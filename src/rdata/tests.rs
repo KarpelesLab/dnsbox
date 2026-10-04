@@ -19,7 +19,7 @@ pub(crate) fn compose<D: ComposeRdata + ?Sized>(data: &D) -> Vec<u8> {
     let mut buf = [0u8; 1024];
     let mut w = WireWriter::new(&mut buf);
     data.compose_rdata(&mut w).unwrap();
-    w.written().to_vec()
+    w.as_bytes().to_vec()
 }
 
 /// Parses `rdata` (class IN) as a typed `rtype`, checks its presentation
@@ -181,7 +181,7 @@ fn canonical_form() {
     let mut w = WireWriter::new(&mut buf);
     soa.compose_rdata(&mut Canonical::new(&mut w)).unwrap();
     assert!(
-        w.written()
+        w.as_bytes()
             .starts_with(b"\x02ns\x07example\x00\x02ns\x07example\x00")
     );
 }
@@ -231,7 +231,7 @@ fn type_bitmaps() {
     let mut buf = [0u8; 128];
     let mut w = WireWriter::new(&mut buf);
     TypeBitmap::compose(&types, &mut w).unwrap();
-    assert_eq!(w.written(), wire);
+    assert_eq!(w.as_bytes(), wire);
     assert_eq!(std::format!("{bm:?}"), "[A, MX, RRSIG, NSEC, TYPE1234]");
 
     let empty = TypeBitmap::new(b"").unwrap();
@@ -282,7 +282,7 @@ fn single_name_macro_is_reusable() {
     let mut buf = [0u8; 16];
     let mut w = WireWriter::new(&mut buf);
     d.compose_rdata(&mut Canonical::new(&mut w)).unwrap();
-    assert_eq!(w.written(), b"\x01x\x00");
+    assert_eq!(w.as_bytes(), b"\x01x\x00");
     let mut r = WireReader::new(b"\xc0\x00");
     assert_eq!(
         reuse::Dn::parse_rdata(&mut r),
@@ -307,7 +307,7 @@ pub(crate) fn text_parse(rtype: Rtype, text: &str) -> Result<Vec<u8>> {
     let mut out = WireWriter::new(&mut buf);
     out.put_bytes(b"prefix").unwrap();
     let res = RData::parse_text(rtype, Class::IN, &mut s, &mut out);
-    let out = out.written();
+    let out = out.as_bytes();
     match res {
         Ok(()) => {
             assert!(out.starts_with(b"prefix"), "{rtype} {text:?}");

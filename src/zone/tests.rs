@@ -48,7 +48,7 @@ fn check_record(rr: &ZoneRecord<'_>) {
     let mut buf = std::vec![0u8; 65535];
     let mut again = WireWriter::new(&mut buf);
     match RData::parse_text(rr.rtype, rr.class, &mut s, &mut again) {
-        Ok(()) => assert_eq!(again.written(), rr.rdata, "{rr}"),
+        Ok(()) => assert_eq!(again.as_bytes(), rr.rdata, "{rr}"),
         Err(Error::NoTextFormat) => {}
         Err(e) => panic!("{rr}: display does not parse back: {e}"),
     }
@@ -210,7 +210,7 @@ fn nsec(next: &str, types: &str) -> Vec<u8> {
     let next = NameBuf::from_text(next.as_bytes()).unwrap();
     w.put_bytes(next.as_wire()).unwrap();
     Scanner::new(types).type_bitmap_into(&mut w).unwrap();
-    w.written().to_vec()
+    w.as_bytes().to_vec()
 }
 
 /// Wire-format RRSIG RDATA with a dummy signature.
@@ -273,7 +273,7 @@ fn signed_zone() {
                 assert_eq!(sig.key_tag, 2642);
             }
             RData::Dnskey(key) => assert_eq!(key.key_tag(), 2642),
-            RData::Nsec(n) if rr.owner.to_string() == "xx.example." => {
+            RData::Nsec(n) if rr.name.to_string() == "xx.example." => {
                 assert_eq!(n.next_domain_name.to_string(), "example.");
                 assert_eq!(n.types.to_string(), "A HINFO AAAA NSEC");
             }

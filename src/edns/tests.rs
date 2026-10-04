@@ -21,7 +21,7 @@ pub(crate) fn compose<O: ComposeOption + ?Sized>(o: &O) -> Vec<u8> {
     let mut buf = std::vec![0u8; 70000];
     let mut w = WireWriter::new(&mut buf);
     o.compose_option(&mut w).unwrap();
-    w.written().to_vec()
+    w.as_bytes().to_vec()
 }
 
 /// Composes the whole option (code, length, value).
@@ -29,7 +29,7 @@ pub(crate) fn compose_tlv<O: ComposeOption + ?Sized>(o: &O) -> Vec<u8> {
     let mut buf = std::vec![0u8; 70000];
     let mut w = WireWriter::new(&mut buf);
     o.compose_tlv(&mut w).unwrap();
-    w.written().to_vec()
+    w.as_bytes().to_vec()
 }
 
 /// Parses `data` as a typed option of `code`, checks its presentation
@@ -89,7 +89,7 @@ fn opt_framing() {
     let rdata =
         b"\x00\x03\x00\x00\x00\x0a\x00\x08\x01\x02\x03\x04\x05\x06\x07\x08\xfd\xe9\x00\x01\xaa";
     let opt = Opt::new(rdata).unwrap();
-    assert_eq!(opt.as_bytes(), rdata);
+    assert_eq!(opt.as_wire(), rdata);
     assert!(!opt.is_empty() && Opt::EMPTY.is_empty());
     let raw: Vec<_> = opt.raw_options().collect();
     assert_eq!(raw.len(), 3);
@@ -117,7 +117,7 @@ fn opt_framing() {
     let mut buf = [0u8; 64];
     let mut w = WireWriter::new(&mut buf);
     opt.compose_rdata(&mut w).unwrap();
-    assert_eq!(w.written(), rdata);
+    assert_eq!(w.as_bytes(), rdata);
     assert_eq!(opt.rtype(), Rtype::OPT);
 
     // Every truncation inside an option is a framing error.
@@ -310,21 +310,21 @@ fn compose_options_shapes() {
     [Nsid::REQUEST, Nsid::new(b"a")]
         .compose_options(&mut w)
         .unwrap();
-    assert_eq!(w.written(), b"\x00\x03\x00\x00\x00\x03\x00\x01a");
+    assert_eq!(w.as_bytes(), b"\x00\x03\x00\x00\x00\x03\x00\x01a");
     let mut w = WireWriter::new(&mut buf);
     let opts = [
         EdnsOption::Nsid(Nsid::REQUEST),
         EdnsOption::Unknown(UnknownOption::new(OptionCode::new(65002), b"zz")),
     ];
     opts[..].compose_options(&mut w).unwrap();
-    assert_eq!(w.written(), b"\x00\x03\x00\x00\xfd\xea\x00\x02zz");
+    assert_eq!(w.as_bytes(), b"\x00\x03\x00\x00\xfd\xea\x00\x02zz");
     // Echoing a parsed Opt, nested tuples, unit.
     let opt = Opt::new(b"\x00\x0c\x00\x01\x00").unwrap();
     let mut w = WireWriter::new(&mut buf);
     (opt, (), (Expire::REQUEST,))
         .compose_options(&mut w)
         .unwrap();
-    assert_eq!(w.written(), b"\x00\x0c\x00\x01\x00\x00\x09\x00\x00");
+    assert_eq!(w.as_bytes(), b"\x00\x0c\x00\x01\x00\x00\x09\x00\x00");
     let mut w = WireWriter::new(&mut buf);
     let o = (
         Nsid::REQUEST,
@@ -341,7 +341,7 @@ fn compose_options_shapes() {
     let mut w = WireWriter::new(&mut buf);
     OptData(&o).compose_rdata(&mut w).unwrap();
     assert_eq!(OptData(&o).rtype(), Rtype::OPT);
-    let parsed = Opt::new(w.written()).unwrap();
+    let parsed = Opt::new(w.as_bytes()).unwrap();
     assert!(parsed.validate().is_ok());
     assert_eq!(parsed.options().count(), 8);
     // Values over 65535 bytes cannot be framed.

@@ -175,7 +175,7 @@ fn reserved_types_accept_only_the_generic_form() {
             Err(Error::NoTextFormat),
             "{rtype}"
         );
-        assert!(w.written().is_empty());
+        assert!(w.as_bytes().is_empty());
         let d = RData::from_text(rtype, Class::IN, "\\# 2 0102", &mut buf).unwrap();
         assert_eq!(d.to_string(), "\\# 2 0102");
     }

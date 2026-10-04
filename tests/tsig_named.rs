@@ -328,7 +328,7 @@ fn axfr_stream() {
         let mut w = dnsbox::WireWriter::new(&mut storage);
         dnsbox::OutBuf::append(&mut w, &out).unwrap();
         signer.sign_buf(&mut w, 0, t.data.time_signed).unwrap();
-        assert_eq!(w.written(), &p[..]);
+        assert_eq!(w.as_bytes(), &p[..]);
     }
 }
 

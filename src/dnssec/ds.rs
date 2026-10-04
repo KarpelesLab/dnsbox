@@ -25,7 +25,7 @@ use {
 /// let mut buf = [0u8; 64];
 /// let mut w = WireWriter::new(&mut buf);
 /// ds_digest_input(owner.as_name(), &key, &mut w)?;
-/// assert!(w.written().starts_with(b"\x07example\x00\x01\x01\x03\x0f\x07"));
+/// assert!(w.as_bytes().starts_with(b"\x07example\x00\x01\x01\x03\x0f\x07"));
 /// # Ok::<(), dnsbox::Error>(())
 /// ```
 pub fn ds_digest_input<C: Composer + ?Sized>(
@@ -186,7 +186,7 @@ mod tests {
         ds_digest_input(owner.as_name(), &key, &mut out).unwrap();
         let mut expected = b"\x05dskey\x07example\x03com\x00".to_vec();
         expected.extend(&key_wire);
-        assert_eq!(out.written(), expected);
+        assert_eq!(out.as_bytes(), expected);
     }
 
     #[cfg(feature = "dnssec-digest")]

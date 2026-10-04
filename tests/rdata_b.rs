@@ -539,7 +539,7 @@ fn arbitrary_rdata_round_trips() {
         let mut out = [0u8; 128];
         let mut w = WireWriter::new(&mut out);
         rdata.compose_rdata(&mut w).unwrap();
-        assert_eq!(w.written(), &data[..], "{rtype}");
+        assert_eq!(w.as_bytes(), &data[..], "{rtype}");
     }
     assert!(parsed > 1000, "only {parsed} parsed");
 }

@@ -40,12 +40,12 @@ fn write_and_append() {
     append_frame(&mut w, b"xy").unwrap();
     assert_eq!(append_frame(&mut w, b"xy"), Err(Error::BufferTooSmall));
     assert_eq!(
-        w.written(),
+        w.as_bytes(),
         &[0, 2, b'x', b'y'],
         "failed append left nothing"
     );
     append_frame(&mut w, b"z").unwrap();
-    assert_eq!(w.written(), &[0, 2, b'x', b'y', 0, 1, b'z']);
+    assert_eq!(w.as_bytes(), &[0, 2, b'x', b'y', 0, 1, b'z']);
     assert_eq!(append_frame(&mut w, b""), Err(Error::BufferTooSmall));
     assert_eq!(
         append_frame(&mut WireWriter::new(&mut []), &big),

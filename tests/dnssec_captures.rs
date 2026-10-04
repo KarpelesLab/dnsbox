@@ -328,7 +328,7 @@ fn presentation_format_round_trip() {
         assert_eq!(zone.len(), answers.len());
         for (z, rr) in zone.iter().zip(&answers) {
             assert_eq!(
-                (z.owner.as_name(), z.ttl, z.class, z.rtype),
+                (z.name.as_name(), z.ttl, z.class, z.rtype),
                 (rr.name(), rr.ttl(), rr.class(), rr.rtype())
             );
             // The capture's RDATA, uncompressed.
@@ -350,7 +350,7 @@ fn presentation_format_round_trip() {
                 .iter()
                 .find_map(|k| match k.data() {
                     Ok(RData::Dnskey(d)) if d.key_tag() == rrsig.key_tag => {
-                        Some((k.owner.as_name(), d))
+                        Some((k.name.as_name(), d))
                     }
                     _ => None,
                 })
@@ -358,10 +358,10 @@ fn presentation_format_round_trip() {
             let key = ZoneKey::new(owner, dnskey);
             let covered: Vec<RData<'_>> = zone
                 .iter()
-                .filter(|r| r.rtype == rrsig.type_covered && r.owner == z.owner)
+                .filter(|r| r.rtype == rrsig.type_covered && r.name == z.name)
                 .map(|r| r.data().unwrap())
                 .collect();
-            let rrset = Rrset::new(z.owner.as_name(), z.class, covered);
+            let rrset = Rrset::new(z.name.as_name(), z.class, covered);
             verify_rrsig(&PurecryptoVerifier, &key, &rrsig, rrset, NOW, &mut scratch)
                 .unwrap_or_else(|e| panic!("capture {msg}: {e}"));
             verified += 1;

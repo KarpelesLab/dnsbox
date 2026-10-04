@@ -23,7 +23,7 @@ pub const DEFAULT_MAX_INCLUDES: usize = 256;
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub struct ZoneRecordBuf {
     /// The owner name.
-    pub owner: NameBuf,
+    pub name: NameBuf,
     /// The TTL.
     pub ttl: u32,
     /// The class.
@@ -47,7 +47,7 @@ impl ZoneRecordBuf {
     #[inline]
     pub fn as_record(&self) -> ZoneRecord<'_> {
         ZoneRecord {
-            owner: self.owner.clone(),
+            name: self.name.clone(),
             ttl: self.ttl,
             class: self.class,
             rtype: self.rtype,
@@ -60,7 +60,7 @@ impl ZoneRecordBuf {
 impl From<ZoneRecord<'_>> for ZoneRecordBuf {
     fn from(r: ZoneRecord<'_>) -> Self {
         ZoneRecordBuf {
-            owner: r.owner,
+            name: r.name,
             ttl: r.ttl,
             class: r.class,
             rtype: r.rtype,
@@ -75,7 +75,7 @@ impl fmt::Display for ZoneRecordBuf {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write_record(
             f,
-            self.owner.as_name(),
+            self.name.as_name(),
             self.ttl,
             self.class,
             self.rtype,

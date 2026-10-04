@@ -70,7 +70,7 @@ pub fn canonical_name(name: Name<'_>, out: &mut [u8; MAX_NAME_LEN]) -> usize {
 /// assert_eq!(rrset.len(), 3);
 /// let rr = b"\x01a\x07example\x00\x00\x01\x00\x01\x00\x00\x01\x2c\x00\x04";
 /// assert_eq!(rrset.finish()?, 2 * (rr.len() + 4));
-/// assert_eq!(out.written(), [&rr[..], &[192, 0, 2, 1], rr, &[192, 0, 2, 2]].concat());
+/// assert_eq!(out.as_bytes(), [&rr[..], &[192, 0, 2, 1], rr, &[192, 0, 2, 2]].concat());
 /// # Ok::<(), dnsbox::Error>(())
 /// ```
 #[derive(Debug)]
@@ -358,7 +358,7 @@ mod tests {
             expected.extend_from_slice(d);
         }
         assert_eq!(set.finish(), Ok(expected.len()));
-        assert_eq!(out.written(), expected);
+        assert_eq!(out.as_bytes(), expected);
     }
 
     #[test]
@@ -397,7 +397,7 @@ mod tests {
                 expected.extend_from_slice(&(d.len() as u16).to_be_bytes());
                 expected.extend_from_slice(d);
             }
-            assert_eq!(out.written(), expected, "round {round}");
+            assert_eq!(out.as_bytes(), expected, "round {round}");
             assert_eq!(len, expected.len() - 2);
         }
     }
@@ -413,7 +413,7 @@ mod tests {
             set.push(&A::new([1, 1, 1, 1].into())).unwrap();
             if ok {
                 assert_eq!(set.finish(), Ok(30));
-                assert_eq!(&w.written()[11..15], [1, 1, 1, 1]);
+                assert_eq!(&w.as_bytes()[11..15], [1, 1, 1, 1]);
             } else {
                 assert_eq!(set.finish(), Err(Error::BufferTooSmall));
                 assert!(w.is_empty());
@@ -465,7 +465,7 @@ mod tests {
         assert_eq!(set.len(), 1);
         assert_eq!(set.finish(), Ok(15));
         assert_eq!(w.len(), 16);
-        assert_eq!(w.written()[0], 0xaa);
+        assert_eq!(w.as_bytes()[0], 0xaa);
     }
 
     #[test]

@@ -19,7 +19,7 @@ use crate::{Result, Rtype};
 /// let mut buf = [0u8; 16];
 /// let mut w = WireWriter::new(&mut buf);
 /// (Nsid::REQUEST, Expire::REQUEST).compose_options(&mut w)?;
-/// assert_eq!(w.written(), b"\x00\x03\x00\x00\x00\x09\x00\x00");
+/// assert_eq!(w.as_bytes(), b"\x00\x03\x00\x00\x00\x09\x00\x00");
 /// # Ok::<(), dnsbox::Error>(())
 /// ```
 pub trait ComposeOptions {
@@ -51,7 +51,7 @@ impl<T: ComposeOption, const N: usize> ComposeOptions for [T; N] {
 impl ComposeOptions for Opt<'_> {
     #[inline]
     fn compose_options<C: Composer + ?Sized>(&self, c: &mut C) -> Result<()> {
-        c.put_bytes(self.as_bytes())
+        c.put_bytes(self.as_wire())
     }
 }
 

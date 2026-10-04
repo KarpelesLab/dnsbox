@@ -11,7 +11,11 @@
 //!   holds a well-formed message;
 //! - owner names, question names and names in the RDATA of the RFC 1035
 //!   types are compressed through a fixed-size table of the labels already
-//!   written (see [`compress`]); names in any other RDATA are never
+//!   written (128 labels, under 1 KiB, no allocation; lookups cost one
+//!   probe per label and at most 32 false candidates per name, so hash
+//!   collisions cannot blow up the cost; a full table only means less
+//!   compression). Matching is case-sensitive, so the case of every name
+//!   is preserved (0x20 randomisation). Names in any other RDATA are never
 //!   compressed (RFC 3597 §4). Compression can be turned off;
 //! - every push is atomic: if an entry does not fit (buffer or
 //!   [size limit](MessageBuilder::set_limit)), the message is rolled back to
@@ -37,7 +41,7 @@
 //! [`copy_message`]: MessageBuilder::copy_message
 //! [`push_raw_records`]: MessageBuilder::push_raw_records
 
-pub mod compress;
+mod compress;
 mod framing;
 mod query;
 mod raw;

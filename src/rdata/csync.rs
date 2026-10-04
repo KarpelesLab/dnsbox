@@ -107,7 +107,7 @@ impl fmt::Display for Csync<'_> {
 /// let mut buf = [0u8; 32];
 /// let mut w = WireWriter::new(&mut buf);
 /// csync.compose_rdata(&mut w)?;
-/// assert_eq!(w.written(), b"\x00\x00\x00\x42\x00\x03\x00\x04\x60\x00\x00\x08");
+/// assert_eq!(w.as_bytes(), b"\x00\x00\x00\x42\x00\x03\x00\x04\x60\x00\x00\x08");
 /// # Ok::<(), dnsbox::Error>(())
 /// ```
 #[derive(Clone, Copy, Debug)]

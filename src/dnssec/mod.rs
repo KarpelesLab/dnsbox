@@ -131,7 +131,7 @@ pub use rrsig::{
 pub use time::{Timestamp, check_validity, serial_cmp};
 #[cfg(feature = "alloc")]
 #[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
-pub use zonemd::{ZoneCollation, ZoneRecord};
+pub use zonemd::{ZoneCollation, ZonemdRecord};
 #[cfg(all(feature = "alloc", feature = "dnssec-digest"))]
 #[cfg_attr(docsrs, doc(cfg(all(feature = "alloc", feature = "dnssec-digest"))))]
 pub use zonemd::{ZonemdDigest, ZonemdFailure, ZonemdVerified, verify_zonemd, zonemd_digest};

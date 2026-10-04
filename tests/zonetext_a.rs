@@ -98,14 +98,14 @@ fn rfc_examples_in_a_zone() {
                 assert_eq!(rr.ttl, 3600);
                 let data = rr.data().unwrap();
                 let text = data.to_string();
-                shown.push(format!("{} {} {}", rr.owner, rr.rtype, text));
+                shown.push(format!("{} {} {}", rr.name, rr.rtype, text));
                 // The display reads back as the same wire form.
                 let mut s = Scanner::new(&text);
                 let mut again = [0u8; 1024];
                 let mut w = WireWriter::new(&mut again);
                 RData::parse_text(rr.rtype, rr.class, &mut s, &mut w).unwrap();
-                assert_eq!(w.written(), rr.rdata, "{rr}");
-                b.push_answer(&rr.owner, rr.class, rr.ttl, &data).unwrap();
+                assert_eq!(w.as_bytes(), rr.rdata, "{rr}");
+                b.push_answer(&rr.name, rr.class, rr.ttl, &data).unwrap();
             }
             Ok(None) => break,
             Err(e) => errors.push((e.line(), e.error())),

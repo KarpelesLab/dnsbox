@@ -128,7 +128,7 @@ fn rfc1995_incremental_example() {
     );
     assert!(p.is_done());
     assert_eq!(p.style(), Some(XfrStyle::Incremental));
-    assert_eq!((p.messages(), p.records()), (1, 11));
+    assert_eq!((p.message_count(), p.record_count()), (1, 11));
 }
 
 #[test]

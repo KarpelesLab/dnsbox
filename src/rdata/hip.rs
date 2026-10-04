@@ -221,7 +221,7 @@ impl fmt::Display for Hip<'_> {
 /// let mut buf = [0u8; 64];
 /// let mut w = WireWriter::new(&mut buf);
 /// hip.compose_rdata(&mut w)?;
-/// assert_eq!(w.written(), b"\x02\x02\x00\x03\x20\x01\x01\x02\x03\x03rvs\x07example\x00");
+/// assert_eq!(w.as_bytes(), b"\x02\x02\x00\x03\x20\x01\x01\x02\x03\x03rvs\x07example\x00");
 /// # Ok::<(), dnsbox::Error>(())
 /// ```
 #[derive(Clone, Copy, Debug)]

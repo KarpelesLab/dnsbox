@@ -23,7 +23,11 @@ use crate::{Error, Result};
 ///
 /// This is an open newtype rather than an enum so that unassigned values
 /// round-trip unchanged.
-#[derive(Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
+///
+/// Its text form is the IANA mnemonic (`QUERY`, `UPDATE`) or `OPCODE<n>`
+/// for unassigned values; [`FromStr`](core::str::FromStr) parses both back.
+/// The default is [`QUERY`](Self::QUERY).
+#[derive(Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord, Default)]
 pub struct Opcode(u8);
 
 impl Opcode {
@@ -53,7 +57,7 @@ impl Opcode {
     }
 
     /// The IANA mnemonic for this opcode, if it is assigned.
-    pub const fn name(self) -> Option<&'static str> {
+    pub const fn mnemonic(self) -> Option<&'static str> {
         Some(match self.0 {
             0 => "QUERY",
             1 => "IQUERY",
@@ -63,6 +67,36 @@ impl Opcode {
             6 => "DSO",
             _ => return None,
         })
+    }
+
+    /// Looks up an assigned mnemonic, ASCII-case-insensitively. Does not
+    /// accept the generic `OPCODE<n>` form; [`FromStr`](core::str::FromStr)
+    /// does.
+    pub fn from_mnemonic(s: &str) -> Option<Self> {
+        (0..16)
+            .map(Opcode)
+            .find(|op| op.mnemonic().is_some_and(|m| m.eq_ignore_ascii_case(s)))
+    }
+}
+
+impl core::str::FromStr for Opcode {
+    type Err = Error;
+
+    /// Parses a mnemonic or the generic form `OPCODE<n>` (`n` below 16),
+    /// ASCII-case-insensitively: [`Error::UnknownMnemonic`] for an unknown
+    /// word, [`Error::InvalidText`] for a bad number.
+    fn from_str(s: &str) -> Result<Self> {
+        if let Some(op) = Self::from_mnemonic(s) {
+            return Ok(op);
+        }
+        match crate::macros::generic_digits(s, "OPCODE") {
+            Some(Some(digits)) => match digits.parse::<u8>() {
+                Ok(v) if v < 16 => Ok(Opcode(v)),
+                _ => Err(Error::InvalidText),
+            },
+            Some(None) => Err(Error::InvalidText),
+            None => Err(Error::UnknownMnemonic),
+        }
     }
 }
 
@@ -74,8 +108,8 @@ impl fmt::Debug for Opcode {
 
 impl fmt::Display for Opcode {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self.name() {
-            Some(name) => f.write_str(name),
+        match self.mnemonic() {
+            Some(m) => f.write_str(m),
             None => write!(f, "OPCODE{}", self.0),
         }
     }
@@ -85,7 +119,11 @@ impl fmt::Display for Opcode {
 ///
 /// The header carries only the low 4 bits; EDNS(0) (RFC 6891) extends this to
 /// 12 bits using the OPT record, which is why the value is stored as `u16`.
-#[derive(Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
+///
+/// Its text form is the IANA mnemonic (`NOERROR`, `NXDOMAIN`) or
+/// `RCODE<n>` for unassigned values; [`FromStr`](core::str::FromStr)
+/// parses both back. The default is [`NOERROR`](Self::NOERROR).
+#[derive(Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord, Default)]
 pub struct Rcode(u16);
 
 impl Rcode {
@@ -149,7 +187,7 @@ impl Rcode {
     }
 
     /// The IANA mnemonic for this response code, if it is assigned.
-    pub const fn name(self) -> Option<&'static str> {
+    pub const fn mnemonic(self) -> Option<&'static str> {
         Some(match self.0 {
             0 => "NOERROR",
             1 => "FORMERR",
@@ -168,6 +206,38 @@ impl Rcode {
             _ => return None,
         })
     }
+
+    /// Looks up an assigned mnemonic, ASCII-case-insensitively. Does not
+    /// accept the generic `RCODE<n>` form; [`FromStr`](core::str::FromStr)
+    /// does.
+    pub fn from_mnemonic(s: &str) -> Option<Self> {
+        // Every assigned mnemonic is below 32.
+        (0..32)
+            .map(Rcode)
+            .find(|rc| rc.mnemonic().is_some_and(|m| m.eq_ignore_ascii_case(s)))
+    }
+}
+
+impl core::str::FromStr for Rcode {
+    type Err = Error;
+
+    /// Parses a mnemonic or the generic form `RCODE<n>` (`n` below 4096,
+    /// RFC 6891 §6.1.3), ASCII-case-insensitively:
+    /// [`Error::UnknownMnemonic`] for an unknown word,
+    /// [`Error::InvalidText`] for a bad number.
+    fn from_str(s: &str) -> Result<Self> {
+        if let Some(rc) = Self::from_mnemonic(s) {
+            return Ok(rc);
+        }
+        match crate::macros::generic_digits(s, "RCODE") {
+            Some(Some(digits)) => match digits.parse::<u16>() {
+                Ok(v) if v < 4096 => Ok(Rcode(v)),
+                _ => Err(Error::InvalidText),
+            },
+            Some(None) => Err(Error::InvalidText),
+            None => Err(Error::UnknownMnemonic),
+        }
+    }
 }
 
 impl fmt::Debug for Rcode {
@@ -178,8 +248,8 @@ impl fmt::Debug for Rcode {
 
 impl fmt::Display for Rcode {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self.name() {
-            Some(name) => f.write_str(name),
+        match self.mnemonic() {
+            Some(m) => f.write_str(m),
             None => write!(f, "RCODE{}", self.0),
         }
     }
@@ -412,6 +482,34 @@ mod tests {
         assert_eq!(f.rcode(), Rcode::NXDOMAIN);
         assert_eq!(f.bits(), 0xac03);
         assert!(!f.with_aa(false).aa());
+    }
+
+    #[test]
+    fn mnemonics() {
+        use std::string::ToString;
+        for v in 0..16 {
+            let op = Opcode::new(v);
+            assert_eq!(op.to_string().parse(), Ok(op));
+        }
+        for v in [0, 3, 11, 16, 23, 24, 4095] {
+            let rc = Rcode::new(v);
+            assert_eq!(rc.to_string().parse(), Ok(rc));
+        }
+        assert_eq!("update".parse(), Ok(Opcode::UPDATE));
+        assert_eq!(Opcode::from_mnemonic("Notify"), Some(Opcode::NOTIFY));
+        assert_eq!(Opcode::from_mnemonic("OPCODE4"), None);
+        assert_eq!("opcode15".parse(), Ok(Opcode::new(15)));
+        assert_eq!("OPCODE16".parse::<Opcode>(), Err(Error::InvalidText));
+        assert_eq!("OPCODE".parse::<Opcode>(), Err(Error::InvalidText));
+        assert_eq!("FOO".parse::<Opcode>(), Err(Error::UnknownMnemonic));
+        assert_eq!("nxdomain".parse(), Ok(Rcode::NXDOMAIN));
+        assert_eq!("RCODE4095".parse(), Ok(Rcode::new(4095)));
+        assert_eq!("RCODE4096".parse::<Rcode>(), Err(Error::InvalidText));
+        assert_eq!("RCODE-1".parse::<Rcode>(), Err(Error::InvalidText));
+        assert_eq!("BADSIG".parse::<Rcode>(), Err(Error::UnknownMnemonic));
+        assert_eq!(Rcode::new(12).mnemonic(), None);
+        assert_eq!(Opcode::default(), Opcode::QUERY);
+        assert_eq!(Rcode::default(), Rcode::NOERROR);
     }
 
     #[test]

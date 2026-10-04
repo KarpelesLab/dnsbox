@@ -145,7 +145,7 @@ mod tests {
         let mut buf = [0u8; 8];
         let mut w = WireWriter::new(&mut buf);
         assert_eq!(bad.compose_rdata(&mut w), Err(Error::InvalidRdata));
-        assert!(w.written().is_empty());
+        assert!(w.as_bytes().is_empty());
     }
 
     #[test]

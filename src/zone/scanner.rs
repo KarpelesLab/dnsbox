@@ -173,7 +173,7 @@ impl Unescape<'_> {
 /// w.put_u16(s.u16()?)?;
 /// s.name_into(&mut w, NameEncoding::Compressible)?;
 /// s.finish()?;
-/// assert_eq!(w.written(), b"\x00\x0a\x04mail\x07example\x03com\x00");
+/// assert_eq!(w.as_bytes(), b"\x00\x0a\x04mail\x07example\x03com\x00");
 /// # Ok::<(), dnsbox::Error>(())
 /// ```
 #[derive(Clone, Debug)]
@@ -752,7 +752,7 @@ mod tests {
         let mut out = WireWriter::new(&mut buf);
         f(&mut s, &mut out)?;
         s.finish()?;
-        Ok(out.written().to_vec())
+        Ok(out.as_bytes().to_vec())
     }
 
     #[test]

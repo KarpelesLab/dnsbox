@@ -183,7 +183,7 @@ mod tests {
         let mut buf = [0u8; 32];
         let mut w = WireWriter::new(&mut buf);
         n.compose_rdata(&mut Canonical::new(&mut w)).unwrap();
-        assert_eq!(w.written(), b"\x04Host\x07Example\x00");
+        assert_eq!(w.as_bytes(), b"\x04Host\x07Example\x00");
     }
 
     #[test]

@@ -13,7 +13,7 @@ use crate::{Class, Error, Result, Rtype};
 
 /// A resource record read from a master file.
 ///
-/// The owner is an inline [`NameBuf`]; the RDATA is in wire format
+/// The owner name is an inline [`NameBuf`]; the RDATA is in wire format
 /// (uncompressed) in the buffer passed to [`ZoneReader::next_record`].
 /// [`data`](Self::data) gives the typed view; to put the record in a
 /// message, push that view (the builder compresses names where allowed):
@@ -28,7 +28,7 @@ use crate::{Class, Error, Result, Rtype};
 ///
 /// let mut buf = [0u8; 512];
 /// let mut b = MessageBuilder::new(&mut buf)?;
-/// b.push_answer(&rr.owner, rr.class, rr.ttl, &rr.data()?)?;
+/// b.push_answer(&rr.name, rr.class, rr.ttl, &rr.data()?)?;
 /// let msg = Message::parse_validated(b.finish())?;
 /// assert_eq!(msg.answers().next().unwrap()?.to_string(), "www.example. 300 IN A 192.0.2.7");
 /// # Ok::<(), dnsbox::Error>(())
@@ -36,7 +36,7 @@ use crate::{Class, Error, Result, Rtype};
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct ZoneRecord<'b> {
     /// The owner name.
-    pub owner: NameBuf,
+    pub name: NameBuf,
     /// The TTL, explicit or defaulted (see the [module docs](super)).
     pub ttl: u32,
     /// The class.
@@ -63,7 +63,7 @@ impl fmt::Display for ZoneRecord<'_> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write_record(
             f,
-            self.owner.as_name(),
+            self.name.as_name(),
             self.ttl,
             self.class,
             self.rtype,
@@ -287,10 +287,10 @@ impl State {
 /// let mut zone = ZoneReader::new("a 60 IN A 192.0.2.1\nb 60 IN A 192.0.2.256\nc 60 IN TXT hi\n")
 ///     .with_origin(&"example.".parse::<dnsbox::NameBuf>()?);
 /// let mut buf = [0u8; 512];
-/// assert_eq!(zone.next_record(&mut buf)?.unwrap().owner.to_string(), "a.example.");
+/// assert_eq!(zone.next_record(&mut buf)?.unwrap().name.to_string(), "a.example.");
 /// let err = zone.next_record(&mut buf).unwrap_err();
 /// assert_eq!((err.error(), err.line(), err.column()), (Error::InvalidText, 2, 11));
-/// assert_eq!(zone.next_record(&mut buf)?.unwrap().owner.to_string(), "c.example.");
+/// assert_eq!(zone.next_record(&mut buf)?.unwrap().name.to_string(), "c.example.");
 /// assert!(zone.next_record(&mut buf)?.is_none());
 /// # Ok::<(), dnsbox::Error>(())
 /// ```
@@ -636,7 +636,7 @@ impl<'a> ZoneReader<'a> {
         }
         self.st.class = class;
         Ok(ZoneRecord {
-            owner,
+            name: owner,
             ttl,
             class,
             rtype,
@@ -663,7 +663,7 @@ fn generate_one<'b>(
     let mut w = WireWriter::new(buf);
     RData::parse_text(g.rtype, g.class, &mut s, &mut w)?;
     Ok(ZoneRecord {
-        owner,
+        name: owner,
         ttl: g.ttl,
         class: g.class,
         rtype: g.rtype,

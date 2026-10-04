@@ -163,7 +163,7 @@ fn captures_text_round_trip() {
             let mut out = [0u8; 512];
             let mut w = WireWriter::new(&mut out);
             parsed.compose_rdata(&mut w).unwrap();
-            assert_eq!(w.written(), rr.rdata(), "{what}: {rdata}");
+            assert_eq!(w.as_bytes(), rr.rdata(), "{what}: {rdata}");
         }
     }
 }

@@ -290,7 +290,7 @@ impl Out<'_> {
 
     /// The bytes written.
     #[inline]
-    pub(super) fn written(&self) -> &[u8] {
+    pub(super) fn as_bytes(&self) -> &[u8] {
         self.buf.get(..self.len).unwrap_or(&[])
     }
 

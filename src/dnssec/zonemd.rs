@@ -18,13 +18,13 @@ use crate::rdata::{Zonemd, ZonemdHashAlg, ZonemdScheme};
 use crate::wire::{Canonical, Composer, WireReader};
 use crate::{Class, Result, Rtype};
 
-/// One record of a zone, as fed to [`ZoneCollation`]: owner, class, TTL
-/// and record data (any [`ComposeRdata`], e.g. typed data, `RData`, or
+/// One record of a zone, as fed to [`ZoneCollation`]: owner name, class,
+/// TTL and record data (any [`ComposeRdata`], e.g. typed data, `RData`, or
 /// [`RecordRdata`] around a message record).
 #[derive(Clone, Copy, Debug)]
-pub struct ZoneRecord<'a, D> {
+pub struct ZonemdRecord<'a, D> {
     /// The owner name.
-    pub owner: Name<'a>,
+    pub name: Name<'a>,
     /// The class.
     pub class: Class,
     /// The TTL.
@@ -33,12 +33,12 @@ pub struct ZoneRecord<'a, D> {
     pub data: D,
 }
 
-impl<'a, D> ZoneRecord<'a, D> {
+impl<'a, D> ZonemdRecord<'a, D> {
     /// Groups the parts of a record.
     #[inline]
-    pub const fn new(owner: Name<'a>, class: Class, ttl: u32, data: D) -> Self {
-        ZoneRecord {
-            owner,
+    pub const fn new(name: Name<'a>, class: Class, ttl: u32, data: D) -> Self {
+        ZonemdRecord {
+            name,
             class,
             ttl,
             data,
@@ -46,12 +46,12 @@ impl<'a, D> ZoneRecord<'a, D> {
     }
 }
 
-impl<'a> From<Record<'a>> for ZoneRecord<'a, RecordRdata<'a>> {
+impl<'a> From<Record<'a>> for ZonemdRecord<'a, RecordRdata<'a>> {
     /// A message record (e.g. from a zone transfer), its data re-encoded
     /// through [`RecordRdata`].
     #[inline]
     fn from(rr: Record<'a>) -> Self {
-        ZoneRecord::new(rr.name(), rr.class(), rr.ttl(), RecordRdata(rr))
+        ZonemdRecord::new(rr.name(), rr.class(), rr.ttl(), RecordRdata(rr))
     }
 }
 
@@ -99,7 +99,7 @@ impl ZoneCollation {
     /// longer than 65535 octets.
     pub fn new<'r, I, D>(apex: Name<'_>, records: I) -> Result<Self>
     where
-        I: IntoIterator<Item = ZoneRecord<'r, D>>,
+        I: IntoIterator<Item = ZonemdRecord<'r, D>>,
         D: ComposeRdata,
     {
         let mut apex_buf = NameBuf::from_name(apex);
@@ -122,13 +122,13 @@ impl ZoneCollation {
     }
 
     /// Adds one record.
-    fn push<D: ComposeRdata>(&mut self, rr: ZoneRecord<'_, D>) -> Result<()> {
+    fn push<D: ComposeRdata>(&mut self, rr: ZonemdRecord<'_, D>) -> Result<()> {
         let apex = self.apex.as_name();
-        if !rr.owner.is_subdomain_of(&apex) {
+        if !rr.name.is_subdomain_of(&apex) {
             return Ok(()); // out-of-zone data (RFC 8976 Appendix A.2)
         }
         let rtype = rr.data.rtype();
-        let at_apex = rr.owner == apex;
+        let at_apex = rr.name == apex;
         if at_apex && rtype == Rtype::ZONEMD {
             // Kept aside, not digested. One that fails to encode (e.g. a
             // digest of the wrong length, rejected by typed parsing) is
@@ -255,11 +255,11 @@ impl ZoneCollation {
 /// owner name's length.
 fn write_rr<D: ComposeRdata>(
     out: &mut Vec<u8>,
-    rr: &ZoneRecord<'_, D>,
+    rr: &ZonemdRecord<'_, D>,
     rtype: Rtype,
 ) -> Result<usize> {
     let mut owner = [0u8; MAX_NAME_LEN];
-    let owner_len = canonical_name(rr.owner, &mut owner);
+    let owner_len = canonical_name(rr.name, &mut owner);
     out.put_bytes(owner.get(..owner_len).unwrap_or(&[]))?;
     out.put_u16(rtype.get())?;
     out.put_u16(rr.class.get())?;
@@ -586,7 +586,7 @@ impl ZoneCollation {
 /// [`ZoneCollation::digest`].
 ///
 /// ```
-/// use dnsbox::dnssec::{ZoneRecord, zonemd_digest};
+/// use dnsbox::dnssec::{ZonemdRecord, zonemd_digest};
 /// use dnsbox::rdata::{Ns, RData, Soa, ZonemdHashAlg, A, Aaaa};
 /// use dnsbox::{Class, NameBuf};
 ///
@@ -596,11 +596,11 @@ impl ZoneCollation {
 /// let soa = Soa { mname: ns1.as_name(), rname: admin.as_name(), serial: 2018031900,
 ///     refresh: 1800, retry: 900, expire: 604800, minimum: 86400 };
 /// let records = [
-///     ZoneRecord::new(apex.as_name(), Class::IN, 86400, RData::Soa(soa)),
-///     ZoneRecord::new(apex.as_name(), Class::IN, 86400, RData::Ns(Ns::new(ns1.as_name()))),
-///     ZoneRecord::new(apex.as_name(), Class::IN, 86400, RData::Ns(Ns::new(ns2.as_name()))),
-///     ZoneRecord::new(ns1.as_name(), Class::IN, 3600, RData::A(A::new([203, 0, 113, 63].into()))),
-///     ZoneRecord::new(ns2.as_name(), Class::IN, 3600, RData::Aaaa(Aaaa::new("2001:db8::63".parse().unwrap()))),
+///     ZonemdRecord::new(apex.as_name(), Class::IN, 86400, RData::Soa(soa)),
+///     ZonemdRecord::new(apex.as_name(), Class::IN, 86400, RData::Ns(Ns::new(ns1.as_name()))),
+///     ZonemdRecord::new(apex.as_name(), Class::IN, 86400, RData::Ns(Ns::new(ns2.as_name()))),
+///     ZonemdRecord::new(ns1.as_name(), Class::IN, 3600, RData::A(A::new([203, 0, 113, 63].into()))),
+///     ZonemdRecord::new(ns2.as_name(), Class::IN, 3600, RData::Aaaa(Aaaa::new("2001:db8::63".parse().unwrap()))),
 /// ];
 /// let digest = zonemd_digest(apex.as_name(), records, ZonemdHashAlg::SHA384)?;
 /// assert!(digest.as_bytes().starts_with(&[0xc6, 0x80, 0x90, 0xd9]));
@@ -614,7 +614,7 @@ pub fn zonemd_digest<'r, I, D>(
     hash_alg: ZonemdHashAlg,
 ) -> Result<ZonemdDigest>
 where
-    I: IntoIterator<Item = ZoneRecord<'r, D>>,
+    I: IntoIterator<Item = ZonemdRecord<'r, D>>,
     D: ComposeRdata,
 {
     ZoneCollation::new(apex, records)?.digest(hash_alg)
@@ -630,7 +630,7 @@ pub fn verify_zonemd<'r, I, D>(
     records: I,
 ) -> core::result::Result<ZonemdVerified, ZonemdFailure>
 where
-    I: IntoIterator<Item = ZoneRecord<'r, D>>,
+    I: IntoIterator<Item = ZonemdRecord<'r, D>>,
     D: ComposeRdata,
 {
     ZoneCollation::new(apex, records)

@@ -82,7 +82,7 @@ impl fmt::Display for KeyTag<'_> {
 /// let mut buf = [0u8; 16];
 /// let mut w = WireWriter::new(&mut buf);
 /// KeyTags(&[20326, 38696]).compose_tlv(&mut w)?;
-/// assert_eq!(w.written(), b"\x00\x0e\x00\x04\x4f\x66\x97\x28");
+/// assert_eq!(w.as_bytes(), b"\x00\x0e\x00\x04\x4f\x66\x97\x28");
 /// # Ok::<(), dnsbox::Error>(())
 /// ```
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]

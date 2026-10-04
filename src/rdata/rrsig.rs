@@ -254,7 +254,7 @@ mod tests {
         let mut buf = [0u8; 64];
         let mut w = WireWriter::new(&mut buf);
         r2.compose_unsigned(&mut Canonical::new(&mut w)).unwrap();
-        assert_eq!(w.written(), &wire[..31]);
+        assert_eq!(w.as_bytes(), &wire[..31]);
         let empty = r.with_signature(&[]);
         assert_eq!(empty.signature, b"");
         assert!(empty.to_string().ends_with(" example.com."));
@@ -394,7 +394,7 @@ mod tests {
         let mut w = WireWriter::new(&mut buf);
         sig.compose_unsigned(&mut Canonical::new(&mut w)).unwrap();
         assert_eq!(
-            w.written(),
+            w.as_bytes(),
             b"\x00\x00\x0f\x00\x00\x00\x00\x00\x00\x00\x00\x02\x00\x00\x00\x01\x00\x07\
               \x04sig0\x07example\x03com\x00"
         );

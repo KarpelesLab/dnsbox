@@ -162,7 +162,7 @@ fn param(b: &mut SvcbBuilder<'_>, token: &[u8]) -> Result<()> {
 /// included) into the `oots` wire entry: the length covers `proto` and the
 /// colon becomes the weight octet.
 fn oots_entry(o: &mut Out<'_>, start: usize) -> Result<()> {
-    let item = o.written().get(start + 1..).ok_or(Error::InvalidText)?;
+    let item = o.as_bytes().get(start + 1..).ok_or(Error::InvalidText)?;
     let colon = item
         .iter()
         .rposition(|&c| c == b':')

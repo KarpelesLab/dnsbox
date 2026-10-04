@@ -418,7 +418,7 @@ fn compose_plain<D: ComposeRdata + ?Sized>(
             Err(e) => return Err(e),
             Ok(()) => {
                 out.clear();
-                out.extend_from_slice(w.written());
+                out.extend_from_slice(w.as_bytes());
                 return Ok(());
             }
         }
@@ -787,7 +787,7 @@ fn tlv_bytes<O: ComposeOption + ?Sized>(o: &O) -> Vec<u8> {
     let mut w = WireWriter::new(&mut buf);
     o.compose_tlv(&mut w)
         .expect("an option fits its own length");
-    w.written().to_vec()
+    w.as_bytes().to_vec()
 }
 
 /// OPT RDATA whose framing was accepted: the raw options re-compose to the
@@ -808,7 +808,7 @@ pub fn check_opt(opt: Opt<'_>) {
         assert_eq!(back, o, "{text}");
         assert_eq!(back.to_string(), text);
     }
-    assert_eq!(all, opt.as_bytes(), "options do not cover the OPT RDATA");
+    assert_eq!(all, opt.as_wire(), "options do not cover the OPT RDATA");
     assert_eq!(opt.options().count(), opt.raw_options().count());
     if opt.validate().is_ok() {
         assert!(opt.options().all(|o| o.is_ok()));
@@ -820,7 +820,7 @@ pub fn check_opt(opt: Opt<'_>) {
 pub fn edns(data: &[u8]) {
     match Opt::new(data) {
         Ok(opt) => {
-            assert_eq!(opt.as_bytes(), data);
+            assert_eq!(opt.as_wire(), data);
             check_opt(opt);
         }
         Err(e) => assert!(
@@ -1208,7 +1208,7 @@ fn check_zone(data: &[u8]) {
             Ok(Some(rr)) => {
                 let d = rr
                     .data()
-                    .unwrap_or_else(|e| panic!("{}: zone RDATA invalid: {e}", rr.owner));
+                    .unwrap_or_else(|e| panic!("{}: zone RDATA invalid: {e}", rr.name));
                 check_rdata(rr.rtype, rr.class, &d);
                 #[cfg(feature = "alloc")]
                 check_owned_zone_record(&rr);
@@ -1227,7 +1227,7 @@ fn check_zone(data: &[u8]) {
 #[cfg(feature = "alloc")]
 fn check_owned_zone_record(rr: &dnsbox::zone::ZoneRecord<'_>) {
     let owned = dnsbox::OwnedRecord::from(rr);
-    assert_eq!(owned.rdata.as_bytes(), rr.rdata);
+    assert_eq!(owned.rdata.as_wire(), rr.rdata);
     assert_eq!(dnsbox::OwnedRecord::from(rr.clone()), owned);
     assert_eq!(
         dnsbox::OwnedRData::new(&owned.rdata).as_ref(),
@@ -1255,7 +1255,7 @@ fn check_text_round_trip(rtype: Rtype, class: Class, text: &str) {
     let mut s = dnsbox::zone::Scanner::new(text);
     match RData::parse_text(rtype, class, &mut s, &mut w) {
         Ok(()) => {
-            let again = RData::parse(rtype, class, WireReader::new(w.written()))
+            let again = RData::parse(rtype, class, WireReader::new(w.as_bytes()))
                 .unwrap_or_else(|e| panic!("{rtype} {text:?}: parse_text output invalid: {e}"));
             assert_eq!(again.to_string(), text, "{rtype}: text does not round-trip");
         }

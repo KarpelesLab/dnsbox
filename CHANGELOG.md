@@ -7,6 +7,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Breaking changes (1.0 API review)
+
+The Milestone 9 API review renamed and tightened parts of the public API.
+Every change that can break a caller is listed here:
+
+- `Opcode::name` and `Rcode::name` are renamed `mnemonic`, as on every
+  other registry newtype (they also gain `from_mnemonic`, `FromStr` and
+  `Default`).
+- `WireWriter::written` is renamed `as_bytes` (the `OutBuf` name, now
+  also inherent, as on every other buffer type).
+- `edns::Opt::as_bytes` and `OwnedRData::as_bytes` are renamed `as_wire`:
+  `as_wire` is the wire form of a structured value (pairing with
+  `from_wire`), `as_bytes` the contents of a buffer or an opaque field.
+- `dnssec::ZoneRecord` (the input of ZONEMD collation) is renamed
+  `dnssec::ZonemdRecord`, so it no longer shares its name with
+  `zone::ZoneRecord`.
+- The owner-name field of `zone::ZoneRecord`, `zone::ZoneRecordBuf` and
+  `dnssec::ZonemdRecord` is renamed from `owner` to `name`, as in
+  `OwnedRecord`, `OwnedQuestion` and `Record::name`.
+- `xfr::XfrProcessor::messages` and `records` are renamed
+  `message_count` and `record_count` (`records` returns an iterator
+  everywhere else).
+- `tsig::TsigVerifier::finish` takes `self`: it ends the stream.
+- The `builder::compress` module is private; its tuning constants
+  (`CAPACITY`, `MAX_PROBES`) are implementation details, described in the
+  `builder` documentation.
+
+
 ### Added
 
 - Initial scaffold: DNS header parsing and encoding (`Header`, `Flags`,

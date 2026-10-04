@@ -85,7 +85,7 @@ impl ParseRdataText for Txt<'_> {
 /// let mut buf = [0u8; 32];
 /// let mut w = WireWriter::new(&mut buf);
 /// TxtParts(&[b"v=spf1", b"-all"]).compose_rdata(&mut w)?;
-/// assert_eq!(w.written(), b"\x06v=spf1\x04-all");
+/// assert_eq!(w.as_bytes(), b"\x06v=spf1\x04-all");
 /// # Ok::<(), dnsbox::Error>(())
 /// ```
 #[derive(Clone, Copy, Debug)]

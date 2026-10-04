@@ -206,10 +206,10 @@ fn signed_data_layout() {
         expected.extend(b"\x03www\x07example\x00\x00\x01\x00\x01\x00\x00\x0e\x10\x00\x04");
         expected.extend([192, 0, 2, last]);
     }
-    assert_eq!(out.written(), expected);
+    assert_eq!(out.as_bytes(), expected);
 
     // Failures leave the output untouched.
-    let before = out.written().to_vec();
+    let before = out.as_bytes().to_vec();
     let mx = name("mx.example");
     let wrong = [Mx {
         preference: 1,
@@ -228,7 +228,7 @@ fn signed_data_layout() {
         signed_data(&mut out, &t, Rrset::new(apex.as_name(), Class::IN, &rdata)),
         Err(Error::RrsetMismatch)
     );
-    assert_eq!(out.written(), before);
+    assert_eq!(out.as_bytes(), before);
     let mut small = [0u8; 60];
     let mut w = WireWriter::new(&mut small);
     assert_eq!(

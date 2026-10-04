@@ -467,9 +467,9 @@ impl<'k, K: TsigKey> TsigVerifier<'k, K> {
         Ok(Some(record))
     }
 
-    /// Checks that the stream ended with a signed message (RFC 8945
-    /// §5.3.1); fails with [`Error::Unsigned`] otherwise.
-    pub fn finish(&self) -> Result<()> {
+    /// Ends the stream: checks that it ended with a signed message
+    /// (RFC 8945 §5.3.1); fails with [`Error::Unsigned`] otherwise.
+    pub fn finish(self) -> Result<()> {
         if self.first || self.unsigned > 0 {
             Err(Error::Unsigned)
         } else {

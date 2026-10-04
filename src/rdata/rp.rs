@@ -91,7 +91,7 @@ mod tests {
         let mut buf = [0u8; 32];
         let mut w = WireWriter::new(&mut buf);
         rp.compose_rdata(&mut Canonical::new(&mut w)).unwrap();
-        assert_eq!(w.written(), b"\x01x\x03foo\x00\x03foo\x00");
+        assert_eq!(w.as_bytes(), b"\x01x\x03foo\x00\x03foo\x00");
         assert!(matches!(
             parse(Rtype::RP, Class::IN, b"\x00\x00").unwrap(),
             RData::Rp(_)

@@ -144,14 +144,7 @@ impl<'de> Deserialize<'de> for NameBuf {
 
 /// Parses an opcode mnemonic or `OPCODE<n>` (ASCII-case-insensitively).
 fn parse_opcode(s: &str) -> Option<Opcode> {
-    if let Some(op) = (0..16)
-        .map(Opcode::new)
-        .find(|op| op.name().is_some_and(|n| n.eq_ignore_ascii_case(s)))
-    {
-        return Some(op);
-    }
-    let digits = crate::macros::generic_digits(s, "OPCODE")??;
-    opcode_from_int(digits.parse().ok()?)
+    s.parse().ok()
 }
 
 fn opcode_from_int(v: u64) -> Option<Opcode> {
@@ -160,15 +153,7 @@ fn opcode_from_int(v: u64) -> Option<Opcode> {
 
 /// Parses an RCODE mnemonic or `RCODE<n>` (ASCII-case-insensitively).
 fn parse_rcode(s: &str) -> Option<Rcode> {
-    // Every assigned mnemonic is below 32.
-    if let Some(rc) = (0..32)
-        .map(Rcode::new)
-        .find(|rc| rc.name().is_some_and(|n| n.eq_ignore_ascii_case(s)))
-    {
-        return Some(rc);
-    }
-    let digits = crate::macros::generic_digits(s, "RCODE")??;
-    rcode_from_int(digits.parse().ok()?)
+    s.parse().ok()
 }
 
 fn rcode_from_int(v: u64) -> Option<Rcode> {

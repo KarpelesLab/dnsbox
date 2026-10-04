@@ -353,14 +353,14 @@ macro_rules! rdata_registry {
             /// let mut buf = [0u8; 512];
             /// let mut out = WireWriter::new(&mut buf);
             /// RData::parse_text(Rtype::MX, Class::IN, &mut s, &mut out)?;
-            /// assert_eq!(out.written(), b"\x00\x0a\x04mail\x07example\x03com\x00");
+            /// assert_eq!(out.as_bytes(), b"\x00\x0a\x04mail\x07example\x03com\x00");
             ///
             /// // Any type, in the generic form (RFC 3597 §5).
             /// let mut s = Scanner::new(r"\# 4 C0000201");
             /// let mut buf = [0u8; 512];
             /// let mut out = WireWriter::new(&mut buf);
             /// RData::parse_text(Rtype::A, Class::IN, &mut s, &mut out)?;
-            /// assert_eq!(out.written(), [192, 0, 2, 1]);
+            /// assert_eq!(out.as_bytes(), [192, 0, 2, 1]);
             /// # Ok::<(), dnsbox::Error>(())
             /// ```
             pub fn parse_text<B: OutBuf + ?Sized>(

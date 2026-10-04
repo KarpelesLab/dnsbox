@@ -136,7 +136,7 @@ impl OwnedRData {
     /// let mx = OwnedRData::new(&Mx { preference: 10, exchange: exchange.as_name() })?;
     /// assert_eq!(mx.rtype(), Rtype::MX);
     /// assert_eq!(mx.to_string(), "10 mail.example.com.");
-    /// assert_eq!(mx.as_bytes(), b"\x00\x0a\x04mail\x07example\x03com\x00");
+    /// assert_eq!(mx.as_wire(), b"\x00\x0a\x04mail\x07example\x03com\x00");
     /// # Ok::<(), dnsbox::Error>(())
     /// ```
     pub fn new<D: ComposeRdata + ?Sized>(data: &D) -> Result<Self> {
@@ -184,7 +184,7 @@ impl OwnedRData {
     /// use dnsbox::{Class, OwnedRData, Rtype};
     ///
     /// let mx = OwnedRData::from_text(Rtype::MX, Class::IN, "10 mail.example.com.")?;
-    /// assert_eq!(mx.as_bytes(), b"\x00\x0a\x04mail\x07example\x03com\x00");
+    /// assert_eq!(mx.as_wire(), b"\x00\x0a\x04mail\x07example\x03com\x00");
     /// let a = OwnedRData::from_text(Rtype::A, Class::IN, r"\# 4 C0000201")?;
     /// assert_eq!(a.to_string(), "192.0.2.1");
     /// # Ok::<(), dnsbox::Error>(())
@@ -212,7 +212,7 @@ impl OwnedRData {
 
     /// The RDATA in uncompressed wire form.
     #[inline]
-    pub fn as_bytes(&self) -> &[u8] {
+    pub fn as_wire(&self) -> &[u8] {
         &self.data
     }
 
@@ -452,7 +452,7 @@ impl From<ZoneRecordBuf> for OwnedRecord {
     /// (already checked, names uncompressed). The line number is dropped.
     fn from(rr: ZoneRecordBuf) -> Self {
         OwnedRecord {
-            name: rr.owner,
+            name: rr.name,
             class: rr.class,
             ttl: rr.ttl,
             rdata: OwnedRData::from_checked(rr.rtype, rr.rdata),
@@ -466,7 +466,7 @@ impl From<ZoneRecord<'_>> for OwnedRecord {
     fn from(rr: ZoneRecord<'_>) -> Self {
         OwnedRecord {
             rdata: OwnedRData::from_checked(rr.rtype, rr.rdata.to_vec()),
-            name: rr.owner,
+            name: rr.name,
             class: rr.class,
             ttl: rr.ttl,
         }
@@ -477,7 +477,7 @@ impl From<&ZoneRecord<'_>> for OwnedRecord {
     /// See `From<ZoneRecord>`.
     fn from(rr: &ZoneRecord<'_>) -> Self {
         OwnedRecord {
-            name: rr.owner.clone(),
+            name: rr.name.clone(),
             class: rr.class,
             ttl: rr.ttl,
             rdata: OwnedRData::from_checked(rr.rtype, rr.rdata.to_vec()),
@@ -540,7 +540,7 @@ impl fmt::Display for OwnedRecord {
         )?;
         match self.data() {
             Ok(d) => fmt::Display::fmt(&d, f),
-            Err(_) => crate::text::fmt_generic_rdata(f, self.rdata.as_bytes()),
+            Err(_) => crate::text::fmt_generic_rdata(f, self.rdata.as_wire()),
         }
     }
 }
@@ -799,7 +799,7 @@ impl DigRecord for &OwnedRecord {
         self.ttl
     }
     fn raw_rdata(&self) -> &[u8] {
-        self.rdata.as_bytes()
+        self.rdata.as_wire()
     }
     fn rdata(&self) -> Result<RData<'_>> {
         self.data()

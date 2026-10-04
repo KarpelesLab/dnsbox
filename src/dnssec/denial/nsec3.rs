@@ -207,7 +207,7 @@ impl Default for Nsec3Limits {
 ///     iterations: 12,
 ///     salt: &[0xaa, 0xbb, 0xcc, 0xdd],
 ///     next_hashed_owner: next.as_bytes(),
-///     types: TypeBitmap::new(w.written())?,
+///     types: TypeBitmap::new(w.as_bytes())?,
 /// };
 /// let records = [Nsec3Record::new(owner.as_name(), nsec3)];
 /// let zone: NameBuf = "example".parse()?;

@@ -17,7 +17,7 @@ use crate::{Error, Result, Rtype};
 /// let mut buf = [0u8; 64];
 /// let mut w = WireWriter::new(&mut buf);
 /// TypeBitmap::compose(&[Rtype::MX, Rtype::A, Rtype::RRSIG, Rtype::NSEC, Rtype::new(1234)], &mut w)?;
-/// let bitmap = TypeBitmap::new(w.written())?;
+/// let bitmap = TypeBitmap::new(w.as_bytes())?;
 /// assert!(bitmap.contains(Rtype::MX) && !bitmap.contains(Rtype::NS));
 /// assert_eq!(bitmap.to_string(), "A MX RRSIG NSEC TYPE1234");
 /// # Ok::<(), dnsbox::Error>(())

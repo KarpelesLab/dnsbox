@@ -222,7 +222,7 @@ impl Serialize for OwnedRecord {
             rtype: self.rtype(),
             class: self.class,
             ttl: self.ttl,
-            rdata: RdataRef(self.rdata.as_bytes()),
+            rdata: RdataRef(self.rdata.as_wire()),
         }
         .serialize(s)
     }

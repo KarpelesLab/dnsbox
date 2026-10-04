@@ -19,7 +19,7 @@ fn name(s: &str) -> NameBuf {
 }
 
 /// A zone under construction: owned records, turned into
-/// [`ZoneRecord`]s of [`RData`] for collation.
+/// [`ZonemdRecord`]s of [`RData`] for collation.
 #[derive(Default)]
 struct Zone {
     rrs: Vec<(NameBuf, u32, Rtype, Vec<u8>)>,
@@ -30,7 +30,7 @@ impl Zone {
         let mut buf = [0u8; 4096];
         let mut w = WireWriter::new(&mut buf);
         data.compose_rdata(&mut w).unwrap();
-        self.raw(owner, ttl, data.rtype(), w.written())
+        self.raw(owner, ttl, data.rtype(), w.as_bytes())
     }
 
     fn raw(&mut self, owner: &str, ttl: u32, rtype: Rtype, rdata: &[u8]) -> &mut Self {
@@ -145,7 +145,7 @@ impl Zone {
         let mut buf = [0u8; 64];
         let mut w = WireWriter::new(&mut buf);
         TypeBitmap::compose(types, &mut w).unwrap();
-        let bitmap = w.written().to_vec();
+        let bitmap = w.as_bytes().to_vec();
         self.add(
             owner,
             ttl,
@@ -162,13 +162,13 @@ impl Zone {
         self.raw(owner, ttl, Rtype::NAPTR, &rdata)
     }
 
-    fn records(&self) -> Vec<ZoneRecord<'_, RData<'_>>> {
+    fn records(&self) -> Vec<ZonemdRecord<'_, RData<'_>>> {
         self.rrs
             .iter()
             .map(|(owner, ttl, rtype, rdata)| {
                 let data = RData::parse(*rtype, Class::IN, WireReader::new(rdata))
                     .unwrap_or(RData::Unknown(UnknownRdata::new(*rtype, rdata)));
-                ZoneRecord::new(owner.as_name(), Class::IN, *ttl, data)
+                ZonemdRecord::new(owner.as_name(), Class::IN, *ttl, data)
             })
             .collect()
     }
@@ -756,12 +756,12 @@ impl ComposeRdata for Huge {
 #[test]
 fn encoding_errors() {
     let apex = name("example");
-    let broken = ZoneRecord::new(apex.as_name(), Class::IN, 0, Broken);
+    let broken = ZonemdRecord::new(apex.as_name(), Class::IN, 0, Broken);
     assert_eq!(
         ZoneCollation::new(apex.as_name(), [broken]).err(),
         Some(Error::InvalidRdata)
     );
-    let huge = ZoneRecord::new(apex.as_name(), Class::IN, 0, Huge);
+    let huge = ZonemdRecord::new(apex.as_name(), Class::IN, 0, Huge);
     assert_eq!(
         ZoneCollation::new(apex.as_name(), [huge]).err(),
         Some(Error::BufferTooSmall)
@@ -770,7 +770,7 @@ fn encoding_errors() {
     let other = name("test");
     let c = ZoneCollation::new(
         apex.as_name(),
-        [ZoneRecord::new(other.as_name(), Class::IN, 0, Broken)],
+        [ZonemdRecord::new(other.as_name(), Class::IN, 0, Broken)],
     )
     .unwrap();
     assert!(c.is_empty());
@@ -983,12 +983,12 @@ mod digest {
         records.push(records[0].clone());
         let mut b = MessageBuilder::new_vec();
         for r in &records {
-            b.push_answer(r.owner, r.class, r.ttl, &r.data).unwrap();
+            b.push_answer(r.name, r.class, r.ttl, &r.data).unwrap();
         }
         let wire = b.finish();
         let msg = crate::Message::parse(&wire).unwrap();
         let apex = name("example");
-        let rrs = msg.answers().map(|rr| ZoneRecord::from(rr.unwrap()));
+        let rrs = msg.answers().map(|rr| ZonemdRecord::from(rr.unwrap()));
         assert_eq!(
             verify_zonemd(apex.as_name(), rrs),
             Ok(verified(2018031900, ZonemdHashAlg::SHA384))
@@ -1112,7 +1112,7 @@ mod digest {
         }
         // Failing to collate.
         let apex = name(apex);
-        let broken = || [ZoneRecord::new(apex.as_name(), Class::IN, 0, Broken)];
+        let broken = || [ZonemdRecord::new(apex.as_name(), Class::IN, 0, Broken)];
         assert_eq!(
             verify_zonemd(apex.as_name(), broken()),
             Err(ZonemdFailure::Malformed(Error::InvalidRdata))

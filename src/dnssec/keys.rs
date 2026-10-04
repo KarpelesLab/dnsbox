@@ -174,7 +174,7 @@ mod tests {
         let mut buf = [0u8; 300];
         let mut w = WireWriter::new(&mut buf);
         k.compose(&mut w).unwrap();
-        assert_eq!(w.written(), &long[..]);
+        assert_eq!(w.as_bytes(), &long[..]);
 
         for bad in [
             &[][..],

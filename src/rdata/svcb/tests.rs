@@ -864,7 +864,7 @@ fn canonical_form_keeps_target_case() {
     let mut buf = [0u8; 64];
     let mut w = WireWriter::new(&mut buf);
     s.compose_rdata(&mut Canonical::new(&mut w)).unwrap();
-    assert_eq!(w.written(), b"\x00\x01\x03Foo\x07Example\x00");
+    assert_eq!(w.as_bytes(), b"\x00\x01\x03Foo\x07Example\x00");
 }
 
 #[test]

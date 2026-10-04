@@ -46,8 +46,8 @@ fn axfr_three_messages() {
     assert_eq!((start, end), (Some(1), Some(1)));
     // NS, ns1 A, www A + AAAA, MX, mail A, old A, and 450 TXT.
     assert_eq!((records, txt), (457, 450));
-    assert_eq!(p.messages(), 3);
-    assert_eq!(p.records(), 459);
+    assert_eq!(p.message_count(), 3);
+    assert_eq!(p.record_count(), 459);
 }
 
 #[test]

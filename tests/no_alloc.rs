@@ -231,7 +231,7 @@ fn build_into_stack_buffer() {
             exchange: Name::from_wire(b"\x04MAIL\x07Example\x00").unwrap(),
         };
         mx.compose_rdata(&mut Canonical::new(&mut w)).unwrap();
-        assert_eq!(w.written(), b"\x00\x0a\x04mail\x07example\x00");
+        assert_eq!(w.as_bytes(), b"\x00\x0a\x04mail\x07example\x00");
     });
 }
 

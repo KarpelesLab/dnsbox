@@ -37,7 +37,7 @@
 use crate::name::MAX_LABELS;
 
 /// Number of label entries the table can hold.
-pub const CAPACITY: usize = 128;
+pub(crate) const CAPACITY: usize = 128;
 
 /// Maximum number of false candidates verified per name (candidates whose
 /// hash matches but whose bytes in the message do not). The label hash is
@@ -45,7 +45,7 @@ pub const CAPACITY: usize = 128;
 /// query names) could otherwise make every lookup verify many false
 /// candidates; past this budget the rest of the name is simply written
 /// uncompressed.
-pub const MAX_PROBES: u32 = 32;
+pub(crate) const MAX_PROBES: u32 = 32;
 
 /// Largest offset a compression pointer can encode.
 pub(crate) const MAX_POINTER_OFFSET: usize = 0x3fff;

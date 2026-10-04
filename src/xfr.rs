@@ -261,15 +261,15 @@ impl XfrProcessor {
         }
     }
 
-    /// Messages processed so far.
+    /// Number of messages processed so far.
     #[inline]
-    pub fn messages(&self) -> u32 {
+    pub fn message_count(&self) -> u32 {
         self.messages
     }
 
-    /// Answer records processed so far.
+    /// Number of answer records processed so far.
     #[inline]
-    pub fn records(&self) -> u64 {
+    pub fn record_count(&self) -> u64 {
         self.records
     }
 

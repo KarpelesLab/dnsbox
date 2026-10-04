@@ -35,7 +35,7 @@ fn from_view_decompresses_and_rebuild_recompresses() {
     );
     // The stored RDATA is self-contained: no pointer, full exchange name.
     assert_eq!(
-        first.rdata.as_bytes(),
+        first.rdata.as_wire(),
         b"\x00\x1e\x04alt3\x0dgmail-smtp-in\x01l\x06google\x03com\x00"
     );
     assert_eq!(first.rdata.len(), 35);
@@ -116,7 +116,7 @@ fn rdata_class_semantics() {
     assert!(matches!(a.parse(Class::IN), Ok(RData::A(_))));
     assert!(matches!(a.parse(Class::CH), Ok(RData::Unknown(_))));
     let ch = OwnedRData::from_wire(Rtype::A, Class::CH, &[1, 2]).unwrap();
-    assert_eq!(ch.as_bytes(), [1, 2]);
+    assert_eq!(ch.as_wire(), [1, 2]);
     assert!(matches!(ch.as_rdata(), RData::Unknown(_)));
     assert_eq!(ch.to_string(), "\\# 2 0102");
     let rr = OwnedRecord::new(name("ch.example"), Class::CH, 0, ch.clone());
@@ -149,7 +149,7 @@ fn rdata_class_semantics() {
     let mut buf = [0u8; 8];
     let mut w = WireWriter::new(&mut buf);
     bad.compose_rdata(&mut w).unwrap();
-    assert_eq!(w.written(), [0, 1, 0xc0]);
+    assert_eq!(w.as_bytes(), [0, 1, 0xc0]);
     assert!(std::format!("{bad:?}").contains("data: \\# 3 0001C0"));
 }
 
@@ -185,7 +185,7 @@ fn builder_compresses_and_canonicalizes() {
         exchange: exchange.as_name(),
     })
     .unwrap();
-    assert_eq!(mx.as_bytes(), b"\x00\x0a\x04Mail\x07Example\x03COM\x00");
+    assert_eq!(mx.as_wire(), b"\x00\x0a\x04Mail\x07Example\x03COM\x00");
     let rr = OwnedRecord::new(&owner, Class::IN, 300, mx.clone());
 
     // The builder compresses the exchange against the owner (RFC 1035 MX).
@@ -199,7 +199,7 @@ fn builder_compresses_and_canonicalizes() {
     let back = OwnedMessage::from_wire(&wire).unwrap();
     assert_eq!(back.answers, core::slice::from_ref(&rr));
     // Case is preserved exactly.
-    assert_eq!(back.answers[0].rdata.as_bytes(), mx.as_bytes());
+    assert_eq!(back.answers[0].rdata.as_wire(), mx.as_wire());
 
     // Canonical form (RFC 4034 §6.2) lowercases the MX exchange.
     let mut out = Vec::new();
@@ -333,7 +333,7 @@ fn rdata_from_text() {
     // Presentation format (RFC 1035 §5.1), relative names completed with
     // the root.
     let mx = OwnedRData::from_text(Rtype::MX, Class::IN, "10 mail.example.com").unwrap();
-    assert_eq!(mx.as_bytes(), b"\x00\x0a\x04mail\x07example\x03com\x00");
+    assert_eq!(mx.as_wire(), b"\x00\x0a\x04mail\x07example\x03com\x00");
     assert_eq!(mx.to_string(), "10 mail.example.com.");
     // The RFC 3597 §5 generic form, for known and unknown types; hex may
     // be split and in either case.
@@ -344,11 +344,11 @@ fn rdata_from_text() {
     );
     assert_eq!(generic.unwrap(), mx);
     let unknown = OwnedRData::from_text(Rtype::new(65280), Class::IN, r"\# 3 0 a 0 b 0 c").unwrap();
-    assert_eq!(unknown.as_bytes(), [10, 11, 12]);
+    assert_eq!(unknown.as_wire(), [10, 11, 12]);
     assert_eq!(
         OwnedRData::from_text(Rtype::NULL, Class::IN, r"  \#  0  ")
             .unwrap()
-            .as_bytes(),
+            .as_wire(),
         b""
     );
     let mut big = std::string::String::from(r"\# 65535 ");
@@ -356,7 +356,7 @@ fn rdata_from_text() {
     assert_eq!(
         OwnedRData::from_text(Rtype::NULL, Class::IN, &big)
             .unwrap()
-            .as_bytes()
+            .as_wire()
             .len(),
         65535
     );

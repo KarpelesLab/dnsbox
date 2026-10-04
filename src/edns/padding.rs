@@ -80,7 +80,7 @@ impl fmt::Display for Padding<'_> {
 /// let mut buf = [0xffu8; 8];
 /// let mut w = WireWriter::new(&mut buf);
 /// PaddingLen(3).compose_tlv(&mut w)?;
-/// assert_eq!(w.written(), [0, 12, 0, 3, 0, 0, 0]);
+/// assert_eq!(w.as_bytes(), [0, 12, 0, 3, 0, 0, 0]);
 /// # Ok::<(), dnsbox::Error>(())
 /// ```
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
