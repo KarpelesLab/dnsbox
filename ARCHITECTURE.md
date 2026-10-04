@@ -585,6 +585,23 @@ plus a pointer, and register the newly written labels whose offset is
   truncation at every byte offset (must return `Err`, never panic), bad
   lengths / invalid values asserting the exact `Error` variant.
 - Builder output must always pass `Message::parse_validated`.
+- Assurance infrastructure (Milestone 8) covers new record types
+  automatically through the registry (`Rtype::all()` filtered by
+  `RData::is_known`), so registering a type is enough to get it fuzzed and
+  property-tested:
+  - `fuzz/` — cargo-fuzz targets (`message`, `name`, `rdata`, `roundtrip`,
+    `text`), its own workspace; the properties live in `fuzz/src/lib.rs`
+    and are also replayed on stable by `tests/fuzz_regressions.rs` over
+    `fuzz/seeds/` and `fuzz/regressions/` (put every fixed crash there).
+  - `tests/proptest_roundtrip.rs` — build → parse and parse → build →
+    parse identity of generated messages.
+  - `tests/corpus/` + `tests/corpus.rs` — real responses from BIND, NSD,
+    Knot, PowerDNS, Unbound, Knot Resolver and public resolvers (hex files
+    written by `tests/corpus/capture.py`); all must validate and round-trip.
+  - `tests/no_alloc.rs` — the hot path under a counting allocator, run with
+    `--no-default-features` in CI.
+  - `benches/` — separate package: criterion comparisons against
+    hickory-proto and domain; results in `BENCH.md`.
 - Before pushing, all of these must pass:
 
   ```sh

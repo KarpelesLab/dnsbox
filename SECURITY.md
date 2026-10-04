@@ -15,6 +15,11 @@ captures, zone data). Its parsers are written to that bar:
   builder's compression lookup likewise verifies a bounded number of
   candidates per name.
 
+These properties are checked by cargo-fuzz targets (`fuzz/`, run on every
+push and pull request), property tests, and a corpus of real responses
+from BIND, NSD, Knot, PowerDNS and Unbound (`tests/corpus/`); every fixed
+fuzzer finding is kept as a regression input in `fuzz/regressions/`.
+
 The crate does **not** claim any cryptographic property of its own; DNSSEC
 and TSIG verification delegate to pluggable crypto backends.
 

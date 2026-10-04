@@ -53,6 +53,13 @@ fn main() -> Result<(), dnsbox::Error> {
 
 See [ARCHITECTURE.md](ARCHITECTURE.md) for the design and extension guide.
 
+## Assurance and performance
+
+dnsbox is continuously fuzzed ([`fuzz/`](fuzz)), property-tested, and
+checked against real responses from BIND, NSD, Knot, PowerDNS, Unbound and
+public resolvers ([`tests/corpus/`](tests/corpus)). Benchmarks against
+`hickory-proto` and `domain` are in [BENCH.md](BENCH.md).
+
 ## Minimum supported Rust version
 
 Rust 1.89, edition 2024.
