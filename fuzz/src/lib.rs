@@ -688,6 +688,16 @@ pub fn message(data: &[u8]) {
         assert_eq!(rr.rdata_reader().remaining(), rr.rdata().len());
         prev_end = rr.end();
         check_name(rr.name());
+        // The iterators decode owner names through a cache of suffixes
+        // already seen; a fresh decode at the same offset agrees exactly.
+        let mut fresh = WireReader::with_range(data, rr.start(), data.len()).expect("in range");
+        let plain = dnsbox::Record::parse(&mut fresh).expect("decodes without the cache too");
+        assert!(
+            plain.name().eq_exact(&rr.name()),
+            "cached owner name differs"
+        );
+        assert_eq!(plain.name().as_contiguous(), rr.name().as_contiguous());
+        assert_eq!((plain.end(), fresh.position()), (rr.end(), rr.end()));
         let _ = rr.to_string();
         match rr.data() {
             Ok(d) => {

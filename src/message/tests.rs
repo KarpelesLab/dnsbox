@@ -196,3 +196,72 @@ fn section_helpers() {
     assert_eq!(Section::Additional.index(), 3);
     assert!(Section::Question < Section::Answer);
 }
+
+/// The section locator as a straightforward reader walk, to check the
+/// slice-based one against.
+fn reference_section_offset(msg: &[u8], h: &Header, section: Section) -> Result<usize> {
+    let mut r = WireReader::new(msg);
+    r.skip(Header::LEN)?;
+    for s in Section::ALL {
+        if s == section {
+            break;
+        }
+        for _ in 0..s.count(h) {
+            loop {
+                match r.read_u8()? {
+                    0 => break,
+                    b @ 1..=0x3f => r.skip(usize::from(b))?,
+                    0xc0..=0xff => {
+                        r.skip(1)?;
+                        break;
+                    }
+                    _ => return Err(Error::BadLabelType),
+                }
+            }
+            if s == Section::Question {
+                r.skip(4)?;
+            } else {
+                r.skip(8)?;
+                let len = r.read_u16()?;
+                r.skip(usize::from(len))?;
+            }
+        }
+    }
+    Ok(r.position())
+}
+
+#[test]
+fn section_offsets_agree_with_a_reader_walk() {
+    for capture in [GMAIL_MX, NODATA_SOA] {
+        let wire = hex(capture);
+        // Every truncation, and every single-byte change to values that
+        // matter to the walk (root, label lengths, label types, pointers,
+        // lengths running off the end).
+        let mut cases = Vec::new();
+        for end in Header::LEN..=wire.len() {
+            cases.push(wire[..end].to_vec());
+        }
+        for i in Header::LEN..wire.len() {
+            for b in [0x00, 0x01, 0x3f, 0x40, 0x80, 0xc0, 0xff] {
+                let mut m = wire.clone();
+                m[i] = b;
+                cases.push(m);
+            }
+        }
+        for m in &cases {
+            let msg = Message::parse(m).unwrap();
+            for s in Section::ALL {
+                assert_eq!(
+                    msg.section_offset(s),
+                    reference_section_offset(m, &msg.header(), s),
+                    "{s:?} of {m:02x?}"
+                );
+            }
+        }
+    }
+    let short = [0u8; 11];
+    assert_eq!(
+        skip_to(&short, &Header::default(), Section::Answer),
+        Err(Error::UnexpectedEof)
+    );
+}

@@ -35,12 +35,14 @@
 //! [`WireReader::read_name`]: crate::WireReader::read_name
 
 mod buf;
+mod decode;
 
 use core::cmp::Ordering;
 use core::fmt;
 use core::hash::{Hash, Hasher};
 
 pub use buf::NameBuf;
+pub(crate) use decode::NameCache;
 
 use crate::{Error, Result};
 
@@ -143,84 +145,27 @@ impl<'a> Name<'a> {
     /// The in-place part of the encoding must end before `end`; pointers
     /// may target anything earlier in `msg`. Returns the name and the
     /// offset just past its in-place encoding.
+    #[inline]
     pub(crate) fn parse_bounded(
         msg: &'a [u8],
         start: usize,
         end: usize,
         allow_pointers: bool,
     ) -> Result<(Self, usize)> {
-        let mut bound = end.min(msg.len());
-        let mut pos = start;
-        // Pointer targets must lie strictly before the current label run.
-        let mut run_start = start;
-        let mut next: Option<usize> = None;
-        let mut name_start = start;
-        let mut total = 0usize;
-        let mut labels = 0u8;
-        let mut hops = 0usize;
-        let mut contiguous = true;
-        loop {
-            if pos >= bound {
-                return Err(Error::UnexpectedEof);
-            }
-            let b = *msg.get(pos).ok_or(Error::UnexpectedEof)?;
-            match b {
-                0 => {
-                    total += 1;
-                    pos += 1;
-                    break;
-                }
-                1..=0x3f => {
-                    let label_end = pos + 1 + b as usize;
-                    if label_end > bound {
-                        return Err(Error::UnexpectedEof);
-                    }
-                    total += 1 + b as usize;
-                    if total >= MAX_NAME_LEN {
-                        return Err(Error::NameTooLong);
-                    }
-                    labels += 1;
-                    pos = label_end;
-                }
-                0xc0..=0xff => {
-                    if !allow_pointers {
-                        return Err(Error::UnexpectedPointer);
-                    }
-                    if pos + 1 >= bound {
-                        return Err(Error::UnexpectedEof);
-                    }
-                    let lo = *msg.get(pos + 1).ok_or(Error::UnexpectedEof)?;
-                    let target = (usize::from(b & 0x3f) << 8) | usize::from(lo);
-                    if next.is_none() {
-                        next = Some(pos + 2);
-                    }
-                    if target >= run_start {
-                        return Err(Error::BadPointer);
-                    }
-                    hops += 1;
-                    if hops > MAX_POINTERS {
-                        return Err(Error::TooManyPointers);
-                    }
-                    if labels == 0 {
-                        name_start = target;
-                    } else {
-                        contiguous = false;
-                    }
-                    pos = target;
-                    run_start = target;
-                    bound = msg.len();
-                }
-                _ => return Err(Error::BadLabelType),
-            }
-        }
-        let name = Name {
-            msg,
-            start: name_start,
-            len: total as u8,
-            labels,
-            contiguous,
-        };
-        Ok((name, next.unwrap_or(pos)))
+        decode::parse(msg, start, end, allow_pointers, &mut decode::NoCache)
+    }
+
+    /// Like [`parse_bounded`](Self::parse_bounded) over the whole message,
+    /// remembering decoded suffixes in `cache` (which must only ever be
+    /// used with this `msg`). Same results and errors, less work on
+    /// compressed messages.
+    #[inline]
+    pub(crate) fn parse_cached(
+        msg: &'a [u8],
+        start: usize,
+        cache: &mut NameCache,
+    ) -> Result<(Self, usize)> {
+        decode::parse(msg, start, msg.len(), true, cache)
     }
 
     /// Wraps an uncompressed wire-format name that fills `wire` exactly.
@@ -234,6 +179,13 @@ impl<'a> Name<'a> {
             return Err(Error::TrailingData);
         }
         Ok(name)
+    }
+
+    /// The buffer the name was decoded from (for names read from a
+    /// message: the whole message).
+    #[inline]
+    pub(crate) const fn buffer(&self) -> &'a [u8] {
+        self.msg
     }
 
     /// Length of the name in uncompressed wire form, root label included
@@ -534,26 +486,31 @@ pub struct Labels<'a> {
 impl<'a> Iterator for Labels<'a> {
     type Item = Label<'a>;
 
+    #[inline]
     fn next(&mut self) -> Option<Label<'a>> {
         if self.remaining == 0 {
             return None;
         }
         // The name was validated at construction; the bounded loop and
         // checked accesses only keep this panic-free regardless.
-        for _ in 0..=MAX_POINTERS {
+        let mut hops = 0;
+        loop {
             let b = *self.msg.get(self.pos)?;
-            if b >= 0xc0 {
-                let lo = *self.msg.get(self.pos + 1)?;
-                self.pos = (usize::from(b & 0x3f) << 8) | usize::from(lo);
-                continue;
+            if b < 0xc0 {
+                let start = self.pos + 1;
+                let end = start + usize::from(b);
+                let label = self.msg.get(start..end)?;
+                self.pos = end;
+                self.remaining -= 1;
+                return Some(Label(label));
             }
-            let len = b as usize;
-            let label = self.msg.get(self.pos + 1..self.pos + 1 + len)?;
-            self.pos += 1 + len;
-            self.remaining -= 1;
-            return Some(Label(label));
+            hops += 1;
+            if hops > MAX_POINTERS {
+                return None;
+            }
+            let lo = *self.msg.get(self.pos + 1)?;
+            self.pos = (usize::from(b & 0x3f) << 8) | usize::from(lo);
         }
-        None
     }
 
     fn size_hint(&self) -> (usize, Option<usize>) {

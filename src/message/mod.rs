@@ -9,7 +9,7 @@
 
 use core::fmt;
 
-use crate::name::Name;
+use crate::name::{Name, NameCache};
 use crate::rdata::{ParseRdata, RData};
 use crate::wire::WireReader;
 use crate::{Class, Error, Flags, Header, Result, Rtype};
@@ -124,7 +124,6 @@ impl<'a> Message<'a> {
             msg: self.buf,
             pos: Header::LEN,
             remaining: self.header.qdcount,
-            failed: false,
         }
     }
 
@@ -157,11 +156,11 @@ impl<'a> Message<'a> {
         };
         Records {
             msg: self.buf,
-            pos: None,
+            pos: NOT_LOCATED,
             section,
             header: self.header,
             remaining,
-            failed: false,
+            names: NameCache::new(),
         }
     }
 
@@ -169,16 +168,14 @@ impl<'a> Message<'a> {
     /// with the section it belongs to, in wire order.
     #[inline]
     pub fn records(&self) -> AllRecords<'a> {
+        let h = &self.header;
         AllRecords {
-            inner: Records {
-                msg: self.buf,
-                pos: None,
-                section: Section::Answer,
-                header: self.header,
-                remaining: self.header.ancount,
-                failed: false,
-            },
-            started: false,
+            msg: self.buf,
+            pos: NOT_LOCATED,
+            qdcount: h.qdcount,
+            section: 0,
+            remaining: [h.ancount, h.nscount, h.arcount],
+            names: NameCache::new(),
         }
     }
 
@@ -208,39 +205,62 @@ impl<'a> Message<'a> {
     }
 }
 
-/// Skips over a name without following pointers.
-fn skip_name(r: &mut WireReader<'_>) -> Result<()> {
+/// Skips over the name at `pos` without following pointers, returning the
+/// offset just past it.
+#[inline]
+fn skip_name(msg: &[u8], mut pos: usize) -> Result<usize> {
     loop {
-        let b = r.read_u8()?;
+        let &b = msg.get(pos).ok_or(Error::UnexpectedEof)?;
         match b {
-            0 => return Ok(()),
-            1..=0x3f => r.skip(b as usize)?,
-            0xc0..=0xff => return r.skip(1),
+            0 => return Ok(pos + 1),
+            1..=0x3f => pos += 1 + usize::from(b),
+            0xc0..=0xff => {
+                return if pos + 2 > msg.len() {
+                    Err(Error::UnexpectedEof)
+                } else {
+                    Ok(pos + 2)
+                };
+            }
             _ => return Err(Error::BadLabelType),
+        }
+        if pos > msg.len() {
+            return Err(Error::UnexpectedEof);
         }
     }
 }
 
-/// Finds the start of `section` by skipping the entries before it.
+/// `pos` of an iterator that has not located its section yet (no entry
+/// can start inside the header).
+const NOT_LOCATED: usize = 0;
+
+/// Finds the start of `section` by skipping the entries before it: names
+/// are stepped over without following pointers and RDATA is not looked at.
 fn skip_to(msg: &[u8], header: &Header, section: Section) -> Result<usize> {
-    let mut r = WireReader::new(msg);
-    r.skip(Header::LEN)?;
+    let mut pos = Header::LEN;
+    if msg.len() < pos {
+        return Err(Error::UnexpectedEof);
+    }
     for s in Section::ALL {
         if s == section {
             break;
         }
         for _ in 0..s.count(header) {
-            skip_name(&mut r)?;
-            if s == Section::Question {
-                r.skip(4)?;
+            pos = skip_name(msg, pos)?;
+            pos += if s == Section::Question {
+                4
             } else {
-                r.skip(8)?;
-                let len = r.read_u16()?;
-                r.skip(len as usize)?;
+                // TYPE, CLASS, TTL, then RDLENGTH and the RDATA.
+                let Some(&[l0, l1]) = msg.get(pos + 8..pos + 10) else {
+                    return Err(Error::UnexpectedEof);
+                };
+                10 + usize::from(u16::from_be_bytes([l0, l1]))
+            };
+            if pos > msg.len() {
+                return Err(Error::UnexpectedEof);
             }
         }
     }
-    Ok(r.position())
+    Ok(pos)
 }
 
 /// An entry of the question section (RFC 1035 §4.1.2).
@@ -256,16 +276,30 @@ pub struct Question<'a> {
 impl<'a> Question<'a> {
     /// Parses a question at the reader's position.
     pub fn parse(r: &mut WireReader<'a>) -> Result<Self> {
-        let start = r.position();
-        let name = r.read_name()?;
-        let qtype = Rtype::new(r.read_u16()?);
-        let qclass = Class::new(r.read_u16()?);
+        let q = Self::parse_at(r.message(), r.position(), r.end())?;
+        r.skip(q.end - q.start)?;
+        Ok(q)
+    }
+
+    /// Parses a question at `start`, whose in-place bytes must end before
+    /// `end`.
+    #[inline]
+    fn parse_at(msg: &'a [u8], start: usize, end: usize) -> Result<Self> {
+        let (name, pos) = Name::parse_bounded(msg, start, end, true)?;
+        // One bounds check for the fixed fields.
+        let Some(&[t0, t1, c0, c1]) = msg
+            .get(..end)
+            .and_then(|w| w.get(pos..))
+            .and_then(<[u8]>::first_chunk)
+        else {
+            return Err(Error::UnexpectedEof);
+        };
         Ok(Question {
             name,
-            qtype,
-            qclass,
+            qtype: Rtype::new(u16::from_be_bytes([t0, t1])),
+            qclass: Class::new(u16::from_be_bytes([c0, c1])),
             start,
-            end: r.position(),
+            end: pos + 4,
         })
     }
 
@@ -305,7 +339,7 @@ impl fmt::Display for Question<'_> {
 /// A resource record (RFC 1035 §4.1.3), viewed in place.
 #[derive(Clone, Copy, Debug)]
 pub struct Record<'a> {
-    msg: &'a [u8],
+    /// The owner name; it also holds the whole message.
     name: Name<'a>,
     rtype: Rtype,
     class: Class,
@@ -319,20 +353,51 @@ impl<'a> Record<'a> {
     /// Parses a record at the reader's position. The reader must span the
     /// whole message (so RDATA names can be decompressed later).
     pub fn parse(r: &mut WireReader<'a>) -> Result<Self> {
+        let msg = r.message();
         let start = r.position();
-        let name = r.read_name()?;
-        let rtype = Rtype::new(r.read_u16()?);
-        let class = Class::new(r.read_u16()?);
-        let ttl = r.read_u32()?;
-        let rdata_len = r.read_u16()?;
-        let rdata_start = r.position();
-        r.skip(rdata_len as usize)?;
+        let (name, pos) = Name::parse_bounded(msg, start, r.end(), true)?;
+        let rr = Self::parse_fixed(msg, start, name, pos, r.end())?;
+        r.skip(rr.end() - start)?;
+        Ok(rr)
+    }
+
+    /// Parses a record at `start` of a whole message, remembering decoded
+    /// owner-name suffixes in `names` (the iterators' fast path).
+    #[inline]
+    fn parse_cached(msg: &'a [u8], start: usize, names: &mut NameCache) -> Result<Self> {
+        let (name, pos) = Name::parse_cached(msg, start, names)?;
+        Self::parse_fixed(msg, start, name, pos, msg.len())
+    }
+
+    /// Parses the fields after the owner name (which ends at `pos`): TYPE,
+    /// CLASS, TTL, RDLENGTH, and the RDATA bounds, all before `end`. The
+    /// RDATA itself is left for [`data`](Self::data).
+    #[inline(always)]
+    fn parse_fixed(
+        msg: &'a [u8],
+        start: usize,
+        name: Name<'a>,
+        pos: usize,
+        end: usize,
+    ) -> Result<Self> {
+        let window = msg.get(..end).unwrap_or(msg);
+        // One bounds check for the ten fixed octets.
+        let Some(&[t0, t1, c0, c1, l0, l1, l2, l3, r0, r1]) =
+            window.get(pos..).and_then(<[u8]>::first_chunk)
+        else {
+            return Err(Error::UnexpectedEof);
+        };
+        let rdata_start = pos + 10;
+        let rdata_len = u16::from_be_bytes([r0, r1]);
+        // `rdata_start <= window.len()`: the ten octets were there.
+        if window.len() - rdata_start < usize::from(rdata_len) {
+            return Err(Error::UnexpectedEof);
+        }
         Ok(Record {
-            msg: r.message(),
             name,
-            rtype,
-            class,
-            ttl,
+            rtype: Rtype::new(u16::from_be_bytes([t0, t1])),
+            class: Class::new(u16::from_be_bytes([c0, c1])),
+            ttl: u32::from_be_bytes([l0, l1, l2, l3]),
             start,
             rdata_start,
             rdata_len,
@@ -370,7 +435,7 @@ impl<'a> Record<'a> {
     /// [`data`](Self::data) to decode them.
     #[inline]
     pub fn rdata(&self) -> &'a [u8] {
-        self.msg
+        self.message()
             .get(self.rdata_start..self.rdata_start + self.rdata_len as usize)
             .unwrap_or(&[])
     }
@@ -379,7 +444,7 @@ impl<'a> Record<'a> {
     #[inline]
     pub fn rdata_reader(&self) -> WireReader<'a> {
         WireReader::with_range(
-            self.msg,
+            self.message(),
             self.rdata_start,
             self.rdata_start + self.rdata_len as usize,
         )
@@ -408,7 +473,7 @@ impl<'a> Record<'a> {
     /// The message this record belongs to.
     #[inline]
     pub const fn message(&self) -> &'a [u8] {
-        self.msg
+        self.name.buffer()
     }
 
     /// Offset of the first byte of the record (its owner name).
@@ -454,43 +519,34 @@ impl fmt::Display for Record<'_> {
 pub struct Questions<'a> {
     msg: &'a [u8],
     pos: usize,
+    /// Entries left; 0 once done or after an error.
     remaining: u16,
-    failed: bool,
 }
 
 impl<'a> Iterator for Questions<'a> {
     type Item = Result<Question<'a>>;
 
+    #[inline]
     fn next(&mut self) -> Option<Self::Item> {
-        if self.remaining == 0 || self.failed {
+        if self.remaining == 0 {
             return None;
         }
-        let mut r = match WireReader::with_range(self.msg, self.pos, self.msg.len()) {
-            Ok(r) => r,
-            Err(e) => {
-                self.failed = true;
-                return Some(Err(e));
-            }
-        };
-        match Question::parse(&mut r) {
+        match Question::parse_at(self.msg, self.pos, self.msg.len()) {
             Ok(q) => {
-                self.pos = r.position();
+                self.pos = q.end;
                 self.remaining -= 1;
                 Some(Ok(q))
             }
             Err(e) => {
-                self.failed = true;
+                self.remaining = 0;
                 Some(Err(e))
             }
         }
     }
 
+    #[inline]
     fn size_hint(&self) -> (usize, Option<usize>) {
-        if self.failed {
-            (0, Some(0))
-        } else {
-            (0, Some(self.remaining as usize))
-        }
+        (0, Some(self.remaining as usize))
     }
 }
 
@@ -503,13 +559,15 @@ impl core::iter::FusedIterator for Questions<'_> {}
 #[derive(Clone, Debug)]
 pub struct Records<'a> {
     msg: &'a [u8],
-    /// Offset of the next record; `None` until the section start has been
-    /// located.
-    pos: Option<usize>,
+    /// Offset of the next record; [`NOT_LOCATED`] until the section start
+    /// has been located.
+    pos: usize,
     section: Section,
     header: Header,
+    /// Records left; 0 once done or after an error.
     remaining: u16,
-    failed: bool,
+    /// Owner-name suffixes decoded so far.
+    names: NameCache,
 }
 
 impl<'a> Records<'a> {
@@ -519,8 +577,9 @@ impl<'a> Records<'a> {
         self.section
     }
 
+    #[cold]
     fn fail(&mut self, e: Error) -> Option<Result<Record<'a>>> {
-        self.failed = true;
+        self.remaining = 0;
         Some(Err(e))
     }
 }
@@ -528,24 +587,20 @@ impl<'a> Records<'a> {
 impl<'a> Iterator for Records<'a> {
     type Item = Result<Record<'a>>;
 
+    #[inline]
     fn next(&mut self) -> Option<Self::Item> {
-        if self.remaining == 0 || self.failed {
+        if self.remaining == 0 {
             return None;
         }
-        let pos = match self.pos {
-            Some(pos) => pos,
-            None => match skip_to(self.msg, &self.header, self.section) {
-                Ok(pos) => pos,
+        if self.pos == NOT_LOCATED {
+            match skip_to(self.msg, &self.header, self.section) {
+                Ok(pos) => self.pos = pos,
                 Err(e) => return self.fail(e),
-            },
-        };
-        let mut r = match WireReader::with_range(self.msg, pos, self.msg.len()) {
-            Ok(r) => r,
-            Err(e) => return self.fail(e),
-        };
-        match Record::parse(&mut r) {
+            }
+        }
+        match Record::parse_cached(self.msg, self.pos, &mut self.names) {
             Ok(rr) => {
-                self.pos = Some(r.position());
+                self.pos = rr.end();
                 self.remaining -= 1;
                 Some(Ok(rr))
             }
@@ -553,12 +608,9 @@ impl<'a> Iterator for Records<'a> {
         }
     }
 
+    #[inline]
     fn size_hint(&self) -> (usize, Option<usize>) {
-        if self.failed {
-            (0, Some(0))
-        } else {
-            (0, Some(self.remaining as usize))
-        }
+        (0, Some(self.remaining as usize))
     }
 }
 
@@ -568,39 +620,75 @@ impl core::iter::FusedIterator for Records<'_> {}
 /// [`Message::records`].
 #[derive(Clone, Debug)]
 pub struct AllRecords<'a> {
-    inner: Records<'a>,
-    started: bool,
+    msg: &'a [u8],
+    /// Offset of the next record; [`NOT_LOCATED`] before the first call.
+    pos: usize,
+    /// QDCOUNT, to skip the question section on the first call.
+    qdcount: u16,
+    /// Index into `remaining` of the current section; past the end once
+    /// done or after an error.
+    section: u8,
+    /// Records left in the answer, authority and additional sections.
+    remaining: [u16; 3],
+    /// Owner-name suffixes decoded so far.
+    names: NameCache,
+}
+
+impl<'a> AllRecords<'a> {
+    /// Locates the answer section, then continues as usual. Errors in the
+    /// question section are reported even if there are no records.
+    #[cold]
+    fn locate(&mut self) -> Option<Result<(Section, Record<'a>)>> {
+        let header = Header {
+            qdcount: self.qdcount,
+            ..Header::default()
+        };
+        match skip_to(self.msg, &header, Section::Answer) {
+            Ok(pos) => {
+                self.pos = pos;
+                self.next()
+            }
+            Err(e) => {
+                // Any other position: never locate again.
+                self.pos = Header::LEN;
+                self.section = 3;
+                Some(Err(e))
+            }
+        }
+    }
 }
 
 impl<'a> Iterator for AllRecords<'a> {
     type Item = Result<(Section, Record<'a>)>;
 
+    #[inline]
     fn next(&mut self) -> Option<Self::Item> {
+        if self.pos == NOT_LOCATED {
+            return self.locate();
+        }
         loop {
-            if self.inner.failed {
-                return None;
+            let i = usize::from(self.section);
+            let remaining = self.remaining.get_mut(i)?;
+            if *remaining == 0 {
+                self.section += 1;
+                continue;
             }
-            if !self.started {
-                self.started = true;
-                match skip_to(self.inner.msg, &self.inner.header, Section::Answer) {
-                    Ok(pos) => self.inner.pos = Some(pos),
-                    Err(e) => {
-                        self.inner.failed = true;
-                        return Some(Err(e));
-                    }
+            return match Record::parse_cached(self.msg, self.pos, &mut self.names) {
+                Ok(rr) => {
+                    *remaining -= 1;
+                    self.pos = rr.end();
+                    let section = match i {
+                        0 => Section::Answer,
+                        1 => Section::Authority,
+                        _ => Section::Additional,
+                    };
+                    Some(Ok((section, rr)))
                 }
-            }
-            if self.inner.remaining > 0 {
-                let section = self.inner.section;
-                return self.inner.next().map(|r| r.map(|rr| (section, rr)));
-            }
-            let next = match self.inner.section {
-                Section::Question | Section::Answer => Section::Authority,
-                Section::Authority => Section::Additional,
-                Section::Additional => return None,
+                Err(e) => {
+                    self.section = 3;
+                    Some(Err(e))
+                }
             };
-            self.inner.section = next;
-            self.inner.remaining = next.count(&self.inner.header);
         }
     }
 }

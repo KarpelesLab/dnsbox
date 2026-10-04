@@ -291,7 +291,9 @@ macro_rules! rdata_registry {
                 {
                     return Ok(RData::Unknown(UnknownRdata::new(rtype, &[])));
                 }
-                let data = match rtype {
+                // Every arm builds its variant directly in the return value
+                // (no intermediate `RData` to copy).
+                match rtype {
                     $(
                         $(#[$attr])*
                         Rtype::$rt => {
@@ -304,13 +306,13 @@ macro_rules! rdata_registry {
                             if !class_ok(<$ty as ParseRdata<'a>>::CLASS, class) {
                                 return Ok(RData::Unknown(UnknownRdata::new(rtype, rdata.read_rest())));
                             }
-                            RData::$var(<$ty as ParseRdata<'a>>::parse_rdata(&mut rdata)?)
+                            let data = <$ty as ParseRdata<'a>>::parse_rdata(&mut rdata)?;
+                            rdata.finish()?;
+                            Ok(RData::$var(data))
                         }
                     )*
-                    _ => RData::Unknown(UnknownRdata::new(rtype, rdata.read_rest())),
-                };
-                rdata.finish()?;
-                Ok(data)
+                    _ => Ok(RData::Unknown(UnknownRdata::new(rtype, rdata.read_rest()))),
+                }
             }
 
             /// Whether `rtype` has a typed implementation.
