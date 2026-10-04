@@ -417,35 +417,92 @@ fn copy_unknown_and_opt_records() {
     assert_eq!(crate::Record::parse(&mut r).unwrap().ttl(), 7);
 }
 
-#[test]
-fn compression_table_collisions_are_bounded() {
-    use super::compress::{CompressionTable, MAX_PROBES, plan};
-    // Fill a table with entries that all claim the same hash and whose
-    // first label length matches, but whose names differ: every lookup
-    // must give up after MAX_PROBES verifications.
-    let mut msg = std::vec::Vec::new();
-    let mut table = CompressionTable::new();
-    let probe = name("zz.example");
-    let wire = probe.as_wire();
-    let hash = {
-        let p = plan(&table, &msg, wire);
-        p.hashes[0]
-    };
-    for i in 0..100u8 {
-        table.push(hash, msg.len());
-        msg.extend_from_slice(&[2, b'a', b'a' + (i % 26), 0]);
+/// A reference compressor without size limits: every suffix written
+/// literally is remembered with its offset, and each name uses the longest
+/// remembered suffix (RFC 1035 §4.1.4).
+struct ReferenceCompressor {
+    suffixes: Vec<(Vec<u8>, usize)>,
+}
+
+impl ReferenceCompressor {
+    fn write(&mut self, out: &mut Vec<u8>, wire: &[u8]) {
+        let mut starts = Vec::new();
+        let mut pos = 0;
+        while wire[pos] != 0 {
+            starts.push(pos);
+            pos += 1 + usize::from(wire[pos]);
+        }
+        let base = out.len();
+        for (i, &s) in starts.iter().enumerate() {
+            let found = self.suffixes.iter().find(|(suf, _)| suf[..] == wire[s..]);
+            if let Some(&(_, off)) = found {
+                out.extend_from_slice(&wire[..s]);
+                out.extend_from_slice(&(0xc000 | off as u16).to_be_bytes());
+                self.register(wire, &starts[..i], base);
+                return;
+            }
+        }
+        out.extend_from_slice(wire);
+        self.register(wire, &starts, base);
     }
-    // A genuine match after the decoys is never reached.
-    let genuine = msg.len();
-    table.push(hash, genuine);
-    msg.extend_from_slice(wire);
-    let p = plan(&table, &msg, wire);
-    assert_eq!(p.pointer, None);
-    assert_eq!(p.literal_len, wire.len());
-    const { assert!(MAX_PROBES < 100) };
-    // With fewer decoys than the budget, it is found.
-    let mut small = CompressionTable::new();
-    small.push(hash, 0);
-    small.push(hash, genuine);
-    assert_eq!(plan(&small, &msg, wire).pointer, Some(genuine as u16));
+
+    fn register(&mut self, wire: &[u8], starts: &[usize], base: usize) {
+        for &s in starts {
+            if base + s <= 0x3fff {
+                self.suffixes.push((wire[s..].to_vec(), base + s));
+            }
+        }
+    }
+}
+
+#[test]
+fn compression_matches_a_reference_compressor() {
+    // Random names over a few labels (in two cases, so that matching must
+    // be case-sensitive), as owners and as CNAME targets, until about as
+    // many labels have been written as the table holds: the output is
+    // byte for byte what an unbounded longest-suffix compressor writes.
+    let mut state = 0x9e37_79b9u32;
+    let mut rand = move |n: u32| {
+        state = state.wrapping_mul(1_664_525).wrapping_add(1_013_904_223);
+        (state >> 16) % n
+    };
+    const LABELS: [&str; 7] = ["a", "b", "www", "WWW", "mail", "example", "com"];
+    let mut random_name = move || {
+        let labels: Vec<&[u8]> = (0..1 + rand(4))
+            .map(|_| LABELS[rand(LABELS.len() as u32) as usize].as_bytes())
+            .collect();
+        (NameBuf::from_labels(labels).unwrap(), rand(3) == 0)
+    };
+    for _ in 0..200 {
+        let mut buf = [0u8; 4096];
+        let mut b = MessageBuilder::new(&mut buf).unwrap();
+        let mut reference = ReferenceCompressor {
+            suffixes: Vec::new(),
+        };
+        let mut expected = std::vec![0u8; 12];
+        let mut records = 0u16;
+        while reference.suffixes.len() < compress::CAPACITY - 8 {
+            let (owner, cname) = random_name();
+            reference.write(&mut expected, owner.as_wire());
+            if cname {
+                let (target, _) = random_name();
+                b.push_answer(&owner, Class::IN, 7, &Cname::new(target.as_name()))
+                    .unwrap();
+                expected.extend_from_slice(&[0, 5, 0, 1, 0, 0, 0, 7, 0, 0]);
+                let at = expected.len();
+                reference.write(&mut expected, target.as_wire());
+                let len = (expected.len() - at) as u16;
+                expected[at - 2..at].copy_from_slice(&len.to_be_bytes());
+            } else {
+                b.push_answer(&owner, Class::IN, 7, &A::new([192, 0, 2, 1].into()))
+                    .unwrap();
+                expected.extend_from_slice(&[0, 1, 0, 1, 0, 0, 0, 7, 0, 4, 192, 0, 2, 1]);
+            }
+            records += 1;
+        }
+        expected[6..8].copy_from_slice(&records.to_be_bytes());
+        let wire = b.finish();
+        assert_eq!(wire, &expected[..]);
+        Message::parse_validated(wire).unwrap();
+    }
 }

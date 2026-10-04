@@ -10,9 +10,9 @@
 //! - the header counts are maintained automatically, so the buffer always
 //!   holds a well-formed message;
 //! - owner names, question names and names in the RDATA of the RFC 1035
-//!   types are compressed through a fixed-size suffix table (see
-//!   [`compress`]); names in any other RDATA are never compressed
-//!   (RFC 3597 §4). Compression can be turned off;
+//!   types are compressed through a fixed-size table of the labels already
+//!   written (see [`compress`]); names in any other RDATA are never
+//!   compressed (RFC 3597 §4). Compression can be turned off;
 //! - every push is atomic: if an entry does not fit (buffer or
 //!   [size limit](MessageBuilder::set_limit)), the message is rolled back to
 //!   its state before the push and the error returned. [`checkpoint`] /
@@ -50,13 +50,19 @@ use core::fmt;
 
 use self::compress::CompressionTable;
 use crate::message::{Question, Record, Section};
-use crate::name::{MAX_NAME_LEN, Name, ToName};
+use crate::name::{MAX_LABELS, MAX_NAME_LEN, Name, ToName};
 use crate::rdata::ComposeRdata;
 use crate::wire::{Composer, NameEncoding, OutBuf, WireWriter, put_name_uncompressed};
 use crate::{Class, Error, Flags, Header, Result, Rtype};
 
 /// Maximum size of a DNS message (the TCP length prefix is 16 bits).
 pub const MAX_MESSAGE_LEN: usize = 65535;
+
+/// Initial capacity of the `Vec` behind [`MessageBuilder::new_vec`]: the
+/// classic UDP payload limit (RFC 1035 §4.2.1), which typical messages fit
+/// in.
+#[cfg(feature = "alloc")]
+const DEFAULT_VEC_CAPACITY: usize = 512;
 
 /// A saved builder state; see [`MessageBuilder::checkpoint`].
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -115,6 +121,7 @@ pub struct MessageBuilder<B: OutBuf> {
 impl<'b> MessageBuilder<WireWriter<'b>> {
     /// Starts a message at the beginning of `buf`. Fails with
     /// [`Error::BufferTooSmall`] if `buf` cannot hold the 12-byte header.
+    #[inline]
     pub fn new(buf: &'b mut [u8]) -> Result<Self> {
         Self::from_buf(WireWriter::new(buf))
     }
@@ -124,9 +131,24 @@ impl<'b> MessageBuilder<WireWriter<'b>> {
 #[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
 impl MessageBuilder<alloc::vec::Vec<u8>> {
     /// Starts a message in a new growable `Vec`, limited to 65535 bytes.
+    ///
+    /// The `Vec` starts with room for 512 bytes (the classic UDP limit,
+    /// RFC 1035 §4.2.1), so typical messages are written with a single
+    /// allocation.
+    #[inline]
     pub fn new_vec() -> Self {
+        Self::new_vec_with_capacity(DEFAULT_VEC_CAPACITY)
+    }
+
+    /// Like [`new_vec`](Self::new_vec), preallocating `capacity` bytes
+    /// (e.g. the expected response size) so typical messages never
+    /// reallocate.
+    #[inline]
+    pub fn new_vec_with_capacity(capacity: usize) -> Self {
+        let mut buf = alloc::vec::Vec::with_capacity(capacity.max(Header::LEN));
+        buf.resize(Header::LEN, 0);
         MessageBuilder {
-            buf: alloc::vec![0; Header::LEN],
+            buf,
             base: 0,
             limit: MAX_MESSAGE_LEN,
             header: Header::default(),
@@ -139,23 +161,13 @@ impl MessageBuilder<alloc::vec::Vec<u8>> {
             framed: false,
         }
     }
-
-    /// Like [`new_vec`](Self::new_vec), preallocating `capacity` bytes
-    /// (e.g. the expected response size) so typical messages never
-    /// reallocate.
-    pub fn new_vec_with_capacity(capacity: usize) -> Self {
-        let mut buf = alloc::vec::Vec::with_capacity(capacity.max(Header::LEN));
-        buf.resize(Header::LEN, 0);
-        let mut b = Self::new_vec();
-        b.buf = buf;
-        b
-    }
 }
 
 impl<B: OutBuf> MessageBuilder<B> {
     /// Starts a message at the current end of `buf` (anything already in
     /// it, such as a TCP length prefix, is kept and not counted as part of
     /// the message). Writes a zeroed header.
+    #[inline]
     pub fn from_buf(mut buf: B) -> Result<Self> {
         let base = buf.as_bytes().len();
         let limit = buf
@@ -470,8 +482,9 @@ impl<B: OutBuf> MessageBuilder<B> {
         }
         let mut w = self.writer();
         w.put_name(name, NameEncoding::Compressible)?;
-        w.put_u16(qtype.get())?;
-        w.put_u16(qclass.get())?;
+        let [t0, t1] = qtype.get().to_be_bytes();
+        let [c0, c1] = qclass.get().to_be_bytes();
+        w.put_bytes(&[t0, t1, c0, c1])?;
         self.bump(Section::Question)
     }
 
@@ -492,10 +505,16 @@ impl<B: OutBuf> MessageBuilder<B> {
         }
         let mut w = self.writer();
         w.put_name(name, NameEncoding::Compressible)?;
-        w.put_u16(data.rtype().get())?;
-        w.put_u16(class.get())?;
-        w.put_u32(ttl)?;
-        w.put_u16_prefixed(|w| data.compose_rdata(w))?;
+        // TYPE, CLASS, TTL and an RDLENGTH placeholder in one write.
+        let [t0, t1] = data.rtype().get().to_be_bytes();
+        let [c0, c1] = class.get().to_be_bytes();
+        let [l0, l1, l2, l3] = ttl.to_be_bytes();
+        let at = w.pos() + 8;
+        w.put_bytes(&[t0, t1, c0, c1, l0, l1, l2, l3, 0, 0])?;
+        data.compose_rdata(&mut w)?;
+        let len =
+            u16::try_from(w.pos().saturating_sub(at + 2)).map_err(|_| Error::BufferTooSmall)?;
+        w.patch(at, &len.to_be_bytes())?;
         self.bump(section)
     }
 }
@@ -527,19 +546,32 @@ struct MsgWriter<'x, B: OutBuf> {
 
 impl<B: OutBuf> MsgWriter<'_, B> {
     fn write_compressed(&mut self, table: &mut CompressionTable, name: Name<'_>) -> Result<()> {
-        let mut flat = [0u8; MAX_NAME_LEN];
-        let len = name.flatten(&mut flat);
-        let wire = flat.get(..len).ok_or(Error::NameTooLong)?;
+        if name.is_root() {
+            // Nothing to compress (an OPT record's owner, for one).
+            return self.put_u8(0);
+        }
+        // Names built locally (`NameBuf`) are contiguous: no copy.
+        let flat;
+        let wire = match name.as_contiguous() {
+            Some(wire) => wire,
+            None => {
+                let mut buf = [0u8; MAX_NAME_LEN];
+                let len = name.flatten(&mut buf);
+                flat = buf;
+                flat.get(..len).ok_or(Error::NameTooLong)?
+            }
+        };
+        let mut offsets = [0u8; MAX_LABELS];
+        let n = compress::label_offsets(wire, &mut offsets);
+        let offsets = offsets.get(..n).unwrap_or(&[]);
         let msg = self.buf.as_bytes().get(self.base..).unwrap_or(&[]);
-        let plan = compress::plan(table, msg, wire);
+        let m = table.lookup(msg, wire, offsets);
         let start = self.pos();
-        self.put_bytes(wire.get(..plan.literal_len).unwrap_or(&[]))?;
-        if let Some(ptr) = plan.pointer {
+        self.put_bytes(wire.get(..m.literal_len(wire, offsets)).unwrap_or(&[]))?;
+        if let Some(ptr) = m.pointer {
             self.put_u16(0xc000 | ptr)?;
         }
-        for i in 0..plan.new_labels {
-            table.push(plan.hashes[i], start + plan.offsets[i] as usize);
-        }
+        table.insert(wire, offsets, &m, start);
         Ok(())
     }
 }
