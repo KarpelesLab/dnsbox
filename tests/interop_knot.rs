@@ -43,8 +43,8 @@ use std::path::{Path, PathBuf};
 use dnsbox::dnssec::{
     Algorithm, Denial, DenialProof, DenialStatus, DigestType, InsecureReason, Nsec3Proof,
     Nsec3Record, NsecProof, NsecRecord, PurecryptoNsec3Hasher, PurecryptoVerifier, Rrset, Signer,
-    SigningKey, TrustedKeys, ZoneKey, ZonemdRecord, nsec3_hash, sign_rrset, verify_ds,
-    verify_zonemd, zonemd_digest,
+    SigningKey, TrustedKeys, ValidationBudget, ZoneKey, ZonemdRecord, nsec3_hash, sign_rrset,
+    verify_ds, verify_zonemd, zonemd_digest,
 };
 use dnsbox::rdata::{Dnskey, Ds, Nsec, Nsec3, RData, Rrsig, Zonemd};
 use dnsbox::tsig::{self, HmacKey, TsigAlgorithm, TsigRcode, TsigVerifier};
@@ -1896,7 +1896,9 @@ fn anchor() -> Vec<ZoneRecordBuf> {
 /// DNSKEY RRset, or a verified denial proves the delegation unsigned
 /// (insecure); then the answer, or its denial proof, must verify with the
 /// zone's keys. The data is what Unbound fetched (`case/<step>`, asked
-/// with CD set, RFC 4035 §3.2.2).
+/// with CD set, RFC 4035 §3.2.2). Each response is validated within one
+/// default [`ValidationBudget`] (the KeyTrap limits a resolver keeps on):
+/// a legitimate chain must never run out of it.
 fn dnsbox_verdict(case: &str, qname: &NameBuf, qtype: Rtype, zone: &NameBuf) -> Verdict {
     // The last response of every step of the case.
     let mut wires: BTreeMap<String, Vec<u8>> = BTreeMap::new();
@@ -1928,13 +1930,14 @@ fn dnsbox_verdict(case: &str, qname: &NameBuf, qtype: Rtype, zone: &NameBuf) -> 
     let mut scratch = Vec::new();
     let root = name("interop");
     let (k, s) = dnskeys(&fetch("dnskey-interop."), &root);
-    let Ok(mut keys) = TrustedKeys::from_ds(
+    let Ok(mut keys) = TrustedKeys::from_ds_with_budget(
         &PurecryptoVerifier,
         Rrset::new(root.as_name(), Class::IN, k),
         anchor_ds.iter().copied(),
         s,
         now(),
         &mut scratch,
+        &ValidationBudget::new(),
     ) else {
         return Verdict::Bogus;
     };
@@ -1949,6 +1952,7 @@ fn dnsbox_verdict(case: &str, qname: &NameBuf, qtype: Rtype, zone: &NameBuf) -> 
     below.reverse();
     for child in &below {
         let ds_msg = fetch(&format!("ds-{child}"));
+        let budget = ValidationBudget::new();
         let (ds, ds_sigs) = rrset_in(&ds_msg, Section::Answer, child, Rtype::DS);
         if ds.is_empty() {
             // No DS: the parent must prove the delegation unsigned.
@@ -1960,12 +1964,13 @@ fn dnsbox_verdict(case: &str, qname: &NameBuf, qtype: Rtype, zone: &NameBuf) -> 
                 }
                 let (rdata, sigs) = rrset_in(&ds_msg, Section::Authority, &owner, rtype);
                 if keys
-                    .verify_rrset(
+                    .verify_rrset_with_budget(
                         &PurecryptoVerifier,
                         Rrset::new(owner.as_name(), Class::IN, &rdata),
                         sigs,
                         now(),
                         &mut scratch,
+                        &budget,
                     )
                     .is_err()
                 {
@@ -1975,8 +1980,12 @@ fn dnsbox_verdict(case: &str, qname: &NameBuf, qtype: Rtype, zone: &NameBuf) -> 
             let status = if nsec3.is_empty() {
                 NsecProof::new(cut.as_name(), &nsec).unsigned_delegation(child.as_name())
             } else {
-                Nsec3Proof::new(cut.as_name(), &nsec3, PurecryptoNsec3Hasher)
-                    .unsigned_delegation(child.as_name())
+                Nsec3Proof::new(
+                    cut.as_name(),
+                    &nsec3,
+                    budget.nsec3_hasher(PurecryptoNsec3Hasher),
+                )
+                .unsigned_delegation(child.as_name())
             };
             return match Verdict::of_status(status) {
                 Verdict::Bogus => Verdict::Bogus,
@@ -1992,25 +2001,27 @@ fn dnsbox_verdict(case: &str, qname: &NameBuf, qtype: Rtype, zone: &NameBuf) -> 
             })
             .collect();
         if keys
-            .verify_rrset(
+            .verify_rrset_with_budget(
                 &PurecryptoVerifier,
                 Rrset::new(child.as_name(), Class::IN, &ds),
                 ds_sigs,
                 now(),
                 &mut scratch,
+                &budget,
             )
             .is_err()
         {
             return Verdict::Bogus;
         }
         let (k, s) = dnskeys(&fetch(&format!("dnskey-{child}")), child);
-        let Ok(child_keys) = TrustedKeys::from_ds(
+        let Ok(child_keys) = TrustedKeys::from_ds_with_budget(
             &PurecryptoVerifier,
             Rrset::new(child.as_name(), Class::IN, k),
             ds.iter().copied(),
             s,
             now(),
             &mut scratch,
+            &ValidationBudget::new(),
         ) else {
             return Verdict::Bogus;
         };
@@ -2020,6 +2031,7 @@ fn dnsbox_verdict(case: &str, qname: &NameBuf, qtype: Rtype, zone: &NameBuf) -> 
 
     // The answer itself, from the zone's keys.
     let msg = fetch("cd");
+    let budget = ValidationBudget::new();
     let verify_section = |section: Section, scratch: &mut Vec<u8>| -> Result<bool, ()> {
         // Every RRset of the section verifies; whether one is a wildcard
         // expansion.
@@ -2027,12 +2039,13 @@ fn dnsbox_verdict(case: &str, qname: &NameBuf, qtype: Rtype, zone: &NameBuf) -> 
         for (owner, rtype) in rrsets_of(&msg, section) {
             let (rdata, sigs) = rrset_in(&msg, section, &owner, rtype);
             let v = keys
-                .verify_rrset(
+                .verify_rrset_with_budget(
                     &PurecryptoVerifier,
                     Rrset::new(owner.as_name(), Class::IN, &rdata),
                     sigs,
                     now(),
                     scratch,
+                    &budget,
                 )
                 .map_err(|_| ())?;
             wildcard |= v.wildcard.is_some();
@@ -2053,7 +2066,7 @@ fn dnsbox_verdict(case: &str, qname: &NameBuf, qtype: Rtype, zone: &NameBuf) -> 
             f(&Nsec3Proof::new(
                 cut.as_name(),
                 &nsec3,
-                PurecryptoNsec3Hasher,
+                budget.nsec3_hasher(PurecryptoNsec3Hasher),
             ))
         }
     };
@@ -2068,13 +2081,14 @@ fn dnsbox_verdict(case: &str, qname: &NameBuf, qtype: Rtype, zone: &NameBuf) -> 
     if !wildcard {
         return Verdict::Secure;
     }
-    let answer = prove(&|p| match keys.verify_answer(
+    let answer = prove(&|p| match keys.verify_answer_with_budget(
         &PurecryptoVerifier,
         Rrset::new(qn, Class::IN, &rdata),
         sigs.iter().copied(),
         p,
         now(),
         &mut Vec::new(),
+        &budget,
     ) {
         Ok(dnsbox::dnssec::Answer::Wildcard { proof, .. }) => proof,
         Ok(_) => DenialStatus::Secure(Denial::WildcardAnswer),
@@ -2298,4 +2312,58 @@ fn knot_reads_dnsbox_text_of_every_type() {
         r.3 = u32::from_be_bytes(r.4[4..8].try_into().unwrap());
     }
     assert_same_records(t.full, bind, "knotd (-) and BIND (+)");
+}
+
+/// knotd loaded dnsbox's presentation of the types BIND 9.18's alltypes
+/// zone lacks (`newtypes.zone`: AMTRELAY, DSYNC, HHIT, BRID, DOA), but for
+/// the types Knot does not know, and transfers exactly those records: Knot
+/// reads dnsbox's text of each type it knows to dnsbox's wire form.
+#[test]
+fn knot_reads_dnsbox_text_of_new_types() {
+    let path = Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/corpus/knot/newtypes.zone");
+    let src = fs::read_to_string(&path).unwrap();
+    let records = read_zone(&src);
+    // The file is dnsbox's own presentation of its records.
+    let lines: Vec<&str> = src
+        .lines()
+        .filter(|l| !l.starts_with(';') && !l.starts_with('$'))
+        .collect();
+    let shown: Vec<String> = records.iter().map(ToString::to_string).collect();
+    assert_eq!(shown, lines);
+    let new: BTreeSet<&str> = ["AMTRELAY", "DSYNC", "HHIT", "BRID", "DOA"].into();
+    assert_eq!(
+        records
+            .iter()
+            .map(|r| r.rtype.to_string())
+            .filter(|t| new.contains(t.as_str()))
+            .collect::<BTreeSet<_>>()
+            .len(),
+        new.len()
+    );
+
+    let Some(ex) = exchange("knot/newtypes/axfr") else {
+        assert!(!live());
+        return;
+    };
+    let t = transfer(&ex, XfrProcessor::axfr(name("newtypes.example")));
+    assert!(t.done);
+    // What Knot cannot read: some of the new types (whole), nothing else.
+    let omitted: Vec<Rr> = read_zone(&text("newtypes-omitted.txt"))
+        .iter()
+        .map(rr)
+        .collect();
+    let unknown: BTreeSet<Rtype> = omitted.iter().map(|r| r.1).collect();
+    for rtype in &unknown {
+        assert!(new.contains(rtype.to_string().as_str()), "{rtype} omitted");
+    }
+    let (left_out, served): (Vec<Rr>, Vec<Rr>) =
+        records.iter().map(rr).partition(|r| unknown.contains(&r.1));
+    assert_eq!(sorted(left_out), sorted(omitted));
+    let known: BTreeSet<&str> = new
+        .iter()
+        .copied()
+        .filter(|t| !unknown.iter().any(|u| u.to_string() == *t))
+        .collect();
+    println!("Knot reads {known:?}, not {unknown:?}");
+    assert_same_records(t.full, served, "knotd (-) and dnsbox (+)");
 }

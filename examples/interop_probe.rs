@@ -14,7 +14,8 @@
 //! configured secret, a DNSKEY RRset over TCP authenticated from the
 //! parent's DS (verified with the parent's keys from the trust anchor),
 //! TSIG-signed queries with every HMAC (which knotd must accept) and with
-//! a wrong secret (which it must reject), TSIG-signed AXFR streams of
+//! a wrong secret (which it must reject), a TSIG-signed TKEY query
+//! (RFC 2930; knotd must answer it well-formed), TSIG-signed AXFR streams of
 //! several messages, dynamic UPDATEs (RFC 2136) knotd must apply, refuse
 //! or fail on a prerequisite, the IXFR they produce, and Unbound's
 //! validated (AD), insecure and bogus (SERVFAIL with an Extended DNS
@@ -32,7 +33,7 @@ use dnsbox::dnssec::{PurecryptoVerifier, Rrset, TrustedKeys};
 use dnsbox::edns::{
     ClientSubnet, Cookie, ExtendedError, Nsid, OptHeader, PaddingPolicy, UnknownOption,
 };
-use dnsbox::rdata::{A, Aaaa, Dnskey, Ds, ParseRdataText, RData, Rrsig, Soa, Txt};
+use dnsbox::rdata::{A, Aaaa, Dnskey, Ds, ParseRdataText, RData, Rrsig, Soa, Tkey, TkeyMode, Txt};
 use dnsbox::tcp::{self, MAX_FRAME_LEN};
 use dnsbox::tsig::{self, HmacKey, TsigAlgorithm, TsigRcode, TsigSigner, TsigVerifier};
 use dnsbox::update::UpdateBuilder;
@@ -116,6 +117,7 @@ fn run() -> Result<usize> {
         p.check(&format!("tsig-{h}"), |p| p.tsig_query(h, alg));
     }
     p.check("tsig-badsig", Probe::tsig_badsig);
+    p.check("tkey", Probe::tkey);
     for (h, alg) in HMACS {
         p.check(&format!("axfr-{h}"), |p| p.axfr(h, alg));
     }
@@ -470,6 +472,46 @@ impl Probe {
         let rec = tsig::find(&msg)?.ok_or("no TSIG record")?;
         ensure(rec.data.error == TsigRcode::BADSIG, "not BADSIG")?;
         ensure(rec.data.mac.is_empty(), "error response with a MAC")
+    }
+
+    /// A TKEY query (RFC 2930 §4.2: delete the key that signs it), built by
+    /// `dnsbox::tkey::build_query` and signed with TSIG. knotd does not
+    /// implement TKEY: whatever it answers must be a well-formed response
+    /// to the query, either an error or a TKEY record dnsbox reads, and a
+    /// TSIG on it must verify.
+    fn tkey(&mut self) -> Result<()> {
+        let key = Probe::key("sha256", TsigAlgorithm::HmacSha256)?;
+        let key_name = name("hmac-sha256.key.")?;
+        let alg = name("hmac-sha256.")?;
+        let mut b = MessageBuilder::new_vec();
+        b.set_id(self.next_id());
+        let t = now() as u32;
+        let tkey = Tkey::new(alg.as_name(), t, t + 3600, TkeyMode::KEY_DELETION, &[]);
+        dnsbox::tkey::build_query(&mut b, &key_name, &tkey)?;
+        let mac = TsigSigner::request(&key).sign(&mut b, now())?;
+        let r = self.udp(self.knot, &b.finish())?;
+        let msg = Message::parse_validated(&r)?;
+        let q = msg.questions().next().ok_or("no question")??;
+        ensure(
+            q.qtype() == Rtype::TKEY && q.name() == key_name.as_name(),
+            "not our question",
+        )?;
+        let rcode = msg.flags().rcode();
+        let answer = dnsbox::tkey::find(&msg)?;
+        match &answer {
+            Some(rec) => println!("knotd answered TKEY with {rcode}: {}", rec.data),
+            None => println!("knotd answered TKEY with {rcode}, no TKEY record"),
+        }
+        ensure(
+            rcode != Rcode::NOERROR || answer.is_some(),
+            "NOERROR without a TKEY record",
+        )?;
+        if tsig::find(&msg)?.is_some_and(|t| !t.data.mac.is_empty()) {
+            let mut v = TsigVerifier::new(&key, mac.as_slice())?;
+            ensure(v.verify(&msg, now())?.is_some(), "response not signed")?;
+            v.finish()?;
+        }
+        Ok(())
     }
 
     /// A TSIG-signed AXFR of `bulk.interop.`: a stream of several

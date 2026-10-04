@@ -1,0 +1,19 @@
+; dnsbox's presentation of the record types BIND 9.18's alltypes zone does
+; not have (AMTRELAY, RFC 8777; DSYNC, RFC 9859; HHIT and BRID, RFC 9886;
+; DOA). run.sh has knotd serve those Knot reads; tests/interop_knot.rs
+; checks knotd's transfer of them.
+$TTL 3600
+newtypes.example. 3600 IN SOA ns1.newtypes.example. hostmaster.newtypes.example. 2026100501 7200 900 1209600 3600
+newtypes.example. 3600 IN NS ns1.newtypes.example.
+ns1.newtypes.example. 3600 IN A 192.0.2.53
+amtrelay.newtypes.example. 3600 IN AMTRELAY 10 0 1 203.0.113.15
+amtrelay.newtypes.example. 3600 IN AMTRELAY 10 0 2 2001:db8::15
+amtrelay.newtypes.example. 3600 IN AMTRELAY 128 1 3 amtrelays.example.com.
+amtrelay.newtypes.example. 3600 IN AMTRELAY 0 0 0 .
+*._dsync.newtypes.example. 3600 IN DSYNC CDS NOTIFY 5359 cds-scanner.example.net.
+_dsync.newtypes.example. 3600 IN DSYNC CSYNC NOTIFY 5360 csync-scanner.example.net.
+child._dsync.newtypes.example. 3600 IN DSYNC CDS NOTIFY 5300 rr-endpoint.newtypes.example.
+drip.newtypes.example. 3600 IN HHIT gwppM2ZmOCAwMDAwWQFGMIIBQjCB9aADAgECAgE1MAUGAytlcDArMSkwJwYDVQQD
+drip.newtypes.example. 3600 IN BRID owAAAYIEUQ==
+doa.newtypes.example. 3600 IN DOA 0 1 2 "" aHR0cHM6Ly93d3cuaXNjLm9yZy8=
+doa.newtypes.example. 3600 IN DOA 1234567890 100 1 "text/plain" -

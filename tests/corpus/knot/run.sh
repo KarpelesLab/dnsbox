@@ -29,6 +29,8 @@
 #   alltypes-omitted.txt     the records of ../bind9/alltypes.dnsbox Knot
 #                            cannot read (zones/alltypes.example.zone has
 #                            the others)
+#   newtypes-omitted.txt     likewise for newtypes.zone (the types BIND's
+#                            alltypes zone lacks; zones/newtypes.example.zone)
 #   knot/<label>/            exchanges with knotd: NN-<udp|tcp>-<q|r>.hex
 #                            (proxy.py) and kdig's output (kdig.txt)
 #   unbound/<case>/<step>/   exchanges with unbound, likewise;
@@ -296,22 +298,33 @@ cmd_sign() {
     done
     # dnsbox's presentation of every type BIND reads, for knotd to serve:
     # minus the records Knot cannot read (types it does not know), which
-    # go to alltypes-omitted.txt.
-    kzonecheck -v -o alltypes.example. "$HERE/../bind9/alltypes.dnsbox" \
-        >"$OUT/checks/alltypes.dnsbox.kzonecheck" 2>&1 || true
-    python3 - "$HERE/../bind9/alltypes.dnsbox" "$OUT/checks/alltypes.dnsbox.kzonecheck" \
-        "$OUT/zones/alltypes.example.zone" "$OUT/alltypes-omitted.txt" <<'PY'
+    # go to alltypes-omitted.txt. Likewise for the types typed since
+    # (newtypes.zone).
+    knot_readable alltypes.example. "$HERE/../bind9/alltypes.dnsbox" alltypes || rc=1
+    knot_readable newtypes.example. "$HERE/newtypes.zone" newtypes || rc=1
+    ls -l "$OUT/zones"
+    return $rc
+}
+
+# knot_readable ORIGIN SRC NAME: writes the lines of zone file SRC that
+# Knot reads to OUT/zones/ORIGIN.zone (without the final dot), and the
+# others to OUT/NAME-omitted.txt.
+knot_readable() {
+    local origin=$1 src=$2 tag=$3
+    kzonecheck -v -o "$origin" "$src" >"$OUT/checks/$tag.kzonecheck" 2>&1 || true
+    python3 - "$src" "$OUT/checks/$tag.kzonecheck" \
+        "$OUT/zones/${origin%.}.zone" "$OUT/$tag-omitted.txt" "$tag" <<'PY'
 import re, sys
-src, log, out, omitted = sys.argv[1:]
+src, log, out, omitted, tag = sys.argv[1:]
 bad = {int(m) for m in re.findall(r"line (\d+) \(", open(log).read())}
 lines = open(src).readlines()
 open(out, "w").writelines(l for i, l in enumerate(lines, 1) if i not in bad)
 open(omitted, "w").writelines(l for i, l in enumerate(lines, 1) if i in bad)
-print("alltypes: %d of %d lines omitted for Knot" % (len(bad), len(lines)))
+print("%s: %d of %d lines omitted for Knot" % (tag, len(bad), len(lines)))
+for i in sorted(bad):
+    print("  omitted: " + lines[i - 1].rstrip())
 PY
-    kzonecheck -o alltypes.example. "$OUT/zones/alltypes.example.zone" || rc=1
-    ls -l "$OUT/zones"
-    return $rc
+    kzonecheck -o "$origin" "$OUT/zones/${origin%.}.zone"
 }
 
 # Checks signed zone $1 in file $2 with kzonecheck, ldns-verify-zone and
@@ -410,6 +423,8 @@ EOF
     # dnsbox's presentation of every type BIND reads (tests/interop_zones.rs),
     # but those Knot does not know.
     printf '  - domain: alltypes.example.\n'
+    # The same for the types typed since (newtypes.zone).
+    printf '  - domain: newtypes.example.\n'
 }
 
 unbound_conf() {
@@ -599,6 +614,11 @@ cmd_capture() {
     log "knotd: dnsbox's presentation of every type (../bind9/alltypes.dnsbox)"
     kq alltypes/axfr -y "hmac-sha256:hmac-sha256.key:$SECRET" alltypes.example. AXFR
     kq alltypes/axfr-json +json -y "hmac-sha256:hmac-sha256.key:$SECRET" alltypes.example. AXFR
+    log "knotd: dnsbox's presentation of the types typed since (newtypes.zone)"
+    kq newtypes/axfr -y "hmac-sha256:hmac-sha256.key:$SECRET" newtypes.example. AXFR
+    kq newtypes/axfr-json +json -y "hmac-sha256:hmac-sha256.key:$SECRET" newtypes.example. AXFR
+    kq newtypes/dsync "_dsync.newtypes.example." TYPE66
+    kq newtypes/amtrelay "amtrelay.newtypes.example." TYPE260
 
     log "knotd: EDNS, transports, CHAOS"
     local z=ed25519-nsec.interop.

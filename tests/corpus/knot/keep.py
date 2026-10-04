@@ -6,12 +6,13 @@ of tests/interop_knot.rs).
     python3 tests/corpus/knot/keep.py /tmp/interop "run RUN_ID, DATE"
 
 Replaces the kept data (everything in this directory but the scripts and
-child.zone) with: six of the eighteen signed zones (every algorithm and
+child.zone and newtypes.zone) with: six of the eighteen signed zones (every algorithm and
 every denial chain twice), the parent and the three tampered zones, with
 their keys, DS records, knotd's answers and transfers, and Unbound's cases
 for three of them and for the others; knotd's EDNS, CHAOS, truncation and
 TSIG exchanges; the dynamic
-zone's updates and two of its IXFRs; knotd's transfer of alltypes.example; the
+zone's updates and two of its IXFRs; knotd's transfers of alltypes.example
+and newtypes.example; the
 interop_probe exchanges but the bulk transfers; and the unbound-to-knotd
 queries of one zone. A few single responses also go to
 tests/corpus/knotd-ci-*.hex and unbound-ci-*.hex. Python standard library
@@ -23,7 +24,7 @@ import shutil
 import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-KEEP_SCRIPTS = {"run.sh", "proxy.py", "keep.py", "child.zone"}
+KEEP_SCRIPTS = {"run.sh", "proxy.py", "keep.py", "child.zone", "newtypes.zone"}
 
 CHILDREN = [
     "rsasha256-optout.interop",
@@ -65,6 +66,7 @@ KNOT = [
     "dyn/ixfr-udp",
     "dyn/update-yxdomain",
     "alltypes",
+    "newtypes",
     "tsig/axfr-sha256",
     "tsig/axfr-badsig",
     "tsig/axfr-badkey",
@@ -72,6 +74,7 @@ KNOT = [
     "probe/edns",
     "probe/tcp-dnskey",
     "probe/tsig-badsig",
+    "probe/tkey",
     "probe/update",
     "unbound-upstream/ed25519-nsec",
 ] + ["tsig/soa-" + h for h in ("md5", "sha1", "sha224", "sha256", "sha384", "sha512")] + [
@@ -142,7 +145,8 @@ def main():
         else:
             os.remove(path)
 
-    for rel in ["versions.txt", "now", "anchor.ds", "alltypes-omitted.txt", "zones/bulk.interop.zone"]:
+    for rel in ["versions.txt", "now", "anchor.ds", "alltypes-omitted.txt", "newtypes-omitted.txt",
+                "zones/bulk.interop.zone"]:
         copy(src, rel)
     for z in ZONES:
         copy(src, "zones/%s.zone" % z)

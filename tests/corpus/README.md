@@ -166,8 +166,9 @@ runs `knot/run.sh`:
   `unsigned.<zone>` below each, `insecure.interop.` (no DS), a zone of
   503 records for multi-message transfers, `dyn.interop.` (signed by
   `knotd` itself, dynamic updates), and dnsbox's presentation of every type
-  BIND reads (`bind9/alltypes.dnsbox`) but for the records Knot cannot
-  read; NSID, CHAOS identity, Client Subnet, RFC 9018 cookies
+  BIND reads (`bind9/alltypes.dnsbox`) and of the types typed since
+  (`knot/newtypes.zone`: AMTRELAY, DSYNC, HHIT, BRID, DOA), each but for
+  the records Knot cannot read; NSID, CHAOS identity, Client Subnet, RFC 9018 cookies
   (mod-cookies with a fixed secret) and six TSIG keys (HMAC-MD5 to
   HMAC-SHA512, all with the secret `00 01 .. 1f`) for transfers and
   updates. `unbound` (127.0.0.1:5335) validates with the trust anchor,
@@ -191,7 +192,9 @@ runs `knot/run.sh`:
   recorded too (`knot/unbound-upstream/`).
 - **probe**: dnsbox's `interop_probe` example sends its own queries
   (EDNS options, padding, cookies whose RFC 9018 hash it checks, TCP,
-  TSIG with every HMAC, AXFR streams, UPDATEs added, deleted, refused or
+  TSIG with every HMAC, a TSIG-signed TKEY query (RFC 2930 §4.2, built
+  by `dnsbox::tkey`; `knotd` does no TKEY but must answer it
+  well-formed), AXFR streams, UPDATEs added, deleted, refused or
   failing a prerequisite, the IXFR they make) to `knotd` and `unbound`,
   and checks the answers (`knotd` verified dnsbox's TSIG MACs and applied
   its updates; Unbound validated, gave insecure answers without AD, and
@@ -210,8 +213,8 @@ runs `knot/run.sh`:
 The whole run is uploaded as the `interop-knot-unbound` artifact.
 `knot/keep.py` copied a subset of run 37229639496 (2026-10-04) here, so
 that `cargo test --test interop_knot` checks it offline (nothing in this
-directory but `run.sh`, `proxy.py`, `keep.py` and `child.zone` is written
-by hand): six of the signed zones (each algorithm, each chain twice), the
+directory but `run.sh`, `proxy.py`, `keep.py`, `child.zone` and
+`newtypes.zone` is written by hand): six of the signed zones (each algorithm, each chain twice), the
 parent and the bogus zones with their keys (throwaway; PKCS #8 PEM as
 `keymgr` stores them), DS records, `knotd`'s answers and transfers, the
 EDNS, CHAOS, truncation and TSIG exchanges, the dynamic zone's updates and
@@ -249,8 +252,13 @@ tests/corpus/knot/keep.py /tmp/interop "run <run>, <date>"`.
   SipHash-2-4 from the configured secret);
 - for every Unbound case, dnsbox validating the data Unbound fetched (CD)
   from the trust anchor down reaches Unbound's verdict (AD: secure; no AD:
-  insecure; SERVFAIL: bogus), which is also the one the case was made for;
-- `knotd` read dnsbox's text of every type it knows to BIND's wire form.
+  insecure; SERVFAIL: bogus), which is also the one the case was made for,
+  each response validated within one default `ValidationBudget` (the
+  KeyTrap limits must not reject legitimate chains; the zones are read
+  with the default `ZoneLimits` too);
+- `knotd` read dnsbox's text of every type it knows to BIND's wire form,
+  and of the types of `knot/newtypes.zone` it knows to dnsbox's (the
+  test prints which).
 
 Differences found, none a dnsbox bug: Knot writes CERT types and
 algorithms as numbers and LOC without decimals (both sides read the

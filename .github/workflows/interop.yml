@@ -8,7 +8,7 @@ name: Interop (Knot DNS, Unbound)
 
 on:
   push:
-    branches: [master, feat/interop-ci]
+    branches: [master]
   pull_request:
   workflow_dispatch:
 
