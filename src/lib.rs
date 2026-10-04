@@ -88,6 +88,7 @@ pub mod tsig;
 mod util;
 pub mod update;
 pub mod wire;
+pub mod xfr;
 
 pub use builder::{Checkpoint, MessageBuilder};
 pub use charstr::CharStr;
