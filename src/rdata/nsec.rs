@@ -3,9 +3,10 @@
 use core::cmp::Ordering;
 use core::fmt;
 
-use super::{ComposeRdata, ParseRdata, TypeBitmap};
+use super::{ComposeRdata, ParseRdata, ParseRdataText, TypeBitmap};
 use crate::name::Name;
-use crate::wire::{Composer, NameEncoding, WireReader};
+use crate::wire::{Composer, NameEncoding, OutBuf, WireReader};
+use crate::zone::Scanner;
 use crate::{Result, Rtype};
 
 /// `NSEC` record data: authenticated denial of existence (RFC 4034 §4).
@@ -50,7 +51,14 @@ impl<'a> Nsec<'a> {
     }
 }
 
-impl super::ParseRdataText for Nsec<'_> {}
+impl ParseRdataText for Nsec<'_> {
+    /// `<next domain name> <type>...` (RFC 4034 §4.2): the types as
+    /// mnemonics or `TYPEnnn`, in any order; none gives an empty bitmap.
+    fn parse_text<B: OutBuf + ?Sized>(s: &mut Scanner<'_>, out: &mut B) -> Result<()> {
+        s.name_into(out, NameEncoding::Plain)?;
+        s.type_bitmap_into(out)
+    }
+}
 
 impl<'a> ParseRdata<'a> for Nsec<'a> {
     const RTYPE: Rtype = Rtype::NSEC;
@@ -89,7 +97,7 @@ impl fmt::Display for Nsec<'_> {
 mod tests {
     use super::*;
     use crate::rdata::RData;
-    use crate::rdata::tests::{parse, round_trip};
+    use crate::rdata::tests::{parse, round_trip, text_error, text_parse, text_round_trip};
     use crate::testutil::hex;
     use crate::wire::{Canonical, WireWriter};
     use crate::{Class, Error, NameBuf};
@@ -113,6 +121,58 @@ mod tests {
         assert!(n.types.contains(Rtype::MX));
         // An empty bitmap is allowed on the wire.
         round_trip(Rtype::NSEC, b"\x01a\x00", "a.");
+    }
+
+    #[test]
+    fn text() {
+        // RFC 4034 §4.3, as printed there.
+        let mut wire = b"\x04host\x07example\x03com\x00".to_vec();
+        wire.extend(hex("0006 40010000 0003 041b"));
+        wire.extend([0; 26]);
+        wire.push(0x20);
+        text_round_trip(
+            Rtype::NSEC,
+            "host.example.com. (\n A MX RRSIG NSEC TYPE1234 )",
+            &wire,
+            "host.example.com. A MX RRSIG NSEC TYPE1234",
+        );
+        // Any order, duplicates, lowercase and generic mnemonics, a
+        // relative name (origin `example.`); the case of the name is kept.
+        let mut want = b"\x04Host\x07example\x03com\x07example\x00".to_vec();
+        want.extend_from_slice(&wire[18..]);
+        assert_eq!(
+            text_parse(Rtype::NSEC, "Host.example.com TYPE1234 nsec rrsig MX a TYPE15 A")
+                .as_deref(),
+            Ok(&want[..])
+        );
+        // RFC 4035 Appendix A: the last NSEC of the chain, and an empty
+        // bitmap.
+        let mut wire = b"\x07example\x00".to_vec();
+        wire.extend(hex("0006 400400080003"));
+        text_round_trip(
+            Rtype::NSEC,
+            "@ A HINFO AAAA RRSIG NSEC",
+            &wire,
+            "example. A HINFO AAAA RRSIG NSEC",
+        );
+        text_round_trip(Rtype::NSEC, "a.", b"\x01a\x00", "a.");
+        // Types in the last window (TYPE65535).
+        text_round_trip(
+            Rtype::NSEC,
+            ". TYPE65535",
+            &[&[0u8, 0xff, 0x20][..], &[0; 31], &[0x01]].concat(),
+            ". TYPE65535",
+        );
+    }
+
+    #[test]
+    fn text_malformed() {
+        assert_eq!(text_error(Rtype::NSEC, ""), Error::UnexpectedEof);
+        assert_eq!(text_error(Rtype::NSEC, "a. NOSUCHTYPE"), Error::UnknownMnemonic);
+        assert_eq!(text_error(Rtype::NSEC, "a. TYPE65536"), Error::InvalidText);
+        assert_eq!(text_error(Rtype::NSEC, "a. \"A\""), Error::InvalidText);
+        assert_eq!(text_error(Rtype::NSEC, "\"a.\" A"), Error::InvalidText);
+        assert_eq!(text_error(Rtype::NSEC, "a. A (MX"), Error::InvalidText);
     }
 
     #[test]

@@ -3,11 +3,12 @@
 
 use core::fmt;
 
-use super::{ComposeRdata, ParseRdata};
+use super::{ComposeRdata, ParseRdata, ParseRdataText};
 use crate::dnssec::{Algorithm, Timestamp};
 use crate::name::Name;
 use crate::text::Base64;
-use crate::wire::{Composer, NameEncoding, WireReader};
+use crate::wire::{Composer, NameEncoding, OutBuf, WireReader};
+use crate::zone::Scanner;
 use crate::{Result, Rtype};
 
 /// Defines an RRSIG-shaped record-data view.
@@ -40,7 +41,28 @@ macro_rules! rrsig_like {
             pub signature: &'a [u8],
         }
 
-        impl super::ParseRdataText for $ty<'_> {}
+        impl ParseRdataText for $ty<'_> {
+            /// `<type covered> <algorithm> <labels> <original TTL>
+            /// <expiration> <inception> <key tag> <signer's name>
+            /// <signature>` (RFC 4034 §3.2, RFC 2535 §7.2): the type as a
+            /// mnemonic (or `TYPEnnn`), the algorithm as a number or a
+            /// mnemonic, the original TTL with optional units (as BIND
+            /// accepts), the times as `YYYYMMDDHHmmSS` or seconds since
+            /// the epoch, the signature in base64, possibly split into
+            /// several tokens.
+            fn parse_text<B: OutBuf + ?Sized>(s: &mut Scanner<'_>, out: &mut B) -> Result<()> {
+                out.put_u16(s.parse::<Rtype>()?.get())?;
+                out.put_u8(s.parse::<Algorithm>()?.get())?;
+                out.put_u8(s.u8()?)?;
+                out.put_u32(s.ttl()?)?;
+                out.put_u32(s.timestamp()?)?;
+                out.put_u32(s.timestamp()?)?;
+                out.put_u16(s.u16()?)?;
+                s.name_into(out, NameEncoding::Lowercase)?;
+                s.base64_rest_into(out)?;
+                Ok(())
+            }
+        }
 
         impl<'a> ParseRdata<'a> for $ty<'a> {
             const RTYPE: Rtype = Rtype::$rt;
@@ -183,7 +205,7 @@ impl<'a> From<Rrsig<'a>> for Sig<'a> {
 mod tests {
     use super::*;
     use crate::rdata::RData;
-    use crate::rdata::tests::{parse, round_trip};
+    use crate::rdata::tests::{parse, round_trip, text_error, text_parse, text_round_trip};
     use crate::testutil::hex;
     use crate::wire::{Canonical, WireWriter};
     use crate::{Class, Error};
@@ -238,6 +260,82 @@ mod tests {
         assert!(empty.to_string().ends_with(" example.com."));
     }
 
+    /// RFC 4034 §3.3's RRSIG in the presentation form `Display` gives.
+    const RFC4034_RRSIG_TEXT: &str = "A 5 3 86400 20030322173103 20030220173103 2642 example.com. \
+        oJB1W6WNGv+ldvQ3WDG0MQkg5IEhjRip8WTrPYGv07h108dUKGMeDPKijVCHX3DDKdfb+v6o\
+        B9wfuh3DTJXUAfI/M0zmO/zz8bW0Rznl8O3tGNazPwQKkRN20XPXV6nwwfoXmJQbsLNrLfkG\
+        J5D6fwFm8nN+6pBzeDQfsS3Ap3o=";
+
+    #[test]
+    fn text() {
+        let wire = rfc4034_rrsig();
+        // RFC 4034 §3.3, as printed there.
+        let rfc = "A 5 3 86400 20030322173103 (\n\
+                   20030220173103 2642 example.com.\n\
+                   oJB1W6WNGv+ldvQ3WDG0MQkg5IEhjRip8WTr\n\
+                   PYGv07h108dUKGMeDPKijVCHX3DDKdfb+v6o\n\
+                   B9wfuh3DTJXUAfI/M0zmO/zz8bW0Rznl8O3t\n\
+                   GNazPwQKkRN20XPXV6nwwfoXmJQbsLNrLfkG\n\
+                   J5D6fwFm8nN+6pBzeDQfsS3Ap3o= )";
+        for t in [Rtype::RRSIG, Rtype::SIG] {
+            text_round_trip(t, rfc, &wire, RFC4034_RRSIG_TEXT);
+            // The generic type, an algorithm mnemonic, a TTL with units,
+            // times in seconds (RFC 4034 §3.2), a relative signer name
+            // (origin `example.`) and a different base64 split.
+            let alt = "TYPE1 RSASHA1 3 1D 1048354263 1045762263 2642 example.com \
+                oJB1W6WNGv+ldvQ3WDG0MQkg5IEhjRip8WTrPYGv07h108dUKGMeDPKijVCHX3DDKdfb+v6o\
+                B9wfuh3DTJXUAfI/M0zmO/zz8bW0Rznl8O3t GNazPwQKkRN20XPXV6nwwfoXmJQbsLNrLfkG\
+                J5D6fwFm8nN+6pBzeDQfsS3Ap3o=";
+            let mut want = wire.clone();
+            want.splice(18..31, b"\x07example\x03com\x07example\x00".iter().copied());
+            assert_eq!(text_parse(t, alt).as_deref(), Ok(&want[..]));
+        }
+        // The SIG(0) capture of `sig0_capture_round_trip`: type 0, labels
+        // and TTL 0.
+        text_round_trip(Rtype::SIG, SIG0_TEXT, &hex(ED25519_SIG0), SIG0_TEXT);
+        // No signature (a template), a timestamp past 2038.
+        let mut tmpl = hex("0030 0f 02 00000e10 ffffffff 00000000 0001");
+        tmpl.push(0);
+        text_round_trip(
+            Rtype::RRSIG,
+            "DNSKEY ED25519 2 1h 21060207062815 19700101000000 1 .",
+            &tmpl,
+            "DNSKEY 15 2 3600 21060207062815 19700101000000 1 .",
+        );
+    }
+
+    #[test]
+    fn text_malformed() {
+        for t in [Rtype::RRSIG, Rtype::SIG] {
+            let base = "A 5 3 86400 20030322173103 20030220173103 2642 example.com.";
+            assert!(text_parse(t, base).is_ok());
+            let short = "A 5 3 86400 20030322173103 20030220173103 2642";
+            assert_eq!(text_error(t, short), Error::UnexpectedEof);
+            assert_eq!(text_error(t, "A 5"), Error::UnexpectedEof);
+            for (from, to, err) in [
+                ("A ", "NOSUCHTYPE ", Error::UnknownMnemonic),
+                ("A ", "TYPE65536 ", Error::InvalidText),
+                (" 5 ", " 256 ", Error::InvalidText),
+                (" 3 ", " 256 ", Error::InvalidText),
+                (" 86400 ", " 1x ", Error::InvalidText),
+                (" 86400 ", " 4294967296 ", Error::InvalidText),
+                // Not a date (month 13), 13 and 15 digits (too large a
+                // number), a sign.
+                (" 20030322173103 ", " 20031322173103 ", Error::InvalidText),
+                (" 20030322173103 ", " 2003032217310 ", Error::InvalidText),
+                (" 20030220173103 ", " 200302201731030 ", Error::InvalidText),
+                (" 20030220173103 ", " +1 ", Error::InvalidText),
+                (" 2642 ", " 65536 ", Error::InvalidText),
+                (" example.com.", " example..com.", Error::EmptyLabel),
+            ] {
+                let bad = base.replacen(from, to, 1);
+                assert_eq!(text_error(t, &bad), err, "{bad}");
+            }
+            assert_eq!(text_error(t, &std::format!("{base} AQ*=")), Error::InvalidText);
+            assert_eq!(text_error(t, &std::format!("{base} AQ")), Error::InvalidText);
+        }
+    }
+
     #[test]
     fn names() {
         // RRSIG's signer name must not be compressed; SIG's may be.
@@ -267,15 +365,13 @@ mod tests {
         a613d9eefcc566c0cd1d342d1a536cc338588d6b6fe01b120608a67f4b3b50b9\
         56b380b1ddfd71202b83cac241ae907342407af499359896fc6c8bfa6bad9c05";
 
+    const SIG0_TEXT: &str = "TYPE0 15 0 0 20261004090347 20261004085347 43160 sig0.example.com. \
+        phPZ7vzFZsDNHTQtGlNswzhYjWtv4BsSBgimf0s7ULlWs4Cx3f1xICuDysJBrpBzQkB69Jk1mJb8bIv6a62cBQ==";
+
     #[test]
     fn sig0_capture_round_trip() {
         let wire = hex(ED25519_SIG0);
-        round_trip(
-            Rtype::SIG,
-            &wire,
-            "TYPE0 15 0 0 20261004090347 20261004085347 43160 sig0.example.com. \
-             phPZ7vzFZsDNHTQtGlNswzhYjWtv4BsSBgimf0s7ULlWs4Cx3f1xICuDysJBrpBzQkB69Jk1mJb8bIv6a62cBQ==",
-        );
+        round_trip(Rtype::SIG, &wire, SIG0_TEXT);
     }
 
     #[test]

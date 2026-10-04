@@ -24,15 +24,11 @@ pub struct Rkey<'a> {
 }
 
 impl ParseRdataText for Rkey<'_> {
-    /// `flags protocol algorithm [base64-key]`, as DNSKEY (RFC 4034
-    /// §2.2): decimal flags and protocol, the algorithm as a number or
-    /// mnemonic, then the key in base64, possibly split by blanks (BIND
-    /// requires a key; the wire format allows none, so this does too).
+    /// `<flags> <protocol> <algorithm> <public key>`, as DNSKEY
+    /// (RFC 4034 §2.2): the key in base64, possibly split into several
+    /// tokens; the algorithm as a number or a mnemonic.
     fn parse_text<B: OutBuf + ?Sized>(s: &mut Scanner<'_>, out: &mut B) -> Result<()> {
-        out.put_u16(s.u16()?)?;
-        out.put_u8(s.u8()?)?;
-        out.put_u8(s.parse::<Algorithm>()?.get())?;
-        s.base64_rest_into(out).map(drop)
+        super::dnskey::key_text_into(s, out)
     }
 }
 
@@ -80,6 +76,22 @@ mod tests {
     use crate::{Class, Error, Rtype};
 
     #[test]
+    fn text() {
+        // RKEY 0 1 7 AQID (named-rrchecker); DNSKEY's presentation form,
+        // shared with it (see `dnskey.rs` for the RFC 4034 vectors).
+        text_round_trip(Rtype::RKEY, "0 1 7 AQID", b"\x00\x00\x01\x07\x01\x02\x03", "0 1 7 AQID");
+        text_round_trip(
+            Rtype::RKEY,
+            "0 TLS RSASHA1-NSEC3-SHA1 AQ ID",
+            b"\x00\x00\x01\x07\x01\x02\x03",
+            "0 1 7 AQID",
+        );
+        text_round_trip(Rtype::RKEY, "0 3 7", b"\x00\x00\x03\x07", "0 3 7");
+        assert_eq!(text_error(Rtype::RKEY, "0 3"), Error::UnexpectedEof);
+        assert_eq!(text_error(Rtype::RKEY, "0 3 7 AQI"), Error::InvalidText);
+    }
+
+    #[test]
     fn round_trips() {
         // RKEY 0 1 7 AQID (named-rrchecker).
         round_trip(Rtype::RKEY, b"\x00\x00\x01\x07\x01\x02\x03", "0 1 7 AQID");
@@ -91,7 +103,7 @@ mod tests {
     }
 
     #[test]
-    fn text() {
+    fn text_examples() {
         // named-rrchecker.
         text_round_trip(
             Rtype::RKEY,

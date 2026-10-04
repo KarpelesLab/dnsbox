@@ -19,8 +19,8 @@ pub struct Talink<'a> {
 }
 
 impl ParseRdataText for Talink<'_> {
-    /// `previous-name next-name`
-    /// (draft-wijngaards-dnsop-trust-history-02 §3).
+    /// `<previous name> <next name>`, as BIND writes them
+    /// (draft-wijngaards-dnsop-trust-history-02).
     fn parse_text<B: OutBuf + ?Sized>(s: &mut Scanner<'_>, out: &mut B) -> Result<()> {
         s.name_into(out, NameEncoding::Plain)?;
         s.name_into(out, NameEncoding::Plain)
@@ -64,6 +64,17 @@ mod tests {
     use crate::{Class, Error, Rtype};
 
     #[test]
+    fn text() {
+        // TALINK prev. next. (named-rrchecker), and relative names with
+        // `.` for the ends of the chain.
+        text_round_trip(Rtype::TALINK, "prev. next.", b"\x04prev\x00\x04next\x00", "prev. next.");
+        text_round_trip(Rtype::TALINK, ". Next", b"\x00\x04Next\x07example\x00", ". Next.example.");
+        assert_eq!(text_error(Rtype::TALINK, "prev."), Error::UnexpectedEof);
+        assert_eq!(text_error(Rtype::TALINK, "a..b. c."), Error::EmptyLabel);
+        assert_eq!(text_error(Rtype::TALINK, "a..b. c."), Error::EmptyLabel);
+    }
+
+    #[test]
     fn round_trips() {
         // TALINK prev. next. (named-rrchecker).
         round_trip(Rtype::TALINK, b"\x04prev\x00\x04next\x00", "prev. next.");
@@ -75,7 +86,7 @@ mod tests {
     }
 
     #[test]
-    fn text() {
+    fn text_examples() {
         // named-rrchecker.
         text_round_trip(
             Rtype::TALINK,

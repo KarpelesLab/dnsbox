@@ -3,10 +3,11 @@
 use core::cmp::Ordering;
 use core::fmt;
 
-use super::{ComposeRdata, ParseRdata, TypeBitmap};
+use super::{ComposeRdata, ParseRdata, ParseRdataText, TypeBitmap};
 use crate::dnssec::Nsec3HashAlgorithm;
 use crate::text::{Base32Hex, Hex};
-use crate::wire::{Composer, WireReader};
+use crate::wire::{Composer, OutBuf, WireReader};
+use crate::zone::Scanner;
 use crate::{Error, Result, Rtype};
 
 /// Writes a salt in presentation format: hex, or `-` when empty
@@ -24,6 +25,32 @@ fn put_u8_prefixed<C: Composer + ?Sized>(c: &mut C, data: &[u8]) -> Result<()> {
     let len = u8::try_from(data.len()).map_err(|_| Error::InvalidRdata)?;
     c.put_u8(len)?;
     c.put_bytes(data)
+}
+
+/// Reads the fields NSEC3 and NSEC3PARAM share, `<hash algorithm>
+/// <flags> <iterations> <salt>` (RFC 5155 §3.3, §4.3), and writes them.
+/// The salt is hexadecimal, or `-` when empty.
+fn params_text_into<B: OutBuf + ?Sized>(s: &mut Scanner<'_>, out: &mut B) -> Result<()> {
+    out.put_u8(s.parse::<Nsec3HashAlgorithm>()?.get())?;
+    out.put_u8(s.u8()?)?;
+    out.put_u16(s.u16()?)?;
+    if s.peek()?.is_some_and(|t| t.is("-")) {
+        s.word()?;
+        return out.put_u8(0);
+    }
+    u8_prefixed_text(out, |out| s.hex_into(out))
+}
+
+/// Writes a length octet followed by what `field` writes (a salt or a
+/// hash); [`Error::InvalidText`] if that is more than 255 octets.
+fn u8_prefixed_text<B: OutBuf + ?Sized>(
+    out: &mut B,
+    field: impl FnOnce(&mut B) -> Result<usize>,
+) -> Result<()> {
+    let at = out.pos();
+    out.put_u8(0)?;
+    let len = u8::try_from(field(out)?).map_err(|_| Error::InvalidText)?;
+    out.patch(at, &[len])
 }
 
 /// `NSEC3` record data: hashed authenticated denial of existence
@@ -74,7 +101,17 @@ impl Nsec3<'_> {
     }
 }
 
-impl super::ParseRdataText for Nsec3<'_> {}
+impl ParseRdataText for Nsec3<'_> {
+    /// `<hash algorithm> <flags> <iterations> <salt> <next hashed owner
+    /// name> <type>...` (RFC 5155 §3.3): the salt in hexadecimal or `-`
+    /// for none, the hash in unpadded base32hex (either case), the types
+    /// as mnemonics or `TYPEnnn`, in any order.
+    fn parse_text<B: OutBuf + ?Sized>(s: &mut Scanner<'_>, out: &mut B) -> Result<()> {
+        params_text_into(s, out)?;
+        u8_prefixed_text(out, |out| s.base32hex_into(out))?;
+        s.type_bitmap_into(out)
+    }
+}
 
 impl<'a> ParseRdata<'a> for Nsec3<'a> {
     const RTYPE: Rtype = Rtype::NSEC3;
@@ -155,7 +192,13 @@ pub struct Nsec3param<'a> {
     pub salt: &'a [u8],
 }
 
-impl super::ParseRdataText for Nsec3param<'_> {}
+impl ParseRdataText for Nsec3param<'_> {
+    /// `<hash algorithm> <flags> <iterations> <salt>` (RFC 5155 §4.3), the
+    /// salt in hexadecimal or `-` for none.
+    fn parse_text<B: OutBuf + ?Sized>(s: &mut Scanner<'_>, out: &mut B) -> Result<()> {
+        params_text_into(s, out)
+    }
+}
 
 impl<'a> ParseRdata<'a> for Nsec3param<'a> {
     const RTYPE: Rtype = Rtype::NSEC3PARAM;
@@ -205,7 +248,7 @@ impl fmt::Display for Nsec3param<'_> {
 mod tests {
     use super::*;
     use crate::rdata::RData;
-    use crate::rdata::tests::{compose, parse, round_trip};
+    use crate::rdata::tests::{compose, parse, round_trip, text_error, text_round_trip};
     use crate::testutil::hex;
     use crate::{Class, WireWriter};
 
@@ -235,6 +278,82 @@ mod tests {
         // Empty salt and empty bitmap.
         round_trip(Rtype::NSEC3PARAM, &hex("01 00 0000 00"), "1 0 0 -");
         round_trip(Rtype::NSEC3, &hex("01 00 0000 00 01 ff"), "1 0 0 - VS");
+    }
+
+    #[test]
+    fn text() {
+        // RFC 5155 Appendix A, as printed there (lowercase salt and hash).
+        let mut wire = hex("01 01 000c 04 aabbccdd 14");
+        wire.extend(hex("174eb2409fe28bcb4887a1836f957f0a8425e27b"));
+        wire.extend(hex("0007 22010000000290"));
+        text_round_trip(
+            Rtype::NSEC3,
+            "1 1 12 aabbccdd (\n\
+             \x20   2t7b4g4vsa5smi47k61mv5bv1a22bojr MX DNSKEY NS\n\
+             \x20   SOA NSEC3PARAM RRSIG )",
+            &wire,
+            "1 1 12 AABBCCDD 2T7B4G4VSA5SMI47K61MV5BV1A22BOJR NS SOA MX RRSIG DNSKEY NSEC3PARAM",
+        );
+        // A hash of octets 0..20 (computed with Python's
+        // `base64.b32hexencode`), mixed-case, and an opt-out flag of 1.
+        let mut wire = hex("01 01 000c 04 aabbccdd 14");
+        wire.extend(0..20);
+        wire.extend(hex("0006 400000000002"));
+        text_round_trip(
+            Rtype::NSEC3,
+            "1 1 12 aabbccdd 000g40o40k30E209185GO38E1S8124gj A RRSIG",
+            &wire,
+            "1 1 12 AABBCCDD 000G40O40K30E209185GO38E1S8124GJ A RRSIG",
+        );
+        // The hash algorithm as a mnemonic (as BIND accepts), no salt, no
+        // types (RFC 9276 §3.1 recommends 0 iterations and no salt).
+        text_round_trip(Rtype::NSEC3, "SHA-1 0 0 - vs", &hex("01 00 0000 00 01 ff"), "1 0 0 - VS");
+        // RFC 5155 Appendix A, NSEC3PARAM.
+        text_round_trip(
+            Rtype::NSEC3PARAM,
+            "1 0 12 aabbccdd",
+            &hex("01 00 000c 04 aabbccdd"),
+            "1 0 12 AABBCCDD",
+        );
+        text_round_trip(Rtype::NSEC3PARAM, "1 0 0 -", &hex("01 00 0000 00"), "1 0 0 -");
+        // The longest salt.
+        let salt = "ab".repeat(255);
+        let mut wire = hex("01 00 ffff ff");
+        wire.extend([0xab; 255]);
+        text_round_trip(
+            Rtype::NSEC3PARAM,
+            &std::format!("1 0 65535 {salt}"),
+            &wire,
+            &std::format!("1 0 65535 {}", salt.to_uppercase()),
+        );
+    }
+
+    #[test]
+    fn text_malformed() {
+        for t in [Rtype::NSEC3, Rtype::NSEC3PARAM] {
+            assert_eq!(text_error(t, "1 0 0"), Error::UnexpectedEof);
+            assert_eq!(text_error(t, "256 0 0 -"), Error::InvalidText);
+            assert_eq!(text_error(t, "1 256 0 -"), Error::InvalidText);
+            assert_eq!(text_error(t, "1 0 65536 -"), Error::InvalidText);
+            assert_eq!(text_error(t, "1 0 0 abc"), Error::InvalidText);
+            assert_eq!(text_error(t, "1 0 0 xx"), Error::InvalidText);
+            assert_eq!(text_error(t, "1 0 0 \"-\""), Error::InvalidText);
+            // A salt of 256 octets does not fit its length octet.
+            let long = std::format!("1 0 0 {}", "00".repeat(256));
+            assert_eq!(text_error(t, &long), Error::InvalidText);
+        }
+        // The salt is one token; `-` is not a hex digit.
+        assert_eq!(text_error(Rtype::NSEC3PARAM, "1 0 0 aa bb"), Error::InvalidText);
+        assert_eq!(text_error(Rtype::NSEC3PARAM, "1 0 0 -aa"), Error::InvalidText);
+        assert_eq!(text_error(Rtype::NSEC3, "1 0 0 -"), Error::UnexpectedEof);
+        // Bad base32hex: padding, letters past V, a length that is not a
+        // whole number of octets, more than 255 octets.
+        assert_eq!(text_error(Rtype::NSEC3, "1 0 0 - VS======"), Error::InvalidText);
+        assert_eq!(text_error(Rtype::NSEC3, "1 0 0 - WW"), Error::InvalidText);
+        assert_eq!(text_error(Rtype::NSEC3, "1 0 0 - V"), Error::InvalidText);
+        let long = std::format!("1 0 0 - {}", "0".repeat(416));
+        assert_eq!(text_error(Rtype::NSEC3, &long), Error::InvalidText);
+        assert_eq!(text_error(Rtype::NSEC3, "1 0 0 - VS NOSUCHTYPE"), Error::UnknownMnemonic);
     }
 
     #[test]

@@ -1,0 +1,33 @@
+$ORIGIN example.com.
+$TTL 86400
+@ SOA ns hostmaster 1 2h 15m 2w 1h
+  DNSKEY 256 3 5 ( AQPSKmynfzW4kyBv015MUG2DeIQ3
+                   Cbl+BBZH4b/0PY1kxkmvHjcZc8no
+                   kfzj31GajIQKY+5CptLr3buXA10h
+                   WqTkF7H6RfoRqXQeogmMHfpftf6z
+                   Mv1LyBUgia7za6ZEzOJBOztyvhjL
+                   742iU/TpPSEDhm2SNKLijfUppn1U
+                   aNvv4w==  )
+  CDNSKEY 0 3 0 AA==
+  CDS 0 0 0 00
+  NSEC3PARAM 1 0 12 aabbccdd
+host A 192.0.2.1
+  RRSIG A 5 3 86400 20030322173103 (
+        20030220173103 2642 example.com.
+        oJB1W6WNGv+ldvQ3WDG0MQkg5IEhjRip8WTr
+        PYGv07h108dUKGMeDPKijVCHX3DDKdfb+v6o
+        B9wfuh3DTJXUAfI/M0zmO/zz8bW0Rznl8O3t
+        GNazPwQKkRN20XPXV6nwwfoXmJQbsLNrLfkG
+        J5D6fwFm8nN+6pBzeDQfsS3Ap3o= )
+alfa NSEC host.example.com. ( A MX RRSIG NSEC TYPE1234 )
+dskey DS 60485 RSASHA1 1 ( 2BB183AF5F22588179A53B0A
+                           98631FAD1A292118 )
+0p9mhaveqvm6t7vbl5lop2u3t2rp3tom NSEC3 1 1 12 aabbccdd (
+        2t7b4g4vsa5smi47k61mv5bv1a22bojr MX DNSKEY NS SOA NSEC3PARAM RRSIG )
+old NXT medium.foo.tld. A MX SIG NXT
+  KEY 49664 DNSSEC 5
+  SIG TYPE0 15 0 0 1791104299 1791103699 1 sig0 AAAA
+spf SPF "v=spf1 -all"
+tl TALINK . next
+rk RKEY 0 1 7 AQID
+key.tsig TSIG hmac-sha256. 1791104299 300 4 AAAAAA== 1 BADTIME 6 AABqwhXd

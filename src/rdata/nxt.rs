@@ -3,9 +3,10 @@
 
 use core::fmt;
 
-use super::{ComposeRdata, ParseRdata};
+use super::{ComposeRdata, ParseRdata, ParseRdataText};
 use crate::name::Name;
-use crate::wire::{Composer, NameEncoding, WireReader};
+use crate::wire::{Composer, NameEncoding, OutBuf, WireReader};
+use crate::zone::Scanner;
 use crate::{Error, Result, Rtype};
 
 /// Maximum NXT bitmap length: types 0–127 (RFC 2535 §5.2).
@@ -85,7 +86,27 @@ impl<'a> Nxt<'a> {
     }
 }
 
-impl super::ParseRdataText for Nxt<'_> {}
+impl ParseRdataText for Nxt<'_> {
+    /// `<next domain name> <type>...` (RFC 2535 §5.2): the types as
+    /// mnemonics or `TYPEnnn`, in any order, each 1–127 (the flat bitmap
+    /// cannot hold others: [`Error::InvalidRdata`]).
+    fn parse_text<B: OutBuf + ?Sized>(s: &mut Scanner<'_>, out: &mut B) -> Result<()> {
+        s.name_into(out, NameEncoding::Lowercase)?;
+        let mut bitmap = [0u8; MAX_BITMAP];
+        while let Some(t) = s.next_token()? {
+            if t.is_quoted() {
+                return Err(Error::InvalidText);
+            }
+            let n = usize::from(t.as_str()?.parse::<Rtype>()?.get());
+            if n == 0 {
+                return Err(Error::InvalidRdata);
+            }
+            *bitmap.get_mut(n / 8).ok_or(Error::InvalidRdata)? |= 0x80 >> (n % 8);
+        }
+        let len = bitmap.iter().rposition(|&b| b != 0).map_or(0, |p| p + 1);
+        out.put_bytes(bitmap.get(..len).unwrap_or(&[]))
+    }
+}
 
 impl<'a> ParseRdata<'a> for Nxt<'a> {
     const RTYPE: Rtype = Rtype::NXT;
@@ -131,7 +152,7 @@ impl fmt::Display for Nxt<'_> {
 #[cfg(test)]
 mod tests {
     use super::Nxt;
-    use crate::rdata::tests::{parse, round_trip};
+    use crate::rdata::tests::{parse, round_trip, text_error, text_round_trip};
     use crate::{Class, Error, Name, Rtype};
     use std::vec::Vec;
 
@@ -147,6 +168,39 @@ mod tests {
         let mut wire = b"\x00".to_vec();
         wire.extend_from_slice(&[0x40, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1]);
         round_trip(Rtype::NXT, &wire, ". A TYPE127");
+    }
+
+    #[test]
+    fn text() {
+        // RFC 2535 §5.4: big.foo.tld. NXT medium.foo.tld. A MX SIG NXT.
+        text_round_trip(
+            Rtype::NXT,
+            "medium.foo.tld. A MX SIG NXT",
+            b"\x06medium\x03foo\x03tld\x00\x40\x01\x00\x82",
+            "medium.foo.tld. A MX SIG NXT",
+        );
+        // Any order, duplicates, generic mnemonics, relative names.
+        text_round_trip(
+            Rtype::NXT,
+            "next soa TYPE2 a SOA MX",
+            b"\x04next\x07example\x00\x62\x01",
+            "next.example. A NS SOA MX",
+        );
+        text_round_trip(Rtype::NXT, ".", b"\x00", ".");
+        let mut wire = b"\x00".to_vec();
+        wire.extend_from_slice(&[0x40, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1]);
+        text_round_trip(Rtype::NXT, ". TYPE127 A", &wire, ". A TYPE127");
+    }
+
+    #[test]
+    fn text_malformed() {
+        assert_eq!(text_error(Rtype::NXT, ""), Error::UnexpectedEof);
+        // Types the flat bitmap cannot hold (RFC 2535 §5.2).
+        assert_eq!(text_error(Rtype::NXT, ". TYPE0"), Error::InvalidRdata);
+        assert_eq!(text_error(Rtype::NXT, ". TYPE128"), Error::InvalidRdata);
+        assert_eq!(text_error(Rtype::NXT, ". CAA"), Error::InvalidRdata);
+        assert_eq!(text_error(Rtype::NXT, ". NOSUCHTYPE"), Error::UnknownMnemonic);
+        assert_eq!(text_error(Rtype::NXT, ". \"A\""), Error::InvalidText);
     }
 
     #[test]

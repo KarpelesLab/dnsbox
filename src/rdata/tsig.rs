@@ -5,10 +5,12 @@
 
 use core::fmt;
 
-use super::{ComposeRdata, ParseRdata};
+use super::{ComposeRdata, ParseRdata, ParseRdataText};
 use crate::name::Name;
 use crate::text::Base64;
-use crate::wire::{Composer, NameEncoding, WireReader};
+use crate::util::base64;
+use crate::wire::{Composer, NameEncoding, OutBuf, WireReader};
+use crate::zone::{Scanner, Token};
 use crate::{Error, Rcode, Result, Rtype};
 
 open_enum! {
@@ -106,7 +108,67 @@ pub struct Tsig<'a> {
     pub other: &'a [u8],
 }
 
-impl super::ParseRdataText for Tsig<'_> {}
+impl ParseRdataText for Tsig<'_> {
+    /// `<algorithm> <time signed> <fudge> <MAC size> [<MAC>] <original ID>
+    /// <error> <other len> [<other data>]`, the layout BIND and `dig`
+    /// use (TSIG has no zone-file form; RFC 8945 §4.2 gives the fields).
+    /// The MAC and other data are base64 of exactly the stated size,
+    /// possibly split into several tokens, and absent when the size is 0;
+    /// the error is a mnemonic (`BADTIME`), `RCODEnnn` or a number.
+    fn parse_text<B: OutBuf + ?Sized>(s: &mut Scanner<'_>, out: &mut B) -> Result<()> {
+        s.name_into(out, NameEncoding::Plain)?;
+        out.put_u48(time_signed(s.word()?)?)?;
+        out.put_u16(s.u16()?)?;
+        sized_base64_into(s, out)?;
+        out.put_u16(s.u16()?)?;
+        let error = s.word()?;
+        let error = if error.as_bytes().first().is_some_and(u8::is_ascii_digit) {
+            error.u16()?
+        } else {
+            error.as_str()?.parse::<TsigRcode>()?.get()
+        };
+        out.put_u16(error)?;
+        sized_base64_into(s, out)
+    }
+}
+
+/// A 48-bit decimal number of seconds (the TSIG Time Signed field,
+/// RFC 8945 §4.2).
+fn time_signed(t: Token<'_>) -> Result<u64> {
+    let digits = t.as_bytes();
+    if digits.is_empty() || digits.len() > 15 || !digits.iter().all(u8::is_ascii_digit) {
+        return Err(Error::InvalidText);
+    }
+    let v = digits
+        .iter()
+        .fold(0u64, |v, &d| v * 10 + u64::from(d - b'0'));
+    if v > MAX_TIME_SIGNED {
+        return Err(Error::InvalidText);
+    }
+    Ok(v)
+}
+
+/// Reads a 16-bit size and then base64 tokens decoding to exactly that
+/// many octets (none for size 0), and writes the size and the octets (a
+/// TSIG MAC or other data, RFC 8945 §4.2).
+fn sized_base64_into<B: OutBuf + ?Sized>(s: &mut Scanner<'_>, out: &mut B) -> Result<()> {
+    let size = s.u16()?;
+    out.put_u16(size)?;
+    let size = usize::from(size);
+    let mut d = base64::Decoder::default();
+    let mut n = 0;
+    while n < size || d.finish().is_err() {
+        for &c in s.word()?.as_bytes() {
+            let (bytes, len) = d.push(c)?;
+            out.put_bytes(bytes.get(..len).unwrap_or(&[]))?;
+            n += len;
+        }
+        if n > size {
+            return Err(Error::InvalidText);
+        }
+    }
+    Ok(())
+}
 
 impl<'a> ParseRdata<'a> for Tsig<'a> {
     const RTYPE: Rtype = Rtype::TSIG;
@@ -193,7 +255,7 @@ mod tests {
     use super::*;
     use crate::Class;
     use crate::rdata::RData;
-    use crate::rdata::tests::{compose, parse, round_trip};
+    use crate::rdata::tests::{compose, parse, round_trip, text_error, text_parse, text_round_trip};
     use std::string::ToString;
 
     // TSIG RDATA of a `dig -y hmac-sha256:tsig-key:...` query captured from
@@ -240,6 +302,79 @@ mod tests {
             &wire,
             "hmac-sha256. 1791104299 300 0 42358 BADKEY 0",
         );
+    }
+
+    #[test]
+    fn text() {
+        // The BIND captures above, in the form `dig` prints.
+        let wire = crate::testutil::hex(BIND_QUERY_TSIG);
+        let shown = "hmac-sha256. 1791104299 300 32 Ycm5doP/cpDr1Mmy3VtNbOqCSDiNzljH6BwC26IlckQ= \
+                     51660 NOERROR 0";
+        text_round_trip(Rtype::TSIG, shown, &wire, shown);
+        // The MAC split into tokens, the error as a number, a relative
+        // algorithm name (origin `example.`).
+        let mut rel = wire.clone();
+        rel.splice(12..13, *b"\x07example\x00");
+        assert_eq!(
+            text_parse(
+                Rtype::TSIG,
+                "hmac-sha256 1791104299 300 32 Ycm5doP/cpDr1Mmy3VtN bOqCSDiNzljH6BwC26IlckQ= \
+                 51660 0 0"
+            )
+            .as_deref(),
+            Ok(&rel[..])
+        );
+        let wire = crate::testutil::hex(
+            "0b686d61632d7368613235360000006ac211f5012c0020\
+             39365547cb1f4a70394cdc8766f80153c0173d4503d134926f8b9d1a746b348c\
+             42420012000600006ac215dd",
+        );
+        let shown = "hmac-sha256. 1791103477 300 32 OTZVR8sfSnA5TNyHZvgBU8AXPUUD0TSSb4udGnRrNIw= \
+                     16962 BADTIME 6 AABqwhXd";
+        text_round_trip(Rtype::TSIG, shown, &wire, shown);
+        assert_eq!(
+            text_parse(Rtype::TSIG, &shown.replace("BADTIME", "18")).as_deref(),
+            Ok(&wire[..])
+        );
+        assert_eq!(
+            text_parse(Rtype::TSIG, &shown.replace("BADTIME", "rcode18")).as_deref(),
+            Ok(&wire[..])
+        );
+        // The largest time, an unregistered error.
+        let wire = crate::testutil::hex("00ffffffffffff0000000000000fa00000");
+        text_round_trip(
+            Rtype::TSIG,
+            ". 281474976710655 0 0 0 4000 0",
+            &wire,
+            ". 281474976710655 0 0 0 RCODE4000 0",
+        );
+    }
+
+    #[test]
+    fn text_malformed() {
+        let ok = "hmac-sha256. 1 300 2 AAA= 7 NOERROR 1 AA==";
+        assert!(text_parse(Rtype::TSIG, ok).is_ok());
+        for (from, to, err) in [
+            (" 1 300", " 281474976710656 300", Error::InvalidText),
+            (" 1 300", " 1000000000000000 300", Error::InvalidText),
+            (" 1 300", " -1 300", Error::InvalidText),
+            (" 300 ", " 65536 ", Error::InvalidText),
+            // MAC size and data disagree.
+            (" 2 AAA=", " 3 AAA=", Error::InvalidText),
+            (" 2 AAA=", " 1 AAA=", Error::InvalidText),
+            (" 2 AAA=", " 2 AAAA", Error::InvalidText),
+            (" 2 AAA=", " 2 AA", Error::InvalidText),
+            (" 2 AAA=", " 2 A*A=", Error::InvalidText),
+            (" NOERROR", " NOSUCHERROR", Error::UnknownMnemonic),
+            (" NOERROR", " 65536", Error::InvalidText),
+            (" 1 AA==", " 2 AA==", Error::UnexpectedEof),
+            (" 1 AA==", " 1 \"AA==\"", Error::InvalidText),
+            (" 1 AA==", " 0 AA==", Error::InvalidText),
+        ] {
+            let bad = ok.replacen(from, to, 1);
+            assert_eq!(text_error(Rtype::TSIG, &bad), err, "{bad}");
+        }
+        assert_eq!(text_error(Rtype::TSIG, "hmac-sha256. 1 300"), Error::UnexpectedEof);
     }
 
     #[test]

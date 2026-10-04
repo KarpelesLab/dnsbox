@@ -293,3 +293,79 @@ fn truncation_and_mutation() {
         }
     }
 }
+
+/// The answer section of capture `i` as a master file: one line per
+/// record, in the presentation form `Display` gives (RFC 1035 §5.1,
+/// RFC 4034 §2.2, §3.2).
+fn zone_text(i: usize) -> String {
+    let m = capture(i);
+    let msg = Message::parse(&m).unwrap();
+    msg.answers()
+        .map(|rr| format!("{}\n", rr.unwrap()))
+        .collect()
+}
+
+/// Real DNSKEY, RRSIG and SOA records written as zone-file text read back
+/// to the same RDATA, and the RRSIGs read from text verify with the
+/// DNSKEYs read from text.
+#[test]
+fn presentation_format_round_trip() {
+    use dnsbox::ComposeRdata;
+    use dnsbox::rdata::RData;
+
+    for (msg, keys_msg) in [
+        (ROOT_DNSKEY, ROOT_DNSKEY),
+        (CLOUDFLARE_DNSKEY, CLOUDFLARE_DNSKEY),
+        (ED25519_DNSKEY, ED25519_DNSKEY),
+        (ED448_DNSKEY, ED448_DNSKEY),
+        (ED25519_SOA, ED25519_DNSKEY),
+    ] {
+        let text = zone_text(msg);
+        let zone = dnsbox::zone::parse(&text).unwrap_or_else(|e| panic!("{e}\n{text}"));
+        let m = capture(msg);
+        let parsed = Message::parse(&m).unwrap();
+        let answers: Vec<_> = parsed.answers().map(Result::unwrap).collect();
+        assert_eq!(zone.len(), answers.len());
+        for (z, rr) in zone.iter().zip(&answers) {
+            assert_eq!(
+                (z.owner.as_name(), z.ttl, z.class, z.rtype),
+                (rr.name(), rr.ttl(), rr.class(), rr.rtype())
+            );
+            // The capture's RDATA, uncompressed.
+            let mut want = Vec::new();
+            rr.data().unwrap().compose_rdata(&mut want).unwrap();
+            assert_eq!(z.rdata, want, "{rr}");
+            assert_eq!(z.as_record().to_string(), rr.to_string());
+        }
+
+        // Verify with records that only exist as text.
+        let keys_zone = dnsbox::zone::parse(&zone_text(keys_msg)).unwrap();
+        let mut scratch = Vec::new();
+        let mut verified = 0;
+        for z in &zone {
+            let Ok(RData::Rrsig(rrsig)) = z.data() else {
+                continue;
+            };
+            let (owner, dnskey) = keys_zone
+                .iter()
+                .find_map(|k| match k.data() {
+                    Ok(RData::Dnskey(d)) if d.key_tag() == rrsig.key_tag => {
+                        Some((k.owner.as_name(), d))
+                    }
+                    _ => None,
+                })
+                .expect("signing key");
+            let key = ZoneKey::new(owner, dnskey);
+            let covered: Vec<RData<'_>> = zone
+                .iter()
+                .filter(|r| r.rtype == rrsig.type_covered && r.owner == z.owner)
+                .map(|r| r.data().unwrap())
+                .collect();
+            let rrset = Rrset::new(z.owner.as_name(), z.class, covered);
+            verify_rrsig(&PurecryptoVerifier, &key, &rrsig, rrset, NOW, &mut scratch)
+                .unwrap_or_else(|e| panic!("capture {msg}: {e}"));
+            verified += 1;
+        }
+        assert!(verified > 0, "capture {msg}");
+    }
+}

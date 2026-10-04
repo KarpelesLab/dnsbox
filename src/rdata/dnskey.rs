@@ -4,11 +4,46 @@
 
 use core::fmt;
 
-use super::{ComposeRdata, ParseRdata};
+use super::{ComposeRdata, ParseRdata, ParseRdataText};
 use crate::dnssec::{Algorithm, key_tag};
 use crate::text::Base64;
-use crate::wire::{Composer, WireReader};
-use crate::{Result, Rtype};
+use crate::wire::{Composer, OutBuf, WireReader};
+use crate::zone::Scanner;
+use crate::{Error, Result, Rtype};
+
+/// The protocol mnemonics BIND accepts in KEY-shaped records
+/// (RFC 2535 §3.1.3; only 3, `DNSSEC`, is valid in DNSKEY).
+const PROTOCOLS: [(&str, u8); 6] = [
+    ("NONE", 0),
+    ("TLS", 1),
+    ("EMAIL", 2),
+    ("DNSSEC", 3),
+    ("IPSEC", 4),
+    ("ALL", 255),
+];
+
+/// Reads the presentation form shared by DNSKEY, CDNSKEY, KEY and RKEY,
+/// `<flags> <protocol> <algorithm> <base64 public key>` (RFC 4034 §2.2,
+/// RFC 2535 §7.1), and writes the wire form.
+///
+/// The flags are a decimal number; the protocol a decimal number or an
+/// RFC 2535 §3.1.3 mnemonic (`DNSSEC`, as BIND accepts); the algorithm a
+/// decimal number or a mnemonic (RFC 4034 §2.2). The key may be split
+/// into several tokens and may be absent (a KEY with the NOKEY flags,
+/// RFC 2535 §3.1.2).
+pub(super) fn key_text_into<B: OutBuf + ?Sized>(s: &mut Scanner<'_>, out: &mut B) -> Result<()> {
+    out.put_u16(s.u16()?)?;
+    let protocol = s.word()?;
+    let protocol = match PROTOCOLS.iter().find(|(m, _)| protocol.is(m)) {
+        Some(&(_, v)) => v,
+        None if protocol.as_bytes().first().is_some_and(u8::is_ascii_digit) => protocol.u8()?,
+        None => return Err(Error::UnknownMnemonic),
+    };
+    out.put_u8(protocol)?;
+    out.put_u8(s.parse::<Algorithm>()?.get())?;
+    s.base64_rest_into(out)?;
+    Ok(())
+}
 
 /// Defines a DNSKEY-shaped record-data view.
 macro_rules! dnskey_like {
@@ -48,7 +83,14 @@ macro_rules! dnskey_like {
             }
         }
 
-        impl super::ParseRdataText for $ty<'_> {}
+        impl ParseRdataText for $ty<'_> {
+            /// `<flags> <protocol> <algorithm> <public key>` (RFC 4034
+            /// §2.2), the key in base64, possibly split into several
+            /// tokens; the algorithm as a number or a mnemonic.
+            fn parse_text<B: OutBuf + ?Sized>(s: &mut Scanner<'_>, out: &mut B) -> Result<()> {
+                key_text_into(s, out)
+            }
+        }
 
         impl<'a> ParseRdata<'a> for $ty<'a> {
             const RTYPE: Rtype = Rtype::$rt;
@@ -184,11 +226,10 @@ impl<'a> From<Cdnskey<'a>> for Dnskey<'a> {
 mod tests {
     use super::*;
     use crate::rdata::RData;
-    use crate::rdata::tests::{parse, round_trip};
-    use crate::testutil::hex;
     use crate::dnssec::testvec::RFC4034_KEY;
+    use crate::rdata::tests::{parse, round_trip, text_error, text_parse, text_round_trip};
+    use crate::testutil::hex;
     use crate::{Class, Error};
-
 
     #[test]
     fn rfc4034_example() {
@@ -229,6 +270,76 @@ mod tests {
         assert!(!Cdnskey::new(0, 3, Algorithm::DELETE, &[1]).is_delete());
         assert!(!Cdnskey::new(0, 3, Algorithm::DELETE, &[0, 0]).is_delete());
         assert!(!Cdnskey::new(256, 3, Algorithm::DELETE, &[0]).is_delete());
+    }
+
+    /// RFC 4034 §2.3's key in its presentation form.
+    const RFC4034_KEY_TEXT: &str = "256 3 5 \
+        AQPSKmynfzW4kyBv015MUG2DeIQ3Cbl+BBZH4b/0PY1kxkmvHjcZc8nokfzj31GajIQKY+5CptLr3buXA10h\
+        WqTkF7H6RfoRqXQeogmMHfpftf6zMv1LyBUgia7za6ZEzOJBOztyvhjL742iU/TpPSEDhm2SNKLijfUppn1U\
+        aNvv4w==";
+
+    #[test]
+    fn text() {
+        // RFC 4034 §2.3, as printed there: the key split over lines inside
+        // parentheses.
+        let wire = hex(RFC4034_KEY);
+        let rfc = "256 3 5 ( AQPSKmynfzW4kyBv015MUG2DeIQ3\n\
+                   Cbl+BBZH4b/0PY1kxkmvHjcZc8no\n\
+                   kfzj31GajIQKY+5CptLr3buXA10h\n\
+                   WqTkF7H6RfoRqXQeogmMHfpftf6z\n\
+                   Mv1LyBUgia7za6ZEzOJBOztyvhjL\n\
+                   742iU/TpPSEDhm2SNKLijfUppn1U\n\
+                   aNvv4w==  )";
+        for t in [Rtype::DNSKEY, Rtype::CDNSKEY, Rtype::KEY, Rtype::RKEY] {
+            text_round_trip(t, rfc, &wire, RFC4034_KEY_TEXT);
+            // The algorithm as a mnemonic (RFC 4034 §2.2), either case.
+            let mnemonic = RFC4034_KEY_TEXT.replacen(" 5 ", " rsasha1 ", 1);
+            assert_eq!(text_parse(t, &mnemonic).as_deref(), Ok(&wire[..]));
+            // The protocol as a mnemonic (RFC 2535 §3.1.3, as BIND).
+            let proto = RFC4034_KEY_TEXT.replacen(" 3 ", " DNSSEC ", 1);
+            assert_eq!(text_parse(t, &proto).as_deref(), Ok(&wire[..]));
+        }
+        // RFC 8078 §4: the CDNSKEY delete form.
+        text_round_trip(Rtype::CDNSKEY, "0 3 0 AA==", b"\x00\x00\x03\x00\x00", "0 3 0 AA==");
+        text_round_trip(
+            Rtype::CDNSKEY,
+            "0 DNSSEC DELETE AA==",
+            b"\x00\x00\x03\x00\x00",
+            "0 3 0 AA==",
+        );
+        // RFC 8080 §6.1 (Ed25519 KSK), and a KEY with the NOKEY flags and no
+        // key material (RFC 2535 §3.1.2).
+        let ed = "257 3 15 l02Woi0iS8Aa25FQkUd9RMzZHJpBoRQwAQEX1SxZJA4=";
+        let mut ed_wire = hex("0101 03 0f");
+        ed_wire.extend(crate::dnssec::testvec::b64("l02Woi0iS8Aa25FQkUd9RMzZHJpBoRQwAQEX1SxZJA4="));
+        text_round_trip(Rtype::DNSKEY, ed, &ed_wire, ed);
+        let split = "257 3 ED25519 l02Woi0iS8Aa25FQkUd9RMzZ HJpBoRQwAQEX1SxZJA4=";
+        text_round_trip(Rtype::DNSKEY, split, &ed_wire, ed);
+        let mut buf = [0u8; 64];
+        let key = Dnskey::from_text(ed, &mut buf).unwrap();
+        assert_eq!((key.key_tag(), key.algorithm), (3613, Algorithm::ED25519));
+        text_round_trip(Rtype::KEY, "49664 EMAIL 5", b"\xc2\x00\x02\x05", "49664 2 5");
+        text_round_trip(Rtype::KEY, "0 255 PRIVATEOID", b"\x00\x00\xff\xfe", "0 255 254");
+    }
+
+    #[test]
+    fn text_malformed() {
+        for t in [Rtype::DNSKEY, Rtype::CDNSKEY, Rtype::KEY, Rtype::RKEY] {
+            assert_eq!(text_error(t, ""), Error::UnexpectedEof);
+            assert_eq!(text_error(t, "256 3"), Error::UnexpectedEof);
+            assert_eq!(text_error(t, "65536 3 5 AQM="), Error::InvalidText);
+            assert_eq!(text_error(t, "-1 3 5 AQM="), Error::InvalidText);
+            assert_eq!(text_error(t, "256 256 5 AQM="), Error::InvalidText);
+            assert_eq!(text_error(t, "256 TCP 5 AQM="), Error::UnknownMnemonic);
+            assert_eq!(text_error(t, "256 3 256 AQM="), Error::InvalidText);
+            assert_eq!(text_error(t, "256 3 NOSUCHALG AQM="), Error::InvalidText);
+            assert_eq!(text_error(t, "\"256\" 3 5 AQM="), Error::InvalidText);
+            // Bad base64: characters, padding, length, quoting.
+            assert_eq!(text_error(t, "256 3 5 AQ*="), Error::InvalidText);
+            assert_eq!(text_error(t, "256 3 5 AQM= AQM="), Error::InvalidText);
+            assert_eq!(text_error(t, "256 3 5 AQM"), Error::InvalidText);
+            assert_eq!(text_error(t, "256 3 5 \"AQM=\""), Error::InvalidText);
+        }
     }
 
     #[test]

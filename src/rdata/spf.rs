@@ -135,6 +135,30 @@ mod tests {
     }
 
     #[test]
+    fn text() {
+        // RFC 7208 §3.1 / RFC 4408 §3.1.1: SPF records in TXT format.
+        text_round_trip(Rtype::SPF, "\"v=spf1 -all\"", b"\x0bv=spf1 -all", "\"v=spf1 -all\"");
+        text_round_trip(
+            Rtype::SPF,
+            "\"v=spf1 +mx a:colo.example.com/28\" \"-all\"",
+            b"\x20v=spf1 +mx a:colo.example.com/28\x04-all",
+            "\"v=spf1 +mx a:colo.example.com/28\" \"-all\"",
+        );
+        // RFC 9606 §3: RESINFO key=value pairs, unquoted.
+        let wire = b"\x08qnamemin\x0fexterr=15,16,17\x2ainfourl=https://resolver.example.com/guide";
+        text_round_trip(
+            Rtype::RESINFO,
+            "qnamemin exterr=15,16,17 infourl=https://resolver.example.com/guide",
+            wire,
+            "\"qnamemin\" \"exterr=15,16,17\" \"infourl=https://resolver.example.com/guide\"",
+        );
+        for t in [Rtype::NINFO, Rtype::AVC, Rtype::WALLET] {
+            text_round_trip(t, "\"a b\" c \\065", b"\x03a b\x01c\x01A", "\"a b\" \"c\" \"A\"");
+            text_round_trip(t, "\"\"", b"\x00", "\"\"");
+        }
+    }
+
+    #[test]
     fn malformed() {
         for t in [
             Rtype::SPF,
@@ -152,7 +176,7 @@ mod tests {
     }
 
     #[test]
-    fn text() {
+    fn text_examples() {
         // RFC 4408 §3.1.1 / RFC 7208 §3 policy; named-rrchecker.
         text_round_trip(
             Rtype::SPF,

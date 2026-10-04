@@ -4,10 +4,11 @@
 
 use core::fmt;
 
-use super::{ComposeRdata, ParseRdata};
+use super::{ComposeRdata, ParseRdata, ParseRdataText};
 use crate::dnssec::{Algorithm, DigestType};
 use crate::text::Hex;
-use crate::wire::{Composer, WireReader};
+use crate::wire::{Composer, OutBuf, WireReader};
+use crate::zone::Scanner;
 use crate::{Result, Rtype};
 
 /// Defines a DS-shaped record-data view.
@@ -34,7 +35,19 @@ macro_rules! ds_like {
             }
         }
 
-        impl super::ParseRdataText for $ty<'_> {}
+        impl ParseRdataText for $ty<'_> {
+            /// `<key tag> <algorithm> <digest type> <digest>` (RFC 4034
+            /// §5.3): the algorithm as a number or a mnemonic, the digest
+            /// type as a number (or a mnemonic such as `SHA-256`), the
+            /// digest in hexadecimal, possibly split into several tokens.
+            fn parse_text<B: OutBuf + ?Sized>(s: &mut Scanner<'_>, out: &mut B) -> Result<()> {
+                out.put_u16(s.u16()?)?;
+                out.put_u8(s.parse::<Algorithm>()?.get())?;
+                out.put_u8(s.parse::<DigestType>()?.get())?;
+                s.hex_rest_into(out)?;
+                Ok(())
+            }
+        }
 
         impl<'a> ParseRdata<'a> for $ty<'a> {
             const RTYPE: Rtype = Rtype::$rt;
@@ -148,7 +161,7 @@ impl<'a> From<Cds<'a>> for Ds<'a> {
 mod tests {
     use super::*;
     use crate::rdata::RData;
-    use crate::rdata::tests::{parse, round_trip};
+    use crate::rdata::tests::{parse, round_trip, text_error, text_parse, text_round_trip};
     use crate::testutil::hex;
     use crate::{Class, Error};
     use std::string::ToString;
@@ -188,6 +201,58 @@ mod tests {
         assert_eq!(d, Cds::DELETE);
         assert!(!Cds::new(0, Algorithm::DELETE, DigestType::new(0), &[]).is_delete());
         assert!(!Cds::new(0, Algorithm::DELETE, DigestType::SHA1, &[0]).is_delete());
+    }
+
+    #[test]
+    fn text() {
+        // RFC 4034 §5.4, as printed there.
+        let mut wire = hex("ec45 05 01");
+        wire.extend(hex("2bb183af5f22588179a53b0a98631fad1a292118"));
+        let display = "60485 5 1 2BB183AF5F22588179A53B0A98631FAD1A292118";
+        for t in [Rtype::DS, Rtype::CDS, Rtype::DLV, Rtype::TA] {
+            text_round_trip(
+                t,
+                "60485 5 1 ( 2BB183AF5F22588179A53B0A\n 98631FAD1A292118 )",
+                &wire,
+                display,
+            );
+            // Mnemonics for the algorithm (RFC 4034 §5.3) and, as BIND
+            // accepts, the digest type; lowercase hex.
+            assert_eq!(
+                text_parse(t, "60485 RSASHA1 SHA-1 2bb183af5f22588179a53b0a98631fad1a292118")
+                    .as_deref(),
+                Ok(&wire[..])
+            );
+        }
+        // RFC 8080 §6.1: the DS of the Ed25519 example key, SHA-256.
+        let mut wire = hex("0e1d 0f 02");
+        wire.extend(hex("3aa5ab37efce57f737fc1627013fee07bdf241bd10f3b1964ab55c78e79a304b"));
+        text_round_trip(
+            Rtype::DS,
+            "3613 15 2 3aa5ab37efce57f737fc1627013fee07 bdf241bd10f3b1964ab55c78e79a304b",
+            &wire,
+            "3613 15 2 3AA5AB37EFCE57F737FC1627013FEE07BDF241BD10F3B1964AB55C78E79A304B",
+        );
+        // RFC 8078 §4: the CDS delete form.
+        text_round_trip(Rtype::CDS, "0 0 0 00", b"\x00\x00\x00\x00\x00", "0 0 0 00");
+        // No digest (allowed on the wire, so displayed and parsed back).
+        text_round_trip(Rtype::DS, "1 8 2", b"\x00\x01\x08\x02", "1 8 2");
+    }
+
+    #[test]
+    fn text_malformed() {
+        for t in [Rtype::DS, Rtype::CDS, Rtype::DLV, Rtype::TA] {
+            assert_eq!(text_error(t, "60485 5"), Error::UnexpectedEof);
+            assert_eq!(text_error(t, "65536 5 1 00"), Error::InvalidText);
+            assert_eq!(text_error(t, "1 256 1 00"), Error::InvalidText);
+            assert_eq!(text_error(t, "1 5 256 00"), Error::InvalidText);
+            assert_eq!(text_error(t, "1 5 SHA-512 00"), Error::InvalidText);
+            // Odd number of digits, a non-hex digit, a quoted digest.
+            assert_eq!(text_error(t, "1 5 1 2BB"), Error::InvalidText);
+            assert_eq!(text_error(t, "1 5 1 2B B"), Error::InvalidText);
+            assert_eq!(text_error(t, "1 5 1 2G"), Error::InvalidText);
+            assert_eq!(text_error(t, "1 5 1 \"2B\""), Error::InvalidText);
+        }
     }
 
     #[test]
