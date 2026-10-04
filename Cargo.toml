@@ -1,0 +1,31 @@
+[package]
+name          = "dnsbox"
+version       = "0.0.1"
+edition       = "2024"
+rust-version  = "1.89"
+description   = "High-performance, zero-copy DNS message parsing and building for requests and responses, with broad RFC extension coverage."
+license       = "MIT"
+repository    = "https://github.com/KarpelesLab/dnsbox"
+documentation = "https://docs.rs/dnsbox"
+readme        = "README.md"
+keywords      = ["dns", "parser", "protocol", "no_std", "zero-copy"]
+categories    = ["network-programming", "parser-implementations", "encoding", "no-std"]
+
+[package.metadata.docs.rs]
+all-features = true
+rustdoc-args = ["--cfg", "docsrs"]
+
+[features]
+default = ["std"]
+# Heap-backed conveniences: owned record types, growable message builders.
+alloc = []
+# `std::error::Error` impls and `std::io` integration. Pulls in `alloc`.
+std   = ["alloc"]
+
+[lints.rust]
+unsafe_code = "forbid"
+missing_docs = "warn"
+
+[dependencies]
+
+[dev-dependencies]

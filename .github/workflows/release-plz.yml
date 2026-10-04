@@ -1,0 +1,74 @@
+name: Release-plz
+
+on:
+  push:
+    branches: [master]
+
+permissions:
+  # Open/update the release PR and create GitHub Releases.
+  contents: write
+  pull-requests: write
+
+# Don't run two release-plz jobs in parallel.
+concurrency:
+  group: release-plz-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  release-plz-release:
+    name: Release-plz release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Run release-plz
+        uses: release-plz/action@v0.5
+        with:
+          command: release
+        env:
+          # Create the GitHub Release with the fine-grained PAT
+          # (RELEASE_PLZ_TOKEN) rather than the default GITHUB_TOKEN. GitHub
+          # suppresses downstream workflow triggers for events created by
+          # GITHUB_TOKEN (anti-recursion), so a GITHUB_TOKEN-created release
+          # never fired `release: published` and `release-binaries.yml` had to
+          # be poked manually via workflow_dispatch. A PAT-created release
+          # fires `release: published` normally, so release-binaries chains
+          # automatically (it still keeps its workflow_dispatch entry for
+          # manual re-uploads). The PAT needs `contents: write`.
+          GITHUB_TOKEN: ${{ secrets.RELEASE_PLZ_TOKEN }}
+          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
+
+  release-plz-pr:
+    name: Release-plz PR
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Run release-plz
+        uses: release-plz/action@v0.5
+        with:
+          command: release-pr
+        env:
+          # Use a fine-grained PAT (RELEASE_PLZ_TOKEN) instead of the
+          # default GITHUB_TOKEN so the release PR release-plz opens
+          # triggers downstream workflows (CI, fuzz). GitHub suppresses
+          # workflow triggers on events created by GITHUB_TOKEN to
+          # prevent recursion — that left every release PR sitting
+          # with zero check runs, and branch protection's required
+          # status checks then held the merge.
+          # The PAT needs `contents: write` + `pull_requests: write`
+          # on this repo and renews on the GitHub fine-grained-PAT
+          # cadence (max 1 year).
+          GITHUB_TOKEN: ${{ secrets.RELEASE_PLZ_TOKEN }}
