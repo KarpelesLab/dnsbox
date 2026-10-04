@@ -62,7 +62,7 @@ const EXPECTED: &[&str] = &[
     "pgp.example. OPENPGPKEY mDMEV/fnvBY=",
     "frobozz.example. DNAME frobozz-division.acme.example.",
     r#"_ftp._tcp.example. URI 10 1 "ftp://ftp1.example.com/public""#,
-    "cert.example. CERT PGP 0 8 mDMEV/fnvBY=",
+    "cert.example. CERT PGP 0 RSASHA256 mDMEV/fnvBY=",
     "chi.example. DHCID AAEBOSD+XR3Os/0LozeXVqcNc7FwCfQdWL3b/NaiUDlW2No=",
     "rp.example. RP louie.trantor.umd.edu. LAM1.people.umd.edu.",
     "toaster.example. AFSDB 1 jack.toaster.com.",
