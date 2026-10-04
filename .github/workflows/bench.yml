@@ -1,0 +1,40 @@
+name: Benchmarks
+
+# Keeps the comparison benchmarks (a separate package under benches/, with
+# its own dependency tree and MSRV) compiling, and checks that dnsbox,
+# hickory-proto and domain agree on every fixture. Timings are not taken in
+# CI; see BENCH.md.
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+
+permissions:
+  contents: read
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  bench-check:
+    name: Benchmarks build, libraries agree
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: benches
+
+      - name: Fixture agreement tests
+        working-directory: benches
+        run: cargo test --release
+
+      - name: Benchmarks compile
+        working-directory: benches
+        run: cargo bench --no-run
