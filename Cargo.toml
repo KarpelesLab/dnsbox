@@ -1,6 +1,6 @@
 [package]
 name          = "dnsbox"
-version       = "0.0.1"
+version       = "0.0.2"
 edition       = "2024"
 rust-version  = "1.89"
 description   = "High-performance, zero-copy DNS message parsing and building for requests and responses, with broad RFC extension coverage."
