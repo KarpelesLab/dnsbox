@@ -980,7 +980,7 @@ mod digest {
         // through message records.
         let z = a1();
         let mut records = z.records();
-        records.push(records[0].clone());
+        records.push(records[0]);
         let mut b = MessageBuilder::new_vec();
         for r in &records {
             b.push_answer(r.name, r.class, r.ttl, &r.data).unwrap();

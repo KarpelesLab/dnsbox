@@ -261,7 +261,7 @@ macro_rules! rdata_registry {
         /// Types without a typed implementation — and records whose class or
         /// form does not match a typed implementation — are kept as
         /// [`RData::Unknown`], which round-trips the raw bytes (RFC 3597).
-        #[derive(Clone, Debug, PartialEq, Eq)]
+        #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
         #[non_exhaustive]
         pub enum RData<'a> {
             $(

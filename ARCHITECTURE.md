@@ -776,7 +776,8 @@ parent's label (contiguous) or a pointer to the parent's offset. Properties:
 
 ## Error handling conventions
 
-- One `Error` enum (`#[non_exhaustive]`, `Copy`), one `Result<T>` alias.
+- One `Error` enum (`#[non_exhaustive]`, `Copy`, one byte), one
+  `Result<T>` alias.
   Add variants as needed (keep them small and data-free, with a doc comment
   citing the RFC section and a `Display` string). Prefer reusing (e.g.
   `BadSignature` covers DNSSEC, TSIG and SIG(0) failures alike):
@@ -791,6 +792,74 @@ parent's label (contiguous) or a pointer to the parent's offset. Properties:
   the message untouched. Keep that property in new code.
 - Parsing is strict per the RFCs; leniency belongs to callers (they have
   the raw bytes).
+
+## API conventions
+
+The public API follows the [Rust API Guidelines](https://rust-lang.github.io/api-guidelines/);
+the Milestone 9 review settled the points below. New code follows them,
+and `tests/api.rs` checks the ones the compiler can (thread safety,
+common traits, `Display`/`FromStr` pairs, iteration by reference).
+
+- **Naming.** Conversions: `as_*` borrows for free, `to_*` builds or
+  copies, `into_*` consumes; `from_wire` / `parse` read wire data,
+  `from_text` / `FromStr` presentation format. `as_wire` is the wire form
+  of a structured value (a name, an RDATA view, `Opt`, `OwnedRData`),
+  `as_bytes` the contents of a buffer (`Message`, builders, `WireWriter`)
+  or of an opaque field (`CharStr`, `Label`, a hash). Getters have no
+  `get_` prefix; `get()` is reserved for the number inside a protocol
+  newtype (like `NonZero::get`). Counters are `*_count`; methods named
+  after a plural (`records()`, `labels()`) return iterators.
+- **Records.** Every record representation names its owner `name` (`Record::name`,
+  `OwnedRecord::name`, `zone::ZoneRecord::name`, `dnssec::ZonemdRecord::name`);
+  `rdata` is the RDATA in wire form, `data` the typed view (`RData` or a
+  `ComposeRdata`).
+- **Registries** (`open_enum!`, plus the hand-written `Opcode` and
+  `Rcode`, which mask to their field width): `new`, `get`, `mnemonic`,
+  `from_mnemonic`, `Display` (mnemonic or generic form), `FromStr`
+  (both), `Default` (the zero value), `Ord` by number.
+- **Builders.** `MessageBuilder::new(&mut [u8])`, `new_vec()` (`alloc`),
+  `from_buf(B: OutBuf)`, each with a `_tcp` variant; protocol-shaped
+  constructors (`query`, `response`, DSO `request` / `response` /
+  `unidirectional`, `UpdateBuilder::new`) take their storage first.
+  `set_*(&mut self, ..)` configures in place, `with_*(self, ..) -> Self`
+  is builder style (and `#[must_use]`); `finish(self)` ends the build.
+- **Common traits.** Every public type is `Debug`, `Send` and `Sync`
+  (when its parameters are). Views are `Copy`; value types derive
+  `Clone, PartialEq, Eq, Hash` where meaningful, `Default` where a natural
+  empty value exists, `Ord` only with a meaningful order (registries by
+  number, names in canonical DNSSEC order; `Timestamp` is only
+  `PartialOrd`, RFC 1982). Types with a text form implement `Display`,
+  and `FromStr` when they own their data. Collection-like views implement
+  `IntoIterator` by value and by reference.
+- **`#[must_use]`** on pure functions and methods (constructors,
+  accessors, conversions, `with_*`) and on iterator types. Functions
+  returning `Result` or a `#[must_use]` type need no extra attribute.
+- **`#[non_exhaustive]`** on `Error`, on enums that will grow (`RData`,
+  `EdnsOption`, `SvcParamValue`, `Truncation`, `PaddingPolicy`,
+  `TsigAlgorithm`, the DNSSEC verdicts, `zone::Entry`, `xfr::XfrEvent`,
+  `IpseckeyGateway`) and on result structs the library produces
+  (`zone::ZoneRecord`, `dnssec::Verified`, `tsig::TsigRecord`, ...). Enums
+  whose set the protocol closes (`Section`, `NameEncoding`, `Outcome`,
+  `update::UpdateOp`, `tsig::RequestStatus`, ...) and structs that
+  mirror a wire format (RDATA views, `Header`, the owned types) stay
+  exhaustive so callers can match and build them.
+- **Traits.** Extension points are open: `ParseRdata` / `ComposeRdata` /
+  `ParseRdataText`, `ParseOption` / `ComposeOption`, the DSO TLV traits,
+  `Composer`, `OutBuf`, `ToName`, `IncludeResolver` and the crypto
+  backends (`Verifier`, `Signer`, `Nsec3Hasher`, `TsigKey`, `TsigMac`,
+  `KeyStore`, `Sig0Signer`, `Sig0Verifier`); methods added to them later
+  get default bodies. `dnssec::DenialProof` is sealed (`TrustedKeys`
+  relies on its verdicts).
+- **Errors.** One `Error` (see above); `ZoneError` and `ZonemdFailure` add
+  context and convert into it.
+- **Features** are additive and listed in `Cargo.toml` and the crate
+  docs; docs.rs builds with `--cfg docsrs`, where `feature(doc_cfg)`
+  labels every gated item automatically.
+- **Re-exports.** The crate root re-exports the everyday types (`Message`,
+  `MessageBuilder`, `Name`, `NameBuf`, `Rtype`, `Class`, `RData`, `Error`,
+  the owned types, the wire traits, ...); there is no separate prelude.
+  Everything else is reached through its module (`dnsbox::rdata::Mx`,
+  `dnsbox::edns::Cookie`, `dnsbox::dnssec::TrustedKeys`).
 
 ## Testing conventions
 

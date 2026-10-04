@@ -55,7 +55,7 @@ impl TsigAlgorithm {
     /// The algorithm name in uncompressed, lowercase wire format (the
     /// canonical form used in MAC input, RFC 8945 §4.3.3).
     #[must_use]
-    pub const fn wire(self) -> &'static [u8] {
+    pub const fn as_wire(self) -> &'static [u8] {
         match self {
             TsigAlgorithm::HmacMd5 => b"\x08hmac-md5\x07sig-alg\x03reg\x03int\x00",
             TsigAlgorithm::HmacSha1 => b"\x09hmac-sha1\x00",
@@ -73,7 +73,7 @@ impl TsigAlgorithm {
     #[must_use]
     pub fn name(self) -> Name<'static> {
         // The constants above are valid names; ROOT is unreachable.
-        Name::from_wire(self.wire()).unwrap_or(Name::ROOT)
+        Name::from_wire(self.as_wire()).unwrap_or(Name::ROOT)
     }
 
     /// Looks up an algorithm by name (ASCII-case-insensitively).
@@ -108,6 +108,20 @@ impl TsigAlgorithm {
     }
 }
 
+impl core::str::FromStr for TsigAlgorithm {
+    type Err = crate::Error;
+
+    /// Parses an algorithm name (`hmac-sha256`, `HMAC-MD5.SIG-ALG.REG.INT.`,
+    /// ASCII-case-insensitively, with or without the trailing dot), the
+    /// inverse of `Display`: [`Error::UnknownMnemonic`](crate::Error::UnknownMnemonic)
+    /// for a name that is not one of [`ALL`](Self::ALL), the name parsing
+    /// error for malformed text.
+    fn from_str(s: &str) -> crate::Result<Self> {
+        let name: crate::NameBuf = s.parse()?;
+        Self::from_name(name.as_name()).ok_or(crate::Error::UnknownMnemonic)
+    }
+}
+
 impl fmt::Display for TsigAlgorithm {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         fmt::Display::fmt(&self.name(), f)
@@ -125,7 +139,7 @@ mod tests {
         for a in TsigAlgorithm::ALL {
             let n = a.name();
             assert!(!n.is_root(), "{a:?}");
-            assert_eq!(n.as_contiguous(), Some(a.wire()));
+            assert_eq!(n.as_contiguous(), Some(a.as_wire()));
             assert_eq!(TsigAlgorithm::from_name(n), Some(a));
             assert!(a.mac_len() <= a.digest_len());
         }
@@ -137,5 +151,17 @@ mod tests {
         let gss: NameBuf = "gss-tsig".parse().unwrap();
         assert_eq!(TsigAlgorithm::from_name(gss.as_name()), None);
         assert_eq!(TsigAlgorithm::HmacSha256.to_string(), "hmac-sha256.");
+        for a in TsigAlgorithm::ALL {
+            assert_eq!(a.to_string().parse(), Ok(a));
+        }
+        assert_eq!("HMAC-SHA1".parse(), Ok(TsigAlgorithm::HmacSha1));
+        assert_eq!(
+            "gss-tsig".parse::<TsigAlgorithm>(),
+            Err(crate::Error::UnknownMnemonic)
+        );
+        assert_eq!(
+            "a..b".parse::<TsigAlgorithm>(),
+            Err(crate::Error::EmptyLabel)
+        );
     }
 }

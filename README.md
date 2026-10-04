@@ -10,8 +10,8 @@ DNSSEC, SVCB/HTTPS, TSIG, and more).
 
 > **Status:** pre-1.0. Wire formats, EDNS(0), DNSSEC, SVCB/HTTPS, TSIG and
 > the long tail of record types are implemented; the API may still change.
-> See the [roadmap](ROADMAP.md) for what is left (zone-file parsing, 1.0
-> API review).
+> See the [roadmap](ROADMAP.md) for what is left before 1.0 (rustdoc
+> examples everywhere, the final threat model, the stability policy).
 
 ## Goals
 

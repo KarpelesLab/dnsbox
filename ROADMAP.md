@@ -204,7 +204,9 @@ signatures), through the pluggable `Verifier` / `Signer` traits.
 
 ## Milestone 9 — 1.0
 
-- [ ] API review: naming, error granularity, feature layout
+- [x] API review: naming, error granularity, feature layout (the
+      conventions are in `ARCHITECTURE.md`, the breaking changes in
+      `CHANGELOG.md`)
 - [ ] Complete rustdoc with examples on every public item
 - [ ] SECURITY.md threat model finalized after a fuzzing campaign
 - [ ] Stability commitment and MSRV policy documented

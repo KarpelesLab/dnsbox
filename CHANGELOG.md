@@ -17,9 +17,10 @@ Every change that can break a caller is listed here:
   `Default`).
 - `WireWriter::written` is renamed `as_bytes` (the `OutBuf` name, now
   also inherent, as on every other buffer type).
-- `edns::Opt::as_bytes` and `OwnedRData::as_bytes` are renamed `as_wire`:
-  `as_wire` is the wire form of a structured value (pairing with
-  `from_wire`), `as_bytes` the contents of a buffer or an opaque field.
+- `edns::Opt::as_bytes`, `OwnedRData::as_bytes` and `TsigAlgorithm::wire`
+  are renamed `as_wire`: `as_wire` is the wire form of a structured value
+  (pairing with `from_wire`), `as_bytes` the contents of a buffer or an
+  opaque field.
 - `dnssec::ZoneRecord` (the input of ZONEMD collation) is renamed
   `dnssec::ZonemdRecord`, so it no longer shares its name with
   `zone::ZoneRecord`.
@@ -50,7 +51,6 @@ Every change that can break a caller is listed here:
   whole crate, with `Invalid*` for malformed input (as `InvalidRdata`,
   `InvalidText`, `InvalidOption`) and `Bad*` for failed checks.
 
-
 ### Added
 
 - API review (Rust API Guidelines): `IntoIterator` for references to the
@@ -60,6 +60,10 @@ Every change that can break a caller is listed here:
   `sig0::Validity` and `ZoneError`; `ZoneError` implements
   `core::error::Error` without `std`; `tests/api.rs` checks that the
   public types are `Send + Sync` and implement the common traits.
+- `Copy` and `Hash` for `RData` and `EdnsOption` (every typed view already
+  was).
+- `FromStr` for `dnssec::Nsec3Hash` (base32hex) and `tsig::TsigAlgorithm`
+  (algorithm name), the inverses of their `Display`.
 - `From<ZonemdFailure> for Error` (and `ZonemdFailure::source`), so ZONEMD
   verification composes with `?` like every other error of the crate.
 - Crate documentation: the Cargo features table, the error policy and

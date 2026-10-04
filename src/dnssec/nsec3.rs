@@ -88,6 +88,25 @@ impl fmt::Display for Nsec3Hash {
     }
 }
 
+impl core::str::FromStr for Nsec3Hash {
+    type Err = Error;
+
+    /// Parses unpadded base32hex (case-insensitive), the inverse of
+    /// `Display`; [`Error::InvalidText`] if it is not 1 to 39 octets of
+    /// canonical base32hex.
+    fn from_str(s: &str) -> Result<Self> {
+        let mut bytes = [0u8; MAX_HASH_LEN];
+        let len = crate::util::base32hex::decode(s.as_bytes(), &mut bytes)?;
+        if len == 0 {
+            return Err(Error::InvalidText);
+        }
+        Ok(Nsec3Hash {
+            len: len as u8,
+            bytes,
+        })
+    }
+}
+
 impl fmt::Debug for Nsec3Hash {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "Nsec3Hash({self})")
@@ -164,6 +183,18 @@ pub fn nsec3_hash(
 mod tests {
     use super::*;
     use std::string::ToString;
+
+    #[test]
+    fn display_from_str() {
+        use std::string::ToString;
+        let h = Nsec3Hash::new(&[0x8a, 0x00, 0xff, 0x12, 0x34]).unwrap();
+        let text = h.to_string();
+        assert_eq!(text.parse::<Nsec3Hash>(), Ok(h));
+        assert_eq!(text.to_ascii_lowercase().parse::<Nsec3Hash>(), Ok(h));
+        assert_eq!("".parse::<Nsec3Hash>(), Err(Error::InvalidText));
+        assert_eq!("W".parse::<Nsec3Hash>(), Err(Error::InvalidText));
+        assert_eq!("0".repeat(64).parse::<Nsec3Hash>(), Err(Error::InvalidText));
+    }
 
     #[test]
     fn hashes() {
