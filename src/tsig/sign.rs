@@ -4,7 +4,7 @@ use core::fmt;
 
 use super::input::{TsigVariables, feed_message, feed_prior_mac};
 use super::key::{MAX_MAC_LEN, MacBuf, TsigKey, TsigMac};
-use super::verify::MAX_UNSIGNED;
+use super::verify::{MAX_UNSIGNED, check_mac_size};
 use crate::builder::{MAX_MESSAGE_LEN, MessageBuilder};
 use crate::name::Name;
 use crate::rdata::{MAX_TIME_SIGNED, Tsig, TsigRcode};
@@ -210,10 +210,10 @@ impl<'k, K: TsigKey> TsigSigner<'k, K> {
         if time_signed > MAX_TIME_SIGNED || other.len() > usize::from(u16::MAX) {
             return Err(Error::InvalidRdata);
         }
+        // RFC 8945 §5.2.2.1: never generate a MAC longer than the digest
+        // or shorter than the truncation floor.
         let mac_len = self.key.mac_len();
-        if mac_len > MAX_MAC_LEN || mac_len > self.key.digest_len() {
-            return Err(Error::BadMacSize);
-        }
+        check_mac_size(mac_len, self.key.digest_len())?;
         Ok(record_len(
             self.key.name(),
             self.key.algorithm(),
