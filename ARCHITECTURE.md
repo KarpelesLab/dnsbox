@@ -417,31 +417,49 @@ RFC 9460 §2.1). Add extra inherent methods in a separate `impl` block.
 Put the **complete current IANA registry** in when you create one, one
 line per value, so nobody needs to edit it again.
 
-## EDNS options and other TLV families (pattern)
-
-EDNS(0) is owned by the Milestone 3 work; the expected shape mirrors
-`rdata`:
+## EDNS(0) (`edns`) and other TLV families
 
 ```text
 src/edns/
-  mod.rs        OptionCode (open_enum!), ParseOption<'a> / ComposeOption
-                traits, edns_modules! + edns_registry! -> EdnsOption<'a>
-                (+ Unknown passthrough), Opt<'a> view over OPT RDATA with an
-                option iterator, OPT header accessors (UDP size, extended
-                RCODE, version, DO) from Record::class()/ttl()
-  <option>.rs   one file per option (ecs.rs, cookie.rs, padding.rs, ...)
+  mod.rs        OptionCode (open_enum!, full IANA registry), ParseOption<'a> /
+                ComposeOption traits, edns_modules! + edns_registry! ->
+                EdnsOption<'a> (+ Unknown passthrough)
+  opt.rs        Opt<'a>: OPT RDATA view (framing checked on construction),
+                raw_options() / options() / find() / get::<T>() / validate()
+  record.rs     OptHeader (UDP size, extended RCODE, version, EdnsFlags with
+                DO/CO and the Z bits preserved) <-> CLASS/TTL; Edns<'a> view
+  message.rs    Message::edns() (DuplicateOpt / OptNotRoot), effective_rcode()
+  compose.rs    ComposeOptions (one option, [T], [T; N], tuples, (), Opt
+                echo), OptData (compose-only OPT RDATA)
+  build.rs      MessageBuilder::push_edns / push_edns_padded, PaddingPolicy
+                (RFC 8467)
+  <option>.rs   one file per option or tight family (nsid.rs, ecs.rs,
+                cookie.rs, padding.rs, keepalive.rs, ede.rs, chain.rs,
+                key_tag.rs, expire.rs, zone_version.rs, report_channel.rs,
+                dau.rs for DAU/DHU/N3U, unknown.rs)
 ```
 
 - `trait ParseOption<'a> { const CODE: OptionCode; fn parse_option(data:
   &mut WireReader<'a>) -> Result<Self>; }` and `trait ComposeOption { fn
   code(&self) -> OptionCode; fn compose_option<C: Composer + ?Sized>(&self,
-  c: &mut C) -> Result<()>; }`, with a registry macro of
-  `CODE => Variant(Type),` lines, exactly like `rdata_registry!`.
-- `Opt<'a>` is an ordinary record-data type registered in
-  `rdata_registry!` as `OPT => Opt(Opt<'a>),`; building an OPT record is
-  `builder.push_additional(Name::ROOT, Class::new(udp_size), ttl_bits,
-  &opt_data)`, where option bodies are written with
-  `Composer::put_u16_prefixed`.
+  c: &mut C) -> Result<()>; }` (plus the provided `compose_tlv`), with a
+  registry of `CODE => Variant(Type),` lines, exactly like
+  `rdata_registry!`. Adding an option: a new file, one line in
+  `edns_modules!`, one line in `edns_registry!`, and tests with
+  `crate::edns::tests::round_trip(code, value, presentation)`.
+- Malformed option values are `Error::InvalidOption` and only affect that
+  option (`Opt::options` keeps going); broken framing makes the whole OPT
+  RDATA invalid (`UnexpectedEof`).
+- `Opt<'a>` is registered in `rdata_registry!` as
+  `OPT => Opt(crate::edns::Opt<'a>),`. Build an OPT record with
+  `b.push_edns(OptHeader::new(1232).with_dnssec_ok(true),
+  &(Nsid::REQUEST, Cookie::client_only(c)))`; `push_edns_padded(header,
+  &options, PaddingPolicy::QUERY)` appends a Padding option sized over the
+  whole message. The extended RCODE goes in `OptHeader::with_rcode`, the
+  low 4 bits in `Flags::with_rcode`.
+- RFC 9018 server cookies: `ServerCookie` (layout, hash input, freshness)
+  is always available; `generate` / `verify` call SipHash-2-4 from
+  `purecrypto` behind the `cookie-siphash` feature.
 - SVCB SvcParams follow the same pattern (`SvcParamKey` via `open_enum!`
   with `generic "key"`, one file per param or a small family).
 

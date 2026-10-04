@@ -319,6 +319,7 @@ rdata_registry! {
     NULL => Null(Null<'a>),
     NXT => Nxt(Nxt<'a>),
     OPENPGPKEY => Openpgpkey(Openpgpkey<'a>),
+    OPT => Opt(crate::edns::Opt<'a>),
     PTR => Ptr(Ptr<'a>),
     PX => Px(Px<'a>),
     RESINFO => Resinfo(Resinfo<'a>),

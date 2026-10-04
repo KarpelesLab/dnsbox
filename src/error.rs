@@ -77,6 +77,14 @@ pub enum Error {
     /// A message exceeds 65535 octets, the most the TCP length prefix can
     /// describe (RFC 1035 §4.2.2).
     MessageTooLong,
+
+    /// An EDNS(0) option is malformed: bad length or invalid field value
+    /// (RFC 6891 §6.1.2 and the option's own RFC).
+    InvalidOption,
+    /// A message carries more than one OPT record (RFC 6891 §6.1.1).
+    DuplicateOpt,
+    /// An OPT record's owner name is not the root (RFC 6891 §6.1.2).
+    OptNotRoot,
 }
 
 /// Shorthand for `core::result::Result<T, dnsbox::Error>`.
@@ -110,6 +118,9 @@ impl fmt::Display for Error {
             Error::SectionOrder => "message section written out of order",
             Error::CountOverflow => "section count overflow",
             Error::MessageTooLong => "message longer than 65535 octets",
+            Error::InvalidOption => "malformed EDNS option",
+            Error::DuplicateOpt => "more than one OPT record",
+            Error::OptNotRoot => "OPT record owner is not the root",
         })
     }
 }
