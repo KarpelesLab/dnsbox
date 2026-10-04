@@ -256,6 +256,9 @@ dependencies = [
 [[package]]
 name = "dnsbox"
 version = "0.0.1"
+dependencies = [
+ "serde",
+]
 
 [[package]]
 name = "dnsbox-bench"
