@@ -1,0 +1,18 @@
+;; ->>HEADER<<- opcode: QUERY; status: NOERROR; id: 22094
+;; Flags: qr rd ra ad cd; QUERY: 1; ANSWER: 0; AUTHORITY: 4; ADDITIONAL: 1
+
+;; EDNS PSEUDOSECTION:
+;; Version: 0; flags: do; UDP size: 1232 B; ext-rcode: NOERROR
+
+;; QUESTION SECTION:
+;; www.rsasha256-optout.interop.		IN	MX
+
+;; AUTHORITY SECTION:
+rsasha256-optout.interop.	300	IN	SOA	ns1.rsasha256-optout.interop. hostmaster.rsasha256-optout.interop. 2026100401 7200 3600 1209600 300
+rsasha256-optout.interop.	300	IN	RRSIG	SOA 8 2 3600 20361001194833 20261004181833 30138 rsasha256-optout.interop. N5uERrpV2fNOjGXeDZwQqktNxR5f3TF8w2kgYoO6C4in/7QN2Upd5pSxgooGwCgWDeAzyUlFPxjMBV0XUalD8dN+ERYCbI57sm5i7Xu63xeZeRN7xW5LAtNMlcN68ZcTjfI8ACKBYt4kJ3hYjBx3pLq1v9GAYtF5Cgb3OroNx3E=
+ba1q2mr4eci62qu4e0nho96d68he89i4.rsasha256-optout.interop. 300	IN	NSEC3	1 1 0 - bvgalh4d6c38aetpmejpr3u33tkj46ld A AAAA RRSIG
+ba1q2mr4eci62qu4e0nho96d68he89i4.rsasha256-optout.interop. 300	IN	RRSIG	NSEC3 8 3 300 20361001194833 20261004181833 30138 rsasha256-optout.interop. ZqpS897EFko/uAKdJY1vnZj241UQC5i69LariUTPV/9ryDvEpEuivX3+svImOUycLEzLYZWGFPSDlDk/syJ6IQq8xPwURwk8iRo3XYZ7vA65WCusppJTWgRoRdkmpMosLKbILGIJ0hI16N+jOg4CFDE69BxgOpQIqXwx67bTyG8=
+
+;; Received 555 B
+;; Time 2026-10-04 19:49:38 UTC
+;; From 127.0.0.1@5400(UDP) in 0.4 ms

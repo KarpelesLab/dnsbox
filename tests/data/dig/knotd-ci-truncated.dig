@@ -1,0 +1,12 @@
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 51963
+;; flags: qr aa tc rd; QUERY: 1, ANSWER: 2, AUTHORITY: 0, ADDITIONAL: 1
+;; WARNING: recursion requested but not available
+
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags: do; udp: 1232
+;; QUESTION SECTION:
+;rsasha512-nsec3.interop.	IN	DNSKEY
+
+;; ANSWER SECTION:
+rsasha512-nsec3.interop. 3600	IN	DNSKEY	256 3 10 AwEAAaC8LiCK5JTRjexqagdviBHwzx0ln8Hihc3isUuF66SFqHO/kfIy GQyksxIVU5C2OPIGvmDwpTu9BMHU49cktxOtNckYYJhYYoznAz05yvSy n7nBdY77YiivgKCWzJmPPxtzNsVWwEm7gG7iBwDrZUmJxkgQ5hdrA4+r R74KuoQ1
+rsasha512-nsec3.interop. 3600	IN	DNSKEY	257 3 10 AwEAAd3kKz0sKkSQS2C9g096zyygkZKiTWHcT+6sSuDyM/Pqu0mHyiU9 ipmkM1HCbe46LncszRGqFoWwJArFtWDSMtGLO2q8MF3pI19Nsudtidy9 Wmvj5TzM1JWoofIYyPxHjMNUk8B8mTbxC/FQi2y9+qiH1mwBDY35GvxG GthCups1GRPVXvE5+xjEyvUXUC2Cg3E0RLlu7a+NN7/lObetQ3jdooqT jZNHfNNqTBWwYqRJvQ8Fg+oBD8eMEs18LbjLIjvHqgdtfkwkUaWoqtL5 HVYil5F4XyuRbCsm4Z/ojP9EFxSk9DTfOOPNZ3+h7MgyUtAX84AlTSij n7je4KArtYU=

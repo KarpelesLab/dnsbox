@@ -1,0 +1,20 @@
+;; ->>HEADER<<- opcode: QUERY; status: NOERROR; id: 230
+;; Flags: qr rd; QUERY: 1; ANSWER: 0; AUTHORITY: 3; ADDITIONAL: 2
+
+;; EDNS PSEUDOSECTION:
+;; Version: 0; flags: do; UDP size: 1232 B; ext-rcode: NOERROR
+
+;; QUESTION SECTION:
+;; host.insecure.rsasha512-nsec.interop. 	IN	A
+
+;; AUTHORITY SECTION:
+insecure.rsasha512-nsec.interop. 3600	IN	NS	ns.insecure.rsasha512-nsec.interop.
+insecure.rsasha512-nsec.interop. 300	IN	NSEC	mail.rsasha512-nsec.interop. NS RRSIG NSEC
+insecure.rsasha512-nsec.interop. 300	IN	RRSIG	NSEC 10 3 300 20361001194833 20261004181833 33173 rsasha512-nsec.interop. oXsMzF1bNCzcPR49pO4b5mlzIddP5/zO3FL+LB2Y8uBlXtIVI1Tvn4lW3DaZiThd3JrCD0IpEDJtbIuGku7sdP0FpR0iXr4DmPwTtoLi5dDQ19iBOJ82MPBPhnIbLNvGOe0RTDbn56g8oCjYbKJxBaiKqQlBs7kMjKkcDGcRpko=
+
+;; ADDITIONAL SECTION:
+ns.insecure.rsasha512-nsec.interop. 3600	IN	A	192.0.2.98
+
+;; Received 329 B
+;; Time 2026-10-04 19:49:36 UTC
+;; From 127.0.0.1@5300(UDP) in 0.4 ms

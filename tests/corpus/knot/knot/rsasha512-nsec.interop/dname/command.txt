@@ -1,0 +1,1 @@
+kdig +dnssec x.dname.rsasha512-nsec.interop. A

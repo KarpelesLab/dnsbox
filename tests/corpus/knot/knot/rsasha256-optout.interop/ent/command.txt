@@ -1,0 +1,1 @@
+kdig +dnssec b.ent.rsasha256-optout.interop. A

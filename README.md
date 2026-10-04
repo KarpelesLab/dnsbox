@@ -143,6 +143,7 @@ files, DNSSEC, TSIG), and every public item has its own example. The
 | [`zone2wire`](examples/zone2wire.rs) | `cargo run --example zone2wire -- db.example` | turns a zone file into the AXFR message stream a server would send, and reads it back |
 | [`dnssec_dig`](examples/dnssec_dig.rs) | `cargo run --example dnssec_dig --features dnssec` | validates captured responses from a trust anchor down (DS → DNSKEY → RRset) |
 | [`tsig_axfr`](examples/tsig_axfr.rs) | `cargo run --example tsig_axfr --features tsig` | a TSIG-signed zone transfer, over loopback or from a real server |
+| [`interop_probe`](examples/interop_probe.rs) | (CI only, against `knotd` and `unbound`) | dnsbox-built queries with EDNS options, cookies, TSIG, AXFR/IXFR and UPDATE, checked against Knot DNS and Unbound |
 
 ## What is covered
 
@@ -206,8 +207,11 @@ dnsbox is continuously fuzzed with overflow checks (ten
 decisions), property-tested, and checked against real responses from BIND,
 NSD, Knot, PowerDNS, Unbound and public resolvers, against BIND 9.18, ldns
 and dnspython (zone files, signed zones for every algorithm, TSIG, UPDATE,
-ZONEMD), and by validating the captured DNSSEC data from the IANA root
-trust anchors ([`tests/corpus/`](tests/corpus)). The threat model — what
+ZONEMD), against Knot DNS 3.5 and Unbound 1.19 running in CI (Knot-signed
+zones, `knotd` and `kdig` exchanges, dnsbox's validation verdicts against
+Unbound's, dnsbox-signed zones accepted by `kzonecheck`), and by
+validating the captured DNSSEC data from the IANA root trust anchors
+([`tests/corpus/`](tests/corpus)). The threat model — what
 is guaranteed on hostile input, the work bounds, what callers must do —
 and the findings of the security audit are in [SECURITY.md](SECURITY.md).
 dnsbox parses and builds faster than `hickory-proto` and `domain` on every

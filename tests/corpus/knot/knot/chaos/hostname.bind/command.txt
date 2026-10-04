@@ -1,0 +1,1 @@
+kdig CH TXT hostname.bind.

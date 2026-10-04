@@ -1,0 +1,1 @@
+kdig +dnssec x.dname.ed448-nsec3.interop. A

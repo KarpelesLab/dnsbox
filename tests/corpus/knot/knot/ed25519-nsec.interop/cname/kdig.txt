@@ -1,0 +1,18 @@
+;; ->>HEADER<<- opcode: QUERY; status: NOERROR; id: 65449
+;; Flags: qr aa rd; QUERY: 1; ANSWER: 4; AUTHORITY: 0; ADDITIONAL: 1
+
+;; EDNS PSEUDOSECTION:
+;; Version: 0; flags: do; UDP size: 1232 B; ext-rcode: NOERROR
+
+;; QUESTION SECTION:
+;; alias.ed25519-nsec.interop.		IN	A
+
+;; ANSWER SECTION:
+alias.ed25519-nsec.interop.	3600	IN	CNAME	www.ed25519-nsec.interop.
+www.ed25519-nsec.interop.	3600	IN	A	192.0.2.80
+alias.ed25519-nsec.interop.	3600	IN	RRSIG	CNAME 15 3 3600 20361001194833 20261004181833 11439 ed25519-nsec.interop. hbtgEFePk0rHKFzdUay2r5bMPhOetsnfnhGbQ5J015HxfqRxww6Kldmj1hHLc6B24/eagua1MkoL6QklPiRVDg==
+www.ed25519-nsec.interop.	3600	IN	RRSIG	A 15 3 3600 20361001194833 20261004181833 11439 ed25519-nsec.interop. 7ZwlDdkD7gfT7/jIsvKL23cswsKlOnggY7mZxfxluU10b1cicf4OPdDTyImfo4NDcCKvaV6HEgAIMnCEQBRVAQ==
+
+;; Received 321 B
+;; Time 2026-10-04 19:49:37 UTC
+;; From 127.0.0.1@5300(UDP) in 0.3 ms

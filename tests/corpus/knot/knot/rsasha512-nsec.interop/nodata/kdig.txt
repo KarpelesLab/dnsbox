@@ -1,0 +1,18 @@
+;; ->>HEADER<<- opcode: QUERY; status: NOERROR; id: 29952
+;; Flags: qr aa rd; QUERY: 1; ANSWER: 0; AUTHORITY: 4; ADDITIONAL: 1
+
+;; EDNS PSEUDOSECTION:
+;; Version: 0; flags: do; UDP size: 1232 B; ext-rcode: NOERROR
+
+;; QUESTION SECTION:
+;; www.rsasha512-nsec.interop.		IN	MX
+
+;; AUTHORITY SECTION:
+rsasha512-nsec.interop.	300	IN	SOA	ns1.rsasha512-nsec.interop. hostmaster.rsasha512-nsec.interop. 2026100401 7200 3600 1209600 300
+www.rsasha512-nsec.interop.	300	IN	NSEC	_443._tcp.www.rsasha512-nsec.interop. A AAAA RRSIG NSEC
+rsasha512-nsec.interop.	300	IN	RRSIG	SOA 10 2 3600 20361001194833 20261004181833 33173 rsasha512-nsec.interop. E5MoL6MOuxnUbigIoLXbMn/quY593AuyheIAYtvAwHuDkIv7WLSGL/isULSnlB2Iz4CRhWmj/aVp6UhceE0m3wzOM0J4k2v2Q50GGroZuHwDm0TFZYgDtWGVojbY00jK3L5/v4WJSbwThi+USmmONwHZC+yW1VpNN0gNPM+CoM4=
+www.rsasha512-nsec.interop.	300	IN	RRSIG	NSEC 10 3 300 20361001194833 20261004181833 33173 rsasha512-nsec.interop. c7vBcBY3UNsE7Iy1dNLpY+35/YH99JSpRA4hgGy4NvZH59RQvkhnC/m5Wek6VPwHfZJq8I6ZpJzRzL4w0oIIEJA/kMzLeXKZTf/sA14QRlIfLM2O8G1saOGpRinuUBz1m0LrYy3mnKtsQ+j4Hqfkqj0sbSFR0cF/ycN590g2oz0=
+
+;; Received 528 B
+;; Time 2026-10-04 19:49:36 UTC
+;; From 127.0.0.1@5300(UDP) in 0.4 ms

@@ -1,0 +1,1 @@
+kdig +dnssec +cdflag unsigned.rsasha256-optout.interop. DS

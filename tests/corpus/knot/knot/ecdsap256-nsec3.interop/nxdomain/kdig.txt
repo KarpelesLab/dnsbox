@@ -1,0 +1,22 @@
+;; ->>HEADER<<- opcode: QUERY; status: NXDOMAIN; id: 26276
+;; Flags: qr aa rd; QUERY: 1; ANSWER: 0; AUTHORITY: 8; ADDITIONAL: 1
+
+;; EDNS PSEUDOSECTION:
+;; Version: 0; flags: do; UDP size: 1232 B; ext-rcode: NOERROR
+
+;; QUESTION SECTION:
+;; nosuch.ecdsap256-nsec3.interop.		IN	A
+
+;; AUTHORITY SECTION:
+ecdsap256-nsec3.interop.	300	IN	SOA	ns1.ecdsap256-nsec3.interop. hostmaster.ecdsap256-nsec3.interop. 2026100401 7200 3600 1209600 300
+gfkvtb66jq8r9ev6hj11ubcs7o5og64d.ecdsap256-nsec3.interop. 300	IN	NSEC3	1 0 5 - ja3h8p13gfliv195fqcq4s7tloflbver NS SOA MX TXT LOC SSHFP RRSIG DNSKEY NSEC3PARAM CDS CDNSKEY ZONEMD HTTPS CAA
+3ei53cg4kt279njq0lb9abochk5nof05.ecdsap256-nsec3.interop. 300	IN	NSEC3	1 0 5 - 557h0o131ocumbkqse04ju3kjt7492l3 
+ja3h8p13gfliv195fqcq4s7tloflbver.ecdsap256-nsec3.interop. 300	IN	NSEC3	1 0 5 - jor5ssc55ri2mb2he3jl5ql44lmtu3lp CNAME RRSIG
+ecdsap256-nsec3.interop.	300	IN	RRSIG	SOA 13 2 3600 20361001194833 20261004181833 34006 ecdsap256-nsec3.interop. JvsKBRxsQle+Gir/v07LbVNKlexgEtERrjaG/HliiD66whJgfmvtIUuJdvHe6fcslqsJJPui8juYXB5Qr9DWtw==
+gfkvtb66jq8r9ev6hj11ubcs7o5og64d.ecdsap256-nsec3.interop. 300	IN	RRSIG	NSEC3 13 3 300 20361001194833 20261004181833 34006 ecdsap256-nsec3.interop. 5AaNSg6cCtDn8NohPbqUkbzZedexHE+xUxmGfKM/f4tcIWIIbKJP5sY9bq4w9Njymk1PUPurDxakjymop+uY0w==
+3ei53cg4kt279njq0lb9abochk5nof05.ecdsap256-nsec3.interop. 300	IN	RRSIG	NSEC3 13 3 300 20361001194833 20261004181833 34006 ecdsap256-nsec3.interop. NwjL/7l9GvokUheHBQVpMpprclSwbsCrBofpwj+l6ZvwxYO2i9qDoSmYWvPrk8r+O+fQbLIyiWzqeMz0g+QkZA==
+ja3h8p13gfliv195fqcq4s7tloflbver.ecdsap256-nsec3.interop. 300	IN	RRSIG	NSEC3 13 3 300 20361001194833 20261004181833 34006 ecdsap256-nsec3.interop. 6BsfKNFu8JHCiZCl3LiJ7YMoULjW1XvNEyUFxcTk+9M511pc/03xQyjOW8vVh++mS7tDWpMXE+YI75sW7xuqiA==
+
+;; Received 821 B
+;; Time 2026-10-04 19:49:37 UTC
+;; From 127.0.0.1@5300(UDP) in 0.4 ms

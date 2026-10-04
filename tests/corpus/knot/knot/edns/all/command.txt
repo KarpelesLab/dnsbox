@@ -1,0 +1,1 @@
+kdig +dnssec +nsid +cookie +padding +subnet=198.51.100.0/24 ed25519-nsec.interop. SOA

@@ -1,0 +1,48 @@
+{
+  "dateString": "2026-10-04T19:49:38+0000",
+  "dateSeconds": 1791143378,
+  "msgLength": 118,
+  "ID": 43783,
+  "QR": 1,
+  "Opcode": 0,
+  "AA": 1,
+  "TC": 0,
+  "RD": 1,
+  "RA": 0,
+  "AD": 0,
+  "CD": 0,
+  "RCODE": 0,
+  "QDCOUNT": 1,
+  "ANCOUNT": 1,
+  "NSCOUNT": 0,
+  "ARCOUNT": 1,
+  "QNAME": "ed25519-nsec.interop.",
+  "QTYPE": 6,
+  "QTYPEname": "SOA",
+  "QCLASS": 1,
+  "QCLASSname": "IN",
+  "answerRRs": [
+    {
+      "NAME": "ed25519-nsec.interop.",
+      "TYPE": 6,
+      "TYPEname": "SOA",
+      "CLASS": 1,
+      "CLASSname": "IN",
+      "TTL": 3600,
+      "rdataSOA": "ns1.ed25519-nsec.interop. hostmaster.ed25519-nsec.interop. 2026100401 7200 3600 1209600 300",
+      "RDLENGTH": 79,
+      "RDATAHEX": "036E73310C656432353531392D6E73656307696E7465726F70000A686F73746D61737465720C656432353531392D6E73656307696E7465726F700078C3D6B100001C2000000E10001275000000012C"
+    }
+  ],
+  "EDNS": {
+    "Version": 0,
+    "FLAGS": [
+    ],
+    "RCODE": "NOERROR",
+    "UDPSIZE": 1232,
+    "NSID": {
+      "HEX": "646E73626F782D696E7465726F70",
+      "TEXT": "dnsbox-interop"
+    }
+  }
+}

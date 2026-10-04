@@ -1,0 +1,1 @@
+kdig +dnssec +cdflag host.wild.ed25519-nsec.interop. A

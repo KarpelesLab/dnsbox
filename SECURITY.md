@@ -200,8 +200,11 @@ caller's job:
   target) without a crash.
 - **Tests**: truncation at every offset for every parser, property tests
   (`tests/proptest_roundtrip.rs`), a corpus of real responses from BIND,
-  NSD, Knot, PowerDNS and Unbound (`tests/corpus/`), RFC test vectors,
-  and one regression test per audit finding (`tests/security_audit.rs`).
+  NSD, Knot, PowerDNS and Unbound (`tests/corpus/`), tool-level interop
+  with BIND, ldns, dnspython, and Knot DNS and Unbound in CI (whose
+  bogus, insecure and secure verdicts dnsbox's validation must match,
+  `tests/interop_knot.rs`), RFC test vectors, and one regression test per
+  audit finding (`tests/security_audit.rs`).
 
 ## Audit history
 

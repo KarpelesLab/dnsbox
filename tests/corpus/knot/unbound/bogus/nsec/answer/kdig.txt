@@ -1,0 +1,13 @@
+;; ->>HEADER<<- opcode: QUERY; status: SERVFAIL; id: 29435
+;; Flags: qr rd ra; QUERY: 1; ANSWER: 0; AUTHORITY: 0; ADDITIONAL: 1
+
+;; EDNS PSEUDOSECTION:
+;; Version: 0; flags: do; UDP size: 1232 B; ext-rcode: NOERROR
+;; EDE: 6 (DNSSEC Bogus): 'validation failure <nosuch.bogus-nsec.interop. A IN>: signature crypto failed from 127.0.0.1 for <mail.bogus-nsec.interop. NSEC IN>'
+
+;; QUESTION SECTION:
+;; nosuch.bogus-nsec.interop.		IN	A
+
+;; Received 191 B
+;; Time 2026-10-04 19:49:40 UTC
+;; From 127.0.0.1@5400(UDP) in 7.7 ms

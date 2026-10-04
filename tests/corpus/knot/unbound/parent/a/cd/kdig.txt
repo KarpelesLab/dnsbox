@@ -1,0 +1,16 @@
+;; ->>HEADER<<- opcode: QUERY; status: NOERROR; id: 59991
+;; Flags: qr rd ra ad cd; QUERY: 1; ANSWER: 2; AUTHORITY: 0; ADDITIONAL: 1
+
+;; EDNS PSEUDOSECTION:
+;; Version: 0; flags: do; UDP size: 1232 B; ext-rcode: NOERROR
+
+;; QUESTION SECTION:
+;; www.interop.        		IN	A
+
+;; ANSWER SECTION:
+www.interop.        	3600	IN	A	192.0.2.80
+www.interop.        	3600	IN	RRSIG	A 13 2 3600 20361001194834 20261004181834 8617 interop. jqu3JOhI+D/AcSFoGGdSADC5fkWyul1Q1SotuW91pP2a/iSXunH8opyolOuhgGUmw6GV+juWS58v2vNul+1/+w==
+
+;; Received 159 B
+;; Time 2026-10-04 19:49:40 UTC
+;; From 127.0.0.1@5400(UDP) in 0.4 ms

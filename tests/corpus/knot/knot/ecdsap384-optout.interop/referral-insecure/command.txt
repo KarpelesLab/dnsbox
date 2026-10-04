@@ -1,0 +1,1 @@
+kdig +dnssec host.insecure.ecdsap384-optout.interop. A

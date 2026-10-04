@@ -1,0 +1,20 @@
+;; ->>HEADER<<- opcode: QUERY; status: NOERROR; id: 56121
+;; Flags: qr aa rd; QUERY: 1; ANSWER: 2; AUTHORITY: 2; ADDITIONAL: 1
+
+;; EDNS PSEUDOSECTION:
+;; Version: 0; flags: do; UDP size: 1232 B; ext-rcode: NOERROR
+
+;; QUESTION SECTION:
+;; host.wild.ecdsap384-optout.interop. 	IN	A
+
+;; ANSWER SECTION:
+host.wild.ecdsap384-optout.interop. 3600	IN	A	192.0.2.42
+host.wild.ecdsap384-optout.interop. 3600	IN	RRSIG	A 14 3 3600 20361001194833 20261004181833 10601 ecdsap384-optout.interop. 3QlIo42YeWx4u3NG6bN8mN1Cjx276Be1rOcgVcQq784PA6kG3ndoJ8k0zZQ0o5Gw8hN7RwUswt2Ts1tcWq692h1guuKCRLOcvhjr1/RcsZO6fknVTteC+HSz+oXuT+3K
+
+;; AUTHORITY SECTION:
+9l6a449g9m7vrgddm1opmbrhpj8jcajt.ecdsap384-optout.interop. 300	IN	NSEC3	1 1 0 - aov0bj4gmrje8hm7khcunol7itsakd49 NS DS RRSIG
+9l6a449g9m7vrgddm1opmbrhpj8jcajt.ecdsap384-optout.interop. 300	IN	RRSIG	NSEC3 14 3 300 20361001194833 20261004181833 10601 ecdsap384-optout.interop. HvwIJJNJlzpnFfA+ENgdA9LlmhMsY/hDRRX/iUPOgIrY3dhyiC9dxPwebKWT8Ot+uMk1doJ2jey+xHWl/X07ivThpWu9+6QfyPclK8grpbML91zSxZIaVruu/LyeEyrW
+
+;; Received 462 B
+;; Time 2026-10-04 19:49:37 UTC
+;; From 127.0.0.1@5300(UDP) in 0.4 ms

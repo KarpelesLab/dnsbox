@@ -1,0 +1,20 @@
+;; ->>HEADER<<- opcode: QUERY; status: NOERROR; id: 63432
+;; Flags: qr rd; QUERY: 1; ANSWER: 0; AUTHORITY: 3; ADDITIONAL: 2
+
+;; EDNS PSEUDOSECTION:
+;; Version: 0; flags: do; UDP size: 1232 B; ext-rcode: NOERROR
+
+;; QUESTION SECTION:
+;; host.insecure.ed25519-nsec.interop. 	IN	A
+
+;; AUTHORITY SECTION:
+insecure.ed25519-nsec.interop.	3600	IN	NS	ns.insecure.ed25519-nsec.interop.
+insecure.ed25519-nsec.interop.	300	IN	NSEC	mail.ed25519-nsec.interop. NS RRSIG NSEC
+insecure.ed25519-nsec.interop.	300	IN	RRSIG	NSEC 15 3 300 20361001194833 20261004181833 11439 ed25519-nsec.interop. z8sIq8ajLmOr7cvRXG0UCl4oi1L80PRS1di7FcTooxft/Xe3TA5RHkMbZbKo+ZT5k6UFv1b9nOwLuPZKZ0LzCg==
+
+;; ADDITIONAL SECTION:
+ns.insecure.ed25519-nsec.interop. 3600	IN	A	192.0.2.98
+
+;; Received 259 B
+;; Time 2026-10-04 19:49:37 UTC
+;; From 127.0.0.1@5300(UDP) in 0.4 ms

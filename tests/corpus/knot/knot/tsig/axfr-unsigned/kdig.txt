@@ -1,0 +1,6 @@
+;; ERROR: server replied with error 'NOTAUTH'
+;; ERROR: failed to query server 127.0.0.1@5300(TCP)
+;; AXFR for bulk.interop.
+;; Received 0 B
+;; Time 2026-10-04 19:49:38 UTC
+;; From 127.0.0.1@5300(TCP) in 0.5 ms

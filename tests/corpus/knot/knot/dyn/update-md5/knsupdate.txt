@@ -1,0 +1,11 @@
+Answer:
+;; ->>HEADER<<- opcode: UPDATE; status: NOERROR; id: 59577
+;; Flags: qr; ZONE: 1; PREREQ: 0; UPDATE: 0; ADDITIONAL: 1
+
+;; ZONE SECTION:
+;; dyn.interop.        		IN	SOA
+
+;; ADDITIONAL DATA:
+
+;; TSIG PSEUDOSECTION:
+hmac-md5.key.       	0	ANY	TSIG	hmac-md5.sig-alg.reg.int. 1791143378 300 16 PzroMPPZV6Cqtclt+NqjtA== 59577 NOERROR 0

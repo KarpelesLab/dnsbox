@@ -1,0 +1,20 @@
+;; ->>HEADER<<- opcode: QUERY; status: NXDOMAIN; id: 637
+;; Flags: qr aa rd; QUERY: 1; ANSWER: 0; AUTHORITY: 6; ADDITIONAL: 1
+
+;; EDNS PSEUDOSECTION:
+;; Version: 0; flags: do; UDP size: 1232 B; ext-rcode: NOERROR
+
+;; QUESTION SECTION:
+;; nosuch.rsasha512-nsec.interop.		IN	A
+
+;; AUTHORITY SECTION:
+rsasha512-nsec.interop.	300	IN	SOA	ns1.rsasha512-nsec.interop. hostmaster.rsasha512-nsec.interop. 2026100401 7200 3600 1209600 300
+mail.rsasha512-nsec.interop.	300	IN	NSEC	ns1.rsasha512-nsec.interop. A RRSIG NSEC
+rsasha512-nsec.interop.	300	IN	NSEC	_svc.rsasha512-nsec.interop. NS SOA MX TXT LOC SSHFP RRSIG NSEC DNSKEY HTTPS CAA
+rsasha512-nsec.interop.	300	IN	RRSIG	SOA 10 2 3600 20361001194833 20261004181833 33173 rsasha512-nsec.interop. E5MoL6MOuxnUbigIoLXbMn/quY593AuyheIAYtvAwHuDkIv7WLSGL/isULSnlB2Iz4CRhWmj/aVp6UhceE0m3wzOM0J4k2v2Q50GGroZuHwDm0TFZYgDtWGVojbY00jK3L5/v4WJSbwThi+USmmONwHZC+yW1VpNN0gNPM+CoM4=
+mail.rsasha512-nsec.interop.	300	IN	RRSIG	NSEC 10 3 300 20361001194833 20261004181833 33173 rsasha512-nsec.interop. Q2In3aP9fkvaGMcH3edQbAP9gzAjlkzuEyqfuuaizo3wDcaPk6CTVZaOeLlVOM/CQ+WpoJGHmGkB++WQnJ5VL8wbgWqgfjV68EbXhxWuyqQ2MbtpwAOupH/O1ZjMZGy4akX7yxQqFR/ZVtLuxdiUG2xoYyEg/2aEoE9JOcL23ug=
+rsasha512-nsec.interop.	300	IN	RRSIG	NSEC 10 2 300 20361001194833 20261004181833 33173 rsasha512-nsec.interop. eiQipTEIHwHLvv6LAWANVouTm1dzocTarII5WiWgzXtfAIu1d+uJQMac7DIhHrLzUioIYFIr26ikJd5Q7sVm4CIaIR5bHmjjC/xvrgAkuK2cz66KPciLkfJ1axYfwQ2B8WNPoT9W4yTtwL0YsV2mv67S+w3dVBpi+BHUjAqwYmM=
+
+;; Received 763 B
+;; Time 2026-10-04 19:49:36 UTC
+;; From 127.0.0.1@5300(UDP) in 0.4 ms

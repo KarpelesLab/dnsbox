@@ -1,0 +1,12 @@
+;; ->>HEADER<<- opcode: QUERY; status: BADVERS; id: 4045
+;; Flags: qr rd; QUERY: 1; ANSWER: 0; AUTHORITY: 0; ADDITIONAL: 1
+
+;; EDNS PSEUDOSECTION:
+;; Version: 0; flags: ; UDP size: 1232 B; ext-rcode: BADVERS
+
+;; QUESTION SECTION:
+;; ed25519-nsec.interop.		IN	SOA
+
+;; Received 49 B
+;; Time 2026-10-04 19:49:38 UTC
+;; From 127.0.0.1@5300(UDP) in 0.4 ms

@@ -1,0 +1,17 @@
+;; ->>HEADER<<- opcode: QUERY; status: NOERROR; id: 65302
+;; Flags: qr aa rd; QUERY: 1; ANSWER: 3; AUTHORITY: 0; ADDITIONAL: 1
+
+;; EDNS PSEUDOSECTION:
+;; Version: 0; flags: do; UDP size: 1232 B; ext-rcode: NOERROR
+
+;; QUESTION SECTION:
+;; ecdsap256-nsec3.interop.		IN	DNSKEY
+
+;; ANSWER SECTION:
+ecdsap256-nsec3.interop.	3600	IN	DNSKEY	256 3 13 8FPmV7us+gT2WYlijsEVWDEA4tdtKPN6h3YAF4nNkf0md+ZBChVqmuNcT7SYx6r0gMWXpAs4mEJshXbi2ohGtg==
+ecdsap256-nsec3.interop.	3600	IN	DNSKEY	257 3 13 9dTvKeswCUlkaM8VSkzhtc31+PF1CZEBKm706Z6VQSpfJHMF4iHhn5RsxOBlCl3xO6T4GnMU51mALf8qnIZ/5Q==
+ecdsap256-nsec3.interop.	3600	IN	RRSIG	DNSKEY 13 2 3600 20361001194833 20261004181833 58680 ecdsap256-nsec3.interop. DDGCEX4TvMZfh3EkbUoLZAzUEvzyxdIBCocxaGV37mUM2MaHndxHDr4CfuYI0bjwzIgqTCRJXLFwzQTZ1BTIwg==
+
+;; Received 331 B
+;; Time 2026-10-04 19:49:37 UTC
+;; From 127.0.0.1@5300(UDP) in 0.4 ms

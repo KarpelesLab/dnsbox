@@ -1,0 +1,1 @@
+kdig +dnssec host.secure.ed448-nsec3.interop. A

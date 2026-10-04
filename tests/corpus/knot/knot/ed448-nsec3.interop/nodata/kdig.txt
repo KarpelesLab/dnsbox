@@ -1,0 +1,18 @@
+;; ->>HEADER<<- opcode: QUERY; status: NOERROR; id: 10640
+;; Flags: qr aa rd; QUERY: 1; ANSWER: 0; AUTHORITY: 4; ADDITIONAL: 1
+
+;; EDNS PSEUDOSECTION:
+;; Version: 0; flags: do; UDP size: 1232 B; ext-rcode: NOERROR
+
+;; QUESTION SECTION:
+;; www.ed448-nsec3.interop.		IN	MX
+
+;; AUTHORITY SECTION:
+ed448-nsec3.interop.	300	IN	SOA	ns1.ed448-nsec3.interop. hostmaster.ed448-nsec3.interop. 2026100401 7200 3600 1209600 300
+q7aefoq0ej1hf7ueaioufl2r3quvv1a9.ed448-nsec3.interop. 300	IN	NSEC3	1 0 5 - tmopfb3ebk0a1g9es9j8d80budnbi4t4 A AAAA RRSIG
+ed448-nsec3.interop.	300	IN	RRSIG	SOA 16 2 3600 20361001194834 20261004181834 38260 ed448-nsec3.interop. QysTviWZP/13z2UFuekCVRjlv2WlX1UeRpAwKswCfB/oKiDeo2mOIuc6t837AI7WKPw3bT4Ob4MAc3Oscs8z327YmBTqH0HkK5kLhD98li+dOhrXft56yA7EoE7N0ai+7ebNAkgbmEgS5ETvHkJshSUA
+q7aefoq0ej1hf7ueaioufl2r3quvv1a9.ed448-nsec3.interop. 300	IN	RRSIG	NSEC3 16 3 300 20361001194834 20261004181834 38260 ed448-nsec3.interop. Y8zyW7gtwXGsKMtfjO/Hd+VRbpJLL+bFD/4+c7TpFN69LoONv3FEgpTZapozPSQsSpLKDrrdFZ2AReW1GqjpYKIQ8wgF5K9aSdQ6mxm1vS6iJWteRUoSu9UGnOwf+SFXlSFLfYS5sqOB0RdW8QVQthIA
+
+;; Received 512 B
+;; Time 2026-10-04 19:49:37 UTC
+;; From 127.0.0.1@5300(UDP) in 0.4 ms

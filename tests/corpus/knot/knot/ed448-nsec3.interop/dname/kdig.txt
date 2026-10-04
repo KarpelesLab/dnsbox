@@ -1,0 +1,17 @@
+;; ->>HEADER<<- opcode: QUERY; status: NOERROR; id: 62851
+;; Flags: qr aa rd; QUERY: 1; ANSWER: 3; AUTHORITY: 0; ADDITIONAL: 1
+
+;; EDNS PSEUDOSECTION:
+;; Version: 0; flags: do; UDP size: 1232 B; ext-rcode: NOERROR
+
+;; QUESTION SECTION:
+;; x.dname.ed448-nsec3.interop.		IN	A
+
+;; ANSWER SECTION:
+dname.ed448-nsec3.interop.	3600	IN	DNAME	example.net.
+x.dname.ed448-nsec3.interop.	3600	IN	CNAME	x.example.net.
+dname.ed448-nsec3.interop.	3600	IN	RRSIG	DNAME 16 3 3600 20361001194834 20261004181834 38260 ed448-nsec3.interop. gMAQBFmrDsh+B/sdsd3lQ12J4tWghrYXoPZbBPGhV1yf4zxnm/L0/FpIxNMCmDnSESjafJVvIHAAuim8dUikjai2wMimshZ4g6MteXViNyvwql0YjNLITkISgJUwK5lVEgG9gEJxrhYjX9HNEbxkzDkA
+
+;; Received 273 B
+;; Time 2026-10-04 19:49:37 UTC
+;; From 127.0.0.1@5300(UDP) in 0.4 ms

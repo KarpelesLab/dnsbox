@@ -1,0 +1,1 @@
+kdig +alignment ed25519-nsec.interop. SOA

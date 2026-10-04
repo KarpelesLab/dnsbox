@@ -1,0 +1,4 @@
+# knotd 3.5 on the interop CI runner (run 37229639496, 2026-10-04): kdig +cookie=0102030405060708a1a2a3a4a5a6a7a8a9aaabacadaeafb0 +badcookie ed25519-nsec.interop. SOA
+# tests/corpus/knot/keep.py from knot/edns/badcookie (tests/corpus/README.md)
+6d69810700010000000000010c656432353531392d6e73656307696e7465726f70000006000100002904d00100000000
+1c000a00180102030405060708010000006ac2add24cfff6e2bdc9a5c7

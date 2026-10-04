@@ -1,0 +1,18 @@
+;; ->>HEADER<<- opcode: QUERY; status: NOERROR; id: 15450
+;; Flags: qr aa rd; QUERY: 1; ANSWER: 4; AUTHORITY: 0; ADDITIONAL: 1
+
+;; EDNS PSEUDOSECTION:
+;; Version: 0; flags: do; UDP size: 1232 B; ext-rcode: NOERROR
+
+;; QUESTION SECTION:
+;; alias.ecdsap256-nsec3.interop.		IN	A
+
+;; ANSWER SECTION:
+alias.ecdsap256-nsec3.interop.	3600	IN	CNAME	www.ecdsap256-nsec3.interop.
+www.ecdsap256-nsec3.interop.	3600	IN	A	192.0.2.80
+alias.ecdsap256-nsec3.interop.	3600	IN	RRSIG	CNAME 13 3 3600 20361001194833 20261004181833 34006 ecdsap256-nsec3.interop. xFvDoXNbhvqVjj13J7YbC4u6DJS52XVXrSBl08S2YuJHlVRc9AVq03JUm4J0Z55NGAIqXBMWAsi17BJI91ZgCw==
+www.ecdsap256-nsec3.interop.	3600	IN	RRSIG	A 13 3 3600 20361001194833 20261004181833 34006 ecdsap256-nsec3.interop. RXU2UELA1om+rUEO5uY3ec3x1IwVlyAuEHyf9bO+aKd4Y8IHH2BzCCwfXIyBIEjs+1KX5XZ1N+VCORCd0BXCpw==
+
+;; Received 330 B
+;; Time 2026-10-04 19:49:37 UTC
+;; From 127.0.0.1@5300(UDP) in 0.5 ms

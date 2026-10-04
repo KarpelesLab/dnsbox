@@ -1,0 +1,16 @@
+;; ->>HEADER<<- opcode: QUERY; status: NOERROR; id: 64699
+;; Flags: qr rd ra ad; QUERY: 1; ANSWER: 2; AUTHORITY: 0; ADDITIONAL: 1
+
+;; EDNS PSEUDOSECTION:
+;; Version: 0; flags: do; UDP size: 1232 B; ext-rcode: NOERROR
+
+;; QUESTION SECTION:
+;; www.ed25519-nsec.interop.		IN	A
+
+;; ANSWER SECTION:
+www.ed25519-nsec.interop.	3596	IN	A	192.0.2.80
+www.ed25519-nsec.interop.	3596	IN	RRSIG	A 15 3 3600 20361001194833 20261004181833 11439 ed25519-nsec.interop. 7ZwlDdkD7gfT7/jIsvKL23cswsKlOnggY7mZxfxluU10b1cicf4OPdDTyImfo4NDcCKvaV6HEgAIMnCEQBRVAQ==
+
+;; Received 185 B
+;; Time 2026-10-04 19:49:40 UTC
+;; From 127.0.0.1@5400(TCP) in 3.3 ms

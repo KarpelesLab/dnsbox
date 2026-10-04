@@ -1,0 +1,98 @@
+;; Zone dump (Knot DNS 3.5.8)
+bogus-nsec.interop. 	3600	SOA	ns1.bogus-nsec.interop. hostmaster.bogus-nsec.interop. 2026100401 7200 3600 1209600 300
+bogus-nsec.interop. 	3600	NS	ns1.bogus-nsec.interop.
+bogus-nsec.interop. 	3600	NS	ns2.bogus-nsec.interop.
+bogus-nsec.interop. 	3600	MX	10 mail.bogus-nsec.interop.
+bogus-nsec.interop. 	3600	TXT	"v=spf1 mx -all"
+bogus-nsec.interop. 	3600	LOC	52 22 23 N  4 53 32 E  -2m  0m 10000m 10m
+bogus-nsec.interop. 	3600	SSHFP	4 2 123456789ABCDEF67890123456789ABCDEF67890123456789ABCDEF123456789
+bogus-nsec.interop. 	3600	DNSKEY	256 3 14 qX7mK83JDHuE0yhYS6SBg83wgZGIcroZ9d/m+V9XcQYkPupmDR1XnH2ngnDgjXkf74e+DLHTntp6dFQMY2MMGnlAnoGKZtIYekDmjucbJ8EF3ZV2NAIGQxAF7VWlcSh1
+bogus-nsec.interop. 	3600	DNSKEY	257 3 14 p+/r55Z0rzMb+B6/H31H0myQuyOsoZ6+Dvk6Vhqcwkg/fxSGYmj2eB1e3oq2Skrh2zUPT99XQjNQKALKG+jQeLMvRjMD0vp54MniLoaZVSuKajps1MK01JGpKkVS6aSL
+bogus-nsec.interop. 	3600	HTTPS	1 . alpn="h2,h3" ipv4hint=192.0.2.80
+bogus-nsec.interop. 	3600	CAA	0 issue "letsencrypt.org" 
+_svc.bogus-nsec.interop.	3600	SVCB	1 www.bogus-nsec.interop. alpn="dot" port=853
+_sip._udp.bogus-nsec.interop.	3600	SRV	10 60 5060 www.bogus-nsec.interop.
+_sip._udp.bogus-nsec.interop.	3600	NAPTR	100 10 "S" "SIP+D2U" "" _sip._udp.bogus-nsec.interop.
+alias.bogus-nsec.interop.	3600	CNAME	www.bogus-nsec.interop.
+dname.bogus-nsec.interop.	3600	DNAME	example.net.
+a.b.ent.bogus-nsec.interop.	3600	A	192.0.2.7
+insecure.bogus-nsec.interop.	3600	NS	ns.insecure.bogus-nsec.interop.
+ns.insecure.bogus-nsec.interop.	3600	A	192.0.2.98
+mail.bogus-nsec.interop.	3600	A	192.0.2.25
+ns1.bogus-nsec.interop.	3600	A	127.0.0.1
+ns2.bogus-nsec.interop.	3600	A	198.51.100.53
+odd\.label\032x.bogus-nsec.interop. 3600	TXT	"a \"quoted\" string" "tab\009and\\backslash"
+other.bogus-nsec.interop.	3600	NS	ns.example.net.
+secure.bogus-nsec.interop.	3600	NS	ns.secure.bogus-nsec.interop.
+secure.bogus-nsec.interop.	3600	DS	12345 13 2 E06D44B80B8F1D39A95C0B0D7C65D08458E880409BBC683457104237C7F8EC8D
+ns.secure.bogus-nsec.interop.	3600	A	192.0.2.99
+unsigned.bogus-nsec.interop.	3600	NS	ns.unsigned.bogus-nsec.interop.
+ns.unsigned.bogus-nsec.interop.	3600	A	127.0.0.1
+*.wild.bogus-nsec.interop.	3600	A	192.0.2.42
+*.wild.bogus-nsec.interop.	3600	TXT	"wildcard"
+www.bogus-nsec.interop.	3600	A	192.0.2.80
+www.bogus-nsec.interop.	3600	AAAA	2001:db8::80
+_443._tcp.www.bogus-nsec.interop. 3600	TLSA	3 1 1 0C72AC70B745AC19998811B131D662C9AC69DBDBE7CB23E5B514B56664C5D3D6
+;; DNSSEC signatures
+bogus-nsec.interop. 	3600	RRSIG	NS 14 2 3600 20361001194834 20261004181834 46532 bogus-nsec.interop. 9GgHc0DsK7ngDU1y4Oo8f3ans7sdIsR5YHv0+UmCVLip0Y//ziIa18ALJjMCM4fdXVuiwtB0X/w/h1tAa6oilLs3YC5MXVND4ZzS5k9ueTy4WnMHOChWGPB8keMHnIXC
+bogus-nsec.interop. 	3600	RRSIG	SOA 14 2 3600 20361001194834 20261004181834 46532 bogus-nsec.interop. 8MRujHX7gZfIqIT5wBsVAr905Yib+wXxqQgnbR6dWc45HAUsHbkscJKAnX322M2kTmx/OFQyaevVrxa1Xfrwz4fIDlv8VMU082KowGjEZddRPO8OngfAGdMRtf2+rkPd
+bogus-nsec.interop. 	3600	RRSIG	MX 14 2 3600 20361001194834 20261004181834 46532 bogus-nsec.interop. KDKobtXCmiifXet7Wxh5BtVB7J+Jlk9SJp0u9FlDOZoHDCQJ7Fo6879Dj8bD2FLNDMzyP5u4CCoHmK+2HXKfMYmGsTCKw1mM2Ssyh+0B97OeynLOpRuJfLh33sN6RxqI
+bogus-nsec.interop. 	3600	RRSIG	TXT 14 2 3600 20361001194834 20261004181834 46532 bogus-nsec.interop. VwAhXrN7S8Ev4cJVph87tuSMLXkOjdYh0MWVlT95j3vdkzDe9ePeq4O2lu701a41bK5u140OnALQ31g8YgTsmF5lS/gxk8eGvwNb4y3IgHkk1N7A5qocEqB2oBsqp7aa
+bogus-nsec.interop. 	3600	RRSIG	LOC 14 2 3600 20361001194834 20261004181834 46532 bogus-nsec.interop. fmMQabbox9PrmegRjc8oVH97iHUuPTLNDExe1QbSVn09dGY1KtIOw6FAeTqm+hKyx+l5aur5oGk0Djm8YgyOA7tkEBrsBCL4IQPGspyxdc65bk+XWMY5eG68nw3pzKPQ
+bogus-nsec.interop. 	3600	RRSIG	SSHFP 14 2 3600 20361001194834 20261004181834 46532 bogus-nsec.interop. atH7HiSyRbaYbMiB3ceM7fZ/rqVWdkA5S6sy5tXP/54eiAZy8v2opOqKau2EjPqSqcIfPxxTZOOsOf4ktml0cdiWs+Exj1F3z4ydliie23isPC227An3y39OHnRLovxp
+bogus-nsec.interop. 	300	RRSIG	NSEC 14 2 300 20361001194834 20261004181834 46532 bogus-nsec.interop. nbleQ9Urtqhqli9BsZ9XBhaBO7p0NqSujBaxdmf6YWUFQVasO+urPVvUIgd/DfddHa4yfIH8v9Bw8LQaJmeOkdLvzPXhZFSprASsFDInhJ6ewpgAnVA8QOsynm8xSTbP
+bogus-nsec.interop. 	3600	RRSIG	DNSKEY 14 2 3600 20361001194834 20261004181834 42619 bogus-nsec.interop. KUBPuAdb1fj04EtPjakO0b6/Nakwbc3Rzp3rfYLgBVqk/+L0IlPcP3YxZ5sHvkStQSxco4CYYxssaq1kVfPUMzjSdOWWraYzOd8tDe+UIa2c03+XZXg2aMyYBIo+gNay
+bogus-nsec.interop. 	3600	RRSIG	HTTPS 14 2 3600 20361001194834 20261004181834 46532 bogus-nsec.interop. 7kuXvi9rc6LegGKwKyJTqwqTPOFXGMkB48lqKtR0of4so8Ismp6eAtnWCYLnv1eKLDNLCVbRob3IFDRTeywianfTAUf8L/vel8GCZk3nYd383NgceXnWKDWStP86qKYM
+bogus-nsec.interop. 	3600	RRSIG	CAA 14 2 3600 20361001194834 20261004181834 46532 bogus-nsec.interop. IGoNs5a76uM4CA380hL0Gr5CBTpW4Ldfg9KuOsqpuguQj7qGWAiAFT3k7NEVKV0gUmmBELw4n1zHMpp8K0/2/1pxYMFhw0tDcy8BPSGFvZA7fVR7q4AB2P9QR/WGXEQ9
+_svc.bogus-nsec.interop.	300	RRSIG	NSEC 14 3 300 20361001194834 20261004181834 46532 bogus-nsec.interop. oI4lE4zjTsmGmcLruAJsluKu99QWS7/ScDddVHtidYfAweAhPonB5X2+/8c3HjApvwTW66BTxPtIKeMap4uCDie5mw6B7hEwZLtStcVCaZ9wyPH6QM7bwEIa3cpwBy11
+_svc.bogus-nsec.interop.	3600	RRSIG	SVCB 14 3 3600 20361001194834 20261004181834 46532 bogus-nsec.interop. JGz8cXaXf5r20A8AK/+KIAUFxvzO6XKapnc9KtT3v+cM8w482/uAbYefqhUJ7W3+uF25XGStfUq6mtpvVB5oodRpas9/i0NMMKexLVwbwR36za4tNawiWZNuwD//kVIc
+_sip._udp.bogus-nsec.interop.	3600	RRSIG	SRV 14 4 3600 20361001194834 20261004181834 46532 bogus-nsec.interop. lRMGwBiWsMZE4DrTjH86CC5ey1Y4bRo+ywaBNNdOP0rkUqCHmaxUDi/y4QN/JzXmYPaQC+MfIZlPJHkpesnToiOJSuhh20wCVfBvorRyxTEiLM8xM32AjUQzTIJaOByt
+_sip._udp.bogus-nsec.interop.	3600	RRSIG	NAPTR 14 4 3600 20361001194834 20261004181834 46532 bogus-nsec.interop. +X+7pb+jUejdgGF6JubgV9kLn0O5QrYO5wSxQ2W9eUH8OXK/c8/cBXnNRvjCtjekE0rTMDiZQSN967YBQYZy18HYUBNzEL/QvKd5H9zn/1QRdl9Iq6m8XWjjJjoB4oNI
+_sip._udp.bogus-nsec.interop.	300	RRSIG	NSEC 14 4 300 20361001194834 20261004181834 46532 bogus-nsec.interop. ngDM+b3TnJXIyMNDiXgJNXO97HFiQtWdEzZtVlcCdOuGRa4xRov+0ZvKTl6CYTglyoYtsQDqKxgjUZl10UlhzWDQ1vI+dxcbzlhpfTaEVQG9Wf4cFboNkO/t0k9O8IXI
+alias.bogus-nsec.interop.	3600	RRSIG	CNAME 14 3 3600 20361001194834 20261004181834 46532 bogus-nsec.interop. tyC1cW6WRZRBdGT2PP68zFcttJ2LkulsUdnaXRmOnnMrjgq4j8Vq5vDToVbJ06AC18DRPfZGwlOfzf2uUmn6qRxtnnnjc4rRUYnsyDVi/qv6RojAKZkNrMP/g2ITjd+6
+alias.bogus-nsec.interop.	300	RRSIG	NSEC 14 3 300 20361001194834 20261004181834 46532 bogus-nsec.interop. AWO+RvsghqOeM6+OD1jb2GsvFo9G4tYv2bOTW40970mHUAtAlPpSsb31To01Vz0dLxUf8AibFUIhr8zX7KW+2lWiQ34xCV+gw8Ho2z7PaK6Cm7l0XYa8FRiB1ksXaOEv
+dname.bogus-nsec.interop.	3600	RRSIG	DNAME 14 3 3600 20361001194834 20261004181834 46532 bogus-nsec.interop. tkFYbp0AZRohC/mzGrmgmUSqM6P9KwvxfnDgS24MdrznAsMLg6b/SQk9+YebxIPzClOcBwz2l5yospeIj09BeMu9g26Hxx3JoaROVefVSlEio7yuzRQgK1HG7ZY0Byck
+dname.bogus-nsec.interop.	300	RRSIG	NSEC 14 3 300 20361001194834 20261004181834 46532 bogus-nsec.interop. a8pziO/8Py7b8AdZ8Ik5yo/hU3EGUQFlisHX44oTMldLJJ0zPAl1FKB7EvF3WsxsMeRPfVwgC1AQrHHi3BekZEQqADv3Fy+q+boO71YQjaeVkqp5LgFcbKI11QzqzGyF
+a.b.ent.bogus-nsec.interop.	3600	RRSIG	A 14 5 3600 20361001194834 20261004181834 46532 bogus-nsec.interop. WLGwiMeLk543WMqBGBdDTVQjrYVKiiHEO9OamMf35U0J4Egwo2gAWvlRnlGiWMFEcHH0lcfvfd2kEsPXKreYfLN25OzVtMZQf89Q6vCzgIwZpVLIZv6UI+PQ0/s2kmqd
+a.b.ent.bogus-nsec.interop.	300	RRSIG	NSEC 14 5 300 20361001194834 20261004181834 46532 bogus-nsec.interop. BOwF/FzVENjp4xJkpht6SShgkqetE11Mrj/DzSndj6glNpqNCcGTxGOqELNV0C1DebcSReyFr8yZlwCEGV/VW8jNdCrjCmSIl8Wmd8QD/5CQuX+sDmrmM4hcpXUfkhDp
+insecure.bogus-nsec.interop.	300	RRSIG	NSEC 14 3 300 20361001194834 20261004181834 46532 bogus-nsec.interop. wEzqppTLmqQItM7+/EcRVlrtXCUk/Ng30jIsFNdCf9Cn9G32YA8Lo0IlUz0qlKkGWlhs0oHun9ZU6Ij3WQlPkd2KrBNC/lrvW9Tc+iznPCUplWFbJj4jPJaP4cKCXTVp
+mail.bogus-nsec.interop.	3600	RRSIG	A 14 3 3600 20361001194834 20261004181834 46532 bogus-nsec.interop. TxYBs7x42j/RWPp0G26PBdvBcaCVfMBZ9qlkd4Mhnl/I/iy/G5doEzzqvCoMvXrOZfbemhR6FDWORs6ibe4ZOjm6/fYQajbhYYv7dQJJ2KCPBInECffjIcZmUsPzEVPS
+mail.bogus-nsec.interop.	300	RRSIG	NSEC 14 3 300 20361001194834 20261004181834 46532 bogus-nsec.interop. rQyxa5oaOirMg6tGnXycbmCkHhOozMzG62/D4RftFMCRB/Wk3QQSgsUehL/X7Zo8aDus66JCZthDWg8v9KU6KsGFFbf307HWLxrP1EFb1mk9kkYjiZOPahbZ76R2deew
+ns1.bogus-nsec.interop.	3600	RRSIG	A 14 3 3600 20361001194834 20261004181834 46532 bogus-nsec.interop. EM5V88XQuKFAOfnwSfQII9wThvME0Va4SVha5GekJej8wrd7SGifep3Jm5dQraKc6gu+MMPM1Z6YmUaANqWPh/eHHtNqWHfnftIcwRorGXQ/6D/toxDeRgenAdiwLlWY
+ns1.bogus-nsec.interop.	300	RRSIG	NSEC 14 3 300 20361001194834 20261004181834 46532 bogus-nsec.interop. XmhoFNtFb245NM1QUo9/GOmnCAz2nIChL8X4REpuqGgDZ5Rep7DXh9jn1p1GpjVvhPw1N7fwIsSZsjeiFSlvmK2ZzUMq1oGPnwNzqtE6UKOAzf/JI/Gkb+D0owJKugV5
+ns2.bogus-nsec.interop.	3600	RRSIG	A 14 3 3600 20361001194834 20261004181834 46532 bogus-nsec.interop. wUdpTN3IC8+Cjzxg6eC4joAcCgXHXkPuQ2NDWBKqGE/qLJfb2V2LqL/XJ5KF10kCtrrXQppyMzgycM54Iv6YgG9FFu+Se0DlwEEu2BXSTlynyLaJTNnfy1pEuYml19fw
+ns2.bogus-nsec.interop.	300	RRSIG	NSEC 14 3 300 20361001194834 20261004181834 46532 bogus-nsec.interop. 17Dla8Tyvg4ilkk41RaRLHkjQki6Korxoj4Xhx61EsMpUHxWeYHuoLG7u6SYtrfgdr1QjjLpINNLk8YIMFviEuham5TUNP9iNamQR2sRm7ln+spE3shG81E+hK+1TBPe
+odd\.label\032x.bogus-nsec.interop. 3600	RRSIG	TXT 14 3 3600 20361001194834 20261004181834 46532 bogus-nsec.interop. 5MIaS2yfJJ0PlU0dBhB8bpwVV4bCNlFSmFT4CkKFvRyI+tAwnqmpD+UwVHFhZY2I5SIq/fd84RzikX2MzGbEdQAg+0EiO/YRw7si7HerxPkDxgnWvJZkTaiYEg0u37wf
+odd\.label\032x.bogus-nsec.interop. 300	RRSIG	NSEC 14 3 300 20361001194834 20261004181834 46532 bogus-nsec.interop. jJ8VR0RmZ6cTodQeQHY+RjEBsjaSV2lKCrp8Iyr1/coXGl51FqalAWEMDjPVugIf5KJeQ+OPDXD8qlkurhEqosV3rdy4iDpDLeT+4nAZ85fNKdKs2tT9y6yCpj0pegON
+other.bogus-nsec.interop.	300	RRSIG	NSEC 14 3 300 20361001194834 20261004181834 46532 bogus-nsec.interop. Ol6rmlZnh6k03o01QZYEe1zQMOyVIlKS+5UUs+fiGbOZcZgcXP5uUNJlHDlDezt5otDB5GN+qEWoyg6geEsxjTo05BIekio7ULE7oMpBsjHv+jjAxPXWGr+TaNTzZfkV
+secure.bogus-nsec.interop.	3600	RRSIG	DS 14 3 3600 20361001194834 20261004181834 46532 bogus-nsec.interop. 6/DWwyw33WkKGI9su54v1kGAJ3yjR+cYBod5owYSpoIMSB3yRdfuhBGrs/tspruQqGfqsCj401wGQVtRE1wS4rkfsYDEOmQ8+gsIPOOBNscwxJU/vikbyFTnGKhtkT8C
+secure.bogus-nsec.interop.	300	RRSIG	NSEC 14 3 300 20361001194834 20261004181834 46532 bogus-nsec.interop. 2klUhaL5TqxIfx8yGwVRQ7U9DtOuvcrEMVIs6zu0SpwYNLDvMeiMC0XTpyd1tuphIV4AV/dYwn8IOSFSMSsDGSgKaImDW5v1Aan5CX+OQ2FMOgaWeE0jjhI9V+sXlSdu
+unsigned.bogus-nsec.interop.	300	RRSIG	NSEC 14 3 300 20361001194834 20261004181834 46532 bogus-nsec.interop. F9gNyfnKFdoHRuHO4hJrEl/x7HNU+LrslKtlnB3sQ38glgXoDbVI1RYnEdKjS2mwM2nM0wAAeMTDXKV1FaTlb//lo5ia0/5Gko9hom8EVes542DJiRYDaTImTKbeTbln
+*.wild.bogus-nsec.interop.	3600	RRSIG	A 14 3 3600 20361001194834 20261004181834 46532 bogus-nsec.interop. TyiiRiOYxNGQsjHnI1Zis8gUdpDFgbEurtLh0OguluM89nRbszOZDCnduhFgN3PqiCsMy/jfJiid0LVfycD9fKkVT/cnXKH/THdbDwnYwa/+nQT4Dmju7lpgO5rR8JN5
+*.wild.bogus-nsec.interop.	3600	RRSIG	TXT 14 3 3600 20361001194834 20261004181834 46532 bogus-nsec.interop. 59HoH+dsgbqdR9/4WXf5wRMPaMtp/WCYn7/5cC8BDTcz84MkegCspXHx+McupVsOSVMgQ+C4tc7EYlngFxAq8geTvNAx7ALTILez+d9wZ+siDQOSFpZ7IAju5O8EEIFf
+*.wild.bogus-nsec.interop.	300	RRSIG	NSEC 14 3 300 20361001194834 20261004181834 46532 bogus-nsec.interop. 6Ki0k6KfPd2zaK1Cp/J8fKYFLguyAT/dtuN8CnmwT4F62asTIv08AXUIdsBzHMGfvbaNyqznOAOow0UvC/YypEeBAfyswz4iojkjRw5IfWwW5wbeFBFEvXhGRSxVCnLj
+www.bogus-nsec.interop.	3600	RRSIG	A 14 3 3600 20361001194834 20261004181834 46532 bogus-nsec.interop. XPmYpwNTKS5YQ+wbSaUVmQsXB9G9oS7hxeLysqrLFq4oYyo0poWVicQOi2VVxPn3eeuOv+44OLuoxAVuqQTI2/rMFfzgsEcFFEpN/wF32JkHYAMXDBjKzEbBNyLgqwUA
+www.bogus-nsec.interop.	3600	RRSIG	AAAA 14 3 3600 20361001194834 20261004181834 46532 bogus-nsec.interop. Vo2kEFJl8KlAOEKFXjY1E/YrMLCscjJXkzZFgmsZvCmSgcHmPSj6PZ7zLbmQxcPnIkeNlqnLhDqjJ4iRvbvaFj33GgZLZP2ipzJbl/Ovz6avDzhAGCHNhKTewYJoGl8z
+www.bogus-nsec.interop.	300	RRSIG	NSEC 14 3 300 20361001194834 20261004181834 46532 bogus-nsec.interop. KIclfDNzq6d8XQWsIw5KHeULo0uoh9renlNGKK0P+aKJwijMnhYPxeZRv5rI1ZWRAAHvWPmam3IzsIGsL2zYeU+W2tYBmvVdyA2L2SBtx5eQqJOVEgDtFd+Y4RK6grsn
+_443._tcp.www.bogus-nsec.interop. 300	RRSIG	NSEC 14 5 300 20361001194834 20261004181834 46532 bogus-nsec.interop. uq151zsMg9aVK2iWfiS3AV3sZyCp/eZxqKqN6R8u7rXKGNLykxvVXe2wkaq2CHQW3jx+DRpWomp9R1h6BGMO2YAF7l3CVoCWlh6eaFfNLsRXEBnCjyoQZrvz/kdz73/A
+_443._tcp.www.bogus-nsec.interop. 3600	RRSIG	TLSA 14 5 3600 20361001194834 20261004181834 46532 bogus-nsec.interop. Uz1hGAUaBxnEz/0Z9OXQqUbEHEpLwZDeAcg3xz3NGy1i4KWmfIPaixbxOcveA/VVHYw8lsl4DvMOBKK+VaBLaPtmHk+BAnyPAy+tdlP8JiZ5H4csw/u4EFDamScZ+4rC
+;; DNSSEC NSEC chain
+bogus-nsec.interop. 300 NSEC _svc.bogus-nsec.interop. NS SOA MX TXT LOC SSHFP RRSIG NSEC DNSKEY HTTPS CAA SPF
+_svc.bogus-nsec.interop. 300 NSEC _sip._udp.bogus-nsec.interop. RRSIG NSEC SVCB SPF
+_sip._udp.bogus-nsec.interop. 300 NSEC alias.bogus-nsec.interop. SRV NAPTR RRSIG NSEC SPF
+alias.bogus-nsec.interop. 300 NSEC dname.bogus-nsec.interop. CNAME RRSIG NSEC SPF
+dname.bogus-nsec.interop. 300 NSEC a.b.ent.bogus-nsec.interop. DNAME RRSIG NSEC SPF
+a.b.ent.bogus-nsec.interop. 300 NSEC insecure.bogus-nsec.interop. A RRSIG NSEC SPF
+insecure.bogus-nsec.interop. 300 NSEC mail.bogus-nsec.interop. NS RRSIG NSEC SPF
+mail.bogus-nsec.interop. 300 NSEC ns1.bogus-nsec.interop. A RRSIG NSEC SPF
+ns1.bogus-nsec.interop. 300 NSEC ns2.bogus-nsec.interop. A RRSIG NSEC SPF
+ns2.bogus-nsec.interop. 300 NSEC odd\.label\032x.bogus-nsec.interop. A RRSIG NSEC SPF
+odd\.label\032x.bogus-nsec.interop. 300 NSEC other.bogus-nsec.interop. TXT RRSIG NSEC SPF
+other.bogus-nsec.interop. 300 NSEC secure.bogus-nsec.interop. NS RRSIG NSEC SPF
+secure.bogus-nsec.interop. 300 NSEC unsigned.bogus-nsec.interop. NS DS RRSIG NSEC SPF
+unsigned.bogus-nsec.interop. 300 NSEC *.wild.bogus-nsec.interop. NS RRSIG NSEC SPF
+*.wild.bogus-nsec.interop. 300 NSEC www.bogus-nsec.interop. A TXT RRSIG NSEC SPF
+www.bogus-nsec.interop. 300 NSEC _443._tcp.www.bogus-nsec.interop. A AAAA RRSIG NSEC SPF
+_443._tcp.www.bogus-nsec.interop. 300 NSEC bogus-nsec.interop. RRSIG NSEC TLSA SPF
+;; Written 93 records
+;; Time 2026-10-04 19:48:34 UTC

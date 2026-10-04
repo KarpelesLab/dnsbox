@@ -1,0 +1,1 @@
+kdig +dnssec host.insecure.ecdsap256-nsec3.interop. A

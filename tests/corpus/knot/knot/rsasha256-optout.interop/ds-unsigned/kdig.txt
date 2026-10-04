@@ -1,0 +1,20 @@
+;; ->>HEADER<<- opcode: QUERY; status: NOERROR; id: 27401
+;; Flags: qr aa rd; QUERY: 1; ANSWER: 0; AUTHORITY: 6; ADDITIONAL: 1
+
+;; EDNS PSEUDOSECTION:
+;; Version: 0; flags: do; UDP size: 1232 B; ext-rcode: NOERROR
+
+;; QUESTION SECTION:
+;; other.rsasha256-optout.interop.		IN	DS
+
+;; AUTHORITY SECTION:
+rsasha256-optout.interop.	300	IN	SOA	ns1.rsasha256-optout.interop. hostmaster.rsasha256-optout.interop. 2026100401 7200 3600 1209600 300
+5ffmna0aqj28ff9gcbdhgn6j3e0qeuhq.rsasha256-optout.interop. 300	IN	NSEC3	1 1 0 - 6o195pploe85r13t0n8f7c10h880bce2 NS SOA MX TXT LOC SSHFP RRSIG DNSKEY NSEC3PARAM ZONEMD HTTPS CAA
+miu5bg78llokc82jjtqsfbeiqq5hunfd.rsasha256-optout.interop. 300	IN	NSEC3	1 1 0 - o07osiiuq5ehskfb35thedp8580mp30h 
+rsasha256-optout.interop.	300	IN	RRSIG	SOA 8 2 3600 20361001194833 20261004181833 30138 rsasha256-optout.interop. N5uERrpV2fNOjGXeDZwQqktNxR5f3TF8w2kgYoO6C4in/7QN2Upd5pSxgooGwCgWDeAzyUlFPxjMBV0XUalD8dN+ERYCbI57sm5i7Xu63xeZeRN7xW5LAtNMlcN68ZcTjfI8ACKBYt4kJ3hYjBx3pLq1v9GAYtF5Cgb3OroNx3E=
+5ffmna0aqj28ff9gcbdhgn6j3e0qeuhq.rsasha256-optout.interop. 300	IN	RRSIG	NSEC3 8 3 300 20361001194833 20261004181833 30138 rsasha256-optout.interop. cIeYFwGQNgp4FBI7s8sDZHRPfW7bJO+dLMCxrp6KhcmJRXxwbw44AoXgrmNE5rPKRR+JjiiFq1TxdYyCLrIc6hMyRERs+VYKZYXFC/Gn5Ds34UMaYZ+svqWWZ1UEhCnbab1T6BerqHo0s3w19NYCBEUaz2T8KKXFKUWdSbkHy7c=
+miu5bg78llokc82jjtqsfbeiqq5hunfd.rsasha256-optout.interop. 300	IN	RRSIG	NSEC3 8 3 300 20361001194833 20261004181833 30138 rsasha256-optout.interop. 9HfYcmWopyQ62s1YHTluETSb5JcJ3rWMGBJRDvF19FRNEEb6IVEnWR4gB50pGixpBaMd00x0F8EWndww6RIg20ELnt8v1gn/YO/olCTmfj/Gry6y6m4sHxARF8wRsJqG81i4oQVU7i9HB4pno9+GU41vIIxlSoGiZY1+MFDBx8U=
+
+;; Received 818 B
+;; Time 2026-10-04 19:49:36 UTC
+;; From 127.0.0.1@5300(UDP) in 0.4 ms

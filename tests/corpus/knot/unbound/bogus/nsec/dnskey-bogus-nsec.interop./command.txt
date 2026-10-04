@@ -1,0 +1,1 @@
+kdig +dnssec +cdflag bogus-nsec.interop. DNSKEY

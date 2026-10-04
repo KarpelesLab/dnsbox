@@ -1,0 +1,20 @@
+;; ->>HEADER<<- opcode: QUERY; status: NOERROR; id: 52378
+;; Flags: qr rd; QUERY: 1; ANSWER: 0; AUTHORITY: 3; ADDITIONAL: 2
+
+;; EDNS PSEUDOSECTION:
+;; Version: 0; flags: do; UDP size: 1232 B; ext-rcode: NOERROR
+
+;; QUESTION SECTION:
+;; host.secure.ecdsap384-optout.interop. 	IN	A
+
+;; AUTHORITY SECTION:
+secure.ecdsap384-optout.interop. 3600	IN	NS	ns.secure.ecdsap384-optout.interop.
+secure.ecdsap384-optout.interop. 3600	IN	DS	12345 13 2 E06D44B80B8F1D39A95C0B0D7C65D08458E880409BBC683457104237C7F8EC8D
+secure.ecdsap384-optout.interop. 3600	IN	RRSIG	DS 14 3 3600 20361001194833 20261004181833 10601 ecdsap384-optout.interop. ar1v9Y+z6sucQAFyeDWS19Rf+FycvhSP64C+sEVGF+Tkykr3+1rNLIrLZAeWJCGsk88c9+UhvJiZXJe8n9GoTSEY/y68zOkRqnALhTr89bJayKSaSYvIop6WHi8nmLwi
+
+;; ADDITIONAL SECTION:
+ns.secure.ecdsap384-optout.interop. 3600	IN	A	192.0.2.99
+
+;; Received 298 B
+;; Time 2026-10-04 19:49:37 UTC
+;; From 127.0.0.1@5300(UDP) in 0.4 ms

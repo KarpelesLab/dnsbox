@@ -1,0 +1,17 @@
+;; ->>HEADER<<- opcode: QUERY; status: NOERROR; id: 53079
+;; Flags: qr rd ra cd; QUERY: 1; ANSWER: 3; AUTHORITY: 0; ADDITIONAL: 1
+
+;; EDNS PSEUDOSECTION:
+;; Version: 0; flags: do; UDP size: 1232 B; ext-rcode: NOERROR
+
+;; QUESTION SECTION:
+;; bogus-nsec.interop. 		IN	DNSKEY
+
+;; ANSWER SECTION:
+bogus-nsec.interop. 	3600	IN	DNSKEY	257 3 14 p+/r55Z0rzMb+B6/H31H0myQuyOsoZ6+Dvk6Vhqcwkg/fxSGYmj2eB1e3oq2Skrh2zUPT99XQjNQKALKG+jQeLMvRjMD0vp54MniLoaZVSuKajps1MK01JGpKkVS6aSL
+bogus-nsec.interop. 	3600	IN	DNSKEY	256 3 14 qX7mK83JDHuE0yhYS6SBg83wgZGIcroZ9d/m+V9XcQYkPupmDR1XnH2ngnDgjXkf74e+DLHTntp6dFQMY2MMGnlAnoGKZtIYekDmjucbJ8EF3ZV2NAIGQxAF7VWlcSh1
+bogus-nsec.interop. 	3600	IN	RRSIG	DNSKEY 14 2 3600 20361001194834 20261004181834 42619 bogus-nsec.interop. KUBPuAdb1fj04EtPjakO0b6/Nakwbc3Rzp3rfYLgBVqk/+L0IlPcP3YxZ5sHvkStQSxco4CYYxssaq1kVfPUMzjSdOWWraYzOd8tDe+UIa2c03+XZXg2aMyYBIo+gNay
+
+;; Received 417 B
+;; Time 2026-10-04 19:49:40 UTC
+;; From 127.0.0.1@5400(UDP) in 0.4 ms

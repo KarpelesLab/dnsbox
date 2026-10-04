@@ -1,0 +1,20 @@
+;; ->>HEADER<<- opcode: QUERY; status: NOERROR; id: 1995
+;; Flags: qr aa rd; QUERY: 1; ANSWER: 2; AUTHORITY: 2; ADDITIONAL: 1
+
+;; EDNS PSEUDOSECTION:
+;; Version: 0; flags: do; UDP size: 1232 B; ext-rcode: NOERROR
+
+;; QUESTION SECTION:
+;; host.wild.rsasha512-nsec.interop. 	IN	A
+
+;; ANSWER SECTION:
+host.wild.rsasha512-nsec.interop. 3600	IN	A	192.0.2.42
+host.wild.rsasha512-nsec.interop. 3600	IN	RRSIG	A 10 3 3600 20361001194833 20261004181833 33173 rsasha512-nsec.interop. KPOMaOxkiYxCT4jxsqq0UE7XcvbO+iyeONqxCBE2mDZrweMm/mG44XBRRwM+D+GB7GzhqROXUaQYmkCMKkIHO5ljeWIM26Yv9xEV+tHiQn99bmMKYhhku0mLRKB75blpDbwzx7m3YULnc4Jnt8GHP+qi+BO5uxRNLG96++UmQLQ=
+
+;; AUTHORITY SECTION:
+*.wild.rsasha512-nsec.interop.	300	IN	NSEC	www.rsasha512-nsec.interop. A TXT RRSIG NSEC
+*.wild.rsasha512-nsec.interop.	300	IN	RRSIG	NSEC 10 3 300 20361001194833 20261004181833 33173 rsasha512-nsec.interop. Pu3hD1Ps6Gc4Zaptu/tfuZHrmc8fjlcQJO7pcnWg5fKuwjE5T7M3VhP+18Iy2MedJuO/9x3ayAPiWuNpOCmXECT9sv6V/2XUEr73/oQYKS9gs495I1C0GlNHMSQ4Stw4GZRoWDX7/HGvuRYwgN+jCFmqYUvQJLi/y8AttPfnJNM=
+
+;; Received 491 B
+;; Time 2026-10-04 19:49:36 UTC
+;; From 127.0.0.1@5300(UDP) in 0.4 ms

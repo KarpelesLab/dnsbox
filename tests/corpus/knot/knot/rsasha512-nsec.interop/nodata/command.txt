@@ -1,0 +1,1 @@
+kdig +dnssec www.rsasha512-nsec.interop. MX

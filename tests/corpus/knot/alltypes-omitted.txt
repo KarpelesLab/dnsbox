@@ -1,0 +1,40 @@
+a6.alltypes.example. 3600 IN A6 0 2001:db8::1
+a6.alltypes.example. 3600 IN A6 64 ::1:2:3:4 prefix.alltypes.example.
+a6.alltypes.example. 3600 IN A6 128 prefix.alltypes.example.
+atma.alltypes.example. 3600 IN ATMA 39246f00e7c9000000000000000102030405060708
+atma.alltypes.example. 3600 IN ATMA +3584001234567
+avc.alltypes.example. 3600 IN AVC "app-name:WOLFGANG|app-class:OAM|business=yes"
+dlv.alltypes.example. 3600 IN DLV 60485 5 1 2BB183AF5F22588179A53B0A98631FAD1A292118
+eid.alltypes.example. 3600 IN EID 0123456789ABCDEF
+gid.alltypes.example. 3600 IN GID \# 4 000003E8
+gpos.alltypes.example. 3600 IN GPOS "0" "0" "0"
+gpos.alltypes.example. 3600 IN GPOS "-32.6882" "116.8652" "10.0"
+hip.alltypes.example. 3600 IN HIP 2 200100107B1A74DF365639CC39F1D578 AwEAAbdxyhNuSutc5EMzxTs9LBPCIkOFH8cIvM4p9+LrV4e19WzK00+CI6zBCQTdtWsuxKbWIy87UOoJTwkUs7lBu+Upr1gsNrut79ryra+bSRGQb1slImA8YVJyuIDsj7kwzG7jnERNqnWxZ48AWkskmdHaVDP4BcelrTI3rMXdXF5D rvs.alltypes.example. rvs2.alltypes.example.
+isdn.alltypes.example. 3600 IN ISDN "150862028003217"
+isdn.alltypes.example. 3600 IN ISDN "150862028003217" "004"
+key.alltypes.example. 3600 IN KEY 49664 3 5
+mb.alltypes.example. 3600 IN MB a.alltypes.example.
+mg.alltypes.example. 3600 IN MG a.alltypes.example.
+mr.alltypes.example. 3600 IN MR a.alltypes.example.
+nimloc.alltypes.example. 3600 IN NIMLOC 32427B5E4C3B
+ninfo.alltypes.example. 3600 IN NINFO "Zone Status" "OK"
+nsap.alltypes.example. 3600 IN NSAP 0x4700058000
+nsap.alltypes.example. 3600 IN NSAP 0x47000580005a0000000001e133ffffff00016100
+nsap-ptr.alltypes.example. 3600 IN NSAP-PTR foo.alltypes.example.
+null.alltypes.example. 3600 IN NULL \# 0
+null.alltypes.example. 3600 IN NULL \# 4 DEADBEEF
+nxt.alltypes.example. 3600 IN NXT a.alltypes.example. A MX SIG NXT
+px.alltypes.example. 3600 IN PX 10 map822.alltypes.example. mapx400.alltypes.example.
+rkey.alltypes.example. 3600 IN RKEY 0 3 253 l02Woi0iS8Aa25FQkUd9RMzZHJpBoRQwAQEX1SxZJA4=
+sig.alltypes.example. 3600 IN SIG TYPE0 15 0 0 20261004090347 20261004085347 43160 sig0.alltypes.example. AAAA
+sink.alltypes.example. 3600 IN SINK 1 0 0
+sink.alltypes.example. 3600 IN SINK 8 0 2 l1kFqOTsQOFjXWVn
+ta.alltypes.example. 3600 IN TA 60485 5 1 2BB183AF5F22588179A53B0A98631FAD1A292118
+talink.alltypes.example. 3600 IN TALINK . talink2.alltypes.example.
+talink2.alltypes.example. 3600 IN TALINK talink.alltypes.example. .
+uid.alltypes.example. 3600 IN UID \# 4 000003E8
+uinfo.alltypes.example. 3600 IN UINFO \# 3 616263
+unspec.alltypes.example. 3600 IN UNSPEC \# 2 0102
+wks.alltypes.example. 3600 IN WKS 192.0.2.1 6 25 80 443
+wks.alltypes.example. 3600 IN WKS 192.0.2.1 17 53
+x25.alltypes.example. 3600 IN X25 "311061700956"

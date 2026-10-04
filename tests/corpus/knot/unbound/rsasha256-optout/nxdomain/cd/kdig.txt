@@ -1,0 +1,23 @@
+;; ->>HEADER<<- opcode: QUERY; status: NXDOMAIN; id: 58255
+;; Flags: qr rd ra cd; QUERY: 1; ANSWER: 0; AUTHORITY: 8; ADDITIONAL: 1
+
+;; EDNS PSEUDOSECTION:
+;; Version: 0; flags: do; UDP size: 1232 B; ext-rcode: NOERROR
+;; EDE: 6 (DNSSEC Bogus)
+
+;; QUESTION SECTION:
+;; nosuch.rsasha256-optout.interop. 	IN	A
+
+;; AUTHORITY SECTION:
+rsasha256-optout.interop.	300	IN	SOA	ns1.rsasha256-optout.interop. hostmaster.rsasha256-optout.interop. 2026100401 7200 3600 1209600 300
+rsasha256-optout.interop.	300	IN	RRSIG	SOA 8 2 3600 20361001194833 20261004181833 30138 rsasha256-optout.interop. N5uERrpV2fNOjGXeDZwQqktNxR5f3TF8w2kgYoO6C4in/7QN2Upd5pSxgooGwCgWDeAzyUlFPxjMBV0XUalD8dN+ERYCbI57sm5i7Xu63xeZeRN7xW5LAtNMlcN68ZcTjfI8ACKBYt4kJ3hYjBx3pLq1v9GAYtF5Cgb3OroNx3E=
+5ffmna0aqj28ff9gcbdhgn6j3e0qeuhq.rsasha256-optout.interop. 300	IN	NSEC3	1 1 0 - 6o195pploe85r13t0n8f7c10h880bce2 NS SOA MX TXT LOC SSHFP RRSIG DNSKEY NSEC3PARAM ZONEMD HTTPS CAA
+5ffmna0aqj28ff9gcbdhgn6j3e0qeuhq.rsasha256-optout.interop. 300	IN	RRSIG	NSEC3 8 3 300 20361001194833 20261004181833 30138 rsasha256-optout.interop. cIeYFwGQNgp4FBI7s8sDZHRPfW7bJO+dLMCxrp6KhcmJRXxwbw44AoXgrmNE5rPKRR+JjiiFq1TxdYyCLrIc6hMyRERs+VYKZYXFC/Gn5Ds34UMaYZ+svqWWZ1UEhCnbab1T6BerqHo0s3w19NYCBEUaz2T8KKXFKUWdSbkHy7c=
+q6vqfod1mk95dul8j2comjcbcisaqbhk.rsasha256-optout.interop. 300	IN	NSEC3	1 1 0 - ss35k2nkm201rcrvi18m7a153p3l6ha1 TXT RRSIG
+q6vqfod1mk95dul8j2comjcbcisaqbhk.rsasha256-optout.interop. 300	IN	RRSIG	NSEC3 8 3 300 20361001194833 20261004181833 30138 rsasha256-optout.interop. VH7JDPpMFu2YYnBQQMBJZc/R7aKFCSA8dd975ZQR+fbHLvQJajq9APVRJNBDn47KNdLBwQh51JfVRYau+LK86kgCF1DuJxM7M4HkZ/WR0dsUCJb6dR/RmZ0RsWli3Szs7aRZBKweWrKMn8n86HrwbrRyjC+7u4hCI5lvheD1FPM=
+o07osiiuq5ehskfb35thedp8580mp30h.rsasha256-optout.interop. 300	IN	NSEC3	1 1 0 - q6vqfod1mk95dul8j2comjcbcisaqbhk 
+o07osiiuq5ehskfb35thedp8580mp30h.rsasha256-optout.interop. 300	IN	RRSIG	NSEC3 8 3 300 20361001194833 20261004181833 30138 rsasha256-optout.interop. nYXnmAfxqzrUsOOzEpeBRWF7KtSqByUOlkG8Fdp8idWgJKu5PQ1rVbIdtS+efu8LruOhPTTGwSzjiIKxczpvu/ZTUhufBW4hAYIV/rSM65Yl+BB81ifD/7F2GCL4jxzTdcG2XhhPed1pttOGvg2FTmLFByJO703HdRPCf5BgtpM=
+
+;; Received 1088 B
+;; Time 2026-10-04 19:49:38 UTC
+;; From 127.0.0.1@5400(UDP) in 0.4 ms

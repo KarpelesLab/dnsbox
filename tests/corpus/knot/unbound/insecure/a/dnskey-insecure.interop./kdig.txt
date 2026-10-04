@@ -1,0 +1,15 @@
+;; ->>HEADER<<- opcode: QUERY; status: NOERROR; id: 9054
+;; Flags: qr rd ra cd; QUERY: 1; ANSWER: 0; AUTHORITY: 1; ADDITIONAL: 1
+
+;; EDNS PSEUDOSECTION:
+;; Version: 0; flags: do; UDP size: 1232 B; ext-rcode: NOERROR
+
+;; QUESTION SECTION:
+;; insecure.interop.   		IN	DNSKEY
+
+;; AUTHORITY SECTION:
+insecure.interop.   	300	IN	SOA	ns1.insecure.interop. hostmaster.insecure.interop. 2026100401 7200 3600 1209600 300
+
+;; Received 96 B
+;; Time 2026-10-04 19:49:40 UTC
+;; From 127.0.0.1@5400(UDP) in 0.9 ms

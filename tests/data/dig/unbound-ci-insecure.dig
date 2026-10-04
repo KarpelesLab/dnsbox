@@ -1,0 +1,10 @@
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 64861
+;; flags: qr rd ra; QUERY: 1, ANSWER: 1, AUTHORITY: 0, ADDITIONAL: 1
+
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags: do; udp: 1232
+;; QUESTION SECTION:
+;www.insecure.interop.		IN	A
+
+;; ANSWER SECTION:
+www.insecure.interop.	3600	IN	A	192.0.2.80

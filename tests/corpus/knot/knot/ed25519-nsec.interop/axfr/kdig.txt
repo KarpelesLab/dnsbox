@@ -1,0 +1,99 @@
+;; AXFR for ed25519-nsec.interop.
+ed25519-nsec.interop.	3600	IN	SOA	ns1.ed25519-nsec.interop. hostmaster.ed25519-nsec.interop. 2026100401 7200 3600 1209600 300
+ed25519-nsec.interop.	3600	IN	NS	ns1.ed25519-nsec.interop.
+ed25519-nsec.interop.	3600	IN	NS	ns2.ed25519-nsec.interop.
+ed25519-nsec.interop.	3600	IN	MX	10 mail.ed25519-nsec.interop.
+ed25519-nsec.interop.	3600	IN	TXT	"v=spf1 mx -all"
+ed25519-nsec.interop.	3600	IN	LOC	52 22 23 N  4 53 32 E  -2m  0m 10000m 10m
+ed25519-nsec.interop.	3600	IN	SSHFP	4 2 123456789ABCDEF67890123456789ABCDEF67890123456789ABCDEF123456789
+ed25519-nsec.interop.	3600	IN	RRSIG	NS 15 2 3600 20361001194833 20261004181833 11439 ed25519-nsec.interop. qRwI9O7l2/ASfS3oWISEPHPppvtuNUrhI4sdrxfKcYIc6XpOWiKXmnqbWUO81NhdxvlxM2RO9vGvGl7MQJ0xCw==
+ed25519-nsec.interop.	3600	IN	RRSIG	SOA 15 2 3600 20361001194833 20261004181833 11439 ed25519-nsec.interop. a3o7FzTRlfo5nXZqg7swFv79HRPPzNtNia072Qne4Ak8mZ2z/FVkOY0bsArRoaVNhzN1ORgkJxrrHRggE1Z6CA==
+ed25519-nsec.interop.	3600	IN	RRSIG	MX 15 2 3600 20361001194833 20261004181833 11439 ed25519-nsec.interop. oQNTu3c5hoOkCeRs6ld3+7S56IGVgXtSDkkBEpAArE9ngp9RAJYJcamISGvhFpsDtqtHCnSs+3PAEAwB9Rr3DA==
+ed25519-nsec.interop.	3600	IN	RRSIG	TXT 15 2 3600 20361001194833 20261004181833 11439 ed25519-nsec.interop. x8ybaJRbg/YoeL5pVstS3CyC4pIEnjyxbMckhmycIftAasLKC6EVOb6aXIbl8Quqvb7FcigwBai2BvOuvZeiDA==
+ed25519-nsec.interop.	3600	IN	RRSIG	LOC 15 2 3600 20361001194833 20261004181833 11439 ed25519-nsec.interop. /S7Yn5TRzwRw1vGutAXrHG3glu3GfPLYtomWTnInLDAF3Ftu2SbgzAJaO368LskqUYsYyHxmV2J6XhM0ElHzCQ==
+ed25519-nsec.interop.	3600	IN	RRSIG	SSHFP 15 2 3600 20361001194833 20261004181833 11439 ed25519-nsec.interop. MqpMTmlWJSGhL+Ombl/FqvfPEZ06DGATnJBVuCf2R0JhDfRI55suwnMnxff79wiXmKm9f3GICbFCxlUGHGI5Aw==
+ed25519-nsec.interop.	300	IN	RRSIG	NSEC 15 2 300 20361001194833 20261004181833 11439 ed25519-nsec.interop. jszAwdrDIkvppZUskuUoM7n/nIgCmixCfRbmdwt/a8eMWncS59MsaEmf926zcte2LvTO/fe/+RUk/gca3XowAQ==
+ed25519-nsec.interop.	3600	IN	RRSIG	DNSKEY 15 2 3600 20361001194833 20261004181833 39915 ed25519-nsec.interop. euZfF8nmmwHMjbe+tTeiHitgdk/rQAVcDK1GefOsKo9IWziIEV922XPLsrZQAw5eMjzE3SnLrFHpxzfWpcHIDg==
+ed25519-nsec.interop.	3600	IN	RRSIG	HTTPS 15 2 3600 20361001194833 20261004181833 11439 ed25519-nsec.interop. 7UNKdooDwCvz1Rg2s3jF4kbAYFy7vGG/Mm+ZCV7WrJ3/kMkDv73JeEkfE1hcojJZSfr58KPaP+xHiZLtNLBcBw==
+ed25519-nsec.interop.	3600	IN	RRSIG	CAA 15 2 3600 20361001194833 20261004181833 11439 ed25519-nsec.interop. YUBlZAxvP1kyaOv9G/WOU7gNSs1jT3ciALkRRSOmEkojW7SMgVEbWbHLJiC5+JzpuDY+FtRGQKMTmqwG0UHjAg==
+ed25519-nsec.interop.	300	IN	NSEC	_svc.ed25519-nsec.interop. NS SOA MX TXT LOC SSHFP RRSIG NSEC DNSKEY HTTPS CAA
+ed25519-nsec.interop.	3600	IN	DNSKEY	256 3 15 iw0+2zEZ82J6adGWBQtCOq8BMyTNrQ2f1yiyX+0hctg=
+ed25519-nsec.interop.	3600	IN	DNSKEY	257 3 15 1qLIN+9WvHp/yr289UdP5Lz+Xt10udc/rlxUogbRWNY=
+ed25519-nsec.interop.	3600	IN	HTTPS	1 . alpn="h2,h3" ipv4hint=192.0.2.80
+ed25519-nsec.interop.	3600	IN	CAA	0 issue "letsencrypt.org" 
+_svc.ed25519-nsec.interop.	300	IN	RRSIG	NSEC 15 3 300 20361001194833 20261004181833 11439 ed25519-nsec.interop. xlFUcfDT/buSHX6g7Gi7RY3uuFpcC+2UCxNUdiScck3QBtCF9CPLaMLi1c6pc2QZqY15+PKn87X5ar0vtaptAQ==
+_svc.ed25519-nsec.interop.	3600	IN	RRSIG	SVCB 15 3 3600 20361001194833 20261004181833 11439 ed25519-nsec.interop. 9PS2/7ErJzeXCX0yNn/pmQ3AnfGUGluPBRwATNitZMSPkt/3wNTIOgp9/E7ClLKXpKclmFixyun5FNRp7DmOCg==
+_svc.ed25519-nsec.interop.	300	IN	NSEC	_sip._udp.ed25519-nsec.interop. RRSIG NSEC SVCB
+_svc.ed25519-nsec.interop.	3600	IN	SVCB	1 www.ed25519-nsec.interop. alpn="dot" port=853
+_sip._udp.ed25519-nsec.interop.	3600	IN	SRV	10 60 5060 www.ed25519-nsec.interop.
+_sip._udp.ed25519-nsec.interop.	3600	IN	NAPTR	100 10 "S" "SIP+D2U" "" _sip._udp.ed25519-nsec.interop.
+_sip._udp.ed25519-nsec.interop.	3600	IN	RRSIG	SRV 15 4 3600 20361001194833 20261004181833 11439 ed25519-nsec.interop. OQBPzWW5Zai6VpdRECo7yq26A2AV7u/O0GNYX/MiIGdGc+zzr/blYbhC1B4gkg0wJZH0/rrIZVK42KPFG4q7BQ==
+_sip._udp.ed25519-nsec.interop.	3600	IN	RRSIG	NAPTR 15 4 3600 20361001194833 20261004181833 11439 ed25519-nsec.interop. z9hsg6vzd31Mk2mXYCHEZxzMgqTJ9bM4VyrwXHMvvgSFeugQwJnOewVT2OeKSlr9YJtPRy6j49nOwufUMLz8AQ==
+_sip._udp.ed25519-nsec.interop.	300	IN	RRSIG	NSEC 15 4 300 20361001194833 20261004181833 11439 ed25519-nsec.interop. yYLRkEJuh12diixErw5Zr0Zw3aM6s8mYd1E6n2/4Rizv14ETDFI0WMsus1LMLlO3ZjQquzOWA01gd2cD67nbAQ==
+_sip._udp.ed25519-nsec.interop.	300	IN	NSEC	alias.ed25519-nsec.interop. SRV NAPTR RRSIG NSEC
+alias.ed25519-nsec.interop.	3600	IN	CNAME	www.ed25519-nsec.interop.
+alias.ed25519-nsec.interop.	3600	IN	RRSIG	CNAME 15 3 3600 20361001194833 20261004181833 11439 ed25519-nsec.interop. hbtgEFePk0rHKFzdUay2r5bMPhOetsnfnhGbQ5J015HxfqRxww6Kldmj1hHLc6B24/eagua1MkoL6QklPiRVDg==
+alias.ed25519-nsec.interop.	300	IN	RRSIG	NSEC 15 3 300 20361001194833 20261004181833 11439 ed25519-nsec.interop. 6GEaYt19tVNWtzHDSvLUszGB4WlfzsxHaJ/8bsEUsO99AcKHAw7S3gBFDdK6zkdfU6j9SWH70EYaOu+3FTpMBg==
+alias.ed25519-nsec.interop.	300	IN	NSEC	dname.ed25519-nsec.interop. CNAME RRSIG NSEC
+dname.ed25519-nsec.interop.	3600	IN	DNAME	example.net.
+dname.ed25519-nsec.interop.	3600	IN	RRSIG	DNAME 15 3 3600 20361001194833 20261004181833 11439 ed25519-nsec.interop. 3V6Di2F7O2WFmPHI8fqiuvqICnBsIdXWtDw/e2m/qnWNX3KQVYQ5DGS5tLk9GA3oa3+k9N+lvsVMYVfXp0i7AA==
+dname.ed25519-nsec.interop.	300	IN	RRSIG	NSEC 15 3 300 20361001194833 20261004181833 11439 ed25519-nsec.interop. Yxls1bu6G4fv1lpwJndmn2mi1QEEdbiK7uj08gXzLP/9UifIWVFbV/JySGm/DCXdR1wZGQoqRfSU74TfL2xNBQ==
+dname.ed25519-nsec.interop.	300	IN	NSEC	a.b.ent.ed25519-nsec.interop. DNAME RRSIG NSEC
+a.b.ent.ed25519-nsec.interop.	3600	IN	A	192.0.2.7
+a.b.ent.ed25519-nsec.interop.	3600	IN	RRSIG	A 15 5 3600 20361001194833 20261004181833 11439 ed25519-nsec.interop. kcJNIouVIO7q3TVvKdZGtovSZTgdsGvTQDKmYdu6W2ufcNaBIhHlduof22KMS3BdMBEIYAXCBkaj9tsbulVdAA==
+a.b.ent.ed25519-nsec.interop.	300	IN	RRSIG	NSEC 15 5 300 20361001194833 20261004181833 11439 ed25519-nsec.interop. kO3H4fenM+b3P97IobOH1dsyFM40N7A4DzCqFF3AroZ3/1mI7BQxT/gjVjB3KUCzNoPg7svEMAhWLYthKmFIBQ==
+a.b.ent.ed25519-nsec.interop.	300	IN	NSEC	insecure.ed25519-nsec.interop. A RRSIG NSEC
+insecure.ed25519-nsec.interop.	3600	IN	NS	ns.insecure.ed25519-nsec.interop.
+insecure.ed25519-nsec.interop.	300	IN	RRSIG	NSEC 15 3 300 20361001194833 20261004181833 11439 ed25519-nsec.interop. z8sIq8ajLmOr7cvRXG0UCl4oi1L80PRS1di7FcTooxft/Xe3TA5RHkMbZbKo+ZT5k6UFv1b9nOwLuPZKZ0LzCg==
+insecure.ed25519-nsec.interop.	300	IN	NSEC	mail.ed25519-nsec.interop. NS RRSIG NSEC
+ns.insecure.ed25519-nsec.interop. 3600	IN	A	192.0.2.98
+mail.ed25519-nsec.interop.	3600	IN	A	192.0.2.25
+mail.ed25519-nsec.interop.	3600	IN	RRSIG	A 15 3 3600 20361001194833 20261004181833 11439 ed25519-nsec.interop. +JL30At3OT7ZkIq7nOoAIHyiRVKxmgSGM6HQyzx+GpaWPnMfDtEl2JFP/aSbQvjoLUsBDAiDkK8WtdUeq8nhDA==
+mail.ed25519-nsec.interop.	300	IN	RRSIG	NSEC 15 3 300 20361001194833 20261004181833 11439 ed25519-nsec.interop. Lstp8M8XfHL44hMuAflQgj/uhdbya4H29rSzH6JTXsMYj8cuJhC8BczL0t5aMB6xj867uWk4lbSBrfMiYY5NBQ==
+mail.ed25519-nsec.interop.	300	IN	NSEC	ns1.ed25519-nsec.interop. A RRSIG NSEC
+ns1.ed25519-nsec.interop.	3600	IN	A	127.0.0.1
+ns1.ed25519-nsec.interop.	3600	IN	RRSIG	A 15 3 3600 20361001194833 20261004181833 11439 ed25519-nsec.interop. EeOceopzWAYccqUjPtbQHWxa2LyEZ0UjtzEGkdCpY5yzrzV4gYqLx+SFXuK5qb5mDHxmMJtmWoS7Pakxk81EDQ==
+ns1.ed25519-nsec.interop.	300	IN	RRSIG	NSEC 15 3 300 20361001194833 20261004181833 11439 ed25519-nsec.interop. JKeOD48cniXhNMT/HraC8da7W5wWhIHy2527J6AdFj/69O+WJqKJ6qujz57bPMsST1CHyBpJzdVxZqLtzdTXCQ==
+ns1.ed25519-nsec.interop.	300	IN	NSEC	ns2.ed25519-nsec.interop. A RRSIG NSEC
+ns2.ed25519-nsec.interop.	3600	IN	A	198.51.100.53
+ns2.ed25519-nsec.interop.	3600	IN	RRSIG	A 15 3 3600 20361001194833 20261004181833 11439 ed25519-nsec.interop. TAyEUCYzGe1d08YznlnDThiNIBs/7+KsSVtgsM5sQe5fQrxPN1HPCgalV5ziFJCgvV0wqOzx0P+zjhpp0+6BCA==
+ns2.ed25519-nsec.interop.	300	IN	RRSIG	NSEC 15 3 300 20361001194833 20261004181833 11439 ed25519-nsec.interop. c/H97vSvQa+KtkqdbM1rA29IXl3V3u5kZw2ZpSiEAtfiheF2LEKNjY40b6VB7ESptZblKEkR50nBiG8rEUVrCw==
+ns2.ed25519-nsec.interop.	300	IN	NSEC	odd\.label\032x.ed25519-nsec.interop. A RRSIG NSEC
+odd\.label\032x.ed25519-nsec.interop. 3600	IN	TXT	"a \"quoted\" string" "tab\009and\\backslash"
+odd\.label\032x.ed25519-nsec.interop. 3600	IN	RRSIG	TXT 15 3 3600 20361001194833 20261004181833 11439 ed25519-nsec.interop. 8bJCiCJDN/e7XtITV67bYS6hscvW0phurjpywsqIQN4l3tZdpT0xqUhxgVVhEpqvgObwsTlca4K6+DBdZ4WSBA==
+odd\.label\032x.ed25519-nsec.interop. 300	IN	RRSIG	NSEC 15 3 300 20361001194833 20261004181833 11439 ed25519-nsec.interop. 7GkaVEeVSZh3LSqtL4VkXJPxRsC9kJiQc0yUpNTPTFw1lwf5tTbzr9gP4SuI25f83CwO2UTtN70g8UonUHS2Aw==
+odd\.label\032x.ed25519-nsec.interop. 300	IN	NSEC	other.ed25519-nsec.interop. TXT RRSIG NSEC
+other.ed25519-nsec.interop.	3600	IN	NS	ns.example.net.
+other.ed25519-nsec.interop.	300	IN	RRSIG	NSEC 15 3 300 20361001194833 20261004181833 11439 ed25519-nsec.interop. jsNelIuFlrrs7vSmy5a5CpzU9XnyAkz7TLvTSvW2ucuRQGpHUSxTXmqz8T6eoD3tHcBT19Di/ojQ0s/rNhNjBA==
+other.ed25519-nsec.interop.	300	IN	NSEC	secure.ed25519-nsec.interop. NS RRSIG NSEC
+secure.ed25519-nsec.interop.	3600	IN	NS	ns.secure.ed25519-nsec.interop.
+secure.ed25519-nsec.interop.	3600	IN	DS	12345 13 2 E06D44B80B8F1D39A95C0B0D7C65D08458E880409BBC683457104237C7F8EC8D
+secure.ed25519-nsec.interop.	3600	IN	RRSIG	DS 15 3 3600 20361001194833 20261004181833 11439 ed25519-nsec.interop. GPANEDnDsR8/JHqIWpWn4XFwCxNzmBy339uxuJtBEMW769xgm/14Kk6jZ7XvHRtdprDTBO5352jwZscVLap4CQ==
+secure.ed25519-nsec.interop.	300	IN	RRSIG	NSEC 15 3 300 20361001194833 20261004181833 11439 ed25519-nsec.interop. anribMuXCP9m4qAph9K0i/ooTKf07r9PWM+3lRdHMwszEhiqPPoVK1SA3v3EY+fAmGCnbCg6Ue0EzHJhbe8dBg==
+secure.ed25519-nsec.interop.	300	IN	NSEC	unsigned.ed25519-nsec.interop. NS DS RRSIG NSEC
+ns.secure.ed25519-nsec.interop.	3600	IN	A	192.0.2.99
+unsigned.ed25519-nsec.interop.	3600	IN	NS	ns.unsigned.ed25519-nsec.interop.
+unsigned.ed25519-nsec.interop.	300	IN	RRSIG	NSEC 15 3 300 20361001194833 20261004181833 11439 ed25519-nsec.interop. X1I8zJ+ox1PyGOA9VzCoWXSp+sHj9li1oP+GUrUVpUIqgd5FHjXJygErI3VnXgynF4QExgX0eaaug3vkUJjJCw==
+unsigned.ed25519-nsec.interop.	300	IN	NSEC	*.wild.ed25519-nsec.interop. NS RRSIG NSEC
+ns.unsigned.ed25519-nsec.interop. 3600	IN	A	127.0.0.1
+*.wild.ed25519-nsec.interop.	3600	IN	A	192.0.2.42
+*.wild.ed25519-nsec.interop.	3600	IN	TXT	"wildcard"
+*.wild.ed25519-nsec.interop.	3600	IN	RRSIG	A 15 3 3600 20361001194833 20261004181833 11439 ed25519-nsec.interop. TM3PRLruP6QYsIZcxSulC7fN6NfFGoZZ8kGW5rgTHZVxQqMi8SulpYauSqqPf7eb36eXc788CvImP/Wy9+3cCw==
+*.wild.ed25519-nsec.interop.	3600	IN	RRSIG	TXT 15 3 3600 20361001194833 20261004181833 11439 ed25519-nsec.interop. ghshoEQ+KMWpnTkvqjvdduQTAUsYYg621Q/iHFKjzg4pwsUnBIreFT1tw2xWNXOkNVgLCuG8Fg4i7lgHn/hNCw==
+*.wild.ed25519-nsec.interop.	300	IN	RRSIG	NSEC 15 3 300 20361001194833 20261004181833 11439 ed25519-nsec.interop. IwbZ949tv1h8RSuYjT5qaYreu440qBoA4APpB/xzmXDBJE0LRb8sxpxiHSHsf2o99pHv5Q1p1kZD/quk1vxFAQ==
+*.wild.ed25519-nsec.interop.	300	IN	NSEC	www.ed25519-nsec.interop. A TXT RRSIG NSEC
+www.ed25519-nsec.interop.	3600	IN	A	192.0.2.80
+www.ed25519-nsec.interop.	3600	IN	AAAA	2001:db8::80
+www.ed25519-nsec.interop.	3600	IN	RRSIG	A 15 3 3600 20361001194833 20261004181833 11439 ed25519-nsec.interop. 7ZwlDdkD7gfT7/jIsvKL23cswsKlOnggY7mZxfxluU10b1cicf4OPdDTyImfo4NDcCKvaV6HEgAIMnCEQBRVAQ==
+www.ed25519-nsec.interop.	3600	IN	RRSIG	AAAA 15 3 3600 20361001194833 20261004181833 11439 ed25519-nsec.interop. UKbucbsIGz7by7zONn9jH7RgnDONTg+KwmUf29S3iwz0BaZ79JYy2wFI1ITXoZWp9lbBP8Ir+takoXZQkaBGCQ==
+www.ed25519-nsec.interop.	300	IN	RRSIG	NSEC 15 3 300 20361001194833 20261004181833 11439 ed25519-nsec.interop. BPbofgvcVpXQ4uU4sZnvwVvHw3aJdAgOtoP0pfPmeECW6ZGf8/2JzFkYJmw5p+oIbRJxeeif+FH8rSXseQqVAg==
+www.ed25519-nsec.interop.	300	IN	NSEC	_443._tcp.www.ed25519-nsec.interop. A AAAA RRSIG NSEC
+_443._tcp.www.ed25519-nsec.interop. 300	IN	RRSIG	NSEC 15 5 300 20361001194833 20261004181833 11439 ed25519-nsec.interop. riTa91hAUJL2qLaNllbdLO0h8lokVTPduBRhzW6pIgGcfozHSWYpl3MBtWbUpfkgmyf0Mr1oYdErDeXGAMIhDw==
+_443._tcp.www.ed25519-nsec.interop. 3600	IN	RRSIG	TLSA 15 5 3600 20361001194833 20261004181833 11439 ed25519-nsec.interop. cTqxVyVLyFzzCcJK7oURkvzspVw15NN6hFHF+70MeolpwzGHgXOsmgcSBV7isMUDDPa0rk+NGb4NNRZfPXFTBA==
+_443._tcp.www.ed25519-nsec.interop. 300	IN	NSEC	ed25519-nsec.interop. RRSIG NSEC TLSA
+_443._tcp.www.ed25519-nsec.interop. 3600	IN	TLSA	3 1 1 0C72AC70B745AC19998811B131D662C9AC69DBDBE7CB23E5B514B56664C5D3D6
+ed25519-nsec.interop.	3600	IN	SOA	ns1.ed25519-nsec.interop. hostmaster.ed25519-nsec.interop. 2026100401 7200 3600 1209600 300
+hmac-sha256.key.    	0	ANY	TSIG	hmac-sha256. 1791143377 300 32 VD1UID28NY5Q0WCqN7FGEGLLQSFEJI7bVVfG0fTlRN4= 60465 NOERROR 0
+;; Received 7074 B (1 messages, 94 records)
+;; Time 2026-10-04 19:49:37 UTC
+;; From 127.0.0.1@5300(TCP) in 0.9 ms

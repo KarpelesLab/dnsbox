@@ -1,0 +1,1 @@
+kdig +subnet=2001:db8::/56 ed25519-nsec.interop. SOA

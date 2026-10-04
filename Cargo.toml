@@ -88,3 +88,7 @@ required-features = ["dnssec"]
 [[example]]
 name = "tsig_axfr"
 required-features = ["std", "tsig"]
+
+[[example]]
+name = "interop_probe"
+required-features = ["std", "tsig", "dnssec"]

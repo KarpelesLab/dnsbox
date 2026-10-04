@@ -1,0 +1,7 @@
+;; ERROR: server replied with error 'BADSIG'
+;; ERROR: failed to query server 127.0.0.1@5300(TCP)
+;; AXFR for bulk.interop.
+hmac-sha256.key.    	0	ANY	TSIG	hmac-sha256. 1791143378 300 0 25596 BADSIG 0
+;; Received 0 B
+;; Time 2026-10-04 19:49:38 UTC
+;; From 127.0.0.1@5300(TCP) in 0.6 ms

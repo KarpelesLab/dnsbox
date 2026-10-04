@@ -1,0 +1,18 @@
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 41254
+;; flags: qr rd; QUERY: 1, ANSWER: 0, AUTHORITY: 5, ADDITIONAL: 2
+;; WARNING: recursion requested but not available
+
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags: do; udp: 1232
+;; QUESTION SECTION:
+;host.insecure.ecdsap384-optout.interop.	IN A
+
+;; AUTHORITY SECTION:
+insecure.ecdsap384-optout.interop. 3600	IN NS	ns.insecure.ecdsap384-optout.interop.
+4jbi9tt0ts2rpggkmvd220mpjromh8s1.ecdsap384-optout.interop. 300 IN NSEC3	1 1 0 - 65Q5P9F5VAIEDDN37SI44FQKEJSSR1Q8 NS SOA MX TXT LOC SSHFP RRSIG DNSKEY NSEC3PARAM ZONEMD HTTPS CAA
+qdl64a39upjgcgjr0ujc9s9iqcbci1ag.ecdsap384-optout.interop. 300 IN NSEC3	1 1 0 - TE3DIUVL6S1KT8QC107RTNJ8PTHJV69N CNAME RRSIG
+4jbi9tt0ts2rpggkmvd220mpjromh8s1.ecdsap384-optout.interop. 300 IN RRSIG	NSEC3 14 3 300 20361001194833 20261004181833 10601 ecdsap384-optout.interop. +9hQP8kMEI4GsuTTSQoYXPn1cksP0X0NiLG0r+Ba0dTuFjGgMxeD/+WF WziUFU0Yj07ttkIQ75Hv0k2MU186HTvAFKaFjNaM6vCfDz2AbFRo/Gdc ysNYC5/DcbSVlEzg
+qdl64a39upjgcgjr0ujc9s9iqcbci1ag.ecdsap384-optout.interop. 300 IN RRSIG	NSEC3 14 3 300 20361001194833 20261004181833 10601 ecdsap384-optout.interop. dAmzx7ZCtxg8eTMxHmbmluxUnUNjYUV20FyIHr1NuXpcWuF5U6NzeXxi sXxG+APFNYbK0DDXwBnxOw+cG2z0vOfBG5eQc43P8odJw7jzgx7V06i5 QbyRnKr/3LBxvniY
+
+;; ADDITIONAL SECTION:
+ns.insecure.ecdsap384-optout.interop. 3600 IN A	192.0.2.98

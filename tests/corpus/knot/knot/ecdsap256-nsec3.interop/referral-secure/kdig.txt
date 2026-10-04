@@ -1,0 +1,20 @@
+;; ->>HEADER<<- opcode: QUERY; status: NOERROR; id: 5556
+;; Flags: qr rd; QUERY: 1; ANSWER: 0; AUTHORITY: 3; ADDITIONAL: 2
+
+;; EDNS PSEUDOSECTION:
+;; Version: 0; flags: do; UDP size: 1232 B; ext-rcode: NOERROR
+
+;; QUESTION SECTION:
+;; host.secure.ecdsap256-nsec3.interop. 	IN	A
+
+;; AUTHORITY SECTION:
+secure.ecdsap256-nsec3.interop.	3600	IN	NS	ns.secure.ecdsap256-nsec3.interop.
+secure.ecdsap256-nsec3.interop.	3600	IN	DS	12345 13 2 E06D44B80B8F1D39A95C0B0D7C65D08458E880409BBC683457104237C7F8EC8D
+secure.ecdsap256-nsec3.interop.	3600	IN	RRSIG	DS 13 3 3600 20361001194833 20261004181833 34006 ecdsap256-nsec3.interop. 7zEd6N+kyfmgIeyoJ7JzVR5zNqK584tEFUB2OxepHzYuQXi6B4GnMhLU2gaoZd+pykGtyzIxO9Ux9xpWvyLmIQ==
+
+;; ADDITIONAL SECTION:
+ns.secure.ecdsap256-nsec3.interop. 3600	IN	A	192.0.2.99
+
+;; Received 264 B
+;; Time 2026-10-04 19:49:37 UTC
+;; From 127.0.0.1@5300(UDP) in 0.4 ms

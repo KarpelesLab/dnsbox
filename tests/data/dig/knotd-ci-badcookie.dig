@@ -1,0 +1,9 @@
+;; ->>HEADER<<- opcode: QUERY, status: BADCOOKIE, id: 28009
+;; flags: qr rd; QUERY: 1, ANSWER: 0, AUTHORITY: 0, ADDITIONAL: 1
+;; WARNING: recursion requested but not available
+
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags:; udp: 1232
+; COOKIE: 0102030405060708010000006ac2add24cfff6e2bdc9a5c7
+;; QUESTION SECTION:
+;ed25519-nsec.interop.		IN	SOA

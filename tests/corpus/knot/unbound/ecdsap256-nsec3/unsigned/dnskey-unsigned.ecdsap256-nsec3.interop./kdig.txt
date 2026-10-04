@@ -1,0 +1,15 @@
+;; ->>HEADER<<- opcode: QUERY; status: NOERROR; id: 14418
+;; Flags: qr rd ra cd; QUERY: 1; ANSWER: 0; AUTHORITY: 1; ADDITIONAL: 1
+
+;; EDNS PSEUDOSECTION:
+;; Version: 0; flags: do; UDP size: 1232 B; ext-rcode: NOERROR
+
+;; QUESTION SECTION:
+;; unsigned.ecdsap256-nsec3.interop. 	IN	DNSKEY
+
+;; AUTHORITY SECTION:
+unsigned.ecdsap256-nsec3.interop. 300	IN	SOA	ns.unsigned.ecdsap256-nsec3.interop. hostmaster.unsigned.ecdsap256-nsec3.interop. 2026100401 7200 3600 1209600 300
+
+;; Received 111 B
+;; Time 2026-10-04 19:49:39 UTC
+;; From 127.0.0.1@5400(UDP) in 0.8 ms

@@ -1,0 +1,1 @@
+kdig +dnssec www.interop. A

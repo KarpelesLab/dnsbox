@@ -1,0 +1,17 @@
+;; ->>HEADER<<- opcode: QUERY; status: NOERROR; id: 34065
+;; Flags: qr rd ra cd; QUERY: 1; ANSWER: 2; AUTHORITY: 0; ADDITIONAL: 1
+
+;; EDNS PSEUDOSECTION:
+;; Version: 0; flags: do; UDP size: 1232 B; ext-rcode: NOERROR
+;; EDE: 6 (DNSSEC Bogus): 'validation failure <www.bogus-ds.interop. A IN>: DS hash mismatches key from 127.0.0.1 for key bogus-ds.interop. while building chain of trust'
+
+;; QUESTION SECTION:
+;; www.bogus-ds.interop.		IN	A
+
+;; ANSWER SECTION:
+www.bogus-ds.interop.	3600	IN	A	192.0.2.80
+www.bogus-ds.interop.	3600	IN	RRSIG	A 15 3 3600 20361001194834 20261004181834 34267 bogus-ds.interop. WaahACxF4nX2bjHVRoPJ2N+I1Ye8L1yscwdG9PHBDfis3lRiKi0XxSwVHvy2bwFPYBmCqANhOdJI0facfGptAQ==
+
+;; Received 325 B
+;; Time 2026-10-04 19:49:40 UTC
+;; From 127.0.0.1@5400(UDP) in 0.4 ms

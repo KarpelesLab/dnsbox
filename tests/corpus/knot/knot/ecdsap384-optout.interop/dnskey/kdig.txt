@@ -1,0 +1,17 @@
+;; ->>HEADER<<- opcode: QUERY; status: NOERROR; id: 43844
+;; Flags: qr aa rd; QUERY: 1; ANSWER: 3; AUTHORITY: 0; ADDITIONAL: 1
+
+;; EDNS PSEUDOSECTION:
+;; Version: 0; flags: do; UDP size: 1232 B; ext-rcode: NOERROR
+
+;; QUESTION SECTION:
+;; ecdsap384-optout.interop.		IN	DNSKEY
+
+;; ANSWER SECTION:
+ecdsap384-optout.interop.	3600	IN	DNSKEY	256 3 14 6p4/hww8xAPf1mIWNm9TMx5keSuIPmtvf+QTMW/Yj9fKkM3lrzSpE6rVG9ynjVtutogFu0FbPKzSGPl+VmfTkAWLrI3FRXYKVxkwwqVXR+5APETAhiC09jYn28egdoIW
+ecdsap384-optout.interop.	3600	IN	DNSKEY	257 3 14 Vb7KElFJQlcWDKkI+CGhatgwJvMYBreQP+G+/WFMs/sAib5RsDUODVwJVgrNdcWtde98rN07+V013hbZESyuRI1QeOQbpdCjs2TKAJ5iW/8j6h/Q11QRpuOEvctN9gdF
+ecdsap384-optout.interop.	3600	IN	RRSIG	DNSKEY 14 2 3600 20361001194833 20261004181833 6205 ecdsap384-optout.interop. 4hrlDcbc0HtXA9Fc2wZCRfno+SFQKRkpXTkZSd9v1nFAM2Oj6Aq8RHaD14MJQ4cJ2uFRN/j2tOhAu5UdfEgL/Kz1XBVJViX7VLXq3GGIrhXRNwetCgjOAGpCUGeuD1J/
+
+;; Received 429 B
+;; Time 2026-10-04 19:49:37 UTC
+;; From 127.0.0.1@5300(UDP) in 0.4 ms

@@ -1,0 +1,41 @@
+; The zone run.sh signs once per algorithm and denial chain with Knot
+; (origin: <algorithm>-<nsec|nsec3|optout>.interop.). Like
+; ../bind9/signed.zone, it has what denial-of-existence proofs need: a
+; wildcard, an empty non-terminal (b.ent, ent), a CNAME, a DNAME, a secure
+; delegation (secure, with DS) and unsigned ones (insecure, other,
+; unsigned; knotd also serves unsigned.<origin>, so that resolvers can
+; follow it), plus a few more types and escapes for Knot's presentation
+; format.
+$TTL 3600
+@               SOA     ns1 hostmaster 2026100401 7200 3600 1209600 300
+                NS      ns1
+                NS      ns2
+                MX      10 mail
+                TXT     "v=spf1 mx -all"
+                CAA     0 issue "letsencrypt.org"
+                HTTPS   1 . alpn=h2,h3 ipv4hint=192.0.2.80
+                SSHFP   4 2 123456789abcdef67890123456789abcdef67890123456789abcdef123456789
+                LOC     52 22 23.000 N 4 53 32.000 E -2.00m 0.00m 10000m 10m
+ns1             A       127.0.0.1
+ns2             A       198.51.100.53
+mail            A       192.0.2.25
+www             A       192.0.2.80
+                AAAA    2001:db8::80
+_443._tcp.www   TLSA    3 1 1 0C72AC70B745AC19998811B131D662C9AC69DBDBE7CB23E5B514B56664C5D3D6
+_sip._udp       SRV     10 60 5060 www
+                NAPTR   100 10 "S" "SIP+D2U" "" _sip._udp
+_svc            SVCB    1 www alpn=dot port=853
+odd\.label\032x TXT     "a \"quoted\" string" "tab\009and\\backslash"
+alias           CNAME   www
+*.wild          A       192.0.2.42
+                TXT     "wildcard"
+a.b.ent         A       192.0.2.7
+dname           DNAME   example.net.
+secure          NS      ns.secure
+                DS      12345 13 2 E06D44B80B8F1D39A95C0B0D7C65D08458E880409BBC683457104237C7F8EC8D
+ns.secure       A       192.0.2.99
+insecure        NS      ns.insecure
+ns.insecure     A       192.0.2.98
+other           NS      ns.example.net.
+unsigned        NS      ns.unsigned
+ns.unsigned     A       127.0.0.1

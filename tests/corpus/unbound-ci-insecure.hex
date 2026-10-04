@@ -1,0 +1,4 @@
+# unbound 1.19 on the interop CI runner (run 37229639496, 2026-10-04): kdig +dnssec www.insecure.interop. A
+# tests/corpus/knot/keep.py from unbound/insecure/a/answer (tests/corpus/README.md)
+fd5d818000010001000000010377777708696e73656375726507696e7465726f700000010001c00c0001000100000e10
+0004c000025000002904d0000080000000

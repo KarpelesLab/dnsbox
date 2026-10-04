@@ -9,10 +9,10 @@ Everything was produced on 2026-10-04 with BIND 9.18.49 (`named`, `dig`,
 `named-checkzone`, `dnssec-keygen`, `dnssec-signzone`, `dnssec-dsfromkey`),
 ldns 1.8.4 (built from the NLnet Labs release tarball without root:
 `./configure --prefix=$HOME/ldns --with-examples --with-drill && make install`),
-dnspython 2.8.0 and Python 3.14, plus queries to public servers. Knot's
-`kdig`/`keymgr`/`kzonecheck` and the Unbound tools were not available; Knot,
-Unbound, NSD, PowerDNS and the large resolvers are covered by live
-captures instead.
+dnspython 2.8.0 and Python 3.14, plus queries to public servers. The Knot
+DNS 3.5 and Unbound 1.19 tools run on a GitHub Actions runner instead
+(`knot/`, below); NSD, PowerDNS and the large resolvers are covered by live
+captures.
 
 ## Layout
 
@@ -24,8 +24,9 @@ captures instead.
 | `bind9/` | BIND zone files, signed zones, keys, DS sets; `named-*.hex` | `bind9/gen.sh`, `bind9/capture_local.py` | `interop_zones.rs` |
 | `ldns/` | ldns-written zone text, ldns-signed zones with ZONEMD | `ldns/gen.sh` | `interop_zones.rs` |
 | `dnspython/` | RDATA text/wire pairs, TSIG, UPDATE, ZONEMD; `dnspython-*.hex` | `dnspython/gen_*.py` | `interop_dnspython.rs` |
+| `knot/` | Knot-signed zones, keys, DS; knotd and Unbound exchanges (a subset of a CI run) | `knot/run.sh` in `.github/workflows/interop.yml`, `knot/keep.py` | `interop_knot.rs` |
 
-Every message of the corpus (175 of them) must validate, survive
+Every message of the corpus (190 of them) must validate, survive
 parse → build → parse (and rebuild to a fixed point), reject every
 truncation (`tests/corpus.rs`), round-trip through serde
 (`tests/serde.rs`) and display exactly as `dig` 9.18 shows it, up to the
@@ -136,6 +137,139 @@ and its denial proof gives the expected status.
   `nsec3rsasha1.zonemd` (BIND's signed zones): ZONEMD SHA-384 and SHA-512
   by dnspython, written by dnspython's zone writer; dnsbox reads them and
   computes the same digests.
+
+## Knot DNS 3.5 and Unbound 1.19 (`knot/`)
+
+Knot and Unbound run only on the GitHub Actions runner
+(`.github/workflows/interop.yml`, on pushes to `master`, pull requests
+and on demand): it
+installs Knot DNS 3.5.8 from CZ.NIC's Ubuntu packages (`knotd`, `knotc`,
+`keymgr`, `kzonesign`, `kzonecheck`, `kdig`, `knsupdate`), Unbound
+1.19.2, ldns 1.8.3 and BIND 9.18's `dnssec-verify` from Ubuntu 24.04, and
+runs `knot/run.sh`:
+
+- **sign**: `child.zone` (wildcard, empty non-terminal, CNAME, DNAME,
+  secure and unsigned delegations, SVCB/HTTPS, LOC, NAPTR, SSHFP, TLSA,
+  escapes in owner names and strings) as 18 zones
+  `<algorithm>-<chain>.interop.`: RSASHA256, RSASHA512, ECDSAP256SHA256,
+  ECDSAP384SHA384, ED25519, ED448, each with NSEC, NSEC3 (5 iterations,
+  no salt; ZONEMD SHA-384, CDS/CDNSKEY) and NSEC3 Opt-Out (ZONEMD
+  SHA-512). `keymgr` makes the keys (KSK and ZSK) and DS records (SHA-256,
+  SHA-384), `kzonesign` signs (signatures valid ten years). Three zones are
+  broken after signing: `bogus.` (an A record changed), `bogus-nsec.`
+  (every NSEC bitmap changed) and `bogus-ds.` (the parent's DS digests
+  changed). The parent `interop.` (ECDSAP256SHA256, NSEC) delegates to
+  all of them and holds their DS records; its DS is the trust anchor.
+  `kzonecheck`, `ldns-verify-zone` and `dnssec-verify` accept every Knot
+  zone.
+- **serve**: `knotd` (127.0.0.1:5301) serves them, an unsigned
+  `unsigned.<zone>` below each, `insecure.interop.` (no DS), a zone of
+  503 records for multi-message transfers, `dyn.interop.` (signed by
+  `knotd` itself, dynamic updates), and dnsbox's presentation of every type
+  BIND reads (`bind9/alltypes.dnsbox`) but for the records Knot cannot
+  read; NSID, CHAOS identity, Client Subnet, RFC 9018 cookies
+  (mod-cookies with a fixed secret) and six TSIG keys (HMAC-MD5 to
+  HMAC-SHA512, all with the secret `00 01 .. 1f`) for transfers and
+  updates. `unbound` (127.0.0.1:5335) validates with the trust anchor,
+  one stub zone per zone `knotd` serves. `knot/proxy.py` sits in front of
+  both (5300, 5400) and records every message in both directions, with
+  the client's text output.
+- **capture**: `kdig` asks `knotd` 12 questions per signed zone (the
+  `named` cases of `bind9/`), an AXFR of each (text and RFC 8427 JSON),
+  EDNS (NSID, cookies and BADCOOKIE, Client Subnet v4 and v6, Padding and
+  block alignment, EXPIRE, ZONEVERSION, an unknown option, version 1, no
+  EDNS), TCP, truncation and the TCP retry, ANY, CHAOS, REFUSED,
+  TSIG-signed queries and AXFRs with every HMAC, a wrong secret and an
+  unknown key; `knsupdate` sends six TSIG-signed UPDATEs (and one with a
+  failing prerequisite) to `dyn.interop.`, then `kdig` asks for the IXFR
+  with every HMAC, an up-to-date IXFR and one over UDP. Unbound answers 96
+  cases (positive answers, NXDOMAIN, NODATA, wildcards in every zone, the
+  unsigned zones below them, the three bogus zones, the parent: 62
+  secure, 31 insecure, 3 bogus), each
+  asked once with DO and again with CD, with the DS and DNSKEY RRsets of
+  every zone from `interop.` down; Unbound's own queries to `knotd` are
+  recorded too (`knot/unbound-upstream/`).
+- **probe**: dnsbox's `interop_probe` example sends its own queries
+  (EDNS options, padding, cookies whose RFC 9018 hash it checks, TCP,
+  TSIG with every HMAC, AXFR streams, UPDATEs added, deleted, refused or
+  failing a prerequisite, the IXFR they make) to `knotd` and `unbound`,
+  and checks the answers (`knotd` verified dnsbox's TSIG MACs and applied
+  its updates; Unbound validated, gave insecure answers without AD, and
+  SERVFAIL with Extended DNS Error 6 for the bogus zone).
+- **check-dnsbox**: `tests/interop_knot.rs` (with
+  `DNSBOX_INTEROP_DIR` pointing at the run and `DNSBOX_INTEROP_WRITE` set)
+  writes every zone again, displayed by dnsbox and re-signed by dnsbox
+  with Knot's keys (new ZONEMD digests included); `kzonecheck` (with
+  ZONEMD), `ldns-verify-zone` and `dnssec-verify` accept all 19 of them,
+  and reject the tampered zones (so the checks are not vacuous). (ldns
+  1.8.3 never returns on some of the zones with a ZONEMD record, Knot's
+  as well as dnsbox's, though `kzonecheck`, `ldns-verify-zone -Z` on the
+  others and dnsbox agree on their digests: `ldns-verify-zone` checks
+  them without their ZONEMD, and its `-Z` result is only logged.)
+
+The whole run is uploaded as the `interop-knot-unbound` artifact.
+`knot/keep.py` copied a subset of run 37229639496 (2026-10-04) here, so
+that `cargo test --test interop_knot` checks it offline (nothing in this
+directory but `run.sh`, `proxy.py`, `keep.py` and `child.zone` is written
+by hand): six of the signed zones (each algorithm, each chain twice), the
+parent and the bogus zones with their keys (throwaway; PKCS #8 PEM as
+`keymgr` stores them), DS records, `knotd`'s answers and transfers, the
+EDNS, CHAOS, truncation and TSIG exchanges, the dynamic zone's updates and
+two of its IXFRs, the `alltypes` transfers, the probe's exchanges (but its
+bulk transfers), Unbound's cases for one zone per denial chain and for
+the bogus, insecure and parent zones (21 of 96), and Unbound's own
+queries for one zone; fifteen single responses are also kept as
+`knotd-ci-*.hex` and `unbound-ci-*.hex` for the corpus tests, with their
+`dig` rendering (made on the runner by `dig_reference.py`). To refresh:
+`gh run download <run> -n interop-knot-unbound -D /tmp/interop && python3
+tests/corpus/knot/keep.py /tmp/interop "run <run>, <date>"`.
+
+`tests/interop_knot.rs` checks, as of the run's time (`knot/now`):
+
+- dnsbox reads every Knot zone file; keymgr's DS records authenticate the
+  keys, every RRSIG verifies (the tampered ones fail), the NSEC and NSEC3
+  chains are those dnsbox's canonical order and NSEC3 hashing predict
+  (Knot leaves unsigned delegations out of Opt-Out chains), CDS/CDNSKEY
+  are the KSK's, dnsbox computes Knot's ZONEMD digests, and dnsbox,
+  signing with the private keys read from keymgr's PEM files, reproduces
+  every RSA, Ed25519 and Ed448 signature byte for byte;
+- each zone file holds exactly the records of `knotd`'s AXFR, and `kdig`'s
+  text and JSON (RFC 8427) of every response read back, with dnsbox's
+  zone reader and RDATA parser, to the wire records; dnsbox's own
+  presentation reads back to the same RDATA and matches Knot's but for
+  the styles listed in `KNOT_STYLE`;
+- every captured message (2222 in a run: kdig's, Unbound's and dnsbox's
+  queries, knotd's and Unbound's answers) validates, passes the shared
+  fuzz checks and rebuilds to the same message (96% byte for byte);
+- every `knotd` answer verifies and its denial proof gives the expected
+  status; every TSIG MAC verifies, every transfer stream is complete, the
+  IXFR applied to the AXFR before the updates gives the AXFR after them;
+  knsupdate's UPDATEs decode as sent; the EDNS options decode as sent
+  and as `knotd` answered them (its server cookies recomputed with
+  SipHash-2-4 from the configured secret);
+- for every Unbound case, dnsbox validating the data Unbound fetched (CD)
+  from the trust anchor down reaches Unbound's verdict (AD: secure; no AD:
+  insecure; SERVFAIL: bogus), which is also the one the case was made for;
+- `knotd` read dnsbox's text of every type it knows to BIND's wire form.
+
+Differences found, none a dnsbox bug: Knot writes CERT types and
+algorithms as numbers and LOC without decimals (both sides read the
+other); Knot keeps no TTL of its own for an RRSIG but its original TTL
+field: it serves that as the TTL and computes ZONEMD digests with it, so
+for a zone file whose RRSIG TTLs differ from their RRsets' (an early
+version of the re-signing test wrote such files) `kzonecheck -z` finds
+the ZONEMD invalid where dnsbox and ldns find it valid;
+Knot answers an unknown TSIG key with NOTAUTH without a TSIG record
+(RFC 8945 §5.3.2 has an unsigned TSIG record), and a query with only a
+client cookie with BADCOOKIE (mod-cookies' default); Knot 3.5 has no
+mnemonic for A6, ATMA, AVC, DLV, EID, GID, GPOS, HIP, ISDN, MB, MG, MR,
+NIMLOC, NINFO, NSAP, NSAP-PTR, NULL, NXT, PX, RKEY, SIG, SINK, TA,
+TALINK, UID, UINFO, UNSPEC, WKS and X25, and rejects a KEY without key
+data. With a single stub zone for `interop.`, Unbound timed out (then
+SERVFAIL) on NXDOMAIN, wildcard and unsigned-delegation answers of the
+child zones, and on DS queries for names that are not zone cuts: `knotd`
+answers for every zone it serves with authority, so Unbound never saw the
+cuts (hence one stub zone per zone).
 
 ## Discrepancies found
 

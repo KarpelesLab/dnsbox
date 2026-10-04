@@ -1,0 +1,11 @@
+;; ERROR: update failed with error 'YXDOMAIN'
+;; ->>HEADER<<- opcode: UPDATE; status: YXDOMAIN; id: 20796
+;; Flags: qr; ZONE: 1; PREREQ: 0; UPDATE: 0; ADDITIONAL: 1
+
+;; ZONE SECTION:
+;; dyn.interop.        		IN	SOA
+
+;; ADDITIONAL DATA:
+
+;; TSIG PSEUDOSECTION:
+hmac-sha256.key.    	0	ANY	TSIG	hmac-sha256. 1791143378 300 32 LZAMlfqPAsKzUPbhrnoY0Z+IxaUJ92lCLGzMD9JqWfc= 20796 NOERROR 0

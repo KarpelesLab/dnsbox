@@ -1,0 +1,18 @@
+;; ->>HEADER<<- opcode: QUERY; status: NOERROR; id: 23098
+;; Flags: qr aa rd; QUERY: 1; ANSWER: 0; AUTHORITY: 4; ADDITIONAL: 1
+
+;; EDNS PSEUDOSECTION:
+;; Version: 0; flags: do; UDP size: 1232 B; ext-rcode: NOERROR
+
+;; QUESTION SECTION:
+;; www.ecdsap384-optout.interop.		IN	MX
+
+;; AUTHORITY SECTION:
+ecdsap384-optout.interop.	300	IN	SOA	ns1.ecdsap384-optout.interop. hostmaster.ecdsap384-optout.interop. 2026100401 7200 3600 1209600 300
+2nambl4fg34l2mmbg58au4ao8hieoq8k.ecdsap384-optout.interop. 300	IN	NSEC3	1 1 0 - 3625imd06nll19j6ho9mim0bpn01c9p8 A AAAA RRSIG
+ecdsap384-optout.interop.	300	IN	RRSIG	SOA 14 2 3600 20361001194833 20261004181833 10601 ecdsap384-optout.interop. OcSkScRjP8oN8bSWFlTyKEh/SXs6+aKJMPpMWa34s4MPuEcjKMW4yleZ4TbI3y8tiCD7xFk4my3F7/IrNN/4EXzQbXM0ZsgwtcG9NiB+XuaIJbd80XqHqA8hWsI8lqVb
+2nambl4fg34l2mmbg58au4ao8hieoq8k.ecdsap384-optout.interop. 300	IN	RRSIG	NSEC3 14 3 300 20361001194833 20261004181833 10601 ecdsap384-optout.interop. vtTko8pkQWbREz48RleBsFUzFKV10kLCZtbaRuiJAtVg667BOfSfR2VSKDb7e25IM5sNU49oVM0ZLD4uAOvWbjobUhtyd/ICnmvXgieXHWtEMjOvASWSMBR0HySNZz/0
+
+;; Received 491 B
+;; Time 2026-10-04 19:49:37 UTC
+;; From 127.0.0.1@5300(UDP) in 0.4 ms

@@ -1,0 +1,16 @@
+;; ->>HEADER<<- opcode: QUERY; status: NOERROR; id: 51963
+;; Flags: qr aa tc rd; QUERY: 1; ANSWER: 2; AUTHORITY: 0; ADDITIONAL: 1
+
+;; EDNS PSEUDOSECTION:
+;; Version: 0; flags: do; UDP size: 1232 B; ext-rcode: NOERROR
+
+;; QUESTION SECTION:
+;; rsasha512-nsec3.interop.		IN	DNSKEY
+
+;; ANSWER SECTION:
+rsasha512-nsec3.interop.	3600	IN	DNSKEY	256 3 10 AwEAAaC8LiCK5JTRjexqagdviBHwzx0ln8Hihc3isUuF66SFqHO/kfIyGQyksxIVU5C2OPIGvmDwpTu9BMHU49cktxOtNckYYJhYYoznAz05yvSyn7nBdY77YiivgKCWzJmPPxtzNsVWwEm7gG7iBwDrZUmJxkgQ5hdrA4+rR74KuoQ1
+rsasha512-nsec3.interop.	3600	IN	DNSKEY	257 3 10 AwEAAd3kKz0sKkSQS2C9g096zyygkZKiTWHcT+6sSuDyM/Pqu0mHyiU9ipmkM1HCbe46LncszRGqFoWwJArFtWDSMtGLO2q8MF3pI19Nsudtidy9Wmvj5TzM1JWoofIYyPxHjMNUk8B8mTbxC/FQi2y9+qiH1mwBDY35GvxGGthCups1GRPVXvE5+xjEyvUXUC2Cg3E0RLlu7a+NN7/lObetQ3jdooqTjZNHfNNqTBWwYqRJvQ8Fg+oBD8eMEs18LbjLIjvHqgdtfkwkUaWoqtL5HVYil5F4XyuRbCsm4Z/ojP9EFxSk9DTfOOPNZ3+h7MgyUtAX84AlTSijn7je4KArtYU=
+
+;; Received 476 B
+;; Time 2026-10-04 19:49:38 UTC
+;; From 127.0.0.1@5300(UDP) in 0.4 ms

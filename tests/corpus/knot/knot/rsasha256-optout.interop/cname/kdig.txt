@@ -1,0 +1,18 @@
+;; ->>HEADER<<- opcode: QUERY; status: NOERROR; id: 28779
+;; Flags: qr aa rd; QUERY: 1; ANSWER: 4; AUTHORITY: 0; ADDITIONAL: 1
+
+;; EDNS PSEUDOSECTION:
+;; Version: 0; flags: do; UDP size: 1232 B; ext-rcode: NOERROR
+
+;; QUESTION SECTION:
+;; alias.rsasha256-optout.interop.		IN	A
+
+;; ANSWER SECTION:
+alias.rsasha256-optout.interop.	3600	IN	CNAME	www.rsasha256-optout.interop.
+www.rsasha256-optout.interop.	3600	IN	A	192.0.2.80
+alias.rsasha256-optout.interop.	3600	IN	RRSIG	CNAME 8 3 3600 20361001194833 20261004181833 30138 rsasha256-optout.interop. hp0OrCMb3BlPbp36uja0/XeYrHWUG9hwgb1Gqri0wNx9c7uNRLkhnh3M3K5FO/19/HrbOGGNY+7esSPwkbem88tRccy6RWSSuPfkZlgjv6jSQdQjf+LJ1vFEf6cWSzI0u0LpiRBCVWn4eziK6mH2TxqWzLcetWuJWEoCOpHLyIs=
+www.rsasha256-optout.interop.	3600	IN	RRSIG	A 8 3 3600 20361001194833 20261004181833 30138 rsasha256-optout.interop. NQPb/9SRBMjPN4nV+NQnTH/l5QwRloxJosacUePnvg85LOmzIt0nv1ynJyQiuGmM7mFoVZLzGgekOPE9nwyRl6cJKvux77EmqnQgU1MpdfLdRXTDOae9hAFoipWXDI2cc0jFD+BS9m+hdvGFpGLmL5zQ3hKfPK9nODnKg+9EuVg=
+
+;; Received 461 B
+;; Time 2026-10-04 19:49:36 UTC
+;; From 127.0.0.1@5300(UDP) in 0.5 ms

@@ -1,0 +1,22 @@
+;; ->>HEADER<<- opcode: QUERY; status: NXDOMAIN; id: 10554
+;; Flags: qr aa rd; QUERY: 1; ANSWER: 0; AUTHORITY: 8; ADDITIONAL: 1
+
+;; EDNS PSEUDOSECTION:
+;; Version: 0; flags: do; UDP size: 1232 B; ext-rcode: NOERROR
+
+;; QUESTION SECTION:
+;; nosuch.ed448-nsec3.interop.		IN	A
+
+;; AUTHORITY SECTION:
+ed448-nsec3.interop.	300	IN	SOA	ns1.ed448-nsec3.interop. hostmaster.ed448-nsec3.interop. 2026100401 7200 3600 1209600 300
+ikfls3j60dqe9m7aadlkt9c1e76n2o40.ed448-nsec3.interop. 300	IN	NSEC3	1 0 5 - jrjve83uvea61gc19alv3ladl92nra2c NS SOA MX TXT LOC SSHFP RRSIG DNSKEY NSEC3PARAM CDS CDNSKEY ZONEMD HTTPS CAA
+0feo0r0eciujgs1u9865c1upu7i3t8jo.ed448-nsec3.interop. 300	IN	NSEC3	1 0 5 - 16ipibo7eh9eobd0rne3fmpo8mo6shk1 CNAME RRSIG
+3fbom7ratgvk2cjgvpf2t7r166amste7.ed448-nsec3.interop. 300	IN	NSEC3	1 0 5 - 6riqj4bvulgsg2rbqr8if5og90ft38ft 
+ed448-nsec3.interop.	300	IN	RRSIG	SOA 16 2 3600 20361001194834 20261004181834 38260 ed448-nsec3.interop. QysTviWZP/13z2UFuekCVRjlv2WlX1UeRpAwKswCfB/oKiDeo2mOIuc6t837AI7WKPw3bT4Ob4MAc3Oscs8z327YmBTqH0HkK5kLhD98li+dOhrXft56yA7EoE7N0ai+7ebNAkgbmEgS5ETvHkJshSUA
+ikfls3j60dqe9m7aadlkt9c1e76n2o40.ed448-nsec3.interop. 300	IN	RRSIG	NSEC3 16 3 300 20361001194834 20261004181834 38260 ed448-nsec3.interop. uzBRZ8SQVijMHO1GPZXBBd7O8UWG9kdng+HpjCBZgwOOElakPETdyVcfTHThzHk7e1inNVprvmyAvAwhws3koaNxOVLhZWNgBr/vdBAG4hWliWgL5qGq5JqOir1PI0r7puP3q/PIWLI20SmVjjoZpjYA
+0feo0r0eciujgs1u9865c1upu7i3t8jo.ed448-nsec3.interop. 300	IN	RRSIG	NSEC3 16 3 300 20361001194834 20261004181834 38260 ed448-nsec3.interop. KtH/iuBGRSIZlU5QKlifgaNjYrggklCspgjyFoACa1hs52PYJ6i8kQ6LEf3lggfnyYvG69EjW4oAyx8buaTMN7OsGrzJUZq4rvoVBIq66J7SKI5so02VFu73XEshYZJ+4RwXEZJ8ItmPRLYZeAifVQcA
+3fbom7ratgvk2cjgvpf2t7r166amste7.ed448-nsec3.interop. 300	IN	RRSIG	NSEC3 16 3 300 20361001194834 20261004181834 38260 ed448-nsec3.interop. k2IwPf3AqivoGS32FO6x8IMjTL+K7LqJokzAWPsAi+Q6vTx8AOPSELN1pxRdP/snW1B1C34BVG8AfeAGeoAcR5werGZS09bq+IcSSoHuOlm5Bv+vduZbTxgsQMgyX0E4GCkPsFCKBEdLMhpvEc19KRQA
+
+;; Received 1001 B
+;; Time 2026-10-04 19:49:37 UTC
+;; From 127.0.0.1@5300(UDP) in 0.4 ms

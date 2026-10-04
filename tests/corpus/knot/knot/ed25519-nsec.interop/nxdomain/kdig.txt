@@ -1,0 +1,20 @@
+;; ->>HEADER<<- opcode: QUERY; status: NXDOMAIN; id: 23683
+;; Flags: qr aa rd; QUERY: 1; ANSWER: 0; AUTHORITY: 6; ADDITIONAL: 1
+
+;; EDNS PSEUDOSECTION:
+;; Version: 0; flags: do; UDP size: 1232 B; ext-rcode: NOERROR
+
+;; QUESTION SECTION:
+;; nosuch.ed25519-nsec.interop.		IN	A
+
+;; AUTHORITY SECTION:
+ed25519-nsec.interop.	300	IN	SOA	ns1.ed25519-nsec.interop. hostmaster.ed25519-nsec.interop. 2026100401 7200 3600 1209600 300
+mail.ed25519-nsec.interop.	300	IN	NSEC	ns1.ed25519-nsec.interop. A RRSIG NSEC
+ed25519-nsec.interop.	300	IN	NSEC	_svc.ed25519-nsec.interop. NS SOA MX TXT LOC SSHFP RRSIG NSEC DNSKEY HTTPS CAA
+ed25519-nsec.interop.	300	IN	RRSIG	SOA 15 2 3600 20361001194833 20261004181833 11439 ed25519-nsec.interop. a3o7FzTRlfo5nXZqg7swFv79HRPPzNtNia072Qne4Ak8mZ2z/FVkOY0bsArRoaVNhzN1ORgkJxrrHRggE1Z6CA==
+mail.ed25519-nsec.interop.	300	IN	RRSIG	NSEC 15 3 300 20361001194833 20261004181833 11439 ed25519-nsec.interop. Lstp8M8XfHL44hMuAflQgj/uhdbya4H29rSzH6JTXsMYj8cuJhC8BczL0t5aMB6xj867uWk4lbSBrfMiYY5NBQ==
+ed25519-nsec.interop.	300	IN	RRSIG	NSEC 15 2 300 20361001194833 20261004181833 11439 ed25519-nsec.interop. jszAwdrDIkvppZUskuUoM7n/nIgCmixCfRbmdwt/a8eMWncS59MsaEmf926zcte2LvTO/fe/+RUk/gca3XowAQ==
+
+;; Received 559 B
+;; Time 2026-10-04 19:49:37 UTC
+;; From 127.0.0.1@5300(UDP) in 0.4 ms

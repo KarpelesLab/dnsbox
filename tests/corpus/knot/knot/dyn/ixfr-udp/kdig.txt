@@ -1,0 +1,6 @@
+;; IXFR for dyn.interop.
+dyn.interop.        	3600	IN	SOA	ns1.dyn.interop. hostmaster.dyn.interop. 2026100408 7200 3600 1209600 300
+hmac-sha256.key.    	0	ANY	TSIG	hmac-sha256. 1791143378 300 32 xbxg1cdozYzAHsddL0wXsyLy/WGDhZm4CGW6x36FlxY= 34335 NOERROR 0
+;; Received 179 B (1 messages, 1 records)
+;; Time 2026-10-04 19:49:38 UTC
+;; From 127.0.0.1@5300(UDP) in 0.4 ms

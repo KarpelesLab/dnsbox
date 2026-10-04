@@ -1,0 +1,18 @@
+;; ->>HEADER<<- opcode: QUERY; status: NOERROR; id: 36540
+;; Flags: qr aa rd; QUERY: 1; ANSWER: 4; AUTHORITY: 0; ADDITIONAL: 1
+
+;; EDNS PSEUDOSECTION:
+;; Version: 0; flags: do; UDP size: 1232 B; ext-rcode: NOERROR
+
+;; QUESTION SECTION:
+;; alias.ecdsap384-optout.interop.		IN	A
+
+;; ANSWER SECTION:
+alias.ecdsap384-optout.interop.	3600	IN	CNAME	www.ecdsap384-optout.interop.
+www.ecdsap384-optout.interop.	3600	IN	A	192.0.2.80
+alias.ecdsap384-optout.interop.	3600	IN	RRSIG	CNAME 14 3 3600 20361001194833 20261004181833 10601 ecdsap384-optout.interop. 4Iz5i7zoLptlkTxOhJVlEXsqUyHTHytWl9nJTjA3RJpr/eHdTC75xJgo2Zza6SIkHYRorlFMfssDz0y/KBcv7JR/rdl+0UF8mrBrGurd0/DW+ovS6qaD0EeEXQ1vq8ZB
+www.ecdsap384-optout.interop.	3600	IN	RRSIG	A 14 3 3600 20361001194833 20261004181833 10601 ecdsap384-optout.interop. mD3dthCNmUZHL0XnQz3F2LYwea9vAPL3kkGbr5QJqZKwbuK6Tj6E0sjVqF1uUdzRZVbgu1VHvZ+obwRjCsNXFmp40ltCBa06+6odUJaPPwhIOinSt9hnzCJlQrgnER6y
+
+;; Received 397 B
+;; Time 2026-10-04 19:49:37 UTC
+;; From 127.0.0.1@5300(UDP) in 0.4 ms

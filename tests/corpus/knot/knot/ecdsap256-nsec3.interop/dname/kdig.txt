@@ -1,0 +1,17 @@
+;; ->>HEADER<<- opcode: QUERY; status: NOERROR; id: 18180
+;; Flags: qr aa rd; QUERY: 1; ANSWER: 3; AUTHORITY: 0; ADDITIONAL: 1
+
+;; EDNS PSEUDOSECTION:
+;; Version: 0; flags: do; UDP size: 1232 B; ext-rcode: NOERROR
+
+;; QUESTION SECTION:
+;; x.dname.ecdsap256-nsec3.interop. 	IN	A
+
+;; ANSWER SECTION:
+dname.ecdsap256-nsec3.interop.	3600	IN	DNAME	example.net.
+x.dname.ecdsap256-nsec3.interop. 3600	IN	CNAME	x.example.net.
+dname.ecdsap256-nsec3.interop.	3600	IN	RRSIG	DNAME 13 3 3600 20361001194833 20261004181833 34006 ecdsap256-nsec3.interop. Z6Fyg9IZS6goIXPwzRhSpk0hHoyc+HrQiP1SHKYLJPTttfF5dWPOO+5U5/ig3q1WQ+4LU97A1Zp3Lj4ErMochg==
+
+;; Received 231 B
+;; Time 2026-10-04 19:49:37 UTC
+;; From 127.0.0.1@5300(UDP) in 0.5 ms

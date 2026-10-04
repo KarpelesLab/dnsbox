@@ -1,0 +1,20 @@
+;; ->>HEADER<<- opcode: QUERY; status: NOERROR; id: 2390
+;; Flags: qr aa rd; QUERY: 1; ANSWER: 2; AUTHORITY: 0; ADDITIONAL: 3
+
+;; EDNS PSEUDOSECTION:
+;; Version: 0; flags: ; UDP size: 1232 B; ext-rcode: NOERROR
+
+;; QUESTION SECTION:
+;; ed25519-nsec.interop.		IN	ANY
+
+;; ANSWER SECTION:
+ed25519-nsec.interop.	3600	IN	NS	ns1.ed25519-nsec.interop.
+ed25519-nsec.interop.	3600	IN	NS	ns2.ed25519-nsec.interop.
+
+;; ADDITIONAL SECTION:
+ns1.ed25519-nsec.interop.	3600	IN	A	127.0.0.1
+ns2.ed25519-nsec.interop.	3600	IN	A	198.51.100.53
+
+;; Received 117 B
+;; Time 2026-10-04 19:49:38 UTC
+;; From 127.0.0.1@5300(UDP) in 0.3 ms

@@ -1,0 +1,13 @@
+;; ->>HEADER<<- opcode: QUERY; status: SERVFAIL; id: 11794
+;; Flags: qr rd ra; QUERY: 1; ANSWER: 0; AUTHORITY: 0; ADDITIONAL: 1
+
+;; EDNS PSEUDOSECTION:
+;; Version: 0; flags: do; UDP size: 1232 B; ext-rcode: NOERROR
+;; EDE: 6 (DNSSEC Bogus): 'validation failure <www.bogus.interop. A IN>: signature crypto failed from 127.0.0.1'
+
+;; QUESTION SECTION:
+;; www.bogus.interop.  		IN	A
+
+;; Received 136 B
+;; Time 2026-10-04 19:49:40 UTC
+;; From 127.0.0.1@5400(UDP) in 3.6 ms

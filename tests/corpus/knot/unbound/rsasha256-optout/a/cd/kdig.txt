@@ -1,0 +1,16 @@
+;; ->>HEADER<<- opcode: QUERY; status: NOERROR; id: 42610
+;; Flags: qr rd ra ad cd; QUERY: 1; ANSWER: 2; AUTHORITY: 0; ADDITIONAL: 1
+
+;; EDNS PSEUDOSECTION:
+;; Version: 0; flags: do; UDP size: 1232 B; ext-rcode: NOERROR
+
+;; QUESTION SECTION:
+;; www.rsasha256-optout.interop.		IN	A
+
+;; ANSWER SECTION:
+www.rsasha256-optout.interop.	3600	IN	A	192.0.2.80
+www.rsasha256-optout.interop.	3600	IN	RRSIG	A 8 3 3600 20361001194833 20261004181833 30138 rsasha256-optout.interop. NQPb/9SRBMjPN4nV+NQnTH/l5QwRloxJosacUePnvg85LOmzIt0nv1ynJyQiuGmM7mFoVZLzGgekOPE9nwyRl6cJKvux77EmqnQgU1MpdfLdRXTDOae9hAFoipWXDI2cc0jFD+BS9m+hdvGFpGLmL5zQ3hKfPK9nODnKg+9EuVg=
+
+;; Received 257 B
+;; Time 2026-10-04 19:49:38 UTC
+;; From 127.0.0.1@5400(UDP) in 0.4 ms

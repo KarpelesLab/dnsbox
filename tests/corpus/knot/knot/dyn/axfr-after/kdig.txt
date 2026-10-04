@@ -1,0 +1,73 @@
+;; AXFR for dyn.interop.
+dyn.interop.        	3600	IN	SOA	ns1.dyn.interop. hostmaster.dyn.interop. 2026100408 7200 3600 1209600 300
+dyn.interop.        	3600	IN	NS	ns1.dyn.interop.
+dyn.interop.        	3600	IN	RRSIG	NS 15 2 3600 20361001194935 20261004181935 28192 dyn.interop. pkRlnLu86uyOV8XMYsRFkrsHpi2h0HSqWGLgYLaz/luZQTNzVV8W4nLobm2G7hVwsMeUfi1sK+QviYrAreQUBg==
+dyn.interop.        	3600	IN	RRSIG	SOA 15 2 3600 20361001194938 20261004181938 28192 dyn.interop. eeTQoX8eiMIQ4TIbuPCDgBefjJaZbFqPD7q7SqQ1SdIrTbV9mRUmpM1S0UhcjCpLRR66Fb/KkPyt8TK20M6LCA==
+dyn.interop.        	3600	IN	RRSIG	DNSKEY 15 2 3600 20361001194935 20261004181935 58260 dyn.interop. +dgTsRJXiSIJhP3rjjtyGU0Erwgo/5vGG5KeDr8C+xVNi1bbK4x/lILxeeOA8FM5tmrMaU/jagX1q2IM7+xYBQ==
+dyn.interop.        	300	IN	RRSIG	NSEC3PARAM 15 2 300 20361001194935 20261004181935 28192 dyn.interop. nTIzqOckH0Yi5QjSlZ5UJYhiRV7uzuW4KYUvpHqcxUqAzioV9Q2FtTP96Mx8kx6k1yQLWMf6bS0O3MLWIn6AAw==
+dyn.interop.        	0	IN	RRSIG	CDS 15 2 0 20361001194935 20261004181935 58260 dyn.interop. gULnwU736DdzPOJFtOAUcGgbmNhCqgVNpzxHuGgEhAFst2QwPXCEwLQuNnRqqDUAoYqby8cQgJFTx2T45+j0DQ==
+dyn.interop.        	0	IN	RRSIG	CDNSKEY 15 2 0 20361001194935 20261004181935 58260 dyn.interop. X9arRdtm7Z4NtYfEgIyRVPEcx/bc17uOWa54/k7AhzmYX9x7rEgqg4iZarrJIzc+HzlfyLjMY0cfmolPqSMJCw==
+dyn.interop.        	3600	IN	DNSKEY	256 3 15 BPDBw7r+5O4COKGbJeSx7AaN5YRz/wqW1y0mJq9qcGU=
+dyn.interop.        	3600	IN	DNSKEY	257 3 15 FTJo7SBxEj2YZ5FoH0OZ/D5itSQu6URW8ybTCuXSONw=
+dyn.interop.        	300	IN	NSEC3PARAM	1 0 0 -
+dyn.interop.        	0	IN	CDS	58260 15 2 3905D403A0B2974B4A5C762995DABF25658A7FC0FD3F94B7A9F01C0EBA33D643
+dyn.interop.        	0	IN	CDNSKEY	257 3 15 FTJo7SBxEj2YZ5FoH0OZ/D5itSQu6URW8ybTCuXSONw=
+new1.dyn.interop.   	300	IN	A	192.0.2.1
+new1.dyn.interop.   	300	IN	TXT	"added with hmac-md5"
+new1.dyn.interop.   	300	IN	RRSIG	A 15 3 300 20361001194938 20261004181938 28192 dyn.interop. y4g+1VNa5zdk8BUwmK1PzC8kPxTcjgPU6CWtaIFHRIhyFOFHwqSnYh1V3KZsbaNrOGbWRPyT8PPsztiswKlyBg==
+new1.dyn.interop.   	300	IN	RRSIG	TXT 15 3 300 20361001194938 20261004181938 28192 dyn.interop. AbTODc/uqKERKv84g0KQ1Ru8lR5Bk0r/fMZOfCEpKAJalV6MeohSL8QWdpgXr5eGqd2SsrqJMZicHbdR8zPWAQ==
+new2.dyn.interop.   	300	IN	A	192.0.2.2
+new2.dyn.interop.   	300	IN	TXT	"added with hmac-sha1"
+new2.dyn.interop.   	300	IN	RRSIG	A 15 3 300 20361001194938 20261004181938 28192 dyn.interop. dljIg7vtSVR+ktEgIDdDTTVJ8sU4ODzPdXNwkvdORVfLSzFEJxQIebAINBKoNCZ0htpReKfkf1+51zjkLf5nCQ==
+new2.dyn.interop.   	300	IN	RRSIG	TXT 15 3 300 20361001194938 20261004181938 28192 dyn.interop. lAisESzUrEaH9GAD1qH+Uy8qIVQh6PlQNtFzyOdyxGgeIf9h4xohHCtxzFiAUpG8ZHxCRU2ObvTJity68KDfBg==
+new3.dyn.interop.   	300	IN	A	192.0.2.3
+new3.dyn.interop.   	300	IN	TXT	"added with hmac-sha224"
+new3.dyn.interop.   	300	IN	RRSIG	A 15 3 300 20361001194938 20261004181938 28192 dyn.interop. r22mrvPZT6jmZFoslwUhZHw7SgGi0NRB6cP58jamxwAqZ+Q2l2YmRzbT3x39MGUmJxzTdXKkrvLeWyqDcG1OCg==
+new3.dyn.interop.   	300	IN	RRSIG	TXT 15 3 300 20361001194938 20261004181938 28192 dyn.interop. 3EUKdSDMKvTbfphCnrRA/5j5uTP9nUtYtEu+2GC1OfsYVxnM3f4VUx/b1QZRluTxhhp/KS2jjqjOXxxeQPIECQ==
+new4.dyn.interop.   	300	IN	A	192.0.2.4
+new4.dyn.interop.   	300	IN	TXT	"added with hmac-sha256"
+new4.dyn.interop.   	300	IN	RRSIG	A 15 3 300 20361001194938 20261004181938 28192 dyn.interop. 8CkQ2kqBv1VRUCH5vJiiIpl04g857bESBUcg9kfq22QnrR8xcL00CGPa6Grh+B5cbH9J8lvLSQgA89qfc/ozBA==
+new4.dyn.interop.   	300	IN	RRSIG	TXT 15 3 300 20361001194938 20261004181938 28192 dyn.interop. Vsy2IRyjYC0JMXHQdUOUxidompNCy8OnLMK7zE+3Ptp1WC9EEM3qeVoIlLizDY+YVQinFCUJ2VAGPPy1lMwjAw==
+new5.dyn.interop.   	300	IN	A	192.0.2.5
+new5.dyn.interop.   	300	IN	TXT	"added with hmac-sha384"
+new5.dyn.interop.   	300	IN	RRSIG	A 15 3 300 20361001194938 20261004181938 28192 dyn.interop. RQfYm0tDJYfv/o0WJ8tRFNGz5Cj09JK7ghysWWfrLs5hgkC1fxWcIkMTzqmR/YMM7ttngRS+TMQAYh45FXTcBw==
+new5.dyn.interop.   	300	IN	RRSIG	TXT 15 3 300 20361001194938 20261004181938 28192 dyn.interop. dOOy+450bywGhakaQai+zcS8jrWPf87jOGFl26iNAh+NfS7PD1LNG3ye9lufSIvRgKW3vGGSRxjvGq/Yv/7/AA==
+new6.dyn.interop.   	300	IN	A	192.0.2.6
+new6.dyn.interop.   	300	IN	TXT	"added with hmac-sha512"
+new6.dyn.interop.   	300	IN	RRSIG	A 15 3 300 20361001194938 20261004181938 28192 dyn.interop. FcbkN1pxk72y+FK2nEOdMZZ6IDkudX4rXwXYB0nDgI7knXU/1VbE87STTx1vw5pqGqgPT6ME8OOPg4QKepJWDg==
+new6.dyn.interop.   	300	IN	RRSIG	TXT 15 3 300 20361001194938 20261004181938 28192 dyn.interop. 2P606JDf2aBwhvFiuurZRNGKiCHzH5kLCUpn6xrQhKd/bUDaqaZE5Hsp9f64U31NKFsavj8tjP65oNu3AHISBg==
+ns1.dyn.interop.    	3600	IN	A	127.0.0.1
+ns1.dyn.interop.    	3600	IN	RRSIG	A 15 3 3600 20361001194935 20261004181935 28192 dyn.interop. +8ZivQ6AfmWW0s4FPg/AKmh0hkeOMsy1STPFIO/CLDfPOJaeuyKX+Y2GV3vl/rsRN/SdR0DlimDviAo+Mz6nBA==
+old.dyn.interop.    	3600	IN	A	192.0.2.99
+old.dyn.interop.    	3600	IN	RRSIG	A 15 3 3600 20361001194935 20261004181935 28192 dyn.interop. z4OnAQ1WLGnOjaOxoJZCA/ueCVfbPrHqSRC8Oup/FwYkSjQ/ood6XjKvTnGpvDBQf3XCF4pNhzZl+PUPpkCkBQ==
+t001.dyn.interop.   	3600	IN	TXT	"to be deleted"
+t001.dyn.interop.   	3600	IN	RRSIG	TXT 15 3 3600 20361001194935 20261004181935 28192 dyn.interop. 7GLUTgXBMSvMMJlzQ4hoUvEO0cUC4NSoZR9Nfw0GV9y6+eaDxL4EK66doLLdinyOG9/QiZaw6mxdFnjJzl9DAQ==
+www.dyn.interop.    	3600	IN	A	192.0.2.80
+www.dyn.interop.    	3600	IN	RRSIG	A 15 3 3600 20361001194935 20261004181935 28192 dyn.interop. XdqJ0HE0cURWIY5KvKjvYlNQGoMVJjPkUwbT8ZBUy4YmqKIGhv64eCea0Wr1VIajpZm5x/UtDC5ShRmaLzG5AA==
+50f9ncc8ojel5e6767ojcd1ros1v2qjn.dyn.interop. 300	IN	RRSIG	NSEC3 15 3 300 20361001194938 20261004181938 28192 dyn.interop. Vs2P8pOTbSaOujZkSwaFZFYec0xvpNLj7iuJ1Gk20xlFVvqAFMEYW8Rsht/bG7lfIpANWxL/Y+CQWlCnhhJeBg==
+50f9ncc8ojel5e6767ojcd1ros1v2qjn.dyn.interop. 300	IN	NSEC3	1 0 0 - 867lapbnmj58k4mhtgj70kj2ccr33sag NS SOA RRSIG DNSKEY NSEC3PARAM CDS CDNSKEY
+867lapbnmj58k4mhtgj70kj2ccr33sag.dyn.interop. 300	IN	RRSIG	NSEC3 15 3 300 20361001194938 20261004181938 28192 dyn.interop. hnLHxO+b2cHew3/nHy+YGfVfRLe/7y/hoNaS5KMad3WwMFFfCbxOaB/ZYNT2I7lErjuLirFJfpo3iMFZIyeoCA==
+867lapbnmj58k4mhtgj70kj2ccr33sag.dyn.interop. 300	IN	NSEC3	1 0 0 - 9hkufpqqnjfqrvng9qv84pbn7inkdstt A TXT RRSIG
+9hkufpqqnjfqrvng9qv84pbn7inkdstt.dyn.interop. 300	IN	RRSIG	NSEC3 15 3 300 20361001194938 20261004181938 28192 dyn.interop. 4u2TpX+JVlAReOTsLPFOmMDHTJkhSAl75ckExTYbTZ5aY47QOeIfK0sqzDhnz7ZPzmrfulWpzJ17oFUYmdj4Bw==
+9hkufpqqnjfqrvng9qv84pbn7inkdstt.dyn.interop. 300	IN	NSEC3	1 0 0 - el1fls9adjbi0e8jkfr0e4nfcudnp756 A TXT RRSIG
+el1fls9adjbi0e8jkfr0e4nfcudnp756.dyn.interop. 300	IN	RRSIG	NSEC3 15 3 300 20361001194938 20261004181938 28192 dyn.interop. z2daNeN6nMbGjf8sMT419WD83Qvn9rLwHZLYrSDZmTQ3iaawHhuBkSDGWmwZmRF07/4thCO6NA9dydAvjcvvCA==
+el1fls9adjbi0e8jkfr0e4nfcudnp756.dyn.interop. 300	IN	NSEC3	1 0 0 - h64ajd01ht91thpgcnobr4p0akm5mgig A TXT RRSIG
+h64ajd01ht91thpgcnobr4p0akm5mgig.dyn.interop. 300	IN	RRSIG	NSEC3 15 3 300 20361001194935 20261004181935 28192 dyn.interop. sEHvteG2MZbzysfp7pj5pOvc7SwGrxwUKucH/He0C/OCuyD5R7/SWZidJC8K5bBartfSeEXaEjemHX3pkRAkDw==
+h64ajd01ht91thpgcnobr4p0akm5mgig.dyn.interop. 300	IN	NSEC3	1 0 0 - hed4l3oghe4f7lkn8v342ijj1t8p4al3 A RRSIG
+hed4l3oghe4f7lkn8v342ijj1t8p4al3.dyn.interop. 300	IN	RRSIG	NSEC3 15 3 300 20361001194935 20261004181935 28192 dyn.interop. zi/bqEi9W1rIXwzOdTUHsQRet5S2dK/EpT5HsiKY0epv6eW8Ucbc9hvAJeaLEQMKKadkupqWfJXZRr3oJfhYAA==
+hed4l3oghe4f7lkn8v342ijj1t8p4al3.dyn.interop. 300	IN	NSEC3	1 0 0 - q5umv96odve2tti3a5f2aq1l1efl0872 A RRSIG
+q5umv96odve2tti3a5f2aq1l1efl0872.dyn.interop. 300	IN	RRSIG	NSEC3 15 3 300 20361001194938 20261004181938 28192 dyn.interop. Gv99lnjqttmbkz/iB/JzdLki2Rfg6Ux9eD3sc2MRY0Plef4hdqgbM/9QnkCGUSLdnqafdxm5t39TGm7YPktfDg==
+q5umv96odve2tti3a5f2aq1l1efl0872.dyn.interop. 300	IN	NSEC3	1 0 0 - r6r27s95rnb5nlcd9it6f8tevkihedcv A RRSIG
+r6r27s95rnb5nlcd9it6f8tevkihedcv.dyn.interop. 300	IN	RRSIG	NSEC3 15 3 300 20361001194938 20261004181938 28192 dyn.interop. rlPpIUsjXu2T4f92tZ+g50AfCTHDnbMDVxBjNL5BMd1QpCe6CEZCxovMBOt0J8AtdN9WSvLyPuwUrPabW6jkCQ==
+r6r27s95rnb5nlcd9it6f8tevkihedcv.dyn.interop. 300	IN	NSEC3	1 0 0 - riba3f6si94bkepgjk3e1je8povfm1u2 A TXT RRSIG
+riba3f6si94bkepgjk3e1je8povfm1u2.dyn.interop. 300	IN	RRSIG	NSEC3 15 3 300 20361001194938 20261004181938 28192 dyn.interop. IqZKfUWexSQKTlNSPkjllKrBGIWKcKwNmW3WQAtxx+w5Br57PaD5nSfy/MW5YwEVAIglkjMpDVPGFEmAmrrrAQ==
+riba3f6si94bkepgjk3e1je8povfm1u2.dyn.interop. 300	IN	NSEC3	1 0 0 - v1vhi62gj8kndo35jucr7s66hslt2lmg A TXT RRSIG
+v1vhi62gj8kndo35jucr7s66hslt2lmg.dyn.interop. 300	IN	RRSIG	NSEC3 15 3 300 20361001194938 20261004181938 28192 dyn.interop. ahT17h683WBTUV7bgLYPzfse+eI3gDUIVVEa1xka35vn/KNa4iBwZV1dlGRxsjOv2H9J2O8zg4cen4u1HnjLBQ==
+v1vhi62gj8kndo35jucr7s66hslt2lmg.dyn.interop. 300	IN	NSEC3	1 0 0 - vrp7f88443maulmp6esmr6jffcijbsn0 TXT RRSIG
+vrp7f88443maulmp6esmr6jffcijbsn0.dyn.interop. 300	IN	RRSIG	NSEC3 15 3 300 20361001194938 20261004181938 28192 dyn.interop. G+tREEYUDpupEwpa0OLJglwOhdIkaI6LZy0VUI+/xje6huOWRQgg1YVGgXuPOCiXHvr6GlXmd5Igdi4wIE+QAg==
+vrp7f88443maulmp6esmr6jffcijbsn0.dyn.interop. 300	IN	NSEC3	1 0 0 - 50f9ncc8ojel5e6767ojcd1ros1v2qjn A TXT RRSIG
+dyn.interop.        	3600	IN	SOA	ns1.dyn.interop. hostmaster.dyn.interop. 2026100408 7200 3600 1209600 300
+hmac-sha256.key.    	0	ANY	TSIG	hmac-sha256. 1791143378 300 32 C+P2mIQbsizrhyBBktTUxH/E2uFov2s+8v228tfht9E= 49449 NOERROR 0
+;; Received 5281 B (1 messages, 68 records)
+;; Time 2026-10-04 19:49:38 UTC
+;; From 127.0.0.1@5300(TCP) in 0.8 ms

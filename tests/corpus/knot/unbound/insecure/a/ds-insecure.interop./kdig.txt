@@ -1,0 +1,18 @@
+;; ->>HEADER<<- opcode: QUERY; status: NOERROR; id: 63680
+;; Flags: qr rd ra cd; QUERY: 1; ANSWER: 0; AUTHORITY: 4; ADDITIONAL: 1
+
+;; EDNS PSEUDOSECTION:
+;; Version: 0; flags: do; UDP size: 1232 B; ext-rcode: NOERROR
+
+;; QUESTION SECTION:
+;; insecure.interop.   		IN	DS
+
+;; AUTHORITY SECTION:
+interop.            	296	IN	SOA	ns.interop. hostmaster.interop. 2026100401 7200 3600 1209600 300
+interop.            	296	IN	RRSIG	SOA 13 1 3600 20361001194834 20261004181834 8617 interop. Qr+7MfAFE0de7BzHSbFRL8NKf4sxl/B+1NkmRhT+ASCXJBBSGbwjJyULi6iizRiGELJ16GvkuTHPurp1/qS6IQ==
+insecure.interop.   	300	IN	NSEC	ns.interop. NS RRSIG NSEC
+insecure.interop.   	300	IN	RRSIG	NSEC 13 2 300 20361001194834 20261004181834 8617 interop. 9CY2KgYPv70tjofkzt6Icp1MfCHeSGjBOX1OAW33tCua/F5JhQy5s453uMPJwonWk2+iIOUUtc6/hQ7rPozZfQ==
+
+;; Received 333 B
+;; Time 2026-10-04 19:49:40 UTC
+;; From 127.0.0.1@5400(UDP) in 0.4 ms

@@ -1,0 +1,1 @@
+kdig +dnssec rsasha256-optout.interop. SOA

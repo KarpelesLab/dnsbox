@@ -1,0 +1,41 @@
+;; AXFR for dyn.interop.
+dyn.interop.        	3600	IN	SOA	ns1.dyn.interop. hostmaster.dyn.interop. 2026100402 7200 3600 1209600 300
+dyn.interop.        	3600	IN	NS	ns1.dyn.interop.
+dyn.interop.        	3600	IN	RRSIG	NS 15 2 3600 20361001194935 20261004181935 28192 dyn.interop. pkRlnLu86uyOV8XMYsRFkrsHpi2h0HSqWGLgYLaz/luZQTNzVV8W4nLobm2G7hVwsMeUfi1sK+QviYrAreQUBg==
+dyn.interop.        	3600	IN	RRSIG	SOA 15 2 3600 20361001194935 20261004181935 28192 dyn.interop. UexYrBw+SgVTyu8x+GccxO2wa0Vaa4rxW+j8JS77NijMl57z/RN+mQSeUBbjamwRgh82WnvfaUY8AnZUz64WCg==
+dyn.interop.        	3600	IN	RRSIG	DNSKEY 15 2 3600 20361001194935 20261004181935 58260 dyn.interop. +dgTsRJXiSIJhP3rjjtyGU0Erwgo/5vGG5KeDr8C+xVNi1bbK4x/lILxeeOA8FM5tmrMaU/jagX1q2IM7+xYBQ==
+dyn.interop.        	300	IN	RRSIG	NSEC3PARAM 15 2 300 20361001194935 20261004181935 28192 dyn.interop. nTIzqOckH0Yi5QjSlZ5UJYhiRV7uzuW4KYUvpHqcxUqAzioV9Q2FtTP96Mx8kx6k1yQLWMf6bS0O3MLWIn6AAw==
+dyn.interop.        	0	IN	RRSIG	CDS 15 2 0 20361001194935 20261004181935 58260 dyn.interop. gULnwU736DdzPOJFtOAUcGgbmNhCqgVNpzxHuGgEhAFst2QwPXCEwLQuNnRqqDUAoYqby8cQgJFTx2T45+j0DQ==
+dyn.interop.        	0	IN	RRSIG	CDNSKEY 15 2 0 20361001194935 20261004181935 58260 dyn.interop. X9arRdtm7Z4NtYfEgIyRVPEcx/bc17uOWa54/k7AhzmYX9x7rEgqg4iZarrJIzc+HzlfyLjMY0cfmolPqSMJCw==
+dyn.interop.        	3600	IN	DNSKEY	256 3 15 BPDBw7r+5O4COKGbJeSx7AaN5YRz/wqW1y0mJq9qcGU=
+dyn.interop.        	3600	IN	DNSKEY	257 3 15 FTJo7SBxEj2YZ5FoH0OZ/D5itSQu6URW8ybTCuXSONw=
+dyn.interop.        	300	IN	NSEC3PARAM	1 0 0 -
+dyn.interop.        	0	IN	CDS	58260 15 2 3905D403A0B2974B4A5C762995DABF25658A7FC0FD3F94B7A9F01C0EBA33D643
+dyn.interop.        	0	IN	CDNSKEY	257 3 15 FTJo7SBxEj2YZ5FoH0OZ/D5itSQu6URW8ybTCuXSONw=
+ns1.dyn.interop.    	3600	IN	A	127.0.0.1
+ns1.dyn.interop.    	3600	IN	RRSIG	A 15 3 3600 20361001194935 20261004181935 28192 dyn.interop. +8ZivQ6AfmWW0s4FPg/AKmh0hkeOMsy1STPFIO/CLDfPOJaeuyKX+Y2GV3vl/rsRN/SdR0DlimDviAo+Mz6nBA==
+old.dyn.interop.    	3600	IN	A	192.0.2.99
+old.dyn.interop.    	3600	IN	RRSIG	A 15 3 3600 20361001194935 20261004181935 28192 dyn.interop. z4OnAQ1WLGnOjaOxoJZCA/ueCVfbPrHqSRC8Oup/FwYkSjQ/ood6XjKvTnGpvDBQf3XCF4pNhzZl+PUPpkCkBQ==
+t000.dyn.interop.   	3600	IN	TXT	"to be deleted"
+t000.dyn.interop.   	3600	IN	RRSIG	TXT 15 3 3600 20361001194935 20261004181935 28192 dyn.interop. zBQdRhbXhQIldaeJ6ChQwOQ+ECc9J4Kub1tfp7DKQ8VDwQLS+lh6Y3FB0Lqpa2MXzp16GPByRTz6SnN6oEalDQ==
+t001.dyn.interop.   	3600	IN	TXT	"to be deleted"
+t001.dyn.interop.   	3600	IN	RRSIG	TXT 15 3 3600 20361001194935 20261004181935 28192 dyn.interop. 7GLUTgXBMSvMMJlzQ4hoUvEO0cUC4NSoZR9Nfw0GV9y6+eaDxL4EK66doLLdinyOG9/QiZaw6mxdFnjJzl9DAQ==
+www.dyn.interop.    	3600	IN	A	192.0.2.80
+www.dyn.interop.    	3600	IN	RRSIG	A 15 3 3600 20361001194935 20261004181935 28192 dyn.interop. XdqJ0HE0cURWIY5KvKjvYlNQGoMVJjPkUwbT8ZBUy4YmqKIGhv64eCea0Wr1VIajpZm5x/UtDC5ShRmaLzG5AA==
+50f9ncc8ojel5e6767ojcd1ros1v2qjn.dyn.interop. 300	IN	RRSIG	NSEC3 15 3 300 20361001194935 20261004181935 28192 dyn.interop. lR9dU3Wpjg/MORRto0/QTtbYIG1icdaGvjQJ30tFTnV/m6WzV1krDJXdknAxpm/WVHBhpP7oJTFqB/kiMoySDA==
+50f9ncc8ojel5e6767ojcd1ros1v2qjn.dyn.interop. 300	IN	NSEC3	1 0 0 - bu9d8tu4b59k92nitkunpt4e0cdv4qoe NS SOA RRSIG DNSKEY NSEC3PARAM CDS CDNSKEY
+bu9d8tu4b59k92nitkunpt4e0cdv4qoe.dyn.interop. 300	IN	RRSIG	NSEC3 15 3 300 20361001194935 20261004181935 28192 dyn.interop. aD/QaYW/bLW/TK+3KHy71b4ZXuGpsIpbO5z6l9F7eKS21GzJYcVShC+lS7jJ8ANiccy89Eqim6MHAENHmC7aAw==
+bu9d8tu4b59k92nitkunpt4e0cdv4qoe.dyn.interop. 300	IN	NSEC3	1 0 0 - h64ajd01ht91thpgcnobr4p0akm5mgig TXT RRSIG
+h64ajd01ht91thpgcnobr4p0akm5mgig.dyn.interop. 300	IN	RRSIG	NSEC3 15 3 300 20361001194935 20261004181935 28192 dyn.interop. sEHvteG2MZbzysfp7pj5pOvc7SwGrxwUKucH/He0C/OCuyD5R7/SWZidJC8K5bBartfSeEXaEjemHX3pkRAkDw==
+h64ajd01ht91thpgcnobr4p0akm5mgig.dyn.interop. 300	IN	NSEC3	1 0 0 - hed4l3oghe4f7lkn8v342ijj1t8p4al3 A RRSIG
+hed4l3oghe4f7lkn8v342ijj1t8p4al3.dyn.interop. 300	IN	RRSIG	NSEC3 15 3 300 20361001194935 20261004181935 28192 dyn.interop. zi/bqEi9W1rIXwzOdTUHsQRet5S2dK/EpT5HsiKY0epv6eW8Ucbc9hvAJeaLEQMKKadkupqWfJXZRr3oJfhYAA==
+hed4l3oghe4f7lkn8v342ijj1t8p4al3.dyn.interop. 300	IN	NSEC3	1 0 0 - q5umv96odve2tti3a5f2aq1l1efl0872 A RRSIG
+q5umv96odve2tti3a5f2aq1l1efl0872.dyn.interop. 300	IN	RRSIG	NSEC3 15 3 300 20361001194935 20261004181935 28192 dyn.interop. P2XXXK4YaT17r4yVPepiqtUb8FJBP5kxgH3ZoX79iVMN0XvTU6VtVsU2Gvbn4JVpjau+UaAy3krE71Zx56qyAA==
+q5umv96odve2tti3a5f2aq1l1efl0872.dyn.interop. 300	IN	NSEC3	1 0 0 - v1vhi62gj8kndo35jucr7s66hslt2lmg A RRSIG
+v1vhi62gj8kndo35jucr7s66hslt2lmg.dyn.interop. 300	IN	RRSIG	NSEC3 15 3 300 20361001194935 20261004181935 28192 dyn.interop. yVO3FAflPxRT5mpIY1B9gAc4OYJ0xdNNEY5yvL1b99Nlp4go2GHUvq7Ju+yUXGpD0/IXKn7v+34ov4KeNnxCBA==
+v1vhi62gj8kndo35jucr7s66hslt2lmg.dyn.interop. 300	IN	NSEC3	1 0 0 - 50f9ncc8ojel5e6767ojcd1ros1v2qjn TXT RRSIG
+dyn.interop.        	3600	IN	SOA	ns1.dyn.interop. hostmaster.dyn.interop. 2026100402 7200 3600 1209600 300
+hmac-sha256.key.    	0	ANY	TSIG	hmac-sha256. 1791143378 300 32 7+IZZht4dRYjF0ixnGkpwG71/pi8Dhmgtb3qN9w1xTc= 50295 NOERROR 0
+;; Received 2874 B (1 messages, 36 records)
+;; Time 2026-10-04 19:49:38 UTC
+;; From 127.0.0.1@5300(TCP) in 0.7 ms

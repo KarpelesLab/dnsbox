@@ -1,0 +1,18 @@
+;; ->>HEADER<<- opcode: QUERY; status: NOERROR; id: 16035
+;; Flags: qr aa rd; QUERY: 1; ANSWER: 4; AUTHORITY: 0; ADDITIONAL: 1
+
+;; EDNS PSEUDOSECTION:
+;; Version: 0; flags: do; UDP size: 1232 B; ext-rcode: NOERROR
+
+;; QUESTION SECTION:
+;; alias.ed448-nsec3.interop.		IN	A
+
+;; ANSWER SECTION:
+alias.ed448-nsec3.interop.	3600	IN	CNAME	www.ed448-nsec3.interop.
+www.ed448-nsec3.interop.	3600	IN	A	192.0.2.80
+alias.ed448-nsec3.interop.	3600	IN	RRSIG	CNAME 16 3 3600 20361001194834 20261004181834 38260 ed448-nsec3.interop. uXGCZVQOO74x5hZiQIf25eSFolbeCgN/4q3kyJvi8ryBt/6DFxIbS6l+FiR/MGwGOFUtCm08P5mAUQKza4swnvmFLVuM3Sk9/o4yEOPiZ1L5RsqmP/QYxXq+ViKSshefRe2t5oANNs0f2QGvvqq6zD8A
+www.ed448-nsec3.interop.	3600	IN	RRSIG	A 16 3 3600 20361001194834 20261004181834 38260 ed448-nsec3.interop. M8WX1wXZjsJ1MJmsgoeuUCBSQ4nSvkOLVp3W0gar6Fdk0gLbPynEis5zUv8aJpqaP0Q9b/0fEACAfqNxKea0p/AIw0OUtvMZdiwAWeg4jfOc+pEc3uVeB3Ni9EKEn+Q9/Y1A6l7PeewSegLf7O1s0CoA
+
+;; Received 418 B
+;; Time 2026-10-04 19:49:37 UTC
+;; From 127.0.0.1@5300(UDP) in 0.3 ms

@@ -1,0 +1,37 @@
+;; WARNING: bad cookie from 127.0.0.1@5300(UDP), retrying with the received one
+
+;; ->>HEADER<<- opcode: QUERY; status: BADCOOKIE; id: 50662
+;; Flags: qr rd; QUERY: 1; ANSWER: 0; AUTHORITY: 0; ADDITIONAL: 1
+
+;; EDNS PSEUDOSECTION:
+;; Version: 0; flags: do; UDP size: 1232 B; ext-rcode: BADCOOKIE
+;; NSID: 646E73626F782D696E7465726F70 "dnsbox-interop"
+;; CLIENT-SUBNET: 198.51.100.0/24/0
+;; COOKIE: 55FCD865DFBB1B85010000006AC2ADD27B5EA11CBFFEBF2F
+
+;; QUESTION SECTION:
+;; ed25519-nsec.interop.		IN	SOA
+
+;; Received 106 B
+;; Time 2026-10-04 19:49:38 UTC
+;; From 127.0.0.1@5300(UDP) in 0.4 ms
+
+;; ->>HEADER<<- opcode: QUERY; status: NOERROR; id: 16253
+;; Flags: qr aa rd; QUERY: 1; ANSWER: 2; AUTHORITY: 0; ADDITIONAL: 1
+
+;; EDNS PSEUDOSECTION:
+;; Version: 0; flags: do; UDP size: 1232 B; ext-rcode: NOERROR
+;; NSID: 646E73626F782D696E7465726F70 "dnsbox-interop"
+;; CLIENT-SUBNET: 198.51.100.0/24/0
+;; COOKIE: 55FCD865DFBB1B85010000006AC2ADD27B5EA11CBFFEBF2F
+
+;; QUESTION SECTION:
+;; ed25519-nsec.interop.		IN	SOA
+
+;; ANSWER SECTION:
+ed25519-nsec.interop.	3600	IN	SOA	ns1.ed25519-nsec.interop. hostmaster.ed25519-nsec.interop. 2026100401 7200 3600 1209600 300
+ed25519-nsec.interop.	3600	IN	RRSIG	SOA 15 2 3600 20361001194833 20261004181833 11439 ed25519-nsec.interop. a3o7FzTRlfo5nXZqg7swFv79HRPPzNtNia072Qne4Ak8mZ2z/FVkOY0bsArRoaVNhzN1ORgkJxrrHRggE1Z6CA==
+
+;; Received 273 B
+;; Time 2026-10-04 19:49:38 UTC
+;; From 127.0.0.1@5300(UDP) in 0.3 ms

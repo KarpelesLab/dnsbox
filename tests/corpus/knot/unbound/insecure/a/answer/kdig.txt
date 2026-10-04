@@ -1,0 +1,15 @@
+;; ->>HEADER<<- opcode: QUERY; status: NOERROR; id: 64861
+;; Flags: qr rd ra; QUERY: 1; ANSWER: 1; AUTHORITY: 0; ADDITIONAL: 1
+
+;; EDNS PSEUDOSECTION:
+;; Version: 0; flags: do; UDP size: 1232 B; ext-rcode: NOERROR
+
+;; QUESTION SECTION:
+;; www.insecure.interop.		IN	A
+
+;; ANSWER SECTION:
+www.insecure.interop.	3600	IN	A	192.0.2.80
+
+;; Received 65 B
+;; Time 2026-10-04 19:49:40 UTC
+;; From 127.0.0.1@5400(UDP) in 1.5 ms

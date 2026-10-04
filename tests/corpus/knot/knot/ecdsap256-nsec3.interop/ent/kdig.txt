@@ -1,0 +1,18 @@
+;; ->>HEADER<<- opcode: QUERY; status: NOERROR; id: 15329
+;; Flags: qr aa rd; QUERY: 1; ANSWER: 0; AUTHORITY: 4; ADDITIONAL: 1
+
+;; EDNS PSEUDOSECTION:
+;; Version: 0; flags: do; UDP size: 1232 B; ext-rcode: NOERROR
+
+;; QUESTION SECTION:
+;; b.ent.ecdsap256-nsec3.interop.		IN	A
+
+;; AUTHORITY SECTION:
+ecdsap256-nsec3.interop.	300	IN	SOA	ns1.ecdsap256-nsec3.interop. hostmaster.ecdsap256-nsec3.interop. 2026100401 7200 3600 1209600 300
+3ei53cg4kt279njq0lb9abochk5nof05.ecdsap256-nsec3.interop. 300	IN	NSEC3	1 0 5 - 557h0o131ocumbkqse04ju3kjt7492l3 
+ecdsap256-nsec3.interop.	300	IN	RRSIG	SOA 13 2 3600 20361001194833 20261004181833 34006 ecdsap256-nsec3.interop. JvsKBRxsQle+Gir/v07LbVNKlexgEtERrjaG/HliiD66whJgfmvtIUuJdvHe6fcslqsJJPui8juYXB5Qr9DWtw==
+3ei53cg4kt279njq0lb9abochk5nof05.ecdsap256-nsec3.interop. 300	IN	RRSIG	NSEC3 13 3 300 20361001194833 20261004181833 34006 ecdsap256-nsec3.interop. NwjL/7l9GvokUheHBQVpMpprclSwbsCrBofpwj+l6ZvwxYO2i9qDoSmYWvPrk8r+O+fQbLIyiWzqeMz0g+QkZA==
+
+;; Received 418 B
+;; Time 2026-10-04 19:49:37 UTC
+;; From 127.0.0.1@5300(UDP) in 0.4 ms

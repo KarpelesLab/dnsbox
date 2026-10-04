@@ -113,6 +113,9 @@ tests/
                   responses (corpus/bind9/, corpus/ldns/)
   interop_dnspython.rs dnspython RDATA text/wire, TSIG, UPDATE, EDNS,
                   ZONEMD (corpus/dnspython/)
+  interop_knot.rs      Knot DNS / Unbound: Knot-signed zones, knotd,
+                  kdig and Unbound exchanges, validation verdicts
+                  (corpus/knot/; DNSBOX_INTEROP_DIR for a fresh CI run)
   dnssec_corpus.rs     corpus DNSSEC validated from the root anchors
   fuzz_regressions.rs  fuzz seeds/regressions replayed on stable
   proptest_roundtrip.rs, no_alloc.rs   property tests, allocation check
@@ -954,6 +957,11 @@ common traits, `Display`/`FromStr` pairs, iteration by reference).
     files, signed zones and other artifacts of BIND, ldns and dnspython
     sit beside them (`interop_*.rs`); `tests/corpus/README.md` documents
     every source and how to regenerate it.
+  - `.github/workflows/interop.yml` — Knot DNS and Unbound on the CI
+    runner (`tests/corpus/knot/run.sh`): Knot signs, serves and transfers,
+    Unbound validates, dnsbox's `interop_probe` queries both, and
+    `tests/interop_knot.rs` checks everything (a subset is kept in
+    `tests/corpus/knot/` for the offline run).
   - `tests/no_alloc.rs` — the hot path under a counting allocator, run with
     `--no-default-features` in CI.
   - `benches/` — separate package: criterion comparisons against

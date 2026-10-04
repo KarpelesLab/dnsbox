@@ -1,0 +1,1 @@
+kdig +padding ed25519-nsec.interop. SOA

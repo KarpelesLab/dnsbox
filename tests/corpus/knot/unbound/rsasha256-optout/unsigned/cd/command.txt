@@ -1,0 +1,1 @@
+kdig +dnssec +cdflag www.unsigned.rsasha256-optout.interop. A

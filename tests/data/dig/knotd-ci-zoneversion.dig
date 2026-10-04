@@ -1,0 +1,12 @@
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 41129
+;; flags: qr aa rd; QUERY: 1, ANSWER: 1, AUTHORITY: 0, ADDITIONAL: 1
+;; WARNING: recursion requested but not available
+
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags:; udp: 1232
+; OPT=19: 02 00 78 c3 d6 b1 ("..x...")
+;; QUESTION SECTION:
+;ed25519-nsec.interop.		IN	SOA
+
+;; ANSWER SECTION:
+ed25519-nsec.interop.	3600	IN	SOA	ns1.ed25519-nsec.interop. hostmaster.ed25519-nsec.interop. 2026100401 7200 3600 1209600 300

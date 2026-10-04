@@ -1,0 +1,11 @@
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 43140
+;; flags: qr rd; QUERY: 1, ANSWER: 1, AUTHORITY: 0, ADDITIONAL: 1
+;; WARNING: recursion requested but not available
+
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags:; udp: 1232
+;; QUESTION SECTION:
+;id.server.			CH	TXT
+
+;; ANSWER SECTION:
+id.server.		0	CH	TXT	"knotd.dnsbox-interop"

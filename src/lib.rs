@@ -406,6 +406,7 @@
 //! | `zone2wire` | `std` | reads a master file and writes its records as wire-format messages (or a hex dump) |
 //! | `dnssec_dig` | `dnssec` | validates a captured response against a trust anchor (DS → DNSKEY → RRset) and prints it with the verdict per RRset |
 //! | `tsig_axfr` | `tsig` | signs an AXFR request and verifies a multi-message response stream |
+//! | `interop_probe` | `std`, `tsig`, `dnssec` | the live checks against Knot DNS and Unbound of the interop CI workflow: EDNS, cookies, TSIG, AXFR/IXFR, UPDATE, validation verdicts |
 //!
 //! Run one with `cargo run --example <name> --features <features> -- <args>`.
 //!

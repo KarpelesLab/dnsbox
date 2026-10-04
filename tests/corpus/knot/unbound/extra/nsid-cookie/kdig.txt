@@ -1,0 +1,17 @@
+;; ->>HEADER<<- opcode: QUERY; status: NOERROR; id: 31085
+;; Flags: qr rd ra ad; QUERY: 1; ANSWER: 1; AUTHORITY: 0; ADDITIONAL: 1
+
+;; EDNS PSEUDOSECTION:
+;; Version: 0; flags: ; UDP size: 1232 B; ext-rcode: NOERROR
+;; NSID: 756E626F756E642E646E73626F782D696E7465726F70 "unbound.dnsbox-interop"
+;; COOKIE: 1CF8B3A77AEDC297010000006AC2ADD4B8673E026FFE79C6
+
+;; QUESTION SECTION:
+;; www.ed25519-nsec.interop.		IN	A
+
+;; ANSWER SECTION:
+www.ed25519-nsec.interop.	3596	IN	A	192.0.2.80
+
+;; Received 123 B
+;; Time 2026-10-04 19:49:40 UTC
+;; From 127.0.0.1@5400(UDP) in 0.4 ms

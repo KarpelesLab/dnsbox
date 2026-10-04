@@ -1,0 +1,1 @@
+kdig +dnssec host.wild.ecdsap384-optout.interop. A

@@ -1,0 +1,1 @@
+kdig +dnssec +cdflag www.ecdsap256-nsec3.interop. A

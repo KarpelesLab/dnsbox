@@ -1,0 +1,18 @@
+;; ->>HEADER<<- opcode: QUERY; status: NOERROR; id: 27898
+;; Flags: qr rd ra cd; QUERY: 1; ANSWER: 0; AUTHORITY: 4; ADDITIONAL: 1
+
+;; EDNS PSEUDOSECTION:
+;; Version: 0; flags: do; UDP size: 1232 B; ext-rcode: NOERROR
+
+;; QUESTION SECTION:
+;; unsigned.ed25519-nsec.interop.		IN	DS
+
+;; AUTHORITY SECTION:
+ed25519-nsec.interop.	300	IN	SOA	ns1.ed25519-nsec.interop. hostmaster.ed25519-nsec.interop. 2026100401 7200 3600 1209600 300
+ed25519-nsec.interop.	300	IN	RRSIG	SOA 15 2 3600 20361001194833 20261004181833 11439 ed25519-nsec.interop. a3o7FzTRlfo5nXZqg7swFv79HRPPzNtNia072Qne4Ak8mZ2z/FVkOY0bsArRoaVNhzN1ORgkJxrrHRggE1Z6CA==
+unsigned.ed25519-nsec.interop.	300	IN	NSEC	*.wild.ed25519-nsec.interop. NS RRSIG NSEC
+unsigned.ed25519-nsec.interop.	300	IN	RRSIG	NSEC 15 3 300 20361001194833 20261004181833 11439 ed25519-nsec.interop. X1I8zJ+ox1PyGOA9VzCoWXSp+sHj9li1oP+GUrUVpUIqgd5FHjXJygErI3VnXgynF4QExgX0eaaug3vkUJjJCw==
+
+;; Received 390 B
+;; Time 2026-10-04 19:49:40 UTC
+;; From 127.0.0.1@5400(UDP) in 0.3 ms

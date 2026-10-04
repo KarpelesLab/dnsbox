@@ -1,0 +1,17 @@
+;; ->>HEADER<<- opcode: QUERY; status: NOERROR; id: 48922
+;; Flags: qr rd ra cd; QUERY: 1; ANSWER: 3; AUTHORITY: 0; ADDITIONAL: 1
+
+;; EDNS PSEUDOSECTION:
+;; Version: 0; flags: do; UDP size: 1232 B; ext-rcode: NOERROR
+
+;; QUESTION SECTION:
+;; bogus.interop.      		IN	DNSKEY
+
+;; ANSWER SECTION:
+bogus.interop.      	3600	IN	DNSKEY	256 3 13 jXPiZq6NIUixNxFO05wEx01RNJwEOrwNAtYfPIf83P9l2vnWWkrqzqqdmtGkwbk9KHqRn3CG5TDE1+IAsqRh5g==
+bogus.interop.      	3600	IN	DNSKEY	257 3 13 7Ukjmo3ByxgA9s26OKIS5vJVU6J9EJlpQRf8h/znPMW7Ka8YUGSazQgSzRtXY39XPz3+DqctTQmYrHFk+lclNg==
+bogus.interop.      	3600	IN	RRSIG	DNSKEY 13 2 3600 20361001194834 20261004181834 47171 bogus.interop. qjadGTYQNaf8BHBWDeTBJ9HZYe1Vk1IONP2XRVI0GTSYC4x1SKA7Kmu5RMU9gdGkHC13dkYfhoiDLsbFc5C2jQ==
+
+;; Received 311 B
+;; Time 2026-10-04 19:49:40 UTC
+;; From 127.0.0.1@5400(UDP) in 0.4 ms

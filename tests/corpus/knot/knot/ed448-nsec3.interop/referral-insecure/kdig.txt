@@ -1,0 +1,20 @@
+;; ->>HEADER<<- opcode: QUERY; status: NOERROR; id: 37202
+;; Flags: qr rd; QUERY: 1; ANSWER: 0; AUTHORITY: 3; ADDITIONAL: 2
+
+;; EDNS PSEUDOSECTION:
+;; Version: 0; flags: do; UDP size: 1232 B; ext-rcode: NOERROR
+
+;; QUESTION SECTION:
+;; host.insecure.ed448-nsec3.interop. 	IN	A
+
+;; AUTHORITY SECTION:
+insecure.ed448-nsec3.interop.	3600	IN	NS	ns.insecure.ed448-nsec3.interop.
+7jpr28hq4f0m90vme6hps4kapcotoe2p.ed448-nsec3.interop. 300	IN	NSEC3	1 0 5 - 94ium7slphufqm5n8v5ibojkh9nbj2gm NS
+7jpr28hq4f0m90vme6hps4kapcotoe2p.ed448-nsec3.interop. 300	IN	RRSIG	NSEC3 16 3 300 20361001194834 20261004181834 38260 ed448-nsec3.interop. 3oMO7z2jIYrOBYHpbc+uxUuvTK5gwi4N+DeoNygX6E18cY9dBVFmRvnW4xDtP6vX9EJuQ7WK/lgAm4X9L0fQr6I6KjtRZBPWogSXbZXsfSyfY9ZvCNSyWWSqTxbuFlueD4kp/kU85crk+wgIBWMb/hMA
+
+;; ADDITIONAL SECTION:
+ns.insecure.ed448-nsec3.interop. 3600	IN	A	192.0.2.98
+
+;; Received 334 B
+;; Time 2026-10-04 19:49:37 UTC
+;; From 127.0.0.1@5300(UDP) in 0.4 ms

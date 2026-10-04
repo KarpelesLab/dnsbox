@@ -1,0 +1,1 @@
+kdig +zoneversion ed25519-nsec.interop. SOA

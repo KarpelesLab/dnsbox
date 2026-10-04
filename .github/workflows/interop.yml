@@ -1,0 +1,109 @@
+name: Interop (Knot DNS, Unbound)
+
+# Tool-level interop with Knot DNS (keymgr, kzonesign, kzonecheck, knotd,
+# kdig, knsupdate) and Unbound, run on the runner only (see
+# tests/corpus/knot/run.sh and tests/corpus/README.md). The captures are
+# uploaded as the "interop-knot-unbound" artifact; a subset of them is
+# kept in tests/corpus/knot/ for the offline tests.
+
+on:
+  push:
+    branches: [master, feat/interop-ci]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  interop:
+    name: Knot DNS and Unbound
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Install Knot DNS, Unbound, ldns and the BIND tools
+        run: |
+          # Keep the packages' own services from starting on port 53.
+          printf '#!/bin/sh\nexit 101\n' | sudo tee /usr/sbin/policy-rc.d
+          sudo chmod +x /usr/sbin/policy-rc.d
+          # CZ.NIC's packages of the latest Knot DNS release (Ubuntu's
+          # lack kzonesign).
+          sudo add-apt-repository -y ppa:cz.nic-labs/knot-dns-latest
+          sudo apt-get update
+          apt-cache search --names-only '^knot' | sort
+          # keymgr, kzonesign, kzonecheck and kdig are split between
+          # several packages.
+          KNOT=$(apt-cache search --names-only '^knot-(keymgr|dnsutils|dnssecutils|zonecheck|host)' | cut -d' ' -f1)
+          sudo apt-get install -y --no-install-recommends \
+            knot $KNOT unbound unbound-anchor ldnsutils \
+            bind9-dnsutils bind9-utils
+          sudo systemctl stop knot unbound 2>/dev/null || true
+          dpkg -L knot $KNOT | grep bin/
+          # Their AppArmor profiles confine them to /etc, /var/lib and
+          # /run; run.sh keeps everything in $RUNNER_TEMP.
+          for p in /etc/apparmor.d/usr.sbin.knotd /etc/apparmor.d/usr.sbin.unbound; do
+            if [ -e "$p" ]; then sudo apparmor_parser -R "$p" || true; fi
+          done
+          sudo aa-status 2>/dev/null | grep -E 'knot|unbound' || true
+          echo "OUT=$RUNNER_TEMP/interop" >> "$GITHUB_ENV"
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache
+        uses: Swatinem/rust-cache@v2
+
+      - name: Build dnsbox's interop test and probe
+        run: |
+          cargo build --all-features --example interop_probe
+          cargo test --all-features --test interop_knot --no-run
+
+      - name: Sign the zones (keymgr, kzonesign) and check them
+        run: bash tests/corpus/knot/run.sh sign "$OUT"
+
+      - name: Start knotd and unbound
+        run: bash tests/corpus/knot/run.sh serve "$OUT"
+
+      - name: Query them (kdig, knsupdate)
+        run: bash tests/corpus/knot/run.sh capture "$OUT"
+
+      - name: Query them with dnsbox (interop_probe)
+        run: |
+          cargo run --all-features --example interop_probe -- \
+            --knot 127.0.0.1:5300 --unbound 127.0.0.1:5400 --anchor "$OUT/anchor.ds" \
+            --knot-label "$RUNNER_TEMP/dnsbox-interop-work/knot.label" \
+            --unbound-label "$RUNNER_TEMP/dnsbox-interop-work/unbound.label"
+
+      - name: Stop the servers
+        if: always()
+        run: bash tests/corpus/knot/run.sh stop "$OUT"
+
+      - name: dnsbox checks everything Knot and Unbound produced
+        run: |
+          DNSBOX_INTEROP_DIR="$OUT" DNSBOX_INTEROP_WRITE=1 \
+            cargo test --all-features --test interop_knot -- --nocapture
+
+      - name: Knot, ldns and BIND check the zones dnsbox re-signed
+        run: bash tests/corpus/knot/run.sh check-dnsbox "$OUT"
+
+      - name: dig's rendering of the corpus messages kept from a run
+        if: always()
+        run: |
+          # tests/corpus/{knotd,unbound}-ci-*.hex without a reference in
+          # tests/data/dig/ (tests/dig_display.rs); none once kept.
+          python3 tests/corpus/dig_reference.py --missing
+          mkdir -p "$OUT/dig"
+          cp tests/data/dig/*-ci-*.dig "$OUT/dig/" 2>/dev/null || true
+
+      - name: Upload the captures
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: interop-knot-unbound
+          path: ${{ runner.temp }}/interop
+          if-no-files-found: error

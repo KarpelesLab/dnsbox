@@ -1,0 +1,8 @@
+;; ->>HEADER<<- opcode: QUERY, status: SERVFAIL, id: 11794
+;; flags: qr rd ra; QUERY: 1, ANSWER: 0, AUTHORITY: 0, ADDITIONAL: 1
+
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags: do; udp: 1232
+; EDE: 6 (DNSSEC Bogus): (validation failure <www.bogus.interop. A IN>: signature crypto failed from 127.0.0.1)
+;; QUESTION SECTION:
+;www.bogus.interop.		IN	A

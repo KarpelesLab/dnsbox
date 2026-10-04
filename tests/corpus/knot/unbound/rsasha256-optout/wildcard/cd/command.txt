@@ -1,0 +1,1 @@
+kdig +dnssec +cdflag host.wild.rsasha256-optout.interop. A

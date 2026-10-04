@@ -1,0 +1,20 @@
+;; ->>HEADER<<- opcode: QUERY; status: NOERROR; id: 42685
+;; Flags: qr aa rd; QUERY: 1; ANSWER: 2; AUTHORITY: 2; ADDITIONAL: 1
+
+;; EDNS PSEUDOSECTION:
+;; Version: 0; flags: do; UDP size: 1232 B; ext-rcode: NOERROR
+
+;; QUESTION SECTION:
+;; host.wild.ed25519-nsec.interop.		IN	A
+
+;; ANSWER SECTION:
+host.wild.ed25519-nsec.interop.	3600	IN	A	192.0.2.42
+host.wild.ed25519-nsec.interop.	3600	IN	RRSIG	A 15 3 3600 20361001194833 20261004181833 11439 ed25519-nsec.interop. TM3PRLruP6QYsIZcxSulC7fN6NfFGoZZ8kGW5rgTHZVxQqMi8SulpYauSqqPf7eb36eXc788CvImP/Wy9+3cCw==
+
+;; AUTHORITY SECTION:
+*.wild.ed25519-nsec.interop.	300	IN	NSEC	www.ed25519-nsec.interop. A TXT RRSIG NSEC
+*.wild.ed25519-nsec.interop.	300	IN	RRSIG	NSEC 15 3 300 20361001194833 20261004181833 11439 ed25519-nsec.interop. IwbZ949tv1h8RSuYjT5qaYreu440qBoA4APpB/xzmXDBJE0LRb8sxpxiHSHsf2o99pHv5Q1p1kZD/quk1vxFAQ==
+
+;; Received 355 B
+;; Time 2026-10-04 19:49:37 UTC
+;; From 127.0.0.1@5300(UDP) in 0.3 ms

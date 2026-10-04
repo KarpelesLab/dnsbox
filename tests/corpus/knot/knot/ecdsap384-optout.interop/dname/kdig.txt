@@ -1,0 +1,17 @@
+;; ->>HEADER<<- opcode: QUERY; status: NOERROR; id: 50789
+;; Flags: qr aa rd; QUERY: 1; ANSWER: 3; AUTHORITY: 0; ADDITIONAL: 1
+
+;; EDNS PSEUDOSECTION:
+;; Version: 0; flags: do; UDP size: 1232 B; ext-rcode: NOERROR
+
+;; QUESTION SECTION:
+;; x.dname.ecdsap384-optout.interop. 	IN	A
+
+;; ANSWER SECTION:
+dname.ecdsap384-optout.interop.	3600	IN	DNAME	example.net.
+x.dname.ecdsap384-optout.interop. 3600	IN	CNAME	x.example.net.
+dname.ecdsap384-optout.interop.	3600	IN	RRSIG	DNAME 14 3 3600 20361001194833 20261004181833 10601 ecdsap384-optout.interop. hUIeL3TV/C9I9RaYoUeMc20BWe7kM8Brb6a+O7ctHJZAvheSNiyQWgpQlwST7PBn6ELX+t3N+t/lhJ2x84goOKjUPeAuPJV685aPgbBdyh3stq6odNMnlUtIzNlTD0ny
+
+;; Received 265 B
+;; Time 2026-10-04 19:49:37 UTC
+;; From 127.0.0.1@5300(UDP) in 0.4 ms

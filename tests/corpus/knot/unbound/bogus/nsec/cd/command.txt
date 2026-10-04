@@ -1,0 +1,1 @@
+kdig +dnssec +cdflag nosuch.bogus-nsec.interop. A

@@ -1,0 +1,22 @@
+;; ->>HEADER<<- opcode: QUERY; status: NXDOMAIN; id: 9047
+;; Flags: qr aa rd; QUERY: 1; ANSWER: 0; AUTHORITY: 8; ADDITIONAL: 1
+
+;; EDNS PSEUDOSECTION:
+;; Version: 0; flags: do; UDP size: 1232 B; ext-rcode: NOERROR
+
+;; QUESTION SECTION:
+;; nosuch.ecdsap384-optout.interop. 	IN	A
+
+;; AUTHORITY SECTION:
+ecdsap384-optout.interop.	300	IN	SOA	ns1.ecdsap384-optout.interop. hostmaster.ecdsap384-optout.interop. 2026100401 7200 3600 1209600 300
+4jbi9tt0ts2rpggkmvd220mpjromh8s1.ecdsap384-optout.interop. 300	IN	NSEC3	1 1 0 - 65q5p9f5vaieddn37si44fqkejssr1q8 NS SOA MX TXT LOC SSHFP RRSIG DNSKEY NSEC3PARAM ZONEMD HTTPS CAA
+f6l9al809ep2thn0ujcj2488vk0v8nt1.ecdsap384-optout.interop. 300	IN	NSEC3	1 1 0 - i75t4tihe2ohigubs0rv0chgud6ecuaf A RRSIG
+2nambl4fg34l2mmbg58au4ao8hieoq8k.ecdsap384-optout.interop. 300	IN	NSEC3	1 1 0 - 3625imd06nll19j6ho9mim0bpn01c9p8 A AAAA RRSIG
+ecdsap384-optout.interop.	300	IN	RRSIG	SOA 14 2 3600 20361001194833 20261004181833 10601 ecdsap384-optout.interop. OcSkScRjP8oN8bSWFlTyKEh/SXs6+aKJMPpMWa34s4MPuEcjKMW4yleZ4TbI3y8tiCD7xFk4my3F7/IrNN/4EXzQbXM0ZsgwtcG9NiB+XuaIJbd80XqHqA8hWsI8lqVb
+4jbi9tt0ts2rpggkmvd220mpjromh8s1.ecdsap384-optout.interop. 300	IN	RRSIG	NSEC3 14 3 300 20361001194833 20261004181833 10601 ecdsap384-optout.interop. +9hQP8kMEI4GsuTTSQoYXPn1cksP0X0NiLG0r+Ba0dTuFjGgMxeD/+WFWziUFU0Yj07ttkIQ75Hv0k2MU186HTvAFKaFjNaM6vCfDz2AbFRo/GdcysNYC5/DcbSVlEzg
+f6l9al809ep2thn0ujcj2488vk0v8nt1.ecdsap384-optout.interop. 300	IN	RRSIG	NSEC3 14 3 300 20361001194833 20261004181833 10601 ecdsap384-optout.interop. BX328vWhHBibLT82fQ8qo0Shdwl7lQrWNEfrxPHAZInn0hsxrjLERmv2AnKlh4ybs/JQFvoFLNalbd/uEUfuOShECj0cdOBZPCUhx4o59ol0MAHLViDPLih5QOlgfayv
+2nambl4fg34l2mmbg58au4ao8hieoq8k.ecdsap384-optout.interop. 300	IN	RRSIG	NSEC3 14 3 300 20361001194833 20261004181833 10601 ecdsap384-optout.interop. vtTko8pkQWbREz48RleBsFUzFKV10kLCZtbaRuiJAtVg667BOfSfR2VSKDb7e25IM5sNU49oVM0ZLD4uAOvWbjobUhtyd/ICnmvXgieXHWtEMjOvASWSMBR0HySNZz/0
+
+;; Received 962 B
+;; Time 2026-10-04 19:49:37 UTC
+;; From 127.0.0.1@5300(UDP) in 0.4 ms

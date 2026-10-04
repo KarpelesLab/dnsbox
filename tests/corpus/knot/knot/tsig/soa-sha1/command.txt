@@ -1,0 +1,1 @@
+kdig -y hmac-sha1:hmac-sha1.key:AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8= interop. SOA

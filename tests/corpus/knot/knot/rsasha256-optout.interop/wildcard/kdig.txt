@@ -1,0 +1,20 @@
+;; ->>HEADER<<- opcode: QUERY; status: NOERROR; id: 55891
+;; Flags: qr aa rd; QUERY: 1; ANSWER: 2; AUTHORITY: 2; ADDITIONAL: 1
+
+;; EDNS PSEUDOSECTION:
+;; Version: 0; flags: do; UDP size: 1232 B; ext-rcode: NOERROR
+
+;; QUESTION SECTION:
+;; host.wild.rsasha256-optout.interop. 	IN	A
+
+;; ANSWER SECTION:
+host.wild.rsasha256-optout.interop. 3600	IN	A	192.0.2.42
+host.wild.rsasha256-optout.interop. 3600	IN	RRSIG	A 8 3 3600 20361001194833 20261004181833 30138 rsasha256-optout.interop. fd9gAt6F/U1WgRDcVkowtNN/opruarRbWNMZ91Fh8yV02FMFpCP4FoaumA+qrwZvN54pOwlox5fQ/gkv0tXzgHT/WTJ1PMxk0hr9T6MCSuvue/P6QoeskuGc30MDQev622OSx3r5t4S0bAJG2shqoTdcOroXzTfN3cWhg5/GgIg=
+
+;; AUTHORITY SECTION:
+f32cicg094lisbi9h3q42cg31l0bo887.rsasha256-optout.interop. 300	IN	NSEC3	1 1 0 - lbvl33ru27jcthua5ntoucts78gf0q34 RRSIG TLSA
+f32cicg094lisbi9h3q42cg31l0bo887.rsasha256-optout.interop. 300	IN	RRSIG	NSEC3 8 3 300 20361001194833 20261004181833 30138 rsasha256-optout.interop. e8aERSrj0QxyJagIFC8OUuBF6GdVQZuxeeSUN0+eTis7MnavdcDS0Ns27Sk/rGmBxiPBzKGCOcZkmwDSGnBppxnQXrV0xnG94A8gl+glaUGM8AP5by7DlzeTYKNHr6+MAlTaquYHTOHhSCgc8duzGUh94mQPK67zcG7GqON4/YY=
+
+;; Received 527 B
+;; Time 2026-10-04 19:49:36 UTC
+;; From 127.0.0.1@5300(UDP) in 0.4 ms

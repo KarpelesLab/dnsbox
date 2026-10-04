@@ -1,0 +1,18 @@
+;; ->>HEADER<<- opcode: QUERY; status: NOERROR; id: 48937
+;; Flags: qr aa rd; QUERY: 1; ANSWER: 4; AUTHORITY: 0; ADDITIONAL: 1
+
+;; EDNS PSEUDOSECTION:
+;; Version: 0; flags: do; UDP size: 1232 B; ext-rcode: NOERROR
+
+;; QUESTION SECTION:
+;; alias.rsasha512-nsec.interop.		IN	A
+
+;; ANSWER SECTION:
+alias.rsasha512-nsec.interop.	3600	IN	CNAME	www.rsasha512-nsec.interop.
+www.rsasha512-nsec.interop.	3600	IN	A	192.0.2.80
+alias.rsasha512-nsec.interop.	3600	IN	RRSIG	CNAME 10 3 3600 20361001194833 20261004181833 33173 rsasha512-nsec.interop. C95LApjRDKJGqSHuGO/3DQEynmjEQ4kz1A3P04WfFMivYhzmUJ0rrrWb2OEniHAib03Lpa4wjj+mKgjRdWVfqv6+4TMeOJ64TG2b7J0HvbfFZo2RYvjCBgbx2Kw1ijQhOjVjOqs69UeG0gy5CZNuNUXKxe62d+2Ibf9TUJQxIAA=
+www.rsasha512-nsec.interop.	3600	IN	RRSIG	A 10 3 3600 20361001194833 20261004181833 33173 rsasha512-nsec.interop. hfl5kiEq1DjSrIFYD7QPheK+0mMfMcmnbr9Dy3eqUFDsyfIGRu8IEPGNN7yhHb2Yb2RDLvCtIsM29IDkXGdDqJWcVN4iBl6QweUWiqlJdsRYnSDuqTJBMFD13PAhpZlroB6I77nDFPm3LoUBQossTxUgeWzRc7oiaqdyy/uYjvQ=
+
+;; Received 455 B
+;; Time 2026-10-04 19:49:36 UTC
+;; From 127.0.0.1@5300(UDP) in 0.4 ms

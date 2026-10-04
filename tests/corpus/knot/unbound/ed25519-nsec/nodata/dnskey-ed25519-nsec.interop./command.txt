@@ -1,0 +1,1 @@
+kdig +dnssec +cdflag ed25519-nsec.interop. DNSKEY

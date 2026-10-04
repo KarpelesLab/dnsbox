@@ -1,0 +1,15 @@
+;; ->>HEADER<<- opcode: QUERY; status: NOERROR; id: 2051
+;; Flags: qr rd ra cd; QUERY: 1; ANSWER: 0; AUTHORITY: 1; ADDITIONAL: 1
+
+;; EDNS PSEUDOSECTION:
+;; Version: 0; flags: do; UDP size: 1232 B; ext-rcode: NOERROR
+
+;; QUESTION SECTION:
+;; unsigned.rsasha256-optout.interop. 	IN	DNSKEY
+
+;; AUTHORITY SECTION:
+unsigned.rsasha256-optout.interop. 300	IN	SOA	ns.unsigned.rsasha256-optout.interop. hostmaster.unsigned.rsasha256-optout.interop. 2026100401 7200 3600 1209600 300
+
+;; Received 112 B
+;; Time 2026-10-04 19:49:38 UTC
+;; From 127.0.0.1@5400(UDP) in 0.8 ms

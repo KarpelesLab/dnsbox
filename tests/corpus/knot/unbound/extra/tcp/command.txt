@@ -1,0 +1,1 @@
+kdig +tcp +dnssec www.ed25519-nsec.interop. A

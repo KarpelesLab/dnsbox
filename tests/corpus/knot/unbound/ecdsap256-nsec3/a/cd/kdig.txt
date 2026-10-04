@@ -1,0 +1,16 @@
+;; ->>HEADER<<- opcode: QUERY; status: NOERROR; id: 48432
+;; Flags: qr rd ra ad cd; QUERY: 1; ANSWER: 2; AUTHORITY: 0; ADDITIONAL: 1
+
+;; EDNS PSEUDOSECTION:
+;; Version: 0; flags: do; UDP size: 1232 B; ext-rcode: NOERROR
+
+;; QUESTION SECTION:
+;; www.ecdsap256-nsec3.interop.		IN	A
+
+;; ANSWER SECTION:
+www.ecdsap256-nsec3.interop.	3600	IN	A	192.0.2.80
+www.ecdsap256-nsec3.interop.	3600	IN	RRSIG	A 13 3 3600 20361001194833 20261004181833 34006 ecdsap256-nsec3.interop. RXU2UELA1om+rUEO5uY3ec3x1IwVlyAuEHyf9bO+aKd4Y8IHH2BzCCwfXIyBIEjs+1KX5XZ1N+VCORCd0BXCpw==
+
+;; Received 191 B
+;; Time 2026-10-04 19:49:39 UTC
+;; From 127.0.0.1@5400(UDP) in 0.4 ms

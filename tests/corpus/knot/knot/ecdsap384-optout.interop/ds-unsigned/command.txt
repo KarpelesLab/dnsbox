@@ -1,0 +1,1 @@
+kdig +dnssec other.ecdsap384-optout.interop. DS

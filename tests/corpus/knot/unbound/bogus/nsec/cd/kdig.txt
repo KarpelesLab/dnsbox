@@ -1,0 +1,21 @@
+;; ->>HEADER<<- opcode: QUERY; status: NXDOMAIN; id: 20844
+;; Flags: qr rd ra cd; QUERY: 1; ANSWER: 0; AUTHORITY: 6; ADDITIONAL: 1
+
+;; EDNS PSEUDOSECTION:
+;; Version: 0; flags: do; UDP size: 1232 B; ext-rcode: NOERROR
+;; EDE: 6 (DNSSEC Bogus): 'validation failure <nosuch.bogus-nsec.interop. A IN>: signature crypto failed from 127.0.0.1 for <mail.bogus-nsec.interop. NSEC IN>'
+
+;; QUESTION SECTION:
+;; nosuch.bogus-nsec.interop.		IN	A
+
+;; AUTHORITY SECTION:
+bogus-nsec.interop. 	300	IN	SOA	ns1.bogus-nsec.interop. hostmaster.bogus-nsec.interop. 2026100401 7200 3600 1209600 300
+bogus-nsec.interop. 	300	IN	RRSIG	SOA 14 2 3600 20361001194834 20261004181834 46532 bogus-nsec.interop. 8MRujHX7gZfIqIT5wBsVAr905Yib+wXxqQgnbR6dWc45HAUsHbkscJKAnX322M2kTmx/OFQyaevVrxa1Xfrwz4fIDlv8VMU082KowGjEZddRPO8OngfAGdMRtf2+rkPd
+mail.bogus-nsec.interop.	60	IN	NSEC	ns1.bogus-nsec.interop. A RRSIG NSEC SPF
+mail.bogus-nsec.interop.	60	IN	RRSIG	NSEC 14 3 300 20361001194834 20261004181834 46532 bogus-nsec.interop. rQyxa5oaOirMg6tGnXycbmCkHhOozMzG62/D4RftFMCRB/Wk3QQSgsUehL/X7Zo8aDus66JCZthDWg8v9KU6KsGFFbf307HWLxrP1EFb1mk9kkYjiZOPahbZ76R2deew
+bogus-nsec.interop. 	300	IN	NSEC	_svc.bogus-nsec.interop. NS SOA MX TXT LOC SSHFP RRSIG NSEC DNSKEY HTTPS SPF CAA
+bogus-nsec.interop. 	300	IN	RRSIG	NSEC 14 2 300 20361001194834 20261004181834 46532 bogus-nsec.interop. nbleQ9Urtqhqli9BsZ9XBhaBO7p0NqSujBaxdmf6YWUFQVasO+urPVvUIgd/DfddHa4yfIH8v9Bw8LQaJmeOkdLvzPXhZFSprASsFDInhJ6ewpgAnVA8QOsynm8xSTbP
+
+;; Received 791 B
+;; Time 2026-10-04 19:49:40 UTC
+;; From 127.0.0.1@5400(UDP) in 0.4 ms

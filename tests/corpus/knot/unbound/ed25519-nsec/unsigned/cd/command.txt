@@ -1,0 +1,1 @@
+kdig +dnssec +cdflag www.unsigned.ed25519-nsec.interop. A

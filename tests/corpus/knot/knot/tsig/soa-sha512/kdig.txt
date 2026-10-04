@@ -1,0 +1,20 @@
+;; ->>HEADER<<- opcode: QUERY; status: NOERROR; id: 42570
+;; Flags: qr aa rd; QUERY: 1; ANSWER: 1; AUTHORITY: 0; ADDITIONAL: 2
+
+;; EDNS PSEUDOSECTION:
+;; Version: 0; flags: ; UDP size: 1232 B; ext-rcode: NOERROR
+
+;; QUESTION SECTION:
+;; interop.            		IN	SOA
+
+;; ANSWER SECTION:
+interop.            	3600	IN	SOA	ns.interop. hostmaster.interop. 2026100401 7200 3600 1209600 300
+
+;; ADDITIONAL SECTION:
+
+;; TSIG PSEUDOSECTION:
+hmac-sha512.key.    	0	ANY	TSIG	hmac-sha512. 1791143378 300 64 i3LjsB3e1HhGofW0Z9hVtDLGIoA5k6bGg4kD55VSKR8LE9g1rLpkZz5J1nG1/O0/2CqE4YRnIbN1wuMlctVGww== 42570 NOERROR 0
+
+;; Received 206 B
+;; Time 2026-10-04 19:49:38 UTC
+;; From 127.0.0.1@5300(UDP) in 0.4 ms

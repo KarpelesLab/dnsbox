@@ -1,0 +1,17 @@
+;; ->>HEADER<<- opcode: QUERY; status: NOERROR; id: 38511
+;; Flags: qr aa rd; QUERY: 1; ANSWER: 3; AUTHORITY: 0; ADDITIONAL: 1
+
+;; EDNS PSEUDOSECTION:
+;; Version: 0; flags: do; UDP size: 1232 B; ext-rcode: NOERROR
+
+;; QUESTION SECTION:
+;; x.dname.ed25519-nsec.interop.		IN	A
+
+;; ANSWER SECTION:
+dname.ed25519-nsec.interop.	3600	IN	DNAME	example.net.
+x.dname.ed25519-nsec.interop.	3600	IN	CNAME	x.example.net.
+dname.ed25519-nsec.interop.	3600	IN	RRSIG	DNAME 15 3 3600 20361001194833 20261004181833 11439 ed25519-nsec.interop. 3V6Di2F7O2WFmPHI8fqiuvqICnBsIdXWtDw/e2m/qnWNX3KQVYQ5DGS5tLk9GA3oa3+k9N+lvsVMYVfXp0i7AA==
+
+;; Received 225 B
+;; Time 2026-10-04 19:49:37 UTC
+;; From 127.0.0.1@5300(UDP) in 0.4 ms

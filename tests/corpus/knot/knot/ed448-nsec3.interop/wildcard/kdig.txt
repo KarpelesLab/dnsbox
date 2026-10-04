@@ -1,0 +1,20 @@
+;; ->>HEADER<<- opcode: QUERY; status: NOERROR; id: 39205
+;; Flags: qr aa rd; QUERY: 1; ANSWER: 2; AUTHORITY: 2; ADDITIONAL: 1
+
+;; EDNS PSEUDOSECTION:
+;; Version: 0; flags: do; UDP size: 1232 B; ext-rcode: NOERROR
+
+;; QUESTION SECTION:
+;; host.wild.ed448-nsec3.interop.		IN	A
+
+;; ANSWER SECTION:
+host.wild.ed448-nsec3.interop.	3600	IN	A	192.0.2.42
+host.wild.ed448-nsec3.interop.	3600	IN	RRSIG	A 16 3 3600 20361001194834 20261004181834 38260 ed448-nsec3.interop. UjllkzFIPuu1P3StAVU6G8nKY/SP3ysDvypk9Y5mnHAuv1fgchGOQrFQUtbXA5kNfMtT8jcDn3EAdIadt8gOT0fNnPTbQkxjP57CqXv36XKJECJqw54n9TfvrJOscXP1UmDxs7p9tSoeyF7ceosM3jEA
+
+;; AUTHORITY SECTION:
+tsep2au9ti69uk93klacfgmjhtop663l.ed448-nsec3.interop. 300	IN	NSEC3	1 0 5 - 0feo0r0eciujgs1u9865c1upu7i3t8jo 
+tsep2au9ti69uk93klacfgmjhtop663l.ed448-nsec3.interop. 300	IN	RRSIG	NSEC3 16 3 300 20361001194834 20261004181834 38260 ed448-nsec3.interop. oJHlm7K7uaGQFQvwWGgHtPNWBo0I9lpXZbtEEV+nGp3xEkecjQ82Vk6BbFD5nkU0fCcMJfAITKAAua68SeLnn+Z7KrQfNxVDakbfQH85eBdZ0XarQylpQO+0KmXkaj/yRQ01/ewVYBf3cXCKUn4XUTYA
+
+;; Received 475 B
+;; Time 2026-10-04 19:49:37 UTC
+;; From 127.0.0.1@5300(UDP) in 0.3 ms

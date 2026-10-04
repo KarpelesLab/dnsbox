@@ -1,0 +1,17 @@
+;; ->>HEADER<<- opcode: QUERY; status: NOERROR; id: 45486
+;; Flags: qr aa rd; QUERY: 1; ANSWER: 3; AUTHORITY: 0; ADDITIONAL: 1
+
+;; EDNS PSEUDOSECTION:
+;; Version: 0; flags: do; UDP size: 1232 B; ext-rcode: NOERROR
+
+;; QUESTION SECTION:
+;; ed448-nsec3.interop.		IN	DNSKEY
+
+;; ANSWER SECTION:
+ed448-nsec3.interop.	3600	IN	DNSKEY	256 3 16 EauVhLEUdWYMSArxy/l5u/CJKC9JpYC5QsQdmOZ9296yYDFDmEv0uTtsv1Kcxf47086JEo2UcBoA
+ed448-nsec3.interop.	3600	IN	DNSKEY	257 3 16 3Rjit/iXYBWtsXuXkPyPnG48jn7S9bQPKh2SKO0ABsoZUxhvqPQ1Kj3aapsahlu6hJ0Y77Y2bDSA
+ed448-nsec3.interop.	3600	IN	RRSIG	DNSKEY 16 2 3600 20361001194834 20261004181834 2258 ed448-nsec3.interop. 5Wp6/Je+bUoySwRImtTUvq8B0f9LhPreEPhd8N+T+C/JsVoU6Z1byksGY2Hctgw6pN3as2FL9GwAVIfAYnXHFjHwTQlQubxlUzz4A0dttdnNn8x1Ug9vIPznr75SC1QBSzw88xfwDiFrnif8Wt75EAkA
+
+;; Received 359 B
+;; Time 2026-10-04 19:49:37 UTC
+;; From 127.0.0.1@5300(UDP) in 0.4 ms

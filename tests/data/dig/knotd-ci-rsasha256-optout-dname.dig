@@ -1,0 +1,13 @@
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 63286
+;; flags: qr aa rd; QUERY: 1, ANSWER: 3, AUTHORITY: 0, ADDITIONAL: 1
+;; WARNING: recursion requested but not available
+
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags: do; udp: 1232
+;; QUESTION SECTION:
+;x.dname.rsasha256-optout.interop. IN	A
+
+;; ANSWER SECTION:
+dname.rsasha256-optout.interop.	3600 IN	DNAME	example.net.
+x.dname.rsasha256-optout.interop. 3600 IN CNAME	x.example.net.
+dname.rsasha256-optout.interop.	3600 IN	RRSIG	DNAME 8 3 3600 20361001194833 20261004181833 30138 rsasha256-optout.interop. vKI8s3rGWW3UBg+cGVGEwCVE5dSXPQtRbC39dL9/jMLY1cpDoEdsvi3O 1Gfv4HH8uRFVNM/KvV0AK+rVXxBDWgUzIcXvMvgzJN2i3oSVMTNlTx/k VjOydM+SuF+w05+y4wDHg7AxbMiJlF7nYcAr0/nVabFRCZk9G7p/Slkg 9qw=

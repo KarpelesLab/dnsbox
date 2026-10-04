@@ -1,0 +1,17 @@
+;; ->>HEADER<<- opcode: QUERY; status: NOERROR; id: 38048
+;; Flags: qr aa rd; QUERY: 1; ANSWER: 3; AUTHORITY: 0; ADDITIONAL: 1
+
+;; EDNS PSEUDOSECTION:
+;; Version: 0; flags: do; UDP size: 1232 B; ext-rcode: NOERROR
+
+;; QUESTION SECTION:
+;; x.dname.rsasha512-nsec.interop.		IN	A
+
+;; ANSWER SECTION:
+dname.rsasha512-nsec.interop.	3600	IN	DNAME	example.net.
+x.dname.rsasha512-nsec.interop.	3600	IN	CNAME	x.example.net.
+dname.rsasha512-nsec.interop.	3600	IN	RRSIG	DNAME 10 3 3600 20361001194833 20261004181833 33173 rsasha512-nsec.interop. uYr3flBTD9YhVyI7t1JxdXatW6ov/qQ5+Qq9LeQSZJbnpNS5f/bCUqyoZkUpqX5fgvsk+3TOwNJGTNjlQML41BzgvZa0rOdtNqyDZohofBxLoH9srvP/gaRopA/CCG5tXCMVxSOEufTpxWmojOxEWRJzQ9C+L8JbgCBwH1QdYB4=
+
+;; Received 293 B
+;; Time 2026-10-04 19:49:36 UTC
+;; From 127.0.0.1@5300(UDP) in 0.3 ms

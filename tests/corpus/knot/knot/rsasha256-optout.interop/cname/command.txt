@@ -1,0 +1,1 @@
+kdig +dnssec alias.rsasha256-optout.interop. A

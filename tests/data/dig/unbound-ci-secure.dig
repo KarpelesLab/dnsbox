@@ -1,0 +1,11 @@
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 19748
+;; flags: qr rd ra ad; QUERY: 1, ANSWER: 2, AUTHORITY: 0, ADDITIONAL: 1
+
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags: do; udp: 1232
+;; QUESTION SECTION:
+;www.ed25519-nsec.interop.	IN	A
+
+;; ANSWER SECTION:
+www.ed25519-nsec.interop. 3596	IN	A	192.0.2.80
+www.ed25519-nsec.interop. 3596	IN	RRSIG	A 15 3 3600 20361001194833 20261004181833 11439 ed25519-nsec.interop. 7ZwlDdkD7gfT7/jIsvKL23cswsKlOnggY7mZxfxluU10b1cicf4OPdDT yImfo4NDcCKvaV6HEgAIMnCEQBRVAQ==

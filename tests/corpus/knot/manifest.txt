@@ -1,0 +1,10 @@
+rsasha256-optout.interop. rsasha256 optout
+rsasha512-nsec.interop. rsasha512 nsec
+ecdsap256-nsec3.interop. ecdsap256 nsec3
+ecdsap384-optout.interop. ecdsap384 optout
+ed25519-nsec.interop. ed25519 nsec
+ed448-nsec3.interop. ed448 nsec3
+bogus.interop. ecdsap256 nsec bogus-rdata
+bogus-nsec.interop. ecdsap384 nsec bogus-nsec
+bogus-ds.interop. ed25519 nsec bogus-ds
+interop. ecdsap256 nsec parent
