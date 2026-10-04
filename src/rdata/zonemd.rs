@@ -48,7 +48,9 @@ impl ZonemdHashAlg {
 /// The digest must be at least 12 octets (RFC 8976 §2.2.4) and, for the
 /// registered hash algorithms, exactly the algorithm's output length
 /// (as BIND enforces). Computing the digest needs the whole zone in
-/// canonical order and is out of scope for this view.
+/// canonical order: see `dnssec::ZoneCollation` (feature `alloc`) and
+/// `dnssec::zonemd_digest` / `dnssec::verify_zonemd` (features `alloc`
+/// and `dnssec-digest`).
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub struct Zonemd<'a> {
     /// The SOA serial of the zone the digest was computed over.

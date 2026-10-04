@@ -1,7 +1,7 @@
 //! DNSSEC (RFC 4033, RFC 4034, RFC 4035, RFC 5155, RFC 6840): algorithm
 //! registries, canonical forms, key tags, DS digests, NSEC3 hashing, RRSIG
-//! validation and signing, the chain of trust and authenticated denial of
-//! existence.
+//! validation and signing, the chain of trust, authenticated denial of
+//! existence, and ZONEMD zone digests (RFC 8976).
 //!
 //! The record types themselves live in [`crate::rdata`]: [`Dnskey`],
 //! [`Rrsig`], [`Nsec`], [`Ds`], [`Nsec3`], [`Nsec3param`], [`Cds`],
@@ -38,13 +38,16 @@
 //!   RFC 6840 §4 corrections and RFC 9276 iteration limits
 //!   ([`Nsec3Limits`]); the outcome is a [`DenialStatus`]. NSEC3 hashing
 //!   is pluggable ([`Nsec3Hasher`]).
+//! - With `alloc`: [`ZoneCollation`], a zone in canonical order for the
+//!   ZONEMD SIMPLE scheme (RFC 8976 §3.3.1).
 //!
 //! Cryptography comes from the optional `purecrypto` dependency:
 //!
 //! - feature `dnssec-digest` (no `alloc` needed): `DsDigest`,
 //!   `verify_ds`, `ZoneKey::ds` (SHA-1, SHA-256, SHA-384),
 //!   `TrustedKeys::from_ds`, `nsec3_hash` (SHA-1, RFC 5155 §5) and
-//!   `PurecryptoNsec3Hasher`;
+//!   `PurecryptoNsec3Hasher`; with `alloc` too, the ZONEMD SHA-384 and
+//!   SHA-512 digests and verification (`zonemd_digest`, `verify_zonemd`);
 //! - feature `dnssec`: `PurecryptoVerifier` and `SigningKey`, verifying and
 //!   signing RSA/SHA-1, RSA/SHA-256, RSA/SHA-512, ECDSA P-256/SHA-256,
 //!   ECDSA P-384/SHA-384, Ed25519 and Ed448.
@@ -93,6 +96,8 @@ mod rrsig;
 #[cfg(test)]
 pub(crate) mod testvec;
 mod time;
+#[cfg(feature = "alloc")]
+mod zonemd;
 
 pub use alg::{Algorithm, DigestType, Nsec3HashAlgorithm};
 #[cfg(feature = "dnssec")]
@@ -124,6 +129,12 @@ pub use rrsig::{
     RecordRdata, Rrset, ZoneKey, check_rrsig, rrsig_owner, sign_rrset, signed_data, verify_rrsig,
 };
 pub use time::{Timestamp, check_validity, serial_cmp};
+#[cfg(feature = "alloc")]
+#[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
+pub use zonemd::{ZoneCollation, ZoneRecord};
+#[cfg(all(feature = "alloc", feature = "dnssec-digest"))]
+#[cfg_attr(docsrs, doc(cfg(all(feature = "alloc", feature = "dnssec-digest"))))]
+pub use zonemd::{ZonemdDigest, ZonemdFailure, ZonemdVerified, verify_zonemd, zonemd_digest};
 
 /// The `purecrypto` crate dnsbox was built against, for naming its key and
 /// RNG types (e.g. `purecrypto::rng::OsRng`).
