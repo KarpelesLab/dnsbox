@@ -1,0 +1,62 @@
+[package]
+name = "dnsbox-fuzz"
+version = "0.0.0"
+publish = false
+edition = "2024"
+description = "cargo-fuzz targets for dnsbox"
+license = "MIT"
+
+[package.metadata]
+cargo-fuzz = true
+
+[dependencies]
+libfuzzer-sys = "0.4"
+dnsbox = { path = ".." }
+
+# Not part of any other workspace: this crate needs nightly and libFuzzer.
+[workspace]
+members = ["."]
+
+[profile.release]
+debug = 1
+
+[lib]
+name = "dnsbox_fuzz"
+path = "src/lib.rs"
+test = false
+doc = false
+
+[[bin]]
+name = "message"
+path = "fuzz_targets/message.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "name"
+path = "fuzz_targets/name.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "rdata"
+path = "fuzz_targets/rdata.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "roundtrip"
+path = "fuzz_targets/roundtrip.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "text"
+path = "fuzz_targets/text.rs"
+test = false
+doc = false
+bench = false
