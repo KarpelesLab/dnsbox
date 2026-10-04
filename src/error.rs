@@ -43,6 +43,25 @@ pub enum Error {
     /// A typed RDATA parse was requested for a record of another type.
     WrongType,
 
+    /// A DNSSEC algorithm or digest type is not supported by the crypto
+    /// backend (RFC 4035 §5.2: unsupported algorithms leave data insecure).
+    UnsupportedAlgorithm,
+    /// A DNSSEC public or private key is malformed for its algorithm
+    /// (e.g. RFC 3110 §2, RFC 6605 §4, RFC 8080 §3).
+    InvalidKey,
+    /// A DNSSEC signature or digest does not verify (RFC 4035 §5.3.3).
+    BadSignature,
+    /// An RRSIG's validity period has ended (RFC 4035 §5.3.1).
+    SignatureExpired,
+    /// An RRSIG's validity period has not started yet (RFC 4035 §5.3.1).
+    SignatureNotYetValid,
+    /// An RRSIG does not match the DNSKEY it is checked against: signer
+    /// name, algorithm, key tag, protocol or zone flag (RFC 4035 §5.3.1).
+    KeyMismatch,
+    /// An RRSIG does not cover the RRset it is checked against: type
+    /// covered, labels, signer zone or record types (RFC 4035 §5.3.1).
+    RrsetMismatch,
+
     /// Presentation-format text is malformed (bad escape, bad number, ...).
     InvalidText,
     /// A mnemonic (type, class, ...) is not recognised.
@@ -78,6 +97,13 @@ impl fmt::Display for Error {
             Error::UnexpectedPointer => "compression pointer not allowed here",
             Error::InvalidRdata => "malformed record data",
             Error::WrongType => "record type mismatch",
+            Error::UnsupportedAlgorithm => "unsupported DNSSEC algorithm",
+            Error::InvalidKey => "malformed DNSSEC key",
+            Error::BadSignature => "DNSSEC signature verification failed",
+            Error::SignatureExpired => "DNSSEC signature expired",
+            Error::SignatureNotYetValid => "DNSSEC signature not yet valid",
+            Error::KeyMismatch => "DNSSEC key does not match the signature",
+            Error::RrsetMismatch => "DNSSEC signature does not cover the RRset",
             Error::InvalidText => "malformed presentation-format text",
             Error::UnknownMnemonic => "unknown mnemonic",
             Error::CharStringTooLong => "character-string longer than 255 octets",

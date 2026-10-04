@@ -72,6 +72,7 @@ mod macros;
 pub mod builder;
 pub mod charstr;
 pub mod class;
+pub mod dnssec;
 mod error;
 pub mod header;
 pub mod message;

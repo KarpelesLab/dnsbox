@@ -21,6 +21,11 @@ default = ["std"]
 alloc = []
 # `std::error::Error` impls and `std::io` integration. Pulls in `alloc`.
 std   = ["alloc"]
+# DNSSEC digests (DS digests, NSEC3 hashing) through purecrypto; no_std, no alloc.
+dnssec-digest = ["dep:purecrypto", "purecrypto/hash"]
+# DNSSEC signatures (RSA, ECDSA P-256/P-384, Ed25519, Ed448) through purecrypto:
+# RRSIG verification and signing. Needs `alloc` for RSA and P-384 arithmetic.
+dnssec = ["alloc", "dnssec-digest", "purecrypto/alloc", "purecrypto/rsa", "purecrypto/ec"]
 
 [lints.rust]
 unsafe_code = "forbid"
