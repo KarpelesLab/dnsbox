@@ -239,7 +239,6 @@ impl<'a> Mandatory<'a> {
     }
 
     /// The keys, in increasing order.
-    #[must_use]
     pub fn iter(&self) -> impl ExactSizeIterator<Item = SvcParamKey> + Clone + use<'a> {
         self.0
             .as_chunks::<2>()
@@ -334,7 +333,6 @@ impl<'a> Ipv4Hint<'a> {
     }
 
     /// The addresses, in record order.
-    #[must_use]
     pub fn iter(&self) -> impl ExactSizeIterator<Item = Ipv4Addr> + Clone + use<'a> {
         self.0
             .as_chunks::<4>()
@@ -374,7 +372,6 @@ impl<'a> Ipv6Hint<'a> {
     }
 
     /// The addresses, in record order.
-    #[must_use]
     pub fn iter(&self) -> impl ExactSizeIterator<Item = Ipv6Addr> + Clone + use<'a> {
         self.0
             .as_chunks::<16>()
@@ -492,7 +489,6 @@ impl<'a> TlsSupportedGroups<'a> {
     }
 
     /// The group code points, most preferred first.
-    #[must_use]
     pub fn iter(&self) -> impl ExactSizeIterator<Item = u16> + Clone + use<'a> {
         self.0
             .as_chunks::<2>()

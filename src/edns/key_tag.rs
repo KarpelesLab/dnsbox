@@ -34,7 +34,6 @@ impl<'a> KeyTag<'a> {
     }
 
     /// Iterates over the key tags.
-    #[must_use]
     pub fn iter(&self) -> impl ExactSizeIterator<Item = u16> + 'a {
         self.raw.as_chunks::<2>().0.iter().map(|&p| u16::from_be_bytes(p))
     }
