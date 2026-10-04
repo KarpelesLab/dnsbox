@@ -71,6 +71,20 @@ impl<B: OutBuf> MessageBuilder<B> {
     ///
     /// [`Error::BufferTooSmall`](crate::Error::BufferTooSmall) if the
     /// buffer cannot hold the prefix and the 12-byte header.
+    ///
+    /// ```
+    /// use dnsbox::{Class, Message, MessageBuilder, NameBuf, Rtype, WireWriter};
+    ///
+    /// let name: NameBuf = "example.com".parse()?;
+    /// let mut buf = [0u8; 128];
+    /// let mut b = MessageBuilder::from_buf_tcp(WireWriter::new(&mut buf))?;
+    /// b.start_query(1, &name, Rtype::MX, Class::IN)?;
+    /// let frame = b.finish();
+    /// // The prefix holds the length of the message that follows it.
+    /// assert_eq!(usize::from(u16::from_be_bytes([frame[0], frame[1]])), frame.len() - 2);
+    /// assert_eq!(Message::parse(&frame[2..])?.id(), 1);
+    /// # Ok::<(), dnsbox::Error>(())
+    /// ```
     pub fn from_buf_tcp(mut buf: B) -> Result<Self> {
         buf.append(&[0, 0])?;
         let mut b = Self::from_buf(buf)?;
@@ -82,6 +96,16 @@ impl<B: OutBuf> MessageBuilder<B> {
 
     /// Whether the message is preceded by a TCP length prefix
     /// ([`new_tcp`](MessageBuilder::new_tcp)).
+    ///
+    /// ```
+    /// use dnsbox::MessageBuilder;
+    ///
+    /// let mut udp = [0u8; 512];
+    /// assert!(!MessageBuilder::new(&mut udp)?.is_framed());
+    /// let mut tcp = [0u8; 514];
+    /// assert!(MessageBuilder::new_tcp(&mut tcp)?.is_framed());
+    /// # Ok::<(), dnsbox::Error>(())
+    /// ```
     #[inline]
     pub const fn is_framed(&self) -> bool {
         self.framed

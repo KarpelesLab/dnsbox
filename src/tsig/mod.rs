@@ -69,6 +69,8 @@
 //! # }
 //! # Ok::<(), dnsbox::Error>(())
 //! ```
+#![cfg_attr(feature = "tsig", doc = "\n[`HmacKey`]: HmacKey")]
+#![cfg_attr(not(feature = "tsig"), doc = "\n[`HmacKey`]: crate#cargo-features")]
 
 mod algorithm;
 #[cfg(feature = "tsig")]

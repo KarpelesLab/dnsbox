@@ -81,6 +81,14 @@ impl Opcode {
     pub const DSO: Opcode = Opcode(6);
 
     /// Builds an opcode from its numeric value, keeping the low 4 bits.
+    ///
+    /// ```
+    /// use dnsbox::Opcode;
+    ///
+    /// assert_eq!(Opcode::new(4), Opcode::NOTIFY);
+    /// assert_eq!(Opcode::new(15).to_string(), "OPCODE15");
+    /// assert_eq!(Opcode::new(0x14), Opcode::NOTIFY); // high bits dropped
+    /// ```
     #[inline]
     #[must_use]
     pub const fn new(value: u8) -> Self {
@@ -88,6 +96,13 @@ impl Opcode {
     }
 
     /// The numeric value of this opcode.
+    ///
+    /// ```
+    /// use dnsbox::Opcode;
+    ///
+    /// assert_eq!(Opcode::UPDATE.get(), 5);
+    /// assert_eq!(Opcode::new(Opcode::DSO.get()), Opcode::DSO);
+    /// ```
     #[inline]
     #[must_use]
     pub const fn get(self) -> u8 {
@@ -95,6 +110,13 @@ impl Opcode {
     }
 
     /// The IANA mnemonic for this opcode, if it is assigned.
+    ///
+    /// ```
+    /// use dnsbox::Opcode;
+    ///
+    /// assert_eq!(Opcode::NOTIFY.mnemonic(), Some("NOTIFY"));
+    /// assert_eq!(Opcode::new(3).mnemonic(), None); // unassigned
+    /// ```
     #[must_use]
     pub const fn mnemonic(self) -> Option<&'static str> {
         Some(match self.0 {
@@ -111,6 +133,14 @@ impl Opcode {
     /// Looks up an assigned mnemonic, ASCII-case-insensitively. Does not
     /// accept the generic `OPCODE<n>` form; [`FromStr`](core::str::FromStr)
     /// does.
+    ///
+    /// ```
+    /// use dnsbox::Opcode;
+    ///
+    /// assert_eq!(Opcode::from_mnemonic("update"), Some(Opcode::UPDATE));
+    /// assert_eq!(Opcode::from_mnemonic("OPCODE5"), None);
+    /// assert_eq!("OPCODE5".parse::<Opcode>(), Ok(Opcode::UPDATE));
+    /// ```
     pub fn from_mnemonic(s: &str) -> Option<Self> {
         (0..16)
             .map(Opcode)
@@ -212,6 +242,14 @@ impl Rcode {
     pub const BADCOOKIE: Rcode = Rcode(23);
 
     /// Builds a response code from its numeric value, keeping the low 12 bits.
+    ///
+    /// ```
+    /// use dnsbox::Rcode;
+    ///
+    /// assert_eq!(Rcode::new(3), Rcode::NXDOMAIN);
+    /// assert_eq!(Rcode::new(23), Rcode::BADCOOKIE);
+    /// assert_eq!(Rcode::new(4095).to_string(), "RCODE4095");
+    /// ```
     #[inline]
     #[must_use]
     pub const fn new(value: u16) -> Self {
@@ -219,6 +257,14 @@ impl Rcode {
     }
 
     /// Combines the 4-bit header RCODE with the 8-bit EDNS extended RCODE.
+    ///
+    /// ```
+    /// use dnsbox::Rcode;
+    ///
+    /// // BADVERS: header RCODE 0, extended RCODE 1 in the OPT record.
+    /// assert_eq!(Rcode::from_parts(0, 1), Rcode::BADVERS);
+    /// assert_eq!(Rcode::from_parts(3, 0), Rcode::NXDOMAIN);
+    /// ```
     #[inline]
     #[must_use]
     pub const fn from_parts(header: u8, extended: u8) -> Self {
@@ -226,6 +272,13 @@ impl Rcode {
     }
 
     /// The numeric value of this response code.
+    ///
+    /// ```
+    /// use dnsbox::Rcode;
+    ///
+    /// assert_eq!(Rcode::REFUSED.get(), 5);
+    /// assert_eq!(Rcode::BADCOOKIE.get(), 23);
+    /// ```
     #[inline]
     #[must_use]
     pub const fn get(self) -> u16 {
@@ -233,6 +286,15 @@ impl Rcode {
     }
 
     /// The low 4 bits, as carried in the message header.
+    ///
+    /// ```
+    /// use dnsbox::{Flags, Rcode};
+    ///
+    /// assert_eq!(Rcode::SERVFAIL.header_bits(), 2);
+    /// // BADVERS (16) leaves 0 in the header; the rest goes in the OPT record.
+    /// assert_eq!(Rcode::BADVERS.header_bits(), 0);
+    /// assert_eq!(Flags::default().with_rcode(Rcode::BADVERS).rcode(), Rcode::NOERROR);
+    /// ```
     #[inline]
     #[must_use]
     pub const fn header_bits(self) -> u8 {
@@ -240,6 +302,14 @@ impl Rcode {
     }
 
     /// The high 8 bits, as carried in the EDNS OPT record's TTL field.
+    ///
+    /// ```
+    /// use dnsbox::Rcode;
+    ///
+    /// assert_eq!(Rcode::NXDOMAIN.extended_bits(), 0);
+    /// assert_eq!(Rcode::BADVERS.extended_bits(), 1);
+    /// assert_eq!(Rcode::BADCOOKIE.extended_bits(), 1);
+    /// ```
     #[inline]
     #[must_use]
     pub const fn extended_bits(self) -> u8 {
@@ -247,6 +317,13 @@ impl Rcode {
     }
 
     /// The IANA mnemonic for this response code, if it is assigned.
+    ///
+    /// ```
+    /// use dnsbox::Rcode;
+    ///
+    /// assert_eq!(Rcode::NOTAUTH.mnemonic(), Some("NOTAUTH"));
+    /// assert_eq!(Rcode::new(12).mnemonic(), None); // unassigned
+    /// ```
     #[must_use]
     pub const fn mnemonic(self) -> Option<&'static str> {
         Some(match self.0 {
@@ -271,6 +348,14 @@ impl Rcode {
     /// Looks up an assigned mnemonic, ASCII-case-insensitively. Does not
     /// accept the generic `RCODE<n>` form; [`FromStr`](core::str::FromStr)
     /// does.
+    ///
+    /// ```
+    /// use dnsbox::Rcode;
+    ///
+    /// assert_eq!(Rcode::from_mnemonic("NXDomain"), Some(Rcode::NXDOMAIN));
+    /// assert_eq!(Rcode::from_mnemonic("RCODE3"), None);
+    /// assert_eq!("RCODE3".parse::<Rcode>(), Ok(Rcode::NXDOMAIN));
+    /// ```
     pub fn from_mnemonic(s: &str) -> Option<Self> {
         // Every assigned mnemonic is below 32.
         (0..32)
@@ -343,6 +428,14 @@ pub struct Flags(u16);
 macro_rules! flag_bit {
     ($(#[$doc:meta])* $get:ident, $set:ident, $bit:expr) => {
         $(#[$doc])*
+        ///
+        /// ```
+        /// use dnsbox::Flags;
+        ///
+        #[doc = concat!("let flags = Flags::from_bits(1 << ", stringify!($bit), ");")]
+        #[doc = concat!("assert!(flags.", stringify!($get), "());")]
+        #[doc = concat!("assert!(!Flags::default().", stringify!($get), "());")]
+        /// ```
         #[inline]
         #[must_use]
         pub const fn $get(self) -> bool {
@@ -350,6 +443,15 @@ macro_rules! flag_bit {
         }
 
         #[doc = concat!("Returns a copy with the `", stringify!($get), "` bit set to `value`.")]
+        ///
+        /// ```
+        /// use dnsbox::Flags;
+        ///
+        #[doc = concat!("let flags = Flags::default().", stringify!($set), "(true);")]
+        #[doc = concat!("assert!(flags.", stringify!($get), "());")]
+        #[doc = concat!("assert_eq!(flags.bits(), 1 << ", stringify!($bit), ");")]
+        #[doc = concat!("assert_eq!(flags.", stringify!($set), "(false), Flags::default());")]
+        /// ```
         #[inline]
         #[must_use]
         pub const fn $set(self, value: bool) -> Self {
@@ -364,6 +466,15 @@ macro_rules! flag_bit {
 
 impl Flags {
     /// Wraps a raw 16-bit flags word.
+    ///
+    /// ```
+    /// use dnsbox::{Flags, Opcode, Rcode};
+    ///
+    /// // The flags word of a typical recursive response: QR RD RA, NOERROR.
+    /// let flags = Flags::from_bits(0x8180);
+    /// assert!(flags.qr() && flags.rd() && flags.ra() && !flags.aa());
+    /// assert_eq!((flags.opcode(), flags.rcode()), (Opcode::QUERY, Rcode::NOERROR));
+    /// ```
     #[inline]
     #[must_use]
     pub const fn from_bits(bits: u16) -> Self {
@@ -371,6 +482,14 @@ impl Flags {
     }
 
     /// The raw 16-bit flags word.
+    ///
+    /// ```
+    /// use dnsbox::Flags;
+    ///
+    /// let query = Flags::default().with_rd(true);
+    /// assert_eq!(query.bits(), 0x0100);
+    /// assert_eq!(query.bits().to_be_bytes(), [0x01, 0x00]); // as on the wire
+    /// ```
     #[inline]
     #[must_use]
     pub const fn bits(self) -> u16 {
@@ -411,6 +530,13 @@ impl Flags {
     );
 
     /// The operation code.
+    ///
+    /// ```
+    /// use dnsbox::{Flags, Opcode};
+    ///
+    /// // The flags word of a NOTIFY (opcode 4) with AA set.
+    /// assert_eq!(Flags::from_bits(0x2400).opcode(), Opcode::NOTIFY);
+    /// ```
     #[inline]
     #[must_use]
     pub const fn opcode(self) -> Opcode {
@@ -418,6 +544,14 @@ impl Flags {
     }
 
     /// Returns a copy with the opcode replaced.
+    ///
+    /// ```
+    /// use dnsbox::{Flags, Opcode};
+    ///
+    /// let flags = Flags::default().with_opcode(Opcode::UPDATE);
+    /// assert_eq!(flags.bits(), 0x2800);
+    /// assert_eq!(flags.with_opcode(Opcode::QUERY).bits(), 0);
+    /// ```
     #[inline]
     #[must_use]
     pub const fn with_opcode(self, opcode: Opcode) -> Self {
@@ -426,6 +560,14 @@ impl Flags {
 
     /// The 4-bit header response code. Combine with the EDNS extended RCODE
     /// via [`Rcode::from_parts`] for the full value.
+    ///
+    /// ```
+    /// use dnsbox::{Flags, Rcode};
+    ///
+    /// assert_eq!(Flags::from_bits(0x8183).rcode(), Rcode::NXDOMAIN);
+    /// // Only the low 4 bits: the full value needs the OPT record's extension.
+    /// assert_eq!(Rcode::from_parts(Flags::from_bits(0x8180).rcode().header_bits(), 1), Rcode::BADVERS);
+    /// ```
     #[inline]
     #[must_use]
     pub const fn rcode(self) -> Rcode {
@@ -434,6 +576,14 @@ impl Flags {
 
     /// Returns a copy with the header RCODE replaced by the low 4 bits of
     /// `rcode`. The extended bits must be carried in an OPT record.
+    ///
+    /// ```
+    /// use dnsbox::{Flags, Rcode};
+    ///
+    /// let flags = Flags::default().with_qr(true).with_rcode(Rcode::REFUSED);
+    /// assert_eq!(flags.bits(), 0x8005);
+    /// assert_eq!(flags.with_rcode(Rcode::NOERROR).bits(), 0x8000);
+    /// ```
     #[inline]
     #[must_use]
     pub const fn with_rcode(self, rcode: Rcode) -> Self {
@@ -507,6 +657,18 @@ impl Header {
     /// # Errors
     ///
     /// [`Error::UnexpectedEof`] if `buf` is shorter than 12 bytes.
+    ///
+    /// ```
+    /// use dnsbox::{Error, Header};
+    ///
+    /// // The start of a response: ID 0x037b, QR RD RA, 1 question, 5 answers.
+    /// let wire = [0x03, 0x7b, 0x81, 0x80, 0, 1, 0, 5, 0, 0, 0, 1, 0x05, b'g'];
+    /// let h = Header::parse(&wire)?;
+    /// assert_eq!((h.id, h.qdcount, h.ancount, h.nscount, h.arcount), (0x037b, 1, 5, 0, 1));
+    /// assert!(h.flags.qr());
+    /// assert_eq!(Header::parse(&wire[..11]), Err(Error::UnexpectedEof));
+    /// # Ok::<(), Error>(())
+    /// ```
     pub const fn parse(buf: &[u8]) -> Result<Self> {
         let [a, b, c, d, e, f, g, h, i, j, k, l, ..] = *buf else {
             return Err(Error::UnexpectedEof);
@@ -522,6 +684,13 @@ impl Header {
     }
 
     /// Encodes the header into its 12-byte wire form.
+    ///
+    /// ```
+    /// use dnsbox::{Flags, Header};
+    ///
+    /// let header = Header { id: 7, flags: Flags::default().with_rd(true), qdcount: 1, ..Header::default() };
+    /// assert_eq!(header.to_bytes(), [0, 7, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0]);
+    /// ```
     #[must_use]
     pub const fn to_bytes(&self) -> [u8; Self::LEN] {
         let [a, b] = self.id.to_be_bytes();
@@ -539,6 +708,19 @@ impl Header {
     ///
     /// [`Error::BufferTooSmall`] if `out` is shorter than 12 bytes; nothing
     /// is written then.
+    ///
+    /// ```
+    /// use dnsbox::{Error, Header};
+    ///
+    /// // Patch the header of a message in place (e.g. a new ID for a retry).
+    /// let mut msg = [0x12, 0x34, 0x01, 0x00, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1];
+    /// let mut header = Header::parse(&msg)?;
+    /// header.id = 0x5678;
+    /// header.write(&mut msg)?;
+    /// assert_eq!(&msg[..2], [0x56, 0x78]);
+    /// assert_eq!(header.write(&mut [0u8; 4]), Err(Error::BufferTooSmall));
+    /// # Ok::<(), Error>(())
+    /// ```
     pub fn write(&self, out: &mut [u8]) -> Result<()> {
         let dst = out.get_mut(..Self::LEN).ok_or(Error::BufferTooSmall)?;
         dst.copy_from_slice(&self.to_bytes());

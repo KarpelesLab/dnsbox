@@ -101,8 +101,8 @@ pub(super) fn write_record(
 /// [`ZoneReader::next_entry`] reports it for the caller to process: read
 /// the named file and parse it with a reader whose origin is
 /// [`origin`](Self::origin); afterwards the including file continues with
-/// its own origin. [`Records`](super::Records) does this through an
-/// [`IncludeResolver`](super::IncludeResolver).
+/// its own origin. [`Records`] does this through an
+/// [`IncludeResolver`].
 ///
 /// ```
 /// use dnsbox::zone::{Entry, ZoneReader};
@@ -120,6 +120,14 @@ pub(super) fn write_record(
 /// }
 /// # Ok::<(), dnsbox::Error>(())
 /// ```
+///
+#[cfg_attr(feature = "alloc", doc = "[`Records`]: super::Records")]
+#[cfg_attr(feature = "alloc", doc = "[`IncludeResolver`]: super::IncludeResolver")]
+#[cfg_attr(not(feature = "alloc"), doc = "[`Records`]: crate#cargo-features")]
+#[cfg_attr(
+    not(feature = "alloc"),
+    doc = "[`IncludeResolver`]: crate#cargo-features"
+)]
 #[derive(Clone, Debug, PartialEq, Eq)]
 #[non_exhaustive]
 pub struct Include<'a> {
@@ -531,9 +539,12 @@ impl<'a> ZoneReader<'a> {
     /// that does not fit in `buf`, [`Error::LimitExceeded`] for a
     /// [limit](ZoneLimits) reached, and [`Error::BadInclude`] for an
     /// `$INCLUDE` (use [`next_entry`](Self::next_entry) or
-    /// [`records`](Self::records) with a resolver to follow it). The reader
+    /// [`records`] with a resolver to follow it). The reader
     /// then skips to the next entry, or, once the record or input limit is
     /// reached, stops (later calls return `Ok(None)`).
+    ///
+    #[cfg_attr(feature = "alloc", doc = "[`records`]: Self::records")]
+    #[cfg_attr(not(feature = "alloc"), doc = "[`records`]: crate#cargo-features")]
     pub fn next_record<'b>(
         &mut self,
         buf: &'b mut [u8],

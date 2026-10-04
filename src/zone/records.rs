@@ -110,12 +110,12 @@ impl fmt::Display for ZoneRecordBuf {
 /// [`Records`].
 ///
 /// Implemented by [`NoIncludes`] (the default: every `$INCLUDE` fails),
-/// [`FsIncludes`](super::FsIncludes) with `std`, and closures
+/// [`FsIncludes`] with `std`, and closures
 /// `FnMut(&str) -> Result<String>`. Return [`Error::BadInclude`] for a
 /// file that cannot be loaded. See the [`Records`] example for a closure.
 ///
 /// The path comes from the zone file: a resolver for untrusted zone files
-/// must decide which files it serves (as [`FsIncludes::new`](super::FsIncludes::new)
+/// must decide which files it serves (as [`FsIncludes::new`]
 /// does, confining them to a directory), and should implement
 /// [`load_limited`](Self::load_limited) to stop reading a file that is too
 /// large.
@@ -141,6 +141,14 @@ impl fmt::Display for ZoneRecordBuf {
 /// assert_eq!(zone[0].to_string(), "example. 60 IN NS ns1.example.");
 /// # Ok::<(), dnsbox::Error>(())
 /// ```
+///
+#[cfg_attr(feature = "std", doc = "[`FsIncludes`]: super::FsIncludes")]
+#[cfg_attr(not(feature = "std"), doc = "[`FsIncludes`]: crate#cargo-features")]
+#[cfg_attr(feature = "std", doc = "[`FsIncludes::new`]: super::FsIncludes::new")]
+#[cfg_attr(
+    not(feature = "std"),
+    doc = "[`FsIncludes::new`]: crate#cargo-features"
+)]
 pub trait IncludeResolver {
     /// Returns the text of the file named `path` (escapes already
     /// decoded).

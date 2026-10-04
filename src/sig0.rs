@@ -22,8 +22,7 @@
 //! With the `alloc` feature, [`DnssecSig0Signer`] and [`DnssecSig0Verifier`]
 //! adapt any DNSSEC [`Signer`](crate::dnssec::Signer) /
 //! [`Verifier`](crate::dnssec::Verifier) — in particular the
-//! purecrypto-backed [`SigningKey`](crate::dnssec::SigningKey) and
-//! [`PurecryptoVerifier`](crate::dnssec::PurecryptoVerifier) of the
+//! purecrypto-backed [`SigningKey`] and [`PurecryptoVerifier`] of the
 //! `dnssec` feature — to these traits, giving SIG(0) RSA, ECDSA and EdDSA.
 //!
 //! Validity times are 32-bit seconds since the epoch compared with RFC
@@ -63,6 +62,30 @@
 //! # }
 //! # Ok::<(), dnsbox::Error>(())
 //! ```
+#![cfg_attr(
+    feature = "alloc",
+    doc = "
+[`DnssecSig0Signer`]: DnssecSig0Signer
+[`DnssecSig0Verifier`]: DnssecSig0Verifier"
+)]
+#![cfg_attr(
+    not(feature = "alloc"),
+    doc = "
+[`DnssecSig0Signer`]: crate#cargo-features
+[`DnssecSig0Verifier`]: crate#cargo-features"
+)]
+#![cfg_attr(
+    feature = "dnssec",
+    doc = "
+[`SigningKey`]: crate::dnssec::SigningKey
+[`PurecryptoVerifier`]: crate::dnssec::PurecryptoVerifier"
+)]
+#![cfg_attr(
+    not(feature = "dnssec"),
+    doc = "
+[`SigningKey`]: crate#cargo-features
+[`PurecryptoVerifier`]: crate#cargo-features"
+)]
 
 use crate::builder::MessageBuilder;
 use crate::dnssec::Algorithm;
@@ -116,19 +139,83 @@ const SIG_FIXED_LEN: usize = 18;
 ///     }
 /// }
 /// ```
+///
+#[cfg_attr(feature = "alloc", doc = "[`DnssecSig0Signer`]: DnssecSig0Signer")]
+#[cfg_attr(
+    not(feature = "alloc"),
+    doc = "[`DnssecSig0Signer`]: crate#cargo-features"
+)]
 pub trait Sig0Signer {
     /// DNSSEC algorithm (RFC 4034 Appendix A.1, e.g.
     /// [`Algorithm::ED25519`]).
+    ///
+    /// ```
+    /// # #[cfg(feature = "dnssec")] {
+    /// use dnsbox::dnssec::{Algorithm, SigningKey};
+    /// use dnsbox::sig0::{DnssecSig0Signer, Sig0Signer};
+    /// use dnsbox::NameBuf;
+    ///
+    /// let key = SigningKey::from_private_bytes(Algorithm::ED25519, &[7; 32])?;
+    /// let name: NameBuf = "client.example".parse()?;
+    /// let signer = DnssecSig0Signer::new(&key, name.as_name(), 512);
+    /// assert_eq!(signer.algorithm(), Algorithm::ED25519); // goes into the SIG RDATA
+    /// # }
+    /// # Ok::<(), dnsbox::Error>(())
+    /// ```
     fn algorithm(&self) -> Algorithm;
 
     /// Key tag of the public KEY record (RFC 4034 Appendix B).
+    ///
+    /// ```
+    /// # #[cfg(feature = "dnssec")] {
+    /// use dnsbox::dnssec::{Algorithm, SigningKey};
+    /// use dnsbox::sig0::{DnssecSig0Signer, Sig0Signer};
+    /// use dnsbox::NameBuf;
+    ///
+    /// let key = SigningKey::from_private_bytes(Algorithm::ED25519, &[7; 32])?;
+    /// let name: NameBuf = "client.example".parse()?;
+    /// let signer = DnssecSig0Signer::new(&key, name.as_name(), 512);
+    /// // The tag of the KEY record the receiver looks the key up with.
+    /// assert_eq!(signer.key_tag(), signer.key().key_tag());
+    /// # }
+    /// # Ok::<(), dnsbox::Error>(())
+    /// ```
     fn key_tag(&self) -> u16;
 
     /// Owner name of the public KEY record (the SIG signer name).
+    ///
+    /// ```
+    /// # #[cfg(feature = "dnssec")] {
+    /// use dnsbox::dnssec::{Algorithm, SigningKey};
+    /// use dnsbox::sig0::{DnssecSig0Signer, Sig0Signer};
+    /// use dnsbox::NameBuf;
+    ///
+    /// let key = SigningKey::from_private_bytes(Algorithm::ED25519, &[7; 32])?;
+    /// let name: NameBuf = "client.example".parse()?;
+    /// let signer = DnssecSig0Signer::new(&key, name.as_name(), 512);
+    /// assert_eq!(signer.signer_name().to_string(), "client.example.");
+    /// # }
+    /// # Ok::<(), dnsbox::Error>(())
+    /// ```
     fn signer_name(&self) -> Name<'_>;
 
     /// Length of the signatures this signer produces, or an upper bound
     /// (used to check the message has room before signing).
+    ///
+    /// ```
+    /// # #[cfg(feature = "dnssec")] {
+    /// use dnsbox::dnssec::{Algorithm, SigningKey};
+    /// use dnsbox::sig0::{DnssecSig0Signer, Sig0Signer};
+    /// use dnsbox::NameBuf;
+    ///
+    /// let name: NameBuf = "client.example".parse()?;
+    /// let ed25519 = SigningKey::from_private_bytes(Algorithm::ED25519, &[7; 32])?;
+    /// let p384 = SigningKey::from_private_bytes(Algorithm::ECDSAP384SHA384, &[9; 48])?;
+    /// assert_eq!(DnssecSig0Signer::new(&ed25519, name.as_name(), 512).signature_len(), 64);
+    /// assert_eq!(DnssecSig0Signer::new(&p384, name.as_name(), 512).signature_len(), 96);
+    /// # }
+    /// # Ok::<(), dnsbox::Error>(())
+    /// ```
     fn signature_len(&self) -> usize;
 
     /// Signs the concatenation of `data` and writes the signature, in its
@@ -139,6 +226,24 @@ pub trait Sig0Signer {
     ///
     /// [`Error::BufferTooSmall`] if `out` is too short, or the backend's
     /// error.
+    ///
+    /// ```
+    /// # #[cfg(feature = "dnssec")] {
+    /// use dnsbox::dnssec::{Algorithm, PurecryptoVerifier, SigningKey, Verifier};
+    /// use dnsbox::sig0::{DnssecSig0Signer, Sig0Signer};
+    /// use dnsbox::NameBuf;
+    ///
+    /// let key = SigningKey::from_private_bytes(Algorithm::ED25519, &[7; 32])?;
+    /// let name: NameBuf = "client.example".parse()?;
+    /// let signer = DnssecSig0Signer::new(&key, name.as_name(), 512);
+    /// // The parts are signed as one byte string.
+    /// let mut sig = [0u8; 64];
+    /// let len = signer.sign(&[b"SIG fields", b"", b"header", b"rest"], &mut sig)?;
+    /// let public = signer.key();
+    /// PurecryptoVerifier.verify(Algorithm::ED25519, public.public_key, b"SIG fieldsheaderrest", &sig[..len])?;
+    /// # }
+    /// # Ok::<(), dnsbox::Error>(())
+    /// ```
     fn sign(&self, data: &[&[u8]], out: &mut [u8]) -> Result<usize>;
 }
 
@@ -165,6 +270,12 @@ pub trait Sig0Signer {
 ///     }
 /// }
 /// ```
+///
+#[cfg_attr(feature = "alloc", doc = "[`DnssecSig0Verifier`]: DnssecSig0Verifier")]
+#[cfg_attr(
+    not(feature = "alloc"),
+    doc = "[`DnssecSig0Verifier`]: crate#cargo-features"
+)]
 pub trait Sig0Verifier {
     /// Verifies `sig.signature` over the concatenation of `data`, with the
     /// key identified by `sig.signer_name`, `sig.algorithm` and `sig.key_tag`.
@@ -173,6 +284,33 @@ pub trait Sig0Verifier {
     ///
     /// [`Error::BadKey`] if the key is unknown and
     /// [`Error::BadSignature`] if the signature does not verify.
+    ///
+    /// ```
+    /// # #[cfg(feature = "dnssec")] {
+    /// use dnsbox::dnssec::{Algorithm, PurecryptoVerifier, SigningKey};
+    /// use dnsbox::sig0::{self, DnssecSig0Signer, DnssecSig0Verifier, Sig0Verifier, SignedData, Validity};
+    /// use dnsbox::{Class, Error, Message, MessageBuilder, NameBuf, Rtype};
+    ///
+    /// let key = SigningKey::from_private_bytes(Algorithm::ED25519, &[7; 32])?;
+    /// let name: NameBuf = "client.example".parse()?;
+    /// let signer = DnssecSig0Signer::new(&key, name.as_name(), 512);
+    /// let mut buf = [0u8; 512];
+    /// let mut b = MessageBuilder::query(&mut buf, 1, &name, Rtype::A, Class::IN)?;
+    /// sig0::sign(&mut b, &signer, Validity::around(1_800_000_000, 300), None)?;
+    /// let msg = Message::parse(b.finish())?;
+    ///
+    /// // What `sig0::verify` does after its placement and time checks.
+    /// let record = sig0::find(&msg)?.expect("signed");
+    /// let data = SignedData::new(&record.data, msg.as_bytes(), Some(record.start), None)?;
+    /// let verifier = DnssecSig0Verifier::new(PurecryptoVerifier, name.as_name(), signer.key());
+    /// verifier.verify(&record.data, &data.parts())?;
+    /// // Another client's key does not match the signature's key tag and name.
+    /// let other: NameBuf = "other.example".parse()?;
+    /// let stranger = DnssecSig0Verifier::new(PurecryptoVerifier, other.as_name(), signer.key());
+    /// assert_eq!(stranger.verify(&record.data, &data.parts()), Err(Error::BadKey));
+    /// # }
+    /// # Ok::<(), dnsbox::Error>(())
+    /// ```
     fn verify(&self, sig: &Sig<'_>, data: &[&[u8]]) -> Result<()>;
 }
 
@@ -226,6 +364,28 @@ impl<'a> SignedData<'a> {
     ///
     /// [`Error::UnexpectedEof`] if `msg` is shorter than its header,
     /// `sig_start` is out of range, or ARCOUNT is 0 with a `sig_start`.
+    ///
+    /// ```
+    /// use dnsbox::dnssec::Algorithm;
+    /// use dnsbox::rdata::Sig;
+    /// use dnsbox::sig0::SignedData;
+    /// use dnsbox::{Class, Message, MessageBuilder, NameBuf, Rtype};
+    ///
+    /// let signer: NameBuf = "client.example".parse()?;
+    /// let sig = Sig {
+    ///     type_covered: Rtype::new(0), algorithm: Algorithm::ED25519, labels: 0, original_ttl: 0,
+    ///     expiration: 1_800_000_300, inception: 1_799_999_700, key_tag: 4711,
+    ///     signer_name: signer.as_name(), signature: &[],
+    /// };
+    /// let mut qbuf = [0u8; 128];
+    /// let query = MessageBuilder::query(&mut qbuf, 1, &signer, Rtype::A, Class::IN)?.finish();
+    /// // A response's signed data starts with the whole request.
+    /// let mut rbuf = [0u8; 128];
+    /// let response = MessageBuilder::response(&mut rbuf, &Message::parse(query)?)?.finish();
+    /// let data = SignedData::new(&sig, response, None, Some(query))?;
+    /// assert_eq!(data.parts()[1], &query[..]);
+    /// # Ok::<(), dnsbox::Error>(())
+    /// ```
     pub fn new(
         sig: &Sig<'_>,
         msg: &'a [u8],
@@ -255,6 +415,30 @@ impl<'a> SignedData<'a> {
 
     /// The signed data as consecutive slices: SIG RDATA fields, request
     /// (empty for requests), header, rest of the message.
+    ///
+    /// ```
+    /// use dnsbox::dnssec::Algorithm;
+    /// use dnsbox::rdata::Sig;
+    /// use dnsbox::sig0::SignedData;
+    /// use dnsbox::{Class, MessageBuilder, NameBuf, Rtype};
+    ///
+    /// let signer: NameBuf = "client.example".parse()?;
+    /// let sig = Sig {
+    ///     type_covered: Rtype::new(0), algorithm: Algorithm::ECDSAP256SHA256, labels: 0, original_ttl: 0,
+    ///     expiration: 1_800_000_300, inception: 1_799_999_700, key_tag: 4711,
+    ///     signer_name: signer.as_name(), signature: &[],
+    /// };
+    /// let mut buf = [0u8; 128];
+    /// let query = MessageBuilder::query(&mut buf, 1, &signer, Rtype::A, Class::IN)?.finish();
+    /// let data = SignedData::new(&sig, query, None, None)?;
+    /// // Feed a streaming hash part by part (here: just count the bytes).
+    /// let mut hashed = 0;
+    /// for part in data.parts() {
+    ///     hashed += part.len();
+    /// }
+    /// assert_eq!(hashed, data.len());
+    /// # Ok::<(), dnsbox::Error>(())
+    /// ```
     #[must_use]
     pub fn parts(&self) -> [&[u8]; 4] {
         [
@@ -266,12 +450,50 @@ impl<'a> SignedData<'a> {
     }
 
     /// Total length of the signed data.
+    ///
+    /// ```
+    /// use dnsbox::dnssec::Algorithm;
+    /// use dnsbox::rdata::Sig;
+    /// use dnsbox::sig0::SignedData;
+    /// use dnsbox::{Class, MessageBuilder, NameBuf, Rtype};
+    ///
+    /// let signer: NameBuf = "client.example".parse()?;
+    /// let sig = Sig {
+    ///     type_covered: Rtype::new(0), algorithm: Algorithm::ED25519, labels: 0, original_ttl: 0,
+    ///     expiration: 1_800_000_300, inception: 1_799_999_700, key_tag: 4711,
+    ///     signer_name: signer.as_name(), signature: &[],
+    /// };
+    /// let mut buf = [0u8; 128];
+    /// let query = MessageBuilder::query(&mut buf, 1, &signer, Rtype::A, Class::IN)?.finish();
+    /// let data = SignedData::new(&sig, query, None, None)?;
+    /// // The SIG RDATA without the signature (18 bytes + signer name), then the message.
+    /// assert_eq!(data.len(), 18 + signer.wire_len() + query.len());
+    /// # Ok::<(), dnsbox::Error>(())
+    /// ```
     #[must_use]
     pub fn len(&self) -> usize {
         self.parts().iter().map(|p| p.len()).sum()
     }
 
     /// Whether the signed data is empty (never true for a valid message).
+    ///
+    /// ```
+    /// use dnsbox::dnssec::Algorithm;
+    /// use dnsbox::rdata::Sig;
+    /// use dnsbox::sig0::SignedData;
+    /// use dnsbox::{Class, MessageBuilder, NameBuf, Rtype};
+    ///
+    /// let signer: NameBuf = "client.example".parse()?;
+    /// let sig = Sig {
+    ///     type_covered: Rtype::new(0), algorithm: Algorithm::ED25519, labels: 0, original_ttl: 0,
+    ///     expiration: 1_800_000_300, inception: 1_799_999_700, key_tag: 4711,
+    ///     signer_name: signer.as_name(), signature: &[],
+    /// };
+    /// let mut buf = [0u8; 128];
+    /// let query = MessageBuilder::query(&mut buf, 1, &signer, Rtype::A, Class::IN)?.finish();
+    /// assert!(!SignedData::new(&sig, query, None, None)?.is_empty());
+    /// # Ok::<(), dnsbox::Error>(())
+    /// ```
     #[must_use]
     pub fn is_empty(&self) -> bool {
         self.len() == 0
@@ -298,6 +520,18 @@ pub struct Validity {
 impl Validity {
     /// The window `now - skew ..= now + skew` (wrapping, as RFC 1982
     /// serial arithmetic expects).
+    ///
+    /// ```
+    /// use dnsbox::sig0::Validity;
+    ///
+    /// // Five minutes either side of the signing time, for clock skew.
+    /// let now = 1_800_000_000;
+    /// let v = Validity::around(now, 300);
+    /// assert_eq!(v.expiration - v.inception, 600);
+    /// // Near the end of the 32-bit range the window wraps (RFC 1982).
+    /// let wrapped = Validity::around(u32::MAX - 10, 300);
+    /// assert!(wrapped.expiration < wrapped.inception && wrapped.contains(5));
+    /// ```
     #[must_use]
     pub const fn around(now: u32, skew: u32) -> Self {
         Validity {
@@ -308,6 +542,15 @@ impl Validity {
 
     /// Whether `now` lies within the window (RFC 1982 serial arithmetic,
     /// as for RRSIG in RFC 4034 §3.1.5).
+    ///
+    /// ```
+    /// use dnsbox::sig0::Validity;
+    ///
+    /// let v = Validity { inception: 1_800_000_000, expiration: 1_800_003_600 };
+    /// assert!(v.contains(1_800_001_000));
+    /// assert!(!v.contains(1_799_999_999)); // not yet valid
+    /// assert!(!v.contains(1_800_003_601)); // expired
+    /// ```
     #[must_use]
     pub const fn contains(&self, now: u32) -> bool {
         crate::dnssec::check_validity(self.inception, self.expiration, now).is_ok()
@@ -514,7 +757,7 @@ pub fn verify<'a, V: Sig0Verifier + ?Sized>(
 }
 
 /// A SIG(0) signer backed by a DNSSEC [`Signer`](crate::dnssec::Signer)
-/// (e.g. [`SigningKey`](crate::dnssec::SigningKey) with the `dnssec`
+/// (e.g. [`SigningKey`] with the `dnssec`
 /// feature): the key published as a KEY record named `name` with KEY flags
 /// `flags` (RFC 2535 §3.1.2, RFC 2931 §2; `dnssec-keygen -T KEY -n HOST`
 /// uses 512).
@@ -543,6 +786,9 @@ pub fn verify<'a, V: Sig0Verifier + ?Sized>(
 /// # }
 /// # Ok::<(), dnsbox::Error>(())
 /// ```
+///
+#[cfg_attr(feature = "dnssec", doc = "[`SigningKey`]: crate::dnssec::SigningKey")]
+#[cfg_attr(not(feature = "dnssec"), doc = "[`SigningKey`]: crate#cargo-features")]
 #[cfg(feature = "alloc")]
 #[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
 #[derive(Clone, Copy, Debug)]
@@ -558,6 +804,22 @@ impl<'n, S: crate::dnssec::Signer> DnssecSig0Signer<'n, S> {
     /// Wraps `signer`, whose public key is the KEY record `name` with KEY
     /// flags `flags` and protocol 3. The key tag is computed from them
     /// (RFC 4034 Appendix B).
+    ///
+    /// ```
+    /// # #[cfg(feature = "dnssec")] {
+    /// use dnsbox::dnssec::{Algorithm, SigningKey};
+    /// use dnsbox::sig0::{DnssecSig0Signer, Sig0Signer};
+    /// use dnsbox::NameBuf;
+    ///
+    /// // A host key, as `dnssec-keygen -T KEY -n HOST` makes (flags 512).
+    /// let key = SigningKey::from_private_bytes(Algorithm::ECDSAP256SHA256, &[0x11; 32])?;
+    /// let host: NameBuf = "laptop.example.com".parse()?;
+    /// let signer = DnssecSig0Signer::new(&key, host.as_name(), 512);
+    /// assert_eq!(signer.algorithm(), Algorithm::ECDSAP256SHA256);
+    /// assert_eq!(signer.signer_name(), host.as_name());
+    /// # }
+    /// # Ok::<(), dnsbox::Error>(())
+    /// ```
     pub fn new(signer: S, name: Name<'n>, flags: u16) -> Self {
         let key_tag = crate::dnssec::key_tag(flags, 3, signer.algorithm(), signer.public_key());
         DnssecSig0Signer {
@@ -569,6 +831,23 @@ impl<'n, S: crate::dnssec::Signer> DnssecSig0Signer<'n, S> {
     }
 
     /// The KEY record data to publish for this signer (RFC 2931 §2).
+    ///
+    /// ```
+    /// # #[cfg(feature = "dnssec")] {
+    /// use dnsbox::dnssec::{Algorithm, SigningKey};
+    /// use dnsbox::sig0::DnssecSig0Signer;
+    /// use dnsbox::NameBuf;
+    ///
+    /// let key = SigningKey::from_private_bytes(Algorithm::ED25519, &[7; 32])?;
+    /// let host: NameBuf = "laptop.example.com".parse()?;
+    /// let signer = DnssecSig0Signer::new(&key, host.as_name(), 512);
+    /// // The record to publish in the zone, as `laptop.example.com. KEY ...`.
+    /// let record = signer.key();
+    /// assert_eq!((record.flags, record.protocol, record.algorithm), (512, 3, Algorithm::ED25519));
+    /// assert!(record.to_string().starts_with("512 3 15 "));
+    /// # }
+    /// # Ok::<(), dnsbox::Error>(())
+    /// ```
     pub fn key(&self) -> crate::rdata::Key<'_> {
         crate::rdata::Key::new(
             self.flags,
@@ -604,7 +883,7 @@ impl<S: crate::dnssec::Signer> Sig0Signer for DnssecSig0Signer<'_, S> {
 
 /// A SIG(0) verifier backed by a DNSSEC
 /// [`Verifier`](crate::dnssec::Verifier) (e.g.
-/// [`PurecryptoVerifier`](crate::dnssec::PurecryptoVerifier) with the
+/// [`PurecryptoVerifier`] with the
 /// `dnssec` feature) for one KEY record: `name` and its record data `key`.
 ///
 /// A SIG(0) whose signer name, algorithm or key tag does not match the KEY
@@ -629,6 +908,15 @@ impl<S: crate::dnssec::Signer> Sig0Signer for DnssecSig0Signer<'_, S> {
 /// # }
 /// # Ok::<(), dnsbox::Error>(())
 /// ```
+///
+#[cfg_attr(
+    feature = "dnssec",
+    doc = "[`PurecryptoVerifier`]: crate::dnssec::PurecryptoVerifier"
+)]
+#[cfg_attr(
+    not(feature = "dnssec"),
+    doc = "[`PurecryptoVerifier`]: crate#cargo-features"
+)]
 #[cfg(feature = "alloc")]
 #[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
 #[derive(Clone, Copy, Debug)]
@@ -641,6 +929,26 @@ pub struct DnssecSig0Verifier<'k, V> {
 #[cfg(feature = "alloc")]
 impl<'k, V: crate::dnssec::Verifier> DnssecSig0Verifier<'k, V> {
     /// Checks signatures made with the KEY record `name` / `key`.
+    ///
+    /// ```
+    /// # #[cfg(feature = "dnssec")] {
+    /// use dnsbox::dnssec::{Algorithm, PurecryptoVerifier, SigningKey};
+    /// use dnsbox::sig0::{self, DnssecSig0Signer, DnssecSig0Verifier, Validity};
+    /// use dnsbox::{Class, Message, MessageBuilder, NameBuf, Rtype};
+    ///
+    /// let key = SigningKey::from_private_bytes(Algorithm::ED25519, &[7; 32])?;
+    /// let host: NameBuf = "laptop.example.com".parse()?;
+    /// let signer = DnssecSig0Signer::new(&key, host.as_name(), 512);
+    /// let mut buf = [0u8; 512];
+    /// let mut b = MessageBuilder::query(&mut buf, 1, &host, Rtype::SOA, Class::IN)?;
+    /// sig0::sign(&mut b, &signer, Validity::around(1_800_000_000, 300), None)?;
+    /// let msg = Message::parse(b.finish())?;
+    /// // The server knows the host's KEY record.
+    /// let verifier = DnssecSig0Verifier::new(PurecryptoVerifier, host.as_name(), signer.key());
+    /// sig0::verify(&msg, &verifier, 1_800_000_100, None)?;
+    /// # }
+    /// # Ok::<(), dnsbox::Error>(())
+    /// ```
     pub const fn new(verifier: V, name: Name<'k>, key: crate::rdata::Key<'k>) -> Self {
         DnssecSig0Verifier {
             verifier,

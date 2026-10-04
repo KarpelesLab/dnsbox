@@ -53,6 +53,18 @@
 //! ```
 //!
 //! [`Message::parse`]: crate::Message::parse
+#![cfg_attr(
+    feature = "std",
+    doc = "
+[`read_message`]: read_message
+[`write_message`]: write_message"
+)]
+#![cfg_attr(
+    not(feature = "std"),
+    doc = "
+[`read_message`]: crate#cargo-features
+[`write_message`]: crate#cargo-features"
+)]
 
 use crate::builder::MAX_MESSAGE_LEN;
 use crate::wire::OutBuf;
@@ -217,6 +229,18 @@ pub struct Frames<'a> {
 
 impl<'a> Frames<'a> {
     /// The number of bytes consumed by the frames returned so far.
+    ///
+    /// ```
+    /// // After a read: process the whole frames, keep the rest for later.
+    /// let mut pending = vec![0, 2, 0xab, 0xcd, 0, 4, 1];
+    /// let mut frames = dnsbox::tcp::frames(&pending);
+    /// assert_eq!(frames.next(), Some(&[0xab, 0xcd][..]));
+    /// assert_eq!(frames.next(), None);
+    /// let used = frames.consumed();
+    /// assert_eq!(used, 4);
+    /// pending.drain(..used);
+    /// assert_eq!(pending, [0, 4, 1]);
+    /// ```
     #[inline]
     #[must_use]
     pub const fn consumed(&self) -> usize {
@@ -224,6 +248,14 @@ impl<'a> Frames<'a> {
     }
 
     /// The bytes after the frames returned so far.
+    ///
+    /// ```
+    /// let read = [0, 1, 0x42, 0, 3, 7];
+    /// let mut frames = dnsbox::tcp::frames(&read);
+    /// assert_eq!(frames.by_ref().count(), 1);
+    /// // The start of a 3-byte message: one byte of it so far.
+    /// assert_eq!(frames.remainder(), [0, 3, 7]);
+    /// ```
     #[inline]
     #[must_use]
     pub fn remainder(&self) -> &'a [u8] {
@@ -289,6 +321,15 @@ pub struct FrameReassembler<'b> {
 
 impl<'b> FrameReassembler<'b> {
     /// Creates a reassembler that buffers data in `buf`.
+    ///
+    /// ```
+    /// use dnsbox::tcp::{FrameReassembler, MAX_FRAME_LEN};
+    ///
+    /// // Room for any DNS message (65535 bytes plus the prefix).
+    /// let mut storage = vec![0u8; MAX_FRAME_LEN];
+    /// let r = FrameReassembler::new(&mut storage);
+    /// assert_eq!((r.capacity(), r.buffered()), (MAX_FRAME_LEN, 0));
+    /// ```
     #[inline]
     pub const fn new(buf: &'b mut [u8]) -> Self {
         FrameReassembler {
@@ -300,6 +341,15 @@ impl<'b> FrameReassembler<'b> {
     }
 
     /// The size of the buffer.
+    ///
+    /// ```
+    /// use dnsbox::tcp::FrameReassembler;
+    ///
+    /// let mut storage = [0u8; 1024];
+    /// let mut r = FrameReassembler::new(&mut storage);
+    /// r.extend(&[0, 5, 1, 2]);
+    /// assert_eq!(r.capacity(), 1024); // unchanged by buffering
+    /// ```
     #[inline]
     #[must_use]
     pub const fn capacity(&self) -> usize {
@@ -307,6 +357,18 @@ impl<'b> FrameReassembler<'b> {
     }
 
     /// The number of buffered bytes not yet returned as frames.
+    ///
+    /// ```
+    /// use dnsbox::tcp::FrameReassembler;
+    ///
+    /// let mut storage = [0u8; 64];
+    /// let mut r = FrameReassembler::new(&mut storage);
+    /// r.extend(&[0, 1, 9, 0, 4, 1]);
+    /// assert_eq!(r.buffered(), 6);
+    /// assert_eq!(r.next_frame()?, Some(&[9][..]));
+    /// assert_eq!(r.buffered(), 3); // half of the next frame
+    /// # Ok::<(), dnsbox::Error>(())
+    /// ```
     #[inline]
     #[must_use]
     pub const fn buffered(&self) -> usize {
@@ -315,6 +377,19 @@ impl<'b> FrameReassembler<'b> {
 
     /// Whether no bytes are buffered (the stream is at a frame boundary,
     /// unless a skipped frame is still being discarded).
+    ///
+    /// ```
+    /// use dnsbox::tcp::FrameReassembler;
+    ///
+    /// let mut storage = [0u8; 64];
+    /// let mut r = FrameReassembler::new(&mut storage);
+    /// r.extend(&[0, 1, 9]);
+    /// assert!(!r.is_empty());
+    /// r.next_frame()?;
+    /// // At a frame boundary: a clean place to close the connection.
+    /// assert!(r.is_empty());
+    /// # Ok::<(), dnsbox::Error>(())
+    /// ```
     #[inline]
     #[must_use]
     pub const fn is_empty(&self) -> bool {
@@ -322,6 +397,19 @@ impl<'b> FrameReassembler<'b> {
     }
 
     /// Discards all buffered data (e.g. when the connection is reset).
+    ///
+    /// ```
+    /// use dnsbox::tcp::FrameReassembler;
+    ///
+    /// let mut storage = [0u8; 64];
+    /// let mut r = FrameReassembler::new(&mut storage);
+    /// r.extend(&[0, 9, 1, 2, 3]); // a partial message ...
+    /// r.clear(); // ... dropped when the connection is re-established
+    /// assert!(r.is_empty());
+    /// r.extend(&[0, 1, 7]);
+    /// assert_eq!(r.next_frame()?, Some(&[7][..]));
+    /// # Ok::<(), dnsbox::Error>(())
+    /// ```
     #[inline]
     pub fn clear(&mut self) {
         self.start = 0;
@@ -341,6 +429,20 @@ impl<'b> FrameReassembler<'b> {
     /// The free part of the buffer, to read into directly; report how many
     /// bytes were written with [`commit`](Self::commit). Empty when the
     /// buffer is full (call [`next_frame`](Self::next_frame) first).
+    ///
+    /// ```
+    /// use std::io::Read;
+    /// use dnsbox::tcp::FrameReassembler;
+    ///
+    /// // Read from a socket (here: a byte slice) straight into the buffer.
+    /// let mut socket: &[u8] = &[0, 3, b'a', b'b', b'c'];
+    /// let mut storage = [0u8; 64];
+    /// let mut r = FrameReassembler::new(&mut storage);
+    /// let n = socket.read(r.spare()).unwrap();
+    /// r.commit(n);
+    /// assert_eq!(r.next_frame()?, Some(&b"abc"[..]));
+    /// # Ok::<(), dnsbox::Error>(())
+    /// ```
     pub fn spare(&mut self) -> &mut [u8] {
         self.compact();
         self.buf.get_mut(self.end..).unwrap_or(&mut [])
@@ -348,6 +450,18 @@ impl<'b> FrameReassembler<'b> {
 
     /// Marks `n` bytes written into [`spare`](Self::spare) as received
     /// (clamped to the spare space).
+    ///
+    /// ```
+    /// use dnsbox::tcp::FrameReassembler;
+    ///
+    /// let mut storage = [0u8; 16];
+    /// let mut r = FrameReassembler::new(&mut storage);
+    /// let spare = r.spare();
+    /// spare[..4].copy_from_slice(&[0, 2, 0xbe, 0xef]); // as a `read` would
+    /// r.commit(4);
+    /// assert_eq!(r.next_frame()?, Some(&[0xbe, 0xef][..]));
+    /// # Ok::<(), dnsbox::Error>(())
+    /// ```
     pub fn commit(&mut self, n: usize) {
         let mut n = n.min(self.buf.len() - self.end);
         if self.skip > 0 {
@@ -364,6 +478,21 @@ impl<'b> FrameReassembler<'b> {
     /// Copies as much of `data` as fits into the buffer, returning how
     /// many bytes were consumed. Keep the rest and pass it again after
     /// draining frames with [`next_frame`](Self::next_frame).
+    ///
+    /// ```
+    /// use dnsbox::tcp::FrameReassembler;
+    ///
+    /// let mut storage = [0u8; 8];
+    /// let mut r = FrameReassembler::new(&mut storage);
+    /// let data = [0, 2, 1, 2, 0, 3, 3, 4, 5, 0];
+    /// // Only 8 bytes fit: drain frames, then hand over the rest.
+    /// let n = r.extend(&data);
+    /// assert_eq!(n, 8);
+    /// assert_eq!(r.next_frame()?, Some(&[1, 2][..]));
+    /// assert_eq!(r.extend(&data[n..]), 2);
+    /// assert_eq!(r.next_frame()?, Some(&[3, 4, 5][..]));
+    /// # Ok::<(), dnsbox::Error>(())
+    /// ```
     pub fn extend(&mut self, data: &[u8]) -> usize {
         let k = self.skip.min(data.len());
         self.skip -= k;
@@ -427,6 +556,21 @@ impl<'b> FrameReassembler<'b> {
     /// large for the buffer — including the part not received yet.
     /// Returns `false` (and does nothing) if not even its length prefix
     /// has been received.
+    ///
+    /// ```
+    /// use dnsbox::tcp::FrameReassembler;
+    ///
+    /// let mut storage = [0u8; 16];
+    /// let mut r = FrameReassembler::new(&mut storage);
+    /// assert!(!r.skip_frame()); // nothing to skip yet
+    /// r.extend(&[0, 40]); // a 40-byte message: larger than our buffer
+    /// assert!(r.next_frame().is_err());
+    /// assert!(r.skip_frame());
+    /// r.extend(&[0u8; 40]); // its bytes are discarded as they arrive
+    /// r.extend(&[0, 1, 5]);
+    /// assert_eq!(r.next_frame()?, Some(&[5][..]));
+    /// # Ok::<(), dnsbox::Error>(())
+    /// ```
     pub fn skip_frame(&mut self) -> bool {
         let pending = self.buf.get(self.start..self.end).unwrap_or(&[]);
         let Some(total) = frame_len(pending) else {

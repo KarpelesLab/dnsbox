@@ -31,7 +31,7 @@ open_enum! {
     /// assert_eq!("CLASS3".parse::<Class>(), Ok(Class::CH));
     /// assert_eq!(Class::new(42).to_string(), "CLASS42");
     /// ```
-    pub struct Class(u16), generic "CLASS", aliases {
+    pub struct Class(u16) in dnsbox, generic "CLASS", aliases {
         "*" => ANY,
         "CS" => CS,
         "CHAOS" => CH,
@@ -56,6 +56,14 @@ impl Class {
 
     /// Whether the value lies in the private-use range 65280–65534
     /// (RFC 6895 §3.2).
+    ///
+    /// ```
+    /// use dnsbox::Class;
+    ///
+    /// assert!(Class::new(65280).is_private_use());
+    /// assert!(!Class::IN.is_private_use());
+    /// assert!(!Class::new(65535).is_private_use()); // reserved, not private
+    /// ```
     #[inline]
     #[must_use]
     pub const fn is_private_use(self) -> bool {

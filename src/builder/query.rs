@@ -46,6 +46,21 @@ impl<B: OutBuf> MessageBuilder<B> {
     /// written already, otherwise as
     /// [`push_question`](Self::push_question). On error the builder is
     /// unchanged.
+    ///
+    /// ```
+    /// use dnsbox::{Class, Message, MessageBuilder, NameBuf, Rtype};
+    ///
+    /// let name: NameBuf = "example.org".parse()?;
+    /// let mut buf = [0u8; 512];
+    /// let mut b = MessageBuilder::new(&mut buf)?;
+    /// b.start_query(0xbeef, &name, Rtype::NS, Class::IN)?;
+    /// // An iterative query (as a resolver sends to authoritative servers).
+    /// b.set_flags(b.header().flags.with_rd(false));
+    /// let query = Message::parse_validated(b.finish())?;
+    /// assert_eq!((query.id(), query.flags().rd()), (0xbeef, false));
+    /// assert_eq!(query.questions().next().unwrap()?.qtype(), Rtype::NS);
+    /// # Ok::<(), dnsbox::Error>(())
+    /// ```
     pub fn start_query(
         &mut self,
         id: u16,
@@ -86,6 +101,28 @@ impl<B: OutBuf> MessageBuilder<B> {
     /// from [`response_flags`]), or
     /// [`Error::BufferTooSmall`](crate::Error::BufferTooSmall) if the
     /// questions do not fit. On error the builder is unchanged.
+    ///
+    /// ```
+    /// use dnsbox::rdata::A;
+    /// use dnsbox::{Class, Message, MessageBuilder, NameBuf, Rcode, Rtype};
+    ///
+    /// let name: NameBuf = "www.example".parse()?;
+    /// let mut qbuf = [0u8; 512];
+    /// let query = MessageBuilder::query(&mut qbuf, 77, &name, Rtype::A, Class::IN)?.finish();
+    /// let query = Message::parse(query)?;
+    ///
+    /// let mut buf = [0u8; 512];
+    /// let mut b = MessageBuilder::new(&mut buf)?;
+    /// b.start_response(&query)?;
+    /// b.set_flags(b.header().flags.with_aa(true));
+    /// b.push_answer(&name, Class::IN, 300, &A::new([192, 0, 2, 80].into()))?;
+    /// let response = Message::parse_validated(b.finish())?;
+    /// assert_eq!(response.id(), 77);
+    /// assert!(response.flags().qr() && response.flags().aa() && response.flags().rd());
+    /// assert_eq!(response.flags().rcode(), Rcode::NOERROR);
+    /// assert_eq!((response.header().qdcount, response.header().ancount), (1, 1));
+    /// # Ok::<(), dnsbox::Error>(())
+    /// ```
     pub fn start_response(&mut self, query: &Message<'_>) -> Result<()> {
         self.ensure_fresh()?;
         let saved = self.header;
@@ -109,6 +146,19 @@ impl<B: OutBuf> MessageBuilder<B> {
 
     /// Sets the header RCODE (the low 4 bits of `rcode`; extended RCODEs
     /// also need an OPT record, RFC 6891 §6.1.3).
+    ///
+    /// ```
+    /// use dnsbox::{Class, Message, MessageBuilder, NameBuf, Rcode, Rtype};
+    ///
+    /// let name: NameBuf = "missing.example".parse()?;
+    /// let mut qbuf = [0u8; 512];
+    /// let query = Message::parse(MessageBuilder::query(&mut qbuf, 3, &name, Rtype::A, Class::IN)?.finish())?;
+    /// let mut buf = [0u8; 512];
+    /// let mut b = MessageBuilder::response(&mut buf, &query)?;
+    /// b.set_rcode(Rcode::NXDOMAIN);
+    /// assert_eq!(Message::parse(b.finish())?.flags().rcode(), Rcode::NXDOMAIN);
+    /// # Ok::<(), dnsbox::Error>(())
+    /// ```
     pub fn set_rcode(&mut self, rcode: crate::Rcode) {
         self.header.flags = self.header.flags.with_rcode(rcode);
         self.sync_header();
@@ -215,6 +265,21 @@ impl MessageBuilder<alloc::vec::Vec<u8>> {
     /// # Errors
     ///
     /// The parse error if the query's question section is malformed.
+    ///
+    /// ```
+    /// use dnsbox::rdata::Txt;
+    /// use dnsbox::{Class, Message, MessageBuilder, NameBuf, Rtype};
+    ///
+    /// let name: NameBuf = "example.net".parse()?;
+    /// let query = MessageBuilder::query_vec(9, &name, Rtype::TXT, Class::IN)?.finish();
+    /// let query = Message::parse(&query)?;
+    /// let mut b = MessageBuilder::response_vec(&query)?;
+    /// b.push_answer(&name, Class::IN, 60, &Txt::from_wire(b"\x0bv=spf1 -all")?)?;
+    /// let response: Vec<u8> = b.finish();
+    /// let response = Message::parse_validated(&response)?;
+    /// assert_eq!((response.id(), response.header().ancount), (9, 1));
+    /// # Ok::<(), dnsbox::Error>(())
+    /// ```
     pub fn response_vec(query: &Message<'_>) -> Result<Self> {
         let mut b = Self::new_vec();
         b.start_response(query)?;

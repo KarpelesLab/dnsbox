@@ -165,12 +165,42 @@ impl<'a> RrsetKey<'a> {
 impl<B: OutBuf> MessageBuilder<B> {
     /// Sets what RRset-level pushes do when an RRset does not fit; see
     /// [`Truncation`]. The default is [`Truncation::Error`].
+    ///
+    /// ```
+    /// use dnsbox::builder::{Outcome, Truncation};
+    /// use dnsbox::rdata::A;
+    /// use dnsbox::{Class, Error, MessageBuilder, NameBuf, Section};
+    ///
+    /// let name: NameBuf = "big.example".parse()?;
+    /// let addrs = [A::new([198, 51, 100, 7].into()); 40];
+    /// let mut buf = [0u8; 512];
+    /// let mut b = MessageBuilder::new(&mut buf)?;
+    /// // By default an RRset that does not fit is an error ...
+    /// assert_eq!(b.push_rrset(Section::Answer, &name, Class::IN, 60, &addrs), Err(Error::BufferTooSmall));
+    /// // ... with `SetTc` it is dropped and the TC bit set.
+    /// b.set_truncation(Truncation::SetTc);
+    /// assert_eq!(b.push_rrset(Section::Answer, &name, Class::IN, 60, &addrs)?, Outcome::Truncated);
+    /// assert!(b.header().flags.tc());
+    /// # Ok::<(), dnsbox::Error>(())
+    /// ```
     #[inline]
     pub fn set_truncation(&mut self, policy: Truncation) {
         self.policy = policy;
     }
 
     /// The current truncation policy.
+    ///
+    /// ```
+    /// use dnsbox::MessageBuilder;
+    /// use dnsbox::builder::Truncation;
+    ///
+    /// let mut buf = [0u8; 512];
+    /// let mut b = MessageBuilder::new(&mut buf)?;
+    /// assert_eq!(b.truncation(), Truncation::Error);
+    /// b.set_truncation(Truncation::SetTc);
+    /// assert_eq!(b.truncation(), Truncation::SetTc);
+    /// # Ok::<(), dnsbox::Error>(())
+    /// ```
     #[inline]
     pub const fn truncation(&self) -> Truncation {
         self.policy
@@ -179,6 +209,25 @@ impl<B: OutBuf> MessageBuilder<B> {
     /// Whether the message was truncated by an RRset-level push or
     /// [`truncate`](Self::truncate). (Setting TC through
     /// [`set_flags`](Self::set_flags) does not count.)
+    ///
+    /// ```
+    /// use dnsbox::builder::Truncation;
+    /// use dnsbox::rdata::A;
+    /// use dnsbox::{Class, MessageBuilder, NameBuf, Section};
+    ///
+    /// let name: NameBuf = "pool.example".parse()?;
+    /// let mut buf = [0u8; 512];
+    /// let mut b = MessageBuilder::new(&mut buf)?;
+    /// b.set_truncation(Truncation::SetTc);
+    /// let one = [A::new([192, 0, 2, 1].into())];
+    /// b.push_rrset(Section::Answer, &name, Class::IN, 60, &one)?;
+    /// assert!(!b.is_truncated());
+    /// let many = [A::new([192, 0, 2, 2].into()); 64];
+    /// b.push_rrset(Section::Answer, &name, Class::IN, 60, &many)?;
+    /// assert!(b.is_truncated());
+    /// assert_eq!(b.header().ancount, 1); // the first RRset stays
+    /// # Ok::<(), dnsbox::Error>(())
+    /// ```
     #[inline]
     pub const fn is_truncated(&self) -> bool {
         self.truncated

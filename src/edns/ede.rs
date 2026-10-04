@@ -24,7 +24,7 @@ open_enum! {
     /// assert_eq!("blocked".parse(), Ok(InfoCode::BLOCKED));
     /// assert_eq!(InfoCode::new(50000).to_string(), "50000");
     /// ```
-    pub struct InfoCode(u16), generic "";
+    pub struct InfoCode(u16) in dnsbox::edns, generic "";
     /// Other Error: none of the other codes apply (RFC 8914 §4.1).
     OTHER_ERROR = 0 => "Other Error",
     /// Unsupported DNSKEY Algorithm (RFC 8914 §4.2).

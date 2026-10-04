@@ -28,7 +28,7 @@ open_enum! {
     /// assert_eq!("badvers".parse::<TsigRcode>()?, TsigRcode::BADSIG);
     /// # Ok::<(), dnsbox::Error>(())
     /// ```
-    pub struct TsigRcode(u16), generic "RCODE", aliases { "BADVERS" => BADSIG };
+    pub struct TsigRcode(u16) in dnsbox::rdata, generic "RCODE", aliases { "BADVERS" => BADSIG };
     /// No error (RFC 1035).
     NOERROR = 0 => "NOERROR",
     /// Format error (RFC 1035).

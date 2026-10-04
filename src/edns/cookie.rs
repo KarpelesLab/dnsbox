@@ -144,7 +144,7 @@ impl fmt::Display for Cookie<'_> {
 /// The hash input is built by [`hash_input`](Self::hash_input) without any
 /// dependency. Computing and checking the hash needs SipHash-2-4, which
 /// dnsbox takes from `purecrypto` behind the `cookie-siphash` feature
-/// ([`generate`](Self::generate), [`verify`](Self::verify)).
+/// ([`generate`], [`verify`]).
 ///
 /// ```
 /// use dnsbox::edns::{Cookie, ServerCookie};
@@ -161,6 +161,11 @@ impl fmt::Display for Cookie<'_> {
 /// assert_eq!(c.server_cookie_v1(), Some(sc));
 /// # Ok::<(), dnsbox::Error>(())
 /// ```
+///
+#[cfg_attr(feature = "cookie-siphash", doc = "[`generate`]: Self::generate")]
+#[cfg_attr(feature = "cookie-siphash", doc = "[`verify`]: Self::verify")]
+#[cfg_attr(not(feature = "cookie-siphash"), doc = "[`generate`]: crate#cargo-features")]
+#[cfg_attr(not(feature = "cookie-siphash"), doc = "[`verify`]: crate#cargo-features")]
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub struct ServerCookie {
     /// Construction method; 1 for RFC 9018 (§4.1).

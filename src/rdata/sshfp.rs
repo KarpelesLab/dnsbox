@@ -21,7 +21,7 @@ open_enum! {
     /// assert_eq!("ed25519".parse::<SshfpAlgorithm>()?, SshfpAlgorithm::ED25519);
     /// # Ok::<(), dnsbox::Error>(())
     /// ```
-    pub struct SshfpAlgorithm(u8), generic "";
+    pub struct SshfpAlgorithm(u8) in dnsbox::rdata, generic "";
     /// RSA (RFC 4255).
     RSA = 1 => "RSA",
     /// DSA (RFC 4255).
@@ -46,7 +46,7 @@ open_enum! {
     /// assert_eq!(SshfpFpType::SHA256.to_string(), "SHA-256");
     /// assert_eq!(SshfpFpType::new(2), SshfpFpType::SHA256);
     /// ```
-    pub struct SshfpFpType(u8), generic "";
+    pub struct SshfpFpType(u8) in dnsbox::rdata, generic "";
     /// SHA-1 (RFC 4255).
     SHA1 = 1 => "SHA-1",
     /// SHA-256 (RFC 6594).

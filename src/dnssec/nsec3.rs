@@ -31,6 +31,12 @@ const MAX_HASH_LEN: usize = 39;
 /// assert_eq!(Nsec3Hash::new(hash.as_bytes())?, hash);
 /// # Ok::<(), dnsbox::Error>(())
 /// ```
+///
+#[cfg_attr(feature = "dnssec-digest", doc = "[`nsec3_hash`]: nsec3_hash")]
+#[cfg_attr(
+    not(feature = "dnssec-digest"),
+    doc = "[`nsec3_hash`]: crate#cargo-features"
+)]
 #[derive(Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub struct Nsec3Hash {
     len: u8,

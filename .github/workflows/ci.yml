@@ -93,6 +93,13 @@ jobs:
 
       - name: Build no_std + TSIG HMAC backend (Cortex-M)
         run: cargo build --target thumbv7em-none-eabi --no-default-features --features tsig
+
+      - name: Install cargo-hack
+        uses: taiki-e/install-action@cargo-hack
+
+      - name: Build every combination of the no_std features (Cortex-M)
+        run: cargo hack build --target thumbv7em-none-eabi --feature-powerset --exclude-features std,default --no-dev-deps
+
       - name: Allocation-free hot path (no_std, no alloc)
         run: cargo test --no-default-features --test no_alloc
 
@@ -131,3 +138,63 @@ jobs:
 
       - name: cargo doc (docs.rs config)
         run: cargo doc --no-deps --all-features
+
+  doc_examples:
+    name: Doc examples (nightly lint)
+    runs-on: ubuntu-latest
+    env:
+      # Every public item, function and method has a doctest example.
+      RUSTDOCFLAGS: -Z unstable-options -Zcrate-attr=feature(rustdoc_missing_doc_code_examples) -D rustdoc::missing_doc_code_examples
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Install Rust (nightly, for the unstable lint)
+        uses: dtolnay/rust-toolchain@nightly
+
+      - name: Cache
+        uses: Swatinem/rust-cache@v2
+
+      - name: cargo doc (missing_doc_code_examples denied)
+        run: cargo doc --no-deps --all-features
+
+  features:
+    name: Feature combinations (${{ matrix.check }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # Every combination of features builds ...
+          - check: build
+            run: cargo hack build --feature-powerset --no-dev-deps
+          # ... is clippy-clean (the library in every combination, tests
+          # and examples with up to two features) ...
+          - check: clippy
+            run: |
+              cargo hack clippy --feature-powerset --no-dev-deps -- -D warnings
+              cargo hack clippy --feature-powerset --depth 2 --all-targets -- -D warnings
+          # ... and documents cleanly: intra-doc links to feature-gated
+          # items must resolve (or fall back) in every configuration.
+          - check: docs
+            rustdocflags: -D warnings -D missing_docs -D rustdoc::broken-intra-doc-links -D rustdoc::private-doc-tests -D rustdoc::unescaped-backticks
+            run: cargo hack doc --no-deps --feature-powerset --no-dev-deps
+    env:
+      RUSTDOCFLAGS: ${{ matrix.rustdocflags }}
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy
+
+      - name: Install cargo-hack
+        uses: taiki-e/install-action@cargo-hack
+
+      - name: Cache
+        uses: Swatinem/rust-cache@v2
+        with:
+          key: features-${{ matrix.check }}
+
+      - name: cargo hack ${{ matrix.check }}
+        run: ${{ matrix.run }}

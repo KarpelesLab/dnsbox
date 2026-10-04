@@ -26,7 +26,7 @@ open_enum! {
     /// assert_eq!(IpseckeyAlgorithm::RSA.get(), 2);
     /// assert_eq!(IpseckeyAlgorithm::EDDSA.to_string(), "EDDSA");
     /// ```
-    pub struct IpseckeyAlgorithm(u8), generic "";
+    pub struct IpseckeyAlgorithm(u8) in dnsbox::rdata, generic "";
     /// No public key is present (RFC 4025).
     NONE = 0 => "NONE",
     /// A DSA public key (RFC 2536 §2, RFC 4025).

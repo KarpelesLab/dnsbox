@@ -94,7 +94,7 @@ open_enum! {
     /// assert_eq!("OPT65001".parse(), Ok(OptionCode::new(65001)));
     /// assert_eq!(OptionCode::new(65001).to_string(), "OPT65001");
     /// ```
-    pub struct OptionCode(u16), generic "OPT", aliases {
+    pub struct OptionCode(u16) in dnsbox::edns, generic "OPT", aliases {
         "UPDATE-LEASE" => UL,
         "CLIENT-SUBNET" => ECS,
         "EDNS-CLIENT-SUBNET" => ECS,
@@ -168,6 +168,14 @@ open_enum! {
 impl OptionCode {
     /// Whether the code lies in the range reserved for local or
     /// experimental use, 65001–65534 (RFC 6891 §9).
+    ///
+    /// ```
+    /// use dnsbox::edns::OptionCode;
+    ///
+    /// assert!(OptionCode::new(65001).is_local_use());
+    /// assert!(!OptionCode::COOKIE.is_local_use());
+    /// assert!(!OptionCode::new(65535).is_local_use()); // reserved
+    /// ```
     #[inline]
     #[must_use]
     pub const fn is_local_use(self) -> bool {
@@ -234,6 +242,17 @@ pub trait ParseOption<'a>: Sized {
     /// [`Error::InvalidOption`](crate::Error::InvalidOption); truncation
     /// is reported by the reader as
     /// [`Error::UnexpectedEof`](crate::Error::UnexpectedEof).
+    ///
+    /// ```
+    /// use dnsbox::edns::{ParseOption, TcpKeepalive};
+    /// use dnsbox::WireReader;
+    ///
+    /// // edns-tcp-keepalive (RFC 7828): a timeout of 300 × 100 ms.
+    /// let mut data = WireReader::new(&[0x01, 0x2c]);
+    /// let ka = TcpKeepalive::parse_option(&mut data)?;
+    /// assert_eq!(ka.to_string(), "TCP-KEEPALIVE=300");
+    /// # Ok::<(), dnsbox::Error>(())
+    /// ```
     fn parse_option(data: &mut WireReader<'a>) -> Result<Self>;
 }
 
@@ -253,6 +272,13 @@ pub trait ParseOption<'a>: Sized {
 /// ```
 pub trait ComposeOption {
     /// The option code.
+    ///
+    /// ```
+    /// use dnsbox::edns::{ComposeOption, Nsid, OptionCode};
+    ///
+    /// assert_eq!(Nsid::REQUEST.code(), OptionCode::NSID);
+    /// assert_eq!(Nsid::REQUEST.code().get(), 3);
+    /// ```
     fn code(&self) -> OptionCode;
 
     /// Writes OPTION-DATA (without the code and length) to `c`.
@@ -262,6 +288,17 @@ pub trait ComposeOption {
     /// [`Error::BufferTooSmall`](crate::Error::BufferTooSmall) if `c` is
     /// full, or an implementation-specific error for a value that cannot
     /// be encoded.
+    ///
+    /// ```
+    /// use dnsbox::edns::{ComposeOption, Nsid};
+    /// use dnsbox::WireWriter;
+    ///
+    /// let mut buf = [0u8; 16];
+    /// let mut w = WireWriter::new(&mut buf);
+    /// Nsid::new(b"ns1.example").compose_option(&mut w)?;
+    /// assert_eq!(w.as_bytes(), b"ns1.example"); // the value only, no code or length
+    /// # Ok::<(), dnsbox::Error>(())
+    /// ```
     fn compose_option<C: Composer + ?Sized>(&self, c: &mut C) -> Result<()>;
 
     /// Writes the whole option: OPTION-CODE, OPTION-LENGTH and OPTION-DATA
@@ -270,6 +307,17 @@ pub trait ComposeOption {
     /// # Errors
     ///
     /// As [`compose_option`](Self::compose_option).
+    ///
+    /// ```
+    /// use dnsbox::edns::{ComposeOption, Nsid};
+    /// use dnsbox::WireWriter;
+    ///
+    /// let mut buf = [0u8; 16];
+    /// let mut w = WireWriter::new(&mut buf);
+    /// Nsid::REQUEST.compose_tlv(&mut w)?;
+    /// assert_eq!(w.as_bytes(), [0, 3, 0, 0]); // NSID, empty: a request
+    /// # Ok::<(), dnsbox::Error>(())
+    /// ```
     fn compose_tlv<C: Composer + ?Sized>(&self, c: &mut C) -> Result<()> {
         c.put_u16(self.code().get())?;
         c.put_u16_prefixed(|c| self.compose_option(c))
@@ -394,6 +442,14 @@ macro_rules! edns_registry {
             }
 
             /// Whether `code` has a typed implementation.
+            ///
+            /// ```
+            /// use dnsbox::edns::{EdnsOption, OptionCode};
+            ///
+            /// assert!(EdnsOption::is_known(OptionCode::COOKIE));
+            /// // Codes without a typed view still parse, as `EdnsOption::Unknown`.
+            /// assert!(!EdnsOption::is_known(OptionCode::new(65001)));
+            /// ```
             #[must_use]
             pub const fn is_known(code: OptionCode) -> bool {
                 match code {
@@ -452,6 +508,16 @@ edns_registry! {
 
 impl EdnsOption<'_> {
     /// The option code.
+    ///
+    /// ```
+    /// use dnsbox::edns::{EdnsOption, OptionCode};
+    /// use dnsbox::WireReader;
+    ///
+    /// let opt = EdnsOption::parse(OptionCode::new(10), WireReader::new(&[1, 2, 3, 4, 5, 6, 7, 8]))?;
+    /// assert!(matches!(opt, EdnsOption::Cookie(_)));
+    /// assert_eq!(opt.code(), OptionCode::COOKIE);
+    /// # Ok::<(), dnsbox::Error>(())
+    /// ```
     #[inline]
     #[must_use]
     pub fn code(&self) -> OptionCode {

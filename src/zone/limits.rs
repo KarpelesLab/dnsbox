@@ -3,14 +3,14 @@
 use super::generate::MAX_GENERATE;
 
 /// Work and size limits for reading master files (RFC 1035 §5) with
-/// [`ZoneReader`](super::ZoneReader), [`Records`](super::Records) and
-/// [`parse_with_limits`](super::parse_with_limits).
+/// [`ZoneReader`](super::ZoneReader), [`Records`] and
+/// [`parse_with_limits`].
 ///
 /// Every limit is on by default ([`DEFAULT`](Self::DEFAULT)), sized for
 /// real zones while bounding what a hostile file can cost: reading is
 /// linear in the text except for `$GENERATE` (one line, many records) and
 /// `$INCLUDE` (one line, a whole file), and the records collected by
-/// [`Records`](super::Records) take memory in proportion to their number.
+/// [`Records`] take memory in proportion to their number.
 /// Going over a limit is an [`Error::LimitExceeded`](crate::Error) with
 /// the position of the entry, directive or text at fault. Too many records
 /// or too much input stop the reader (it returns the error once, then the
@@ -55,6 +55,15 @@ use super::generate::MAX_GENERATE;
 /// assert!(reader.next_record(&mut buf)?.is_none());
 /// # Ok::<(), dnsbox::Error>(())
 /// ```
+///
+#[cfg_attr(
+    feature = "alloc",
+    doc = "[`Records`]: super::Records\n[`parse_with_limits`]: super::parse_with_limits"
+)]
+#[cfg_attr(
+    not(feature = "alloc"),
+    doc = "[`Records`]: crate#cargo-features\n[`parse_with_limits`]: crate#cargo-features"
+)]
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 #[non_exhaustive]
 pub struct ZoneLimits {
@@ -64,14 +73,29 @@ pub struct ZoneLimits {
     /// The most records one `$GENERATE` directive may produce; a larger
     /// range is refused (and skipped) before anything is generated.
     pub max_generate: u32,
-    /// The deepest `$INCLUDE` nesting ([`Records`](super::Records); 0
+    /// The deepest `$INCLUDE` nesting ([`Records`]; 0
     /// forbids `$INCLUDE`).
+    ///
+    #[cfg_attr(feature = "alloc", doc = "[`Records`]: super::Records")]
+    #[cfg_attr(not(feature = "alloc"), doc = "[`Records`]: crate#cargo-features")]
     pub max_include_depth: usize,
-    /// The most files `$INCLUDE`d in total ([`Records`](super::Records)).
+    /// The most files `$INCLUDE`d in total ([`Records`]).
+    ///
+    #[cfg_attr(feature = "alloc", doc = "[`Records`]: super::Records")]
+    #[cfg_attr(not(feature = "alloc"), doc = "[`Records`]: crate#cargo-features")]
     pub max_includes: usize,
     /// The most octets of text read: the main text and every included
     /// file together. An include resolver is asked for at most what is
-    /// left ([`IncludeResolver::load_limited`](super::IncludeResolver::load_limited)).
+    /// left ([`IncludeResolver::load_limited`]).
+    ///
+    #[cfg_attr(
+        feature = "alloc",
+        doc = "[`IncludeResolver::load_limited`]: super::IncludeResolver::load_limited"
+    )]
+    #[cfg_attr(
+        not(feature = "alloc"),
+        doc = "[`IncludeResolver::load_limited`]: crate#cargo-features"
+    )]
     pub max_input_len: usize,
     /// The most octets on one line (between two newlines).
     pub max_line_len: usize,

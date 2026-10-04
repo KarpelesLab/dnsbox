@@ -332,6 +332,37 @@ pub struct XfrProcessor {
 
 impl XfrProcessor {
     /// A processor for an AXFR of `zone`.
+    ///
+    /// ```
+    /// # use dnsbox::zone::ZoneReader;
+    /// # use dnsbox::{Class, Flags, Message, MessageBuilder, NameBuf, Rtype, Section};
+    /// # // A transfer response message for example.com holding the records of `text`.
+    /// # fn response<'b>(buf: &'b mut [u8], qtype: Rtype, text: &str) -> dnsbox::Result<&'b mut [u8]> {
+    /// #     let zone: NameBuf = "example.com".parse()?;
+    /// #     let mut b = MessageBuilder::new(buf)?;
+    /// #     b.set_flags(Flags::default().with_qr(true).with_aa(true));
+    /// #     b.push_question(&zone, qtype, Class::IN)?;
+    /// #     let mut reader = ZoneReader::new(text).with_origin(zone.as_name());
+    /// #     let mut rdata = [0u8; 512];
+    /// #     while let Some(rr) = reader.next_record(&mut rdata)? {
+    /// #         b.push_record(Section::Answer, &rr.name, rr.class, rr.ttl, &rr.data()?)?;
+    /// #     }
+    /// #     Ok(b.finish())
+    /// # }
+    /// use dnsbox::xfr::{XfrProcessor, XfrStyle};
+    ///
+    /// let zone: NameBuf = "example.com".parse()?;
+    /// let mut xfr = XfrProcessor::axfr(&zone);
+    /// let mut buf = [0u8; 512];
+    /// let wire = response(&mut buf, Rtype::AXFR, "@ 3600 IN SOA ns1 hostmaster 42 2h 15m 2w 1h
+    /// www 300 IN A 192.0.2.80
+    /// @ 3600 IN SOA ns1 hostmaster 42 2h 15m 2w 1h")?;
+    /// let events = xfr.process(&Message::parse(wire)?)?.count();
+    /// assert_eq!(events, 3); // start, the A record, end
+    /// assert!(xfr.is_done());
+    /// assert_eq!(xfr.style(), Some(XfrStyle::Full));
+    /// # Ok::<(), dnsbox::Error>(())
+    /// ```
     pub fn axfr(zone: impl ToName) -> Self {
         XfrProcessor {
             zone: zone.to_name().to_buf(),
@@ -348,6 +379,37 @@ impl XfrProcessor {
     }
 
     /// A processor for an IXFR of `zone` from version `client_serial`.
+    ///
+    /// ```
+    /// # use dnsbox::zone::ZoneReader;
+    /// # use dnsbox::{Class, Flags, Message, MessageBuilder, NameBuf, Rtype, Section};
+    /// # // A transfer response message for example.com holding the records of `text`.
+    /// # fn response<'b>(buf: &'b mut [u8], qtype: Rtype, text: &str) -> dnsbox::Result<&'b mut [u8]> {
+    /// #     let zone: NameBuf = "example.com".parse()?;
+    /// #     let mut b = MessageBuilder::new(buf)?;
+    /// #     b.set_flags(Flags::default().with_qr(true).with_aa(true));
+    /// #     b.push_question(&zone, qtype, Class::IN)?;
+    /// #     let mut reader = ZoneReader::new(text).with_origin(zone.as_name());
+    /// #     let mut rdata = [0u8; 512];
+    /// #     while let Some(rr) = reader.next_record(&mut rdata)? {
+    /// #         b.push_record(Section::Answer, &rr.name, rr.class, rr.ttl, &rr.data()?)?;
+    /// #     }
+    /// #     Ok(b.finish())
+    /// # }
+    /// use dnsbox::xfr::{XfrProcessor, XfrStyle};
+    ///
+    /// // We hold version 42; the server has nothing newer.
+    /// let zone: NameBuf = "example.com".parse()?;
+    /// let mut xfr = XfrProcessor::ixfr(&zone, 42);
+    /// let mut buf = [0u8; 512];
+    /// let wire = response(&mut buf, Rtype::IXFR, "@ 3600 IN SOA ns1 hostmaster 42 2h 15m 2w 1h")?;
+    /// for event in xfr.process(&Message::parse(wire)?)? {
+    ///     event?;
+    /// }
+    /// assert!(xfr.is_done());
+    /// assert_eq!(xfr.style(), Some(XfrStyle::UpToDate));
+    /// # Ok::<(), dnsbox::Error>(())
+    /// ```
     pub fn ixfr(zone: impl ToName, client_serial: u32) -> Self {
         XfrProcessor {
             qtype: Rtype::IXFR,
@@ -358,6 +420,34 @@ impl XfrProcessor {
 
     /// Also requires every response message to carry this ID (the
     /// query's).
+    ///
+    /// ```
+    /// # use dnsbox::zone::ZoneReader;
+    /// # use dnsbox::{Class, Flags, Message, MessageBuilder, NameBuf, Rtype, Section};
+    /// # // A transfer response message for example.com holding the records of `text`.
+    /// # fn response<'b>(buf: &'b mut [u8], qtype: Rtype, text: &str) -> dnsbox::Result<&'b mut [u8]> {
+    /// #     let zone: NameBuf = "example.com".parse()?;
+    /// #     let mut b = MessageBuilder::new(buf)?;
+    /// #     b.set_flags(Flags::default().with_qr(true).with_aa(true));
+    /// #     b.push_question(&zone, qtype, Class::IN)?;
+    /// #     let mut reader = ZoneReader::new(text).with_origin(zone.as_name());
+    /// #     let mut rdata = [0u8; 512];
+    /// #     while let Some(rr) = reader.next_record(&mut rdata)? {
+    /// #         b.push_record(Section::Answer, &rr.name, rr.class, rr.ttl, &rr.data()?)?;
+    /// #     }
+    /// #     Ok(b.finish())
+    /// # }
+    /// use dnsbox::xfr::XfrProcessor;
+    /// use dnsbox::Error;
+    ///
+    /// let zone: NameBuf = "example.com".parse()?;
+    /// let mut xfr = XfrProcessor::axfr(&zone).with_id(0x7777);
+    /// let mut buf = [0u8; 512];
+    /// let wire = response(&mut buf, Rtype::AXFR, "@ 3600 IN SOA ns1 hostmaster 42 2h 15m 2w 1h")?;
+    /// // A message with another ID (here 0) is not part of our transfer.
+    /// assert_eq!(xfr.process(&Message::parse(wire)?).err(), Some(Error::InvalidXfr));
+    /// # Ok::<(), dnsbox::Error>(())
+    /// ```
     #[must_use]
     pub fn with_id(mut self, id: u16) -> Self {
         self.id = Some(id);
@@ -400,6 +490,35 @@ impl XfrProcessor {
 
     /// Fails the transfer with [`Error::LimitExceeded`] at its message
     /// number `max + 1` (no limit by default).
+    ///
+    /// ```
+    /// use dnsbox::rdata::{A, ParseRdataText, Soa};
+    /// use dnsbox::xfr::XfrProcessor;
+    /// use dnsbox::{Class, Error, Flags, Message, MessageBuilder, NameBuf};
+    ///
+    /// // A server that opens the transfer, then sends one record per
+    /// // message without ever ending it.
+    /// let zone: NameBuf = "example.".parse()?;
+    /// let mut sbuf = [0u8; 64];
+    /// let soa = Soa::from_text("ns. host. 1 2 3 4 5", &mut sbuf)?;
+    /// let mut first = [0u8; 512];
+    /// let mut b = MessageBuilder::new(&mut first)?;
+    /// b.set_flags(Flags::default().with_qr(true));
+    /// b.push_answer(&zone, Class::IN, 60, &soa)?;
+    /// let first = Message::parse(b.finish())?;
+    /// let mut more = [0u8; 512];
+    /// let mut b = MessageBuilder::new(&mut more)?;
+    /// b.set_flags(Flags::default().with_qr(true));
+    /// b.push_answer(&zone, Class::IN, 60, &A::new([192, 0, 2, 1].into()))?;
+    /// let more = Message::parse(b.finish())?;
+    ///
+    /// let mut xfr = XfrProcessor::axfr(&zone).with_max_messages(3);
+    /// assert!(xfr.process(&first)?.all(|r| r.is_ok()));
+    /// assert!(xfr.process(&more)?.all(|r| r.is_ok()));
+    /// assert!(xfr.process(&more)?.all(|r| r.is_ok()));
+    /// assert_eq!(xfr.process(&more).err(), Some(Error::LimitExceeded));
+    /// # Ok::<(), dnsbox::Error>(())
+    /// ```
     #[must_use]
     pub fn with_max_messages(mut self, max: u32) -> Self {
         self.max_messages = max;
@@ -407,6 +526,40 @@ impl XfrProcessor {
     }
 
     /// Whether the transfer is complete.
+    ///
+    /// ```
+    /// # use dnsbox::zone::ZoneReader;
+    /// # use dnsbox::{Class, Flags, Message, MessageBuilder, NameBuf, Rtype, Section};
+    /// # // A transfer response message for example.com holding the records of `text`.
+    /// # fn response<'b>(buf: &'b mut [u8], qtype: Rtype, text: &str) -> dnsbox::Result<&'b mut [u8]> {
+    /// #     let zone: NameBuf = "example.com".parse()?;
+    /// #     let mut b = MessageBuilder::new(buf)?;
+    /// #     b.set_flags(Flags::default().with_qr(true).with_aa(true));
+    /// #     b.push_question(&zone, qtype, Class::IN)?;
+    /// #     let mut reader = ZoneReader::new(text).with_origin(zone.as_name());
+    /// #     let mut rdata = [0u8; 512];
+    /// #     while let Some(rr) = reader.next_record(&mut rdata)? {
+    /// #         b.push_record(Section::Answer, &rr.name, rr.class, rr.ttl, &rr.data()?)?;
+    /// #     }
+    /// #     Ok(b.finish())
+    /// # }
+    /// use dnsbox::xfr::XfrProcessor;
+    ///
+    /// // A transfer spread over two messages, as servers send large zones.
+    /// let zone: NameBuf = "example.com".parse()?;
+    /// let mut xfr = XfrProcessor::axfr(&zone);
+    /// let mut buf = [0u8; 512];
+    /// let first = response(&mut buf, Rtype::AXFR, "@ 3600 IN SOA ns1 hostmaster 42 2h 15m 2w 1h
+    /// www 300 IN A 192.0.2.80")?;
+    /// xfr.process(&Message::parse(first)?)?.try_for_each(|e| e.map(drop))?;
+    /// assert!(!xfr.is_done()); // keep reading from the connection
+    /// let mut buf = [0u8; 512];
+    /// let second = response(&mut buf, Rtype::AXFR, "mail 300 IN A 192.0.2.25
+    /// @ 3600 IN SOA ns1 hostmaster 42 2h 15m 2w 1h")?;
+    /// xfr.process(&Message::parse(second)?)?.try_for_each(|e| e.map(drop))?;
+    /// assert!(xfr.is_done());
+    /// # Ok::<(), dnsbox::Error>(())
+    /// ```
     #[inline]
     #[must_use]
     pub fn is_done(&self) -> bool {
@@ -414,6 +567,47 @@ impl XfrProcessor {
     }
 
     /// The response style, once the server's answer has revealed it.
+    ///
+    /// ```
+    /// # use dnsbox::zone::ZoneReader;
+    /// # use dnsbox::{Class, Flags, Message, MessageBuilder, NameBuf, Rtype, Section};
+    /// # // A transfer response message for example.com holding the records of `text`.
+    /// # fn response<'b>(buf: &'b mut [u8], qtype: Rtype, text: &str) -> dnsbox::Result<&'b mut [u8]> {
+    /// #     let zone: NameBuf = "example.com".parse()?;
+    /// #     let mut b = MessageBuilder::new(buf)?;
+    /// #     b.set_flags(Flags::default().with_qr(true).with_aa(true));
+    /// #     b.push_question(&zone, qtype, Class::IN)?;
+    /// #     let mut reader = ZoneReader::new(text).with_origin(zone.as_name());
+    /// #     let mut rdata = [0u8; 512];
+    /// #     while let Some(rr) = reader.next_record(&mut rdata)? {
+    /// #         b.push_record(Section::Answer, &rr.name, rr.class, rr.ttl, &rr.data()?)?;
+    /// #     }
+    /// #     Ok(b.finish())
+    /// # }
+    /// use dnsbox::xfr::{XfrEvent, XfrProcessor, XfrStyle};
+    ///
+    /// // An incremental answer from version 42 to 43: one A record replaced.
+    /// let zone: NameBuf = "example.com".parse()?;
+    /// let mut xfr = XfrProcessor::ixfr(&zone, 42);
+    /// let mut buf = [0u8; 512];
+    /// let wire = response(&mut buf, Rtype::IXFR, "@ 3600 IN SOA ns1 hostmaster 43 2h 15m 2w 1h
+    /// @ 3600 IN SOA ns1 hostmaster 42 2h 15m 2w 1h
+    /// www 300 IN A 192.0.2.80
+    /// @ 3600 IN SOA ns1 hostmaster 43 2h 15m 2w 1h
+    /// www 300 IN A 192.0.2.81
+    /// @ 3600 IN SOA ns1 hostmaster 43 2h 15m 2w 1h")?;
+    /// let mut changes = (0, 0);
+    /// for event in xfr.process(&Message::parse(wire)?)? {
+    ///     match event? {
+    ///         XfrEvent::Delete(_) => changes.0 += 1,
+    ///         XfrEvent::Add(_) => changes.1 += 1,
+    ///         _ => {}
+    ///     }
+    /// }
+    /// assert_eq!(xfr.style(), Some(XfrStyle::Incremental));
+    /// assert_eq!(changes, (1, 1));
+    /// # Ok::<(), dnsbox::Error>(())
+    /// ```
     #[inline]
     #[must_use]
     pub fn style(&self) -> Option<XfrStyle> {
@@ -423,6 +617,35 @@ impl XfrProcessor {
     /// The serial of the version being transferred (the first SOA), once
     /// seen and while the transfer is in progress (`None` again once it is
     /// [done](Self::is_done) or failed; [`XfrEvent::End`] carries it).
+    ///
+    /// ```
+    /// # use dnsbox::zone::ZoneReader;
+    /// # use dnsbox::{Class, Flags, Message, MessageBuilder, NameBuf, Rtype, Section};
+    /// # // A transfer response message for example.com holding the records of `text`.
+    /// # fn response<'b>(buf: &'b mut [u8], qtype: Rtype, text: &str) -> dnsbox::Result<&'b mut [u8]> {
+    /// #     let zone: NameBuf = "example.com".parse()?;
+    /// #     let mut b = MessageBuilder::new(buf)?;
+    /// #     b.set_flags(Flags::default().with_qr(true).with_aa(true));
+    /// #     b.push_question(&zone, qtype, Class::IN)?;
+    /// #     let mut reader = ZoneReader::new(text).with_origin(zone.as_name());
+    /// #     let mut rdata = [0u8; 512];
+    /// #     while let Some(rr) = reader.next_record(&mut rdata)? {
+    /// #         b.push_record(Section::Answer, &rr.name, rr.class, rr.ttl, &rr.data()?)?;
+    /// #     }
+    /// #     Ok(b.finish())
+    /// # }
+    /// use dnsbox::xfr::XfrProcessor;
+    ///
+    /// let zone: NameBuf = "example.com".parse()?;
+    /// let mut xfr = XfrProcessor::axfr(&zone);
+    /// assert_eq!(xfr.serial(), None);
+    /// let mut buf = [0u8; 512];
+    /// let first = response(&mut buf, Rtype::AXFR, "@ 3600 IN SOA ns1 hostmaster 2024060101 2h 15m 2w 1h
+    /// www 300 IN A 192.0.2.80")?;
+    /// xfr.process(&Message::parse(first)?)?.try_for_each(|e| e.map(drop))?;
+    /// assert_eq!(xfr.serial(), Some(2024060101)); // the version on its way
+    /// # Ok::<(), dnsbox::Error>(())
+    /// ```
     #[must_use]
     pub fn serial(&self) -> Option<u32> {
         match self.state {
@@ -435,6 +658,37 @@ impl XfrProcessor {
     }
 
     /// Number of messages processed so far.
+    ///
+    /// ```
+    /// # use dnsbox::zone::ZoneReader;
+    /// # use dnsbox::{Class, Flags, Message, MessageBuilder, NameBuf, Rtype, Section};
+    /// # // A transfer response message for example.com holding the records of `text`.
+    /// # fn response<'b>(buf: &'b mut [u8], qtype: Rtype, text: &str) -> dnsbox::Result<&'b mut [u8]> {
+    /// #     let zone: NameBuf = "example.com".parse()?;
+    /// #     let mut b = MessageBuilder::new(buf)?;
+    /// #     b.set_flags(Flags::default().with_qr(true).with_aa(true));
+    /// #     b.push_question(&zone, qtype, Class::IN)?;
+    /// #     let mut reader = ZoneReader::new(text).with_origin(zone.as_name());
+    /// #     let mut rdata = [0u8; 512];
+    /// #     while let Some(rr) = reader.next_record(&mut rdata)? {
+    /// #         b.push_record(Section::Answer, &rr.name, rr.class, rr.ttl, &rr.data()?)?;
+    /// #     }
+    /// #     Ok(b.finish())
+    /// # }
+    /// use dnsbox::xfr::XfrProcessor;
+    ///
+    /// let zone: NameBuf = "example.com".parse()?;
+    /// let mut xfr = XfrProcessor::axfr(&zone);
+    /// let mut buf = [0u8; 512];
+    /// let first = response(&mut buf, Rtype::AXFR, "@ 3600 IN SOA ns1 hostmaster 42 2h 15m 2w 1h")?;
+    /// xfr.process(&Message::parse(first)?)?.try_for_each(|e| e.map(drop))?;
+    /// let mut buf = [0u8; 512];
+    /// let second = response(&mut buf, Rtype::AXFR, "@ 3600 IN SOA ns1 hostmaster 42 2h 15m 2w 1h")?;
+    /// xfr.process(&Message::parse(second)?)?.try_for_each(|e| e.map(drop))?;
+    /// assert_eq!(xfr.message_count(), 2);
+    /// assert!(xfr.is_done());
+    /// # Ok::<(), dnsbox::Error>(())
+    /// ```
     #[inline]
     #[must_use]
     pub fn message_count(&self) -> u32 {
@@ -442,6 +696,37 @@ impl XfrProcessor {
     }
 
     /// Number of answer records processed so far.
+    ///
+    /// ```
+    /// # use dnsbox::zone::ZoneReader;
+    /// # use dnsbox::{Class, Flags, Message, MessageBuilder, NameBuf, Rtype, Section};
+    /// # // A transfer response message for example.com holding the records of `text`.
+    /// # fn response<'b>(buf: &'b mut [u8], qtype: Rtype, text: &str) -> dnsbox::Result<&'b mut [u8]> {
+    /// #     let zone: NameBuf = "example.com".parse()?;
+    /// #     let mut b = MessageBuilder::new(buf)?;
+    /// #     b.set_flags(Flags::default().with_qr(true).with_aa(true));
+    /// #     b.push_question(&zone, qtype, Class::IN)?;
+    /// #     let mut reader = ZoneReader::new(text).with_origin(zone.as_name());
+    /// #     let mut rdata = [0u8; 512];
+    /// #     while let Some(rr) = reader.next_record(&mut rdata)? {
+    /// #         b.push_record(Section::Answer, &rr.name, rr.class, rr.ttl, &rr.data()?)?;
+    /// #     }
+    /// #     Ok(b.finish())
+    /// # }
+    /// use dnsbox::xfr::XfrProcessor;
+    ///
+    /// let zone: NameBuf = "example.com".parse()?;
+    /// let mut xfr = XfrProcessor::axfr(&zone);
+    /// let mut buf = [0u8; 512];
+    /// let wire = response(&mut buf, Rtype::AXFR, "@ 3600 IN SOA ns1 hostmaster 42 2h 15m 2w 1h
+    /// @ 3600 IN NS ns1
+    /// ns1 3600 IN A 192.0.2.53
+    /// @ 3600 IN SOA ns1 hostmaster 42 2h 15m 2w 1h")?;
+    /// xfr.process(&Message::parse(wire)?)?.try_for_each(|e| e.map(drop))?;
+    /// // Both SOA records count: a cap on transfer size can use it.
+    /// assert_eq!(xfr.record_count(), 4);
+    /// # Ok::<(), dnsbox::Error>(())
+    /// ```
     #[inline]
     #[must_use]
     pub fn record_count(&self) -> u64 {
@@ -463,6 +748,44 @@ impl XfrProcessor {
     /// [`Error::LimitExceeded`] beyond
     /// [`with_max_records`](Self::with_max_records)) are yielded by the
     /// iterator.
+    ///
+    /// ```
+    /// # use dnsbox::zone::ZoneReader;
+    /// # use dnsbox::{Class, Flags, Message, MessageBuilder, NameBuf, Rtype, Section};
+    /// # // A transfer response message for example.com holding the records of `text`.
+    /// # fn response<'b>(buf: &'b mut [u8], qtype: Rtype, text: &str) -> dnsbox::Result<&'b mut [u8]> {
+    /// #     let zone: NameBuf = "example.com".parse()?;
+    /// #     let mut b = MessageBuilder::new(buf)?;
+    /// #     b.set_flags(Flags::default().with_qr(true).with_aa(true));
+    /// #     b.push_question(&zone, qtype, Class::IN)?;
+    /// #     let mut reader = ZoneReader::new(text).with_origin(zone.as_name());
+    /// #     let mut rdata = [0u8; 512];
+    /// #     while let Some(rr) = reader.next_record(&mut rdata)? {
+    /// #         b.push_record(Section::Answer, &rr.name, rr.class, rr.ttl, &rr.data()?)?;
+    /// #     }
+    /// #     Ok(b.finish())
+    /// # }
+    /// use dnsbox::xfr::XfrProcessor;
+    /// use dnsbox::{Error, Rcode};
+    ///
+    /// // The primary refuses the transfer (we are not an allowed secondary).
+    /// let zone: NameBuf = "example.com".parse()?;
+    /// let mut qbuf = [0u8; 128];
+    /// let mut q = MessageBuilder::new(&mut qbuf)?;
+    /// dnsbox::xfr::build_axfr_query(&mut q, &zone, Class::IN)?;
+    /// let query = Message::parse(q.finish())?;
+    /// let mut buf = [0u8; 128];
+    /// let mut b = MessageBuilder::response(&mut buf, &query)?;
+    /// b.set_rcode(Rcode::REFUSED);
+    /// let refused = Message::parse(b.finish())?;
+    /// let mut xfr = XfrProcessor::axfr(&zone);
+    /// assert_eq!(xfr.process(&refused).err(), Some(Error::ErrorResponse));
+    /// // The processor stays failed.
+    /// let mut rbuf = [0u8; 512];
+    /// let wire = response(&mut rbuf, Rtype::AXFR, "@ 3600 IN SOA ns1 hostmaster 42 2h 15m 2w 1h")?;
+    /// assert!(xfr.process(&Message::parse(wire)?).is_err());
+    /// # Ok::<(), dnsbox::Error>(())
+    /// ```
     pub fn process<'p, 'a>(&'p mut self, msg: &Message<'a>) -> Result<XfrEvents<'p, 'a>> {
         match self.check_message(msg) {
             Ok(()) => {

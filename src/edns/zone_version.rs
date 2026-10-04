@@ -19,7 +19,7 @@ open_enum! {
     /// assert_eq!(ZoneVersionType::new(250).to_string(), "250");
     /// assert!(ZoneVersionType::new(250).is_private_use());
     /// ```
-    pub struct ZoneVersionType(u8), generic "";
+    pub struct ZoneVersionType(u8) in dnsbox::edns, generic "";
     /// The zone's SOA serial number (RFC 9660 §4).
     SOA_SERIAL = 0 => "SOA-SERIAL",
 }

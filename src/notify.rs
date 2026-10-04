@@ -166,6 +166,24 @@ impl<'a> NotifyMessage<'a> {
     ///
     /// [`Error::WrongType`] for another opcode, [`Error::InvalidRdata`] for
     /// a bad question count, or the parse error of the question.
+    ///
+    /// ```
+    /// use dnsbox::notify::{self, NotifyMessage};
+    /// use dnsbox::{Class, Error, Message, MessageBuilder, NameBuf, Rtype};
+    ///
+    /// let zone: NameBuf = "example.com".parse()?;
+    /// let mut buf = [0u8; 512];
+    /// let mut b = MessageBuilder::new(&mut buf)?;
+    /// notify::build_query(&mut b, &zone, Class::IN, None)?;
+    /// let n = NotifyMessage::new(Message::parse(b.finish())?)?;
+    /// assert_eq!(n.zone().qtype(), Rtype::SOA);
+    ///
+    /// // An ordinary query is not a NOTIFY.
+    /// let mut qbuf = [0u8; 512];
+    /// let query = MessageBuilder::query(&mut qbuf, 1, &zone, Rtype::SOA, Class::IN)?.finish();
+    /// assert_eq!(NotifyMessage::new(Message::parse(query)?).unwrap_err(), Error::WrongType);
+    /// # Ok::<(), Error>(())
+    /// ```
     pub fn new(msg: Message<'a>) -> Result<Self> {
         if msg.flags().opcode() != Opcode::NOTIFY {
             return Err(Error::WrongType);
@@ -178,6 +196,21 @@ impl<'a> NotifyMessage<'a> {
     }
 
     /// The underlying message.
+    ///
+    /// ```
+    /// use dnsbox::notify::{self, NotifyMessage};
+    /// use dnsbox::{Class, Message, MessageBuilder, NameBuf};
+    ///
+    /// let zone: NameBuf = "example.com".parse()?;
+    /// let mut buf = [0u8; 512];
+    /// let mut b = MessageBuilder::new(&mut buf)?;
+    /// b.set_id(0x0101);
+    /// notify::build_query(&mut b, &zone, Class::IN, None)?;
+    /// let n = NotifyMessage::new(Message::parse(b.finish())?)?;
+    /// assert_eq!(n.message().id(), 0x0101);
+    /// assert!(n.message().flags().aa());
+    /// # Ok::<(), dnsbox::Error>(())
+    /// ```
     #[inline]
     #[must_use]
     pub const fn message(&self) -> Message<'a> {
@@ -186,6 +219,22 @@ impl<'a> NotifyMessage<'a> {
 
     /// The question: the zone name, the type that changed (normally SOA,
     /// §3.7) and the class.
+    ///
+    /// ```
+    /// use dnsbox::notify::{self, NotifyMessage};
+    /// use dnsbox::{Class, Message, MessageBuilder, NameBuf};
+    ///
+    /// let zone: NameBuf = "example.com".parse()?;
+    /// let mut buf = [0u8; 512];
+    /// let mut b = MessageBuilder::new(&mut buf)?;
+    /// notify::build_query(&mut b, &zone, Class::IN, None)?;
+    /// let n = NotifyMessage::new(Message::parse(b.finish())?)?;
+    /// // Look the zone up among the ones we serve as a secondary.
+    /// let ours: [NameBuf; 2] = ["example.com".parse()?, "example.net".parse()?];
+    /// assert!(ours.iter().any(|z| z.as_name() == n.zone().name()));
+    /// assert_eq!(n.zone().to_string(), "example.com. IN SOA");
+    /// # Ok::<(), dnsbox::Error>(())
+    /// ```
     #[inline]
     #[must_use]
     pub const fn zone(&self) -> Question<'a> {
@@ -193,6 +242,23 @@ impl<'a> NotifyMessage<'a> {
     }
 
     /// Whether this is the response (QR set).
+    ///
+    /// ```
+    /// use dnsbox::notify::{self, NotifyMessage};
+    /// use dnsbox::{Class, Message, MessageBuilder, NameBuf};
+    ///
+    /// let zone: NameBuf = "example.com".parse()?;
+    /// let mut buf = [0u8; 512];
+    /// let mut b = MessageBuilder::new(&mut buf)?;
+    /// notify::build_query(&mut b, &zone, Class::IN, None)?;
+    /// let query = NotifyMessage::new(Message::parse(b.finish())?)?;
+    /// assert!(!query.is_response());
+    /// let mut rbuf = [0u8; 512];
+    /// let mut r = MessageBuilder::new(&mut rbuf)?;
+    /// notify::build_response(&mut r, &query)?;
+    /// assert!(NotifyMessage::new(Message::parse(r.finish())?)?.is_response());
+    /// # Ok::<(), dnsbox::Error>(())
+    /// ```
     #[inline]
     #[must_use]
     pub const fn is_response(&self) -> bool {
@@ -206,6 +272,24 @@ impl<'a> NotifyMessage<'a> {
     /// # Errors
     ///
     /// The parse error of a malformed answer record or SOA.
+    ///
+    /// ```
+    /// use dnsbox::notify::{self, NotifyMessage};
+    /// use dnsbox::rdata::{ParseRdataText, Soa};
+    /// use dnsbox::{Class, Message, MessageBuilder, NameBuf};
+    ///
+    /// let zone: NameBuf = "example.com".parse()?;
+    /// let mut sbuf = [0u8; 128];
+    /// let soa = Soa::from_text("ns1.example.com. hostmaster.example.com. 2024060102 7200 900 1209600 3600", &mut sbuf)?;
+    /// let mut buf = [0u8; 512];
+    /// let mut b = MessageBuilder::new(&mut buf)?;
+    /// notify::build_query(&mut b, &zone, Class::IN, Some((3600, &soa)))?;
+    /// let n = NotifyMessage::new(Message::parse(b.finish())?)?;
+    /// let (record, hint) = n.soa()?.expect("SOA hint");
+    /// assert_eq!(record.ttl(), 3600);
+    /// assert_eq!((hint.serial, hint.mname.to_string()), (2024060102, "ns1.example.com.".to_string()));
+    /// # Ok::<(), dnsbox::Error>(())
+    /// ```
     pub fn soa(&self) -> Result<Option<(Record<'a>, Soa<'a>)>> {
         for rr in self.msg.answers() {
             let rr = rr?;
@@ -221,6 +305,20 @@ impl<'a> NotifyMessage<'a> {
     /// # Errors
     ///
     /// As [`soa`](Self::soa).
+    ///
+    /// ```
+    /// use dnsbox::notify::{self, NotifyMessage};
+    /// use dnsbox::{Class, Message, MessageBuilder, NameBuf};
+    ///
+    /// // A NOTIFY without the optional SOA hint.
+    /// let zone: NameBuf = "example.com".parse()?;
+    /// let mut buf = [0u8; 512];
+    /// let mut b = MessageBuilder::new(&mut buf)?;
+    /// notify::build_query(&mut b, &zone, Class::IN, None)?;
+    /// let n = NotifyMessage::new(Message::parse(b.finish())?)?;
+    /// assert_eq!(n.serial()?, None); // query the primary's SOA to find out
+    /// # Ok::<(), dnsbox::Error>(())
+    /// ```
     pub fn serial(&self) -> Result<Option<u32>> {
         Ok(self.soa()?.map(|(_, soa)| soa.serial))
     }

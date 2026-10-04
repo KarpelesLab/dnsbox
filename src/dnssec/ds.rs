@@ -17,7 +17,7 @@ use {
 ///
 /// # Errors
 ///
-/// [`Error::BufferTooSmall`] if `out` is full.
+/// [`Error::BufferTooSmall`](crate::Error::BufferTooSmall) if `out` is full.
 ///
 /// ```
 /// use dnsbox::dnssec::{Algorithm, ds_digest_input};

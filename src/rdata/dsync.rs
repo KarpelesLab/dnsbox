@@ -29,7 +29,7 @@ open_enum! {
     /// assert!(DsyncScheme::new(0).is_null());
     /// # Ok::<(), dnsbox::Error>(())
     /// ```
-    pub struct DsyncScheme(u8), generic "";
+    pub struct DsyncScheme(u8) in dnsbox::rdata, generic "";
     /// A DNS NOTIFY message to the target, over conventional DNS
     /// transport (RFC 9859 §2.3, §4).
     NOTIFY = 1 => "NOTIFY",

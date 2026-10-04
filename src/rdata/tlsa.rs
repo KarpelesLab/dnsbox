@@ -23,7 +23,7 @@ open_enum! {
     /// assert_eq!("pkix-ta".parse::<TlsaCertUsage>()?, TlsaCertUsage::PKIX_TA);
     /// # Ok::<(), dnsbox::Error>(())
     /// ```
-    pub struct TlsaCertUsage(u8), generic "";
+    pub struct TlsaCertUsage(u8) in dnsbox::rdata, generic "";
     /// CA constraint (RFC 6698 §2.1.1, RFC 7218).
     PKIX_TA = 0 => "PKIX-TA",
     /// Service certificate constraint (RFC 6698 §2.1.1, RFC 7218).
@@ -49,7 +49,7 @@ open_enum! {
     /// assert_eq!(TlsaSelector::CERT.get(), 0);
     /// # Ok::<(), dnsbox::Error>(())
     /// ```
-    pub struct TlsaSelector(u8), generic "";
+    pub struct TlsaSelector(u8) in dnsbox::rdata, generic "";
     /// Full certificate (RFC 6698 §2.1.2, RFC 7218).
     CERT = 0 => "Cert",
     /// SubjectPublicKeyInfo (RFC 6698 §2.1.2, RFC 7218).
@@ -71,7 +71,7 @@ open_enum! {
     /// assert_eq!(TlsaMatchingType::SHA2_512.to_string(), "SHA2-512");
     /// assert_eq!(TlsaMatchingType::from(1), TlsaMatchingType::SHA2_256);
     /// ```
-    pub struct TlsaMatchingType(u8), generic "";
+    pub struct TlsaMatchingType(u8) in dnsbox::rdata, generic "";
     /// Exact match on the selected content (RFC 6698 §2.1.3, RFC 7218).
     FULL = 0 => "Full",
     /// SHA-256 hash of the selected content (RFC 6698 §2.1.3, RFC 7218).

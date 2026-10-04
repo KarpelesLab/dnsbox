@@ -114,6 +114,18 @@ pub struct Label<'a>(&'a [u8]);
 
 impl<'a> Label<'a> {
     /// The raw label octets.
+    ///
+    /// ```
+    /// use dnsbox::NameBuf;
+    ///
+    /// let name: NameBuf = "_443._tcp.example".parse()?;
+    /// let first = name.as_name().first_label().unwrap();
+    /// assert_eq!(first.as_bytes(), b"_443");
+    /// // A TLSA owner: the port comes from the first label.
+    /// let port: u16 = std::str::from_utf8(&first.as_bytes()[1..]).unwrap().parse().unwrap();
+    /// assert_eq!(port, 443);
+    /// # Ok::<(), dnsbox::Error>(())
+    /// ```
     #[inline]
     #[must_use]
     pub const fn as_bytes(&self) -> &'a [u8] {
@@ -121,6 +133,17 @@ impl<'a> Label<'a> {
     }
 
     /// Length of the label in octets.
+    ///
+    /// ```
+    /// use dnsbox::NameBuf;
+    ///
+    /// let name: NameBuf = "www.example.com".parse()?;
+    /// let lens: Vec<usize> = name.as_name().labels().map(|l| l.len()).collect();
+    /// assert_eq!(lens, [3, 7, 3]);
+    /// // Each label costs its length plus one octet on the wire, plus the root.
+    /// assert_eq!(lens.iter().map(|l| l + 1).sum::<usize>() + 1, name.as_name().wire_len());
+    /// # Ok::<(), dnsbox::Error>(())
+    /// ```
     #[inline]
     #[allow(clippy::len_without_is_empty)] // labels yielded by iterators are never empty
     #[must_use]
@@ -129,6 +152,19 @@ impl<'a> Label<'a> {
     }
 
     /// Whether this is the wildcard label `*` (RFC 4592 §2.1.1).
+    ///
+    /// ```
+    /// use dnsbox::NameBuf;
+    ///
+    /// let name: NameBuf = "*.example".parse()?;
+    /// let mut labels = name.as_name().labels();
+    /// assert!(labels.next().unwrap().is_wildcard());
+    /// assert!(!labels.next().unwrap().is_wildcard());
+    /// // Only a label that is exactly `*` counts.
+    /// let other: NameBuf = "*a.example".parse()?;
+    /// assert!(!other.as_name().first_label().unwrap().is_wildcard());
+    /// # Ok::<(), dnsbox::Error>(())
+    /// ```
     #[inline]
     #[must_use]
     pub const fn is_wildcard(&self) -> bool {
@@ -136,6 +172,16 @@ impl<'a> Label<'a> {
     }
 
     /// ASCII-case-insensitive comparison (RFC 4343 §3).
+    ///
+    /// ```
+    /// use dnsbox::NameBuf;
+    ///
+    /// let (a, b): (NameBuf, NameBuf) = ("WWW.example".parse()?, "www.Example".parse()?);
+    /// let (la, lb) = (a.as_name().first_label().unwrap(), b.as_name().first_label().unwrap());
+    /// assert!(la.eq_ignore_case(&lb));
+    /// assert_ne!(la, lb); // `==` on labels is exact
+    /// # Ok::<(), dnsbox::Error>(())
+    /// ```
     #[inline]
     #[must_use]
     pub fn eq_ignore_case(&self, other: &Label<'_>) -> bool {
@@ -273,6 +319,15 @@ impl<'a> Name<'a> {
 
     /// Length of the name in uncompressed wire form, root label included
     /// (1 to 255).
+    ///
+    /// ```
+    /// use dnsbox::{Name, NameBuf};
+    ///
+    /// let name: NameBuf = "example.com".parse()?;
+    /// assert_eq!(name.as_name().wire_len(), 13); // 7example3com0
+    /// assert_eq!(Name::ROOT.wire_len(), 1);
+    /// # Ok::<(), dnsbox::Error>(())
+    /// ```
     #[inline]
     #[must_use]
     pub const fn wire_len(&self) -> usize {
@@ -280,6 +335,16 @@ impl<'a> Name<'a> {
     }
 
     /// Number of labels, not counting the root (0 for the root name).
+    ///
+    /// ```
+    /// use dnsbox::{Name, NameBuf};
+    ///
+    /// // The RRSIG labels field: the owner's label count, minus a wildcard.
+    /// let owner: NameBuf = "www.example.com".parse()?;
+    /// assert_eq!(owner.as_name().label_count(), 3);
+    /// assert_eq!(Name::ROOT.label_count(), 0);
+    /// # Ok::<(), dnsbox::Error>(())
+    /// ```
     #[inline]
     #[must_use]
     pub const fn label_count(&self) -> usize {
@@ -287,6 +352,18 @@ impl<'a> Name<'a> {
     }
 
     /// Whether this is the root name.
+    ///
+    /// ```
+    /// use dnsbox::{Name, NameBuf};
+    ///
+    /// let root: NameBuf = ".".parse()?;
+    /// assert!(root.as_name().is_root());
+    /// assert!(Name::ROOT.is_root());
+    /// let tld: NameBuf = "com".parse()?;
+    /// assert!(!tld.as_name().is_root());
+    /// assert!(tld.as_name().parent().unwrap().is_root());
+    /// # Ok::<(), dnsbox::Error>(())
+    /// ```
     #[inline]
     #[must_use]
     pub const fn is_root(&self) -> bool {
@@ -294,6 +371,17 @@ impl<'a> Name<'a> {
     }
 
     /// Whether the first label is the wildcard label `*` (RFC 4592).
+    ///
+    /// ```
+    /// use dnsbox::NameBuf;
+    ///
+    /// let wildcard: NameBuf = "*.example.com".parse()?;
+    /// assert!(wildcard.as_name().is_wildcard());
+    /// // A `*` further down is an ordinary label (RFC 4592 §2.1.1).
+    /// let not: NameBuf = "a.*.example.com".parse()?;
+    /// assert!(!not.as_name().is_wildcard());
+    /// # Ok::<(), dnsbox::Error>(())
+    /// ```
     #[inline]
     #[must_use]
     pub fn is_wildcard(&self) -> bool {
@@ -303,6 +391,25 @@ impl<'a> Name<'a> {
     /// The uncompressed wire form, if it is stored contiguously (always the
     /// case for names from [`Name::from_wire`] and [`NameBuf`], and for
     /// message names that do not use pointers after their first label).
+    ///
+    /// ```
+    /// use dnsbox::rdata::A;
+    /// use dnsbox::{Class, Message, MessageBuilder, NameBuf};
+    ///
+    /// let (apex, www): (NameBuf, NameBuf) = ("example".parse()?, "www.example".parse()?);
+    /// assert_eq!(apex.as_name().as_contiguous(), Some(&b"\x07example\x00"[..]));
+    ///
+    /// let mut buf = [0u8; 128];
+    /// let mut b = MessageBuilder::new(&mut buf)?;
+    /// b.push_answer(&apex, Class::IN, 60, &A::new([192, 0, 2, 1].into()))?;
+    /// b.push_answer(&www, Class::IN, 60, &A::new([192, 0, 2, 2].into()))?;
+    /// let msg = Message::parse(b.finish())?;
+    /// let owner = msg.answers().nth(1).unwrap()?.name();
+    /// // "www" then a compression pointer to "example.": not contiguous.
+    /// assert_eq!(owner.as_contiguous(), None);
+    /// assert_eq!(owner.to_buf().as_name().as_contiguous(), Some(&b"\x03www\x07example\x00"[..]));
+    /// # Ok::<(), dnsbox::Error>(())
+    /// ```
     #[inline]
     #[must_use]
     pub fn as_contiguous(&self) -> Option<&'a [u8]> {
@@ -314,6 +421,18 @@ impl<'a> Name<'a> {
     }
 
     /// Iterates over the labels, left to right, not including the root.
+    ///
+    /// ```
+    /// use dnsbox::NameBuf;
+    ///
+    /// let name: NameBuf = "mail.example.org".parse()?;
+    /// let labels: Vec<String> = name.as_name().labels().map(|l| l.to_string()).collect();
+    /// assert_eq!(labels, ["mail", "example", "org"]);
+    /// // The last label is the top-level domain.
+    /// let tld = name.as_name().labels().last().unwrap();
+    /// assert_eq!(tld.as_bytes(), b"org");
+    /// # Ok::<(), dnsbox::Error>(())
+    /// ```
     #[inline]
     pub fn labels(&self) -> Labels<'a> {
         Labels {
@@ -324,6 +443,15 @@ impl<'a> Name<'a> {
     }
 
     /// The leftmost label, or `None` for the root.
+    ///
+    /// ```
+    /// use dnsbox::{Name, NameBuf};
+    ///
+    /// let host: NameBuf = "printer.office.example".parse()?;
+    /// assert_eq!(host.as_name().first_label().unwrap().as_bytes(), b"printer");
+    /// assert!(Name::ROOT.first_label().is_none());
+    /// # Ok::<(), dnsbox::Error>(())
+    /// ```
     #[inline]
     #[must_use]
     pub fn first_label(&self) -> Option<Label<'a>> {
@@ -331,6 +459,21 @@ impl<'a> Name<'a> {
     }
 
     /// The name with its leftmost label removed, or `None` for the root.
+    ///
+    /// ```
+    /// use dnsbox::NameBuf;
+    ///
+    /// // Walk up to the root, as when looking for the closest enclosing zone.
+    /// let name: NameBuf = "a.b.example".parse()?;
+    /// let mut ancestors = Vec::new();
+    /// let mut cur = name.as_name();
+    /// while let Some(parent) = cur.parent() {
+    ///     ancestors.push(parent.to_string());
+    ///     cur = parent;
+    /// }
+    /// assert_eq!(ancestors, ["b.example.", "example.", "."]);
+    /// # Ok::<(), dnsbox::Error>(())
+    /// ```
     #[must_use]
     pub fn parent(&self) -> Option<Name<'a>> {
         let first = self.first_label()?;
@@ -426,6 +569,25 @@ impl<'a> Name<'a> {
     }
 
     /// Copies the uncompressed wire form into `out`, returning its length.
+    ///
+    /// ```
+    /// use dnsbox::name::MAX_NAME_LEN;
+    /// use dnsbox::rdata::Cname;
+    /// use dnsbox::{Class, Message, MessageBuilder, NameBuf};
+    ///
+    /// let (alias, target): (NameBuf, NameBuf) = ("www.example".parse()?, "web.example".parse()?);
+    /// let mut buf = [0u8; 128];
+    /// let mut b = MessageBuilder::new(&mut buf)?;
+    /// b.push_answer(&alias, Class::IN, 60, &Cname::new(target.as_name()))?;
+    /// let msg = Message::parse(b.finish())?;
+    /// let rr = msg.answers().next().unwrap()?;
+    /// let cname: Cname<'_> = rr.data_as()?;
+    /// // The target is "web" plus a pointer in the message; flatten it.
+    /// let mut out = [0u8; MAX_NAME_LEN];
+    /// let len = cname.cname.flatten(&mut out);
+    /// assert_eq!(&out[..len], b"\x03web\x07example\x00");
+    /// # Ok::<(), dnsbox::Error>(())
+    /// ```
     pub fn flatten(&self, out: &mut [u8; MAX_NAME_LEN]) -> usize {
         if let Some(bytes) = self.as_contiguous()
             && let Some(dst) = out.get_mut(..bytes.len())
@@ -451,6 +613,22 @@ impl<'a> Name<'a> {
     }
 
     /// Copies the name into an owned [`NameBuf`].
+    ///
+    /// ```
+    /// use dnsbox::rdata::A;
+    /// use dnsbox::{Class, Message, MessageBuilder, NameBuf};
+    ///
+    /// let name: NameBuf = "host.example".parse()?;
+    /// let mut buf = [0u8; 128];
+    /// let mut b = MessageBuilder::new(&mut buf)?;
+    /// b.push_answer(&name, Class::IN, 60, &A::new([192, 0, 2, 1].into()))?;
+    /// let wire = b.finish();
+    /// // Keep the owner name after the message buffer is gone.
+    /// let owner: NameBuf = Message::parse(wire)?.answers().next().unwrap()?.name().to_buf();
+    /// wire.fill(0);
+    /// assert_eq!(owner, name);
+    /// # Ok::<(), dnsbox::Error>(())
+    /// ```
     #[inline]
     #[must_use]
     pub fn to_buf(&self) -> NameBuf {
@@ -693,6 +871,24 @@ impl core::iter::FusedIterator for Labels<'_> {}
 /// ```
 pub trait ToName {
     /// Borrows `self` as a name view.
+    ///
+    /// ```
+    /// use dnsbox::{Name, NameBuf, ToName};
+    ///
+    /// // A key type of your own can be passed wherever a name is expected.
+    /// struct Zone {
+    ///     apex: NameBuf,
+    /// }
+    /// impl ToName for Zone {
+    ///     fn to_name(&self) -> Name<'_> {
+    ///         self.apex.as_name()
+    ///     }
+    /// }
+    /// let zone = Zone { apex: "example.com".parse()? };
+    /// assert_eq!(zone.to_name().to_string(), "example.com.");
+    /// assert!("www.example.com".parse::<NameBuf>()?.as_name().is_subdomain_of(&zone.to_name()));
+    /// # Ok::<(), dnsbox::Error>(())
+    /// ```
     fn to_name(&self) -> Name<'_>;
 }
 

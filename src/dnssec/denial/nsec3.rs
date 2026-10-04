@@ -67,7 +67,7 @@ impl<'a> From<&Nsec3Record<'a>> for Nsec3Record<'a> {
 ///
 /// [`PurecryptoNsec3Hasher`] (feature `dnssec-digest`) implements it with
 /// SHA-1 from `purecrypto`. Any function or closure with the signature of
-/// [`nsec3_hash`](crate::dnssec::nsec3_hash) is a hasher too.
+/// [`nsec3_hash`] is a hasher too.
 ///
 /// ```
 /// use dnsbox::dnssec::{Nsec3Hash, Nsec3HashAlgorithm, Nsec3Hasher};
@@ -83,6 +83,23 @@ impl<'a> From<&Nsec3Record<'a>> for Nsec3Record<'a> {
 /// assert!(my_hasher.hash(name.as_name(), Nsec3HashAlgorithm::SHA1, 0, &[]).is_err());
 /// # Ok::<(), Error>(())
 /// ```
+///
+#[cfg_attr(
+    feature = "dnssec-digest",
+    doc = "[`PurecryptoNsec3Hasher`]: crate::dnssec::PurecryptoNsec3Hasher"
+)]
+#[cfg_attr(
+    feature = "dnssec-digest",
+    doc = "[`nsec3_hash`]: crate::dnssec::nsec3_hash"
+)]
+#[cfg_attr(
+    not(feature = "dnssec-digest"),
+    doc = "[`PurecryptoNsec3Hasher`]: crate#cargo-features"
+)]
+#[cfg_attr(
+    not(feature = "dnssec-digest"),
+    doc = "[`nsec3_hash`]: crate#cargo-features"
+)]
 pub trait Nsec3Hasher {
     /// Whether names can be hashed with `algorithm`. NSEC3 records of other
     /// algorithms are ignored (RFC 5155 §8.1). The default accepts SHA-1,

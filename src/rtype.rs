@@ -32,7 +32,7 @@ open_enum! {
     /// assert_eq!("TYPE65534".parse::<Rtype>(), Ok(Rtype::new(65534)));
     /// assert_eq!(Rtype::new(65534).to_string(), "TYPE65534");
     /// ```
-    pub struct Rtype(u16), generic "TYPE", aliases { "*" => ANY };
+    pub struct Rtype(u16) in dnsbox, generic "TYPE", aliases { "*" => ANY };
     /// IPv4 host address (RFC 1035 §3.4.1).
     A = 1 => "A",
     /// Authoritative name server (RFC 1035 §3.3.11).
@@ -254,6 +254,14 @@ impl Rtype {
     /// Whether this is a meta-type or QTYPE: OPT, or a value in the 128–255
     /// range (RFC 6895 §3.1; this includes NXNAME, RFC 9824 §4). Such types
     /// carry per-message data and are never cached or stored in zones.
+    ///
+    /// ```
+    /// use dnsbox::Rtype;
+    ///
+    /// assert!(Rtype::OPT.is_meta());
+    /// assert!(Rtype::AXFR.is_meta() && Rtype::ANY.is_meta());
+    /// assert!(!Rtype::AAAA.is_meta());
+    /// ```
     #[inline]
     #[must_use]
     pub const fn is_meta(self) -> bool {
@@ -261,6 +269,14 @@ impl Rtype {
     }
 
     /// Whether this is an ordinary data type (neither meta nor QTYPE).
+    ///
+    /// ```
+    /// use dnsbox::Rtype;
+    ///
+    /// assert!(Rtype::MX.is_data());
+    /// assert!(Rtype::new(65280).is_data()); // private use, still data
+    /// assert!(!Rtype::OPT.is_data() && !Rtype::IXFR.is_data());
+    /// ```
     #[inline]
     #[must_use]
     pub const fn is_data(self) -> bool {
@@ -269,6 +285,14 @@ impl Rtype {
 
     /// Whether the value lies in the private-use range 65280–65534
     /// (RFC 6895 §3.1).
+    ///
+    /// ```
+    /// use dnsbox::Rtype;
+    ///
+    /// assert!(Rtype::new(65534).is_private_use());
+    /// assert_eq!(Rtype::new(65534).to_string(), "TYPE65534");
+    /// assert!(!Rtype::TXT.is_private_use());
+    /// ```
     #[inline]
     #[must_use]
     pub const fn is_private_use(self) -> bool {

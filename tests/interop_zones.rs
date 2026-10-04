@@ -21,10 +21,9 @@
 
 #![cfg(feature = "alloc")]
 
-use std::collections::{BTreeMap, BTreeSet};
+use std::collections::BTreeMap;
 use std::fs;
 
-use dnsbox::rdata::RData;
 use dnsbox::zone::{ZoneReader, ZoneRecordBuf};
 use dnsbox::{Class, Message, NameBuf, OwnedRecord, Rtype};
 
@@ -318,8 +317,10 @@ mod signed {
         Rrset, Signer, SigningKey, TrustedKeys, ZoneKey, nsec3_hash, sign_rrset, verify_ds,
         verify_rrsig,
     };
+    use dnsbox::rdata::RData;
     use dnsbox::rdata::{Dnskey, Ds, Nsec, Nsec3, Rrsig};
     use dnsbox::{Name, Section};
+    use std::collections::BTreeSet;
 
     /// Inside the signatures' validity (2026-01-01 to 2036-01-01).
     const NOW: u32 = 1_791_105_383;

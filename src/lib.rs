@@ -436,7 +436,7 @@
 //! | `dnssec-digest` | | DS digests and NSEC3 hashing ([`dnssec::verify_ds`], [`dnssec::nsec3_hash`]) without `alloc`; with `alloc`, ZONEMD digests |
 //! | `dnssec` | | DNSSEC and SIG(0) signature verification and signing: RSA, ECDSA P-256/P-384, Ed25519, Ed448; implies `alloc` and `dnssec-digest` |
 //! | `tsig` | | the TSIG HMAC backend ([`tsig::HmacKey`]: HMAC-MD5, SHA-1, SHA-2) |
-//! | `cookie-siphash` | | RFC 9018 server cookies ([`edns::ServerCookie::generate`] / [`verify`](edns::ServerCookie::verify)) |
+//! | `cookie-siphash` | | RFC 9018 server cookies ([`edns::ServerCookie::generate`] / [`verify`][edns::ServerCookie::verify]) |
 //! | `serde` | | `Serialize` / `Deserialize` (`no_std`) for the registries, names, header flags and, with `alloc`, the owned types |
 //!
 //! dnsbox never implements cryptography: the crypto features enable the
@@ -473,7 +473,68 @@
 //!
 //! See `ARCHITECTURE.md` in the repository for the module layout and the
 //! extension recipes (adding record types, EDNS options, ...).
-
+//!
+// Links to feature-gated items resolve only when their feature is on;
+// otherwise they point at the feature table, so `cargo doc` is clean in
+// every feature configuration.
+#![cfg_attr(
+    feature = "alloc",
+    doc = "
+[`MessageBuilder::new_vec`]: MessageBuilder::new_vec
+[`OwnedMessage`]: OwnedMessage
+[`owned`]: owned
+[`zone::parse`]: zone::parse
+[`zone::ZoneReader::records`]: zone::ZoneReader::records"
+)]
+#![cfg_attr(
+    not(feature = "alloc"),
+    doc = "
+[`MessageBuilder::new_vec`]: crate#cargo-features
+[`OwnedMessage`]: crate#cargo-features
+[`owned`]: crate#cargo-features
+[`zone::parse`]: crate#cargo-features
+[`zone::ZoneReader::records`]: crate#cargo-features"
+)]
+#![cfg_attr(
+    feature = "std",
+    doc = "
+[`tcp::read_message`]: tcp::read_message
+[`tcp::write_message`]: tcp::write_message
+[`zone::FsIncludes`]: zone::FsIncludes"
+)]
+#![cfg_attr(
+    not(feature = "std"),
+    doc = "
+[`tcp::read_message`]: crate#cargo-features
+[`tcp::write_message`]: crate#cargo-features
+[`zone::FsIncludes`]: crate#cargo-features"
+)]
+#![cfg_attr(
+    feature = "dnssec-digest",
+    doc = "
+[`dnssec::verify_ds`]: dnssec::verify_ds
+[`dnssec::nsec3_hash`]: dnssec::nsec3_hash"
+)]
+#![cfg_attr(
+    not(feature = "dnssec-digest"),
+    doc = "
+[`dnssec::verify_ds`]: crate#cargo-features
+[`dnssec::nsec3_hash`]: crate#cargo-features"
+)]
+#![cfg_attr(feature = "tsig", doc = "[`tsig::HmacKey`]: tsig::HmacKey")]
+#![cfg_attr(not(feature = "tsig"), doc = "[`tsig::HmacKey`]: crate#cargo-features")]
+#![cfg_attr(
+    feature = "cookie-siphash",
+    doc = "
+[`edns::ServerCookie::generate`]: edns::ServerCookie::generate
+[edns::ServerCookie::verify]: edns::ServerCookie::verify"
+)]
+#![cfg_attr(
+    not(feature = "cookie-siphash"),
+    doc = "
+[`edns::ServerCookie::generate`]: crate#cargo-features
+[edns::ServerCookie::verify]: crate#cargo-features"
+)]
 #![no_std]
 #![cfg_attr(docsrs, feature(doc_cfg))]
 

@@ -51,6 +51,29 @@ impl<'a> Message<'a> {
     /// # Errors
     ///
     /// As [`edns`](Self::edns).
+    ///
+    /// ```
+    /// use dnsbox::edns::OptHeader;
+    /// use dnsbox::{Class, Message, MessageBuilder, NameBuf, Rcode, Rtype};
+    ///
+    /// // A response to a query with EDNS version 1: BADVERS (16) does not fit
+    /// // in the 4 header bits; the rest travels in the OPT record.
+    /// let name: NameBuf = "example.com".parse()?;
+    /// let mut qbuf = [0u8; 512];
+    /// let mut q = MessageBuilder::query(&mut qbuf, 1, &name, Rtype::A, Class::IN)?;
+    /// let mut v1 = OptHeader::new(1232);
+    /// v1.version = 1;
+    /// q.push_edns(v1, &())?;
+    /// let query = Message::parse(q.finish())?;
+    /// let mut buf = [0u8; 512];
+    /// let mut b = MessageBuilder::new(&mut buf)?;
+    /// let opt = b.start_response_edns(&query, 1232)?.expect("EDNS");
+    /// b.push_reserved_edns(opt, &())?;
+    /// let resp = Message::parse(b.finish())?;
+    /// assert_eq!(resp.flags().rcode(), Rcode::NOERROR); // the header bits alone
+    /// assert_eq!(resp.effective_rcode()?, Rcode::BADVERS);
+    /// # Ok::<(), dnsbox::Error>(())
+    /// ```
     pub fn effective_rcode(&self) -> Result<Rcode> {
         let flags = self.flags();
         Ok(match self.edns()? {

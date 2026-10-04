@@ -91,6 +91,38 @@
 //! ```
 //!
 //! [`NameBuf`]: crate::NameBuf
+#![cfg_attr(
+    feature = "alloc",
+    doc = "
+[`ZoneReader::records`]: ZoneReader::records
+[`ZoneRecordBuf`]: ZoneRecordBuf
+[`IncludeResolver`]: IncludeResolver
+[`Records`]: Records
+[`parse`]: parse"
+)]
+#![cfg_attr(
+    not(feature = "alloc"),
+    doc = "
+[`ZoneReader::records`]: crate#cargo-features
+[`ZoneRecordBuf`]: crate#cargo-features
+[`IncludeResolver`]: crate#cargo-features
+[`Records`]: crate#cargo-features
+[`parse`]: crate#cargo-features"
+)]
+#![cfg_attr(
+    feature = "std",
+    doc = "
+[`FsIncludes`]: FsIncludes
+[`FsIncludes::new`]: FsIncludes::new
+[`FsIncludes::unconfined`]: FsIncludes::unconfined"
+)]
+#![cfg_attr(
+    not(feature = "std"),
+    doc = "
+[`FsIncludes`]: crate#cargo-features
+[`FsIncludes::new`]: crate#cargo-features
+[`FsIncludes::unconfined`]: crate#cargo-features"
+)]
 
 mod generate;
 mod lexer;

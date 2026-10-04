@@ -351,7 +351,7 @@ fn apex_is_not_its_own_delegation() {
 /// unique, and duplicate RRs are dropped while collating. Both used to
 /// compare every apex ZONEMD RR with every other: a zone file (or transfer)
 /// with 40 000 of them took minutes to reject. Now it is a sort.
-#[cfg(feature = "dnssec-digest")]
+#[cfg(all(feature = "alloc", feature = "dnssec-digest"))]
 #[test]
 fn zonemd_many_apex_records_are_not_quadratic() {
     use dnsbox::dnssec::{ZoneCollation, ZonemdFailure, ZonemdRecord};

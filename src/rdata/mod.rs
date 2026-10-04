@@ -212,6 +212,17 @@ pub trait ParseRdata<'a>: Sized {
     /// [`Error::InvalidRdata`] for malformed fields,
     /// [`Error::UnexpectedEof`] for truncated RDATA, or a name decoding
     /// error.
+    ///
+    /// ```
+    /// use dnsbox::rdata::{Mx, ParseRdata};
+    /// use dnsbox::{Error, WireReader};
+    ///
+    /// let mx = Mx::parse_rdata(&mut WireReader::new(b"\x00\x0a\x04mail\x07example\x00"))?;
+    /// assert_eq!(mx.to_string(), "10 mail.example.");
+    /// // Truncated RDATA: the reader reports it.
+    /// assert_eq!(Mx::parse_rdata(&mut WireReader::new(b"\x00")).unwrap_err(), Error::UnexpectedEof);
+    /// # Ok::<(), Error>(())
+    /// ```
     fn parse_rdata(rdata: &mut WireReader<'a>) -> Result<Self>;
 }
 
@@ -236,6 +247,15 @@ pub trait ParseRdata<'a>: Sized {
 /// ```
 pub trait ComposeRdata {
     /// The record type of this data.
+    ///
+    /// ```
+    /// use dnsbox::rdata::{A, Aaaa, ComposeRdata};
+    /// use dnsbox::Rtype;
+    ///
+    /// // What a builder writes in the TYPE field.
+    /// assert_eq!(A::new([192, 0, 2, 1].into()).rtype(), Rtype::A);
+    /// assert_eq!(Aaaa::new("2001:db8::1".parse().unwrap()).rtype(), Rtype::AAAA);
+    /// ```
     fn rtype(&self) -> Rtype;
 
     /// Writes the RDATA (without the RDLENGTH prefix) to `c`.
@@ -248,6 +268,19 @@ pub trait ComposeRdata {
     /// [`Error::BufferTooSmall`] if `c` is full, or an
     /// implementation-specific error for a value that cannot be encoded
     /// (e.g. [`Error::InvalidRdata`]).
+    ///
+    /// ```
+    /// use dnsbox::rdata::{ComposeRdata, Mx};
+    /// use dnsbox::{NameBuf, WireWriter};
+    ///
+    /// let exchange: NameBuf = "mail.example".parse()?;
+    /// let mx = Mx { preference: 10, exchange: exchange.as_name() };
+    /// let mut buf = [0u8; 32];
+    /// let mut w = WireWriter::new(&mut buf);
+    /// mx.compose_rdata(&mut w)?; // a plain writer does not compress
+    /// assert_eq!(w.as_bytes(), b"\x00\x0a\x04mail\x07example\x00");
+    /// # Ok::<(), dnsbox::Error>(())
+    /// ```
     fn compose_rdata<C: Composer + ?Sized>(&self, c: &mut C) -> Result<()>;
 }
 
@@ -319,6 +352,21 @@ pub trait ParseRdataText {
     /// [`Error::InvalidRdata`] for invalid values,
     /// [`Error::BufferTooSmall`] if `out` is full, and
     /// [`Error::NoTextFormat`] for a type without a text form.
+    ///
+    /// ```
+    /// use dnsbox::rdata::{Mx, ParseRdataText};
+    /// use dnsbox::zone::Scanner;
+    /// use dnsbox::{NameBuf, WireWriter};
+    ///
+    /// // Relative names are completed with the scanner's origin.
+    /// let origin: NameBuf = "example.com".parse()?;
+    /// let mut s = Scanner::new("10 mail").with_origin(origin.as_name());
+    /// let mut buf = [0u8; 64];
+    /// let mut w = WireWriter::new(&mut buf);
+    /// Mx::parse_text(&mut s, &mut w)?;
+    /// assert_eq!(w.as_bytes(), b"\x00\x0a\x04mail\x07example\x03com\x00");
+    /// # Ok::<(), dnsbox::Error>(())
+    /// ```
     fn parse_text<B: OutBuf + ?Sized>(s: &mut Scanner<'_>, out: &mut B) -> Result<()> {
         let _ = (s, out);
         Err(Error::NoTextFormat)
@@ -337,6 +385,22 @@ pub trait ParseRdataText {
     /// As [`parse_text`](Self::parse_text), with [`Error::InvalidText`]
     /// for leftover tokens, the wire parser's error if the result is not
     /// valid RDATA, and [`Error::BufferTooSmall`] if `buf` is too short.
+    ///
+    /// ```
+    /// use dnsbox::rdata::{ParseRdataText, Srv};
+    /// use dnsbox::Error;
+    ///
+    /// let mut buf = [0u8; 64];
+    /// let srv = Srv::from_text("0 5 5060 sipserver.example.com.", &mut buf)?;
+    /// assert_eq!((srv.priority, srv.weight, srv.port), (0, 5, 5060));
+    /// // The generic form works for every type (RFC 3597 §5).
+    /// let mut buf = [0u8; 64];
+    /// let generic = Srv::from_text(r"\# 7 0000 0005 13c4 00", &mut buf)?;
+    /// assert_eq!(generic.to_string(), "0 5 5060 .");
+    /// let mut buf = [0u8; 64];
+    /// assert_eq!(Srv::from_text("0 5", &mut buf).unwrap_err(), Error::UnexpectedEof);
+    /// # Ok::<(), Error>(())
+    /// ```
     fn from_text<'b>(text: &str, buf: &'b mut [u8]) -> Result<Self>
     where
         Self: ParseRdata<'b>,
@@ -419,6 +483,21 @@ macro_rules! rdata_registry {
             /// ([`Error::InvalidRdata`], [`Error::UnexpectedEof`], a name
             /// decoding error, ...) or [`Error::TrailingData`] if the
             /// RDATA is longer than its fields.
+            ///
+            /// ```
+            /// use dnsbox::rdata::RData;
+            /// use dnsbox::{Class, Error, Rtype, WireReader};
+            ///
+            /// let data = RData::parse(Rtype::A, Class::IN, WireReader::new(&[192, 0, 2, 1]))?;
+            /// assert_eq!(data.to_string(), "192.0.2.1");
+            /// // A has a format only in class IN; elsewhere the data stays opaque.
+            /// let chaos = RData::parse(Rtype::A, Class::CH, WireReader::new(&[192, 0, 2, 1]))?;
+            /// assert!(matches!(chaos, RData::Unknown(_)));
+            /// // One byte too many.
+            /// let res = RData::parse(Rtype::A, Class::IN, WireReader::new(&[192, 0, 2, 1, 0]));
+            /// assert_eq!(res, Err(Error::TrailingData));
+            /// # Ok::<(), Error>(())
+            /// ```
             pub fn parse(rtype: Rtype, class: Class, mut rdata: WireReader<'a>) -> Result<Self> {
                 if rdata.is_empty()
                     && !rtype.is_meta()
@@ -451,6 +530,15 @@ macro_rules! rdata_registry {
             }
 
             /// Whether `rtype` has a typed implementation.
+            ///
+            /// ```
+            /// use dnsbox::rdata::RData;
+            /// use dnsbox::Rtype;
+            ///
+            /// assert!(RData::is_known(Rtype::HTTPS));
+            /// // No typed view: such records are kept as RFC 3597 opaque data.
+            /// assert!(!RData::is_known(Rtype::new(65280)));
+            /// ```
             #[must_use]
             pub const fn is_known(rtype: Rtype) -> bool {
                 match rtype {
@@ -728,6 +816,16 @@ impl<'a> RData<'a> {
 
 impl RData<'_> {
     /// The record type of this data.
+    ///
+    /// ```
+    /// use dnsbox::rdata::RData;
+    /// use dnsbox::{Class, Rtype, WireReader};
+    ///
+    /// let data = RData::parse(Rtype::new(65280), Class::IN, WireReader::new(b"\x01\x02"))?;
+    /// assert_eq!(data.rtype(), Rtype::new(65280)); // opaque data keeps its type
+    /// assert_eq!(data.to_string(), r"\# 2 0102");
+    /// # Ok::<(), dnsbox::Error>(())
+    /// ```
     #[inline]
     #[must_use]
     pub fn rtype(&self) -> Rtype {

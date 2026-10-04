@@ -232,6 +232,14 @@ impl OwnedRData {
     }
 
     /// The record type.
+    ///
+    /// ```
+    /// use dnsbox::{Class, OwnedRData, Rtype};
+    ///
+    /// let data = OwnedRData::from_text(Rtype::AAAA, Class::IN, "2001:db8::1")?;
+    /// assert_eq!(data.rtype(), Rtype::AAAA);
+    /// # Ok::<(), dnsbox::Error>(())
+    /// ```
     #[inline]
     #[must_use]
     pub fn rtype(&self) -> Rtype {
@@ -239,6 +247,15 @@ impl OwnedRData {
     }
 
     /// The RDATA in uncompressed wire form.
+    ///
+    /// ```
+    /// use dnsbox::{Class, OwnedRData, Rtype};
+    ///
+    /// let cname = OwnedRData::from_text(Rtype::CNAME, Class::IN, "web.example.")?;
+    /// // Names are stored uncompressed.
+    /// assert_eq!(cname.as_wire(), b"\x03web\x07example\x00");
+    /// # Ok::<(), dnsbox::Error>(())
+    /// ```
     #[inline]
     #[must_use]
     pub fn as_wire(&self) -> &[u8] {
@@ -246,6 +263,15 @@ impl OwnedRData {
     }
 
     /// The RDATA length (RDLENGTH, with names uncompressed).
+    ///
+    /// ```
+    /// use dnsbox::{Class, OwnedRData, Rtype};
+    ///
+    /// let a = OwnedRData::from_text(Rtype::A, Class::IN, "192.0.2.1")?;
+    /// let txt = OwnedRData::from_text(Rtype::TXT, Class::IN, "\"hello\" \"world\"")?;
+    /// assert_eq!((a.len(), txt.len()), (4, 12));
+    /// # Ok::<(), dnsbox::Error>(())
+    /// ```
     #[inline]
     #[must_use]
     pub fn len(&self) -> usize {
@@ -254,6 +280,16 @@ impl OwnedRData {
 
     /// Whether the RDATA is empty (e.g. a dynamic-update deletion,
     /// RFC 2136 §2.5.2).
+    ///
+    /// ```
+    /// use dnsbox::{Class, OwnedRData, Rtype};
+    ///
+    /// // "Delete an RRset" in a dynamic update: no RDATA (RFC 2136 §2.5.2).
+    /// let delete = OwnedRData::from_wire(Rtype::A, Class::ANY, &[])?;
+    /// assert!(delete.is_empty());
+    /// assert!(!OwnedRData::from_text(Rtype::A, Class::IN, "192.0.2.1")?.is_empty());
+    /// # Ok::<(), dnsbox::Error>(())
+    /// ```
     #[inline]
     #[must_use]
     pub fn is_empty(&self) -> bool {
@@ -268,6 +304,17 @@ impl OwnedRData {
     ///
     /// As [`RData::parse`]; data built through this type was valid for
     /// the class it was built for.
+    ///
+    /// ```
+    /// use dnsbox::rdata::RData;
+    /// use dnsbox::{Class, OwnedRData, Rtype};
+    ///
+    /// let a = OwnedRData::from_text(Rtype::A, Class::IN, "192.0.2.1")?;
+    /// assert!(matches!(a.parse(Class::IN)?, RData::A(_)));
+    /// // A's format is only defined for class IN (RFC 1035 §3.4.1).
+    /// assert!(matches!(a.parse(Class::CH)?, RData::Unknown(_)));
+    /// # Ok::<(), dnsbox::Error>(())
+    /// ```
     pub fn parse(&self, class: Class) -> Result<RData<'_>> {
         RData::parse(self.rtype, class, WireReader::new(&self.data))
     }
@@ -275,6 +322,17 @@ impl OwnedRData {
     /// The typed view, class-independently: the typed format when the
     /// bytes decode as one (in class IN), [`RData::Unknown`] otherwise.
     /// Never fails.
+    ///
+    /// ```
+    /// use dnsbox::rdata::RData;
+    /// use dnsbox::{Class, OwnedRData, Rtype};
+    ///
+    /// let mx = OwnedRData::from_text(Rtype::MX, Class::IN, "10 mail.example.")?;
+    /// let RData::Mx(view) = mx.as_rdata() else { panic!("an MX") };
+    /// assert_eq!(view.preference, 10);
+    /// assert_eq!(view.exchange.to_string(), "mail.example.");
+    /// # Ok::<(), dnsbox::Error>(())
+    /// ```
     #[must_use]
     pub fn as_rdata(&self) -> RData<'_> {
         self.parse(Class::IN)
@@ -353,6 +411,15 @@ pub struct OwnedQuestion {
 
 impl OwnedQuestion {
     /// Builds a question.
+    ///
+    /// ```
+    /// use dnsbox::{Class, NameBuf, OwnedQuestion, Rtype};
+    ///
+    /// let zone: NameBuf = "example.com".parse()?;
+    /// let q = OwnedQuestion::new(&zone, Rtype::SOA, Class::IN);
+    /// assert_eq!((q.name, q.qtype, q.qclass), (zone, Rtype::SOA, Class::IN));
+    /// # Ok::<(), dnsbox::Error>(())
+    /// ```
     pub fn new(name: impl ToName, qtype: Rtype, qclass: Class) -> Self {
         OwnedQuestion {
             name: NameBuf::from_name(name.to_name()),
@@ -362,6 +429,18 @@ impl OwnedQuestion {
     }
 
     /// Copies a question view (decompressing its name).
+    ///
+    /// ```
+    /// use dnsbox::{Class, Message, MessageBuilder, NameBuf, OwnedQuestion, Rtype};
+    ///
+    /// let name: NameBuf = "example.com".parse()?;
+    /// let mut buf = [0u8; 64];
+    /// let query = Message::parse(MessageBuilder::query(&mut buf, 1, &name, Rtype::A, Class::IN)?.finish())?;
+    /// // Remember the question of an outstanding query.
+    /// let pending = OwnedQuestion::from_question(&query.questions().next().unwrap()?);
+    /// assert_eq!(pending.to_string(), "example.com. IN A");
+    /// # Ok::<(), dnsbox::Error>(())
+    /// ```
     #[must_use]
     pub fn from_question(q: &Question<'_>) -> Self {
         Self::new(q.name(), q.qtype(), q.qclass())
@@ -372,6 +451,18 @@ impl OwnedQuestion {
     /// # Errors
     ///
     /// As [`MessageBuilder::push_question`].
+    ///
+    /// ```
+    /// use dnsbox::{Class, Message, MessageBuilder, NameBuf, OwnedQuestion, Rtype};
+    ///
+    /// let q = OwnedQuestion::new(&"example.org".parse::<NameBuf>()?, Rtype::NS, Class::IN);
+    /// let mut buf = [0u8; 64];
+    /// let mut b = MessageBuilder::new(&mut buf)?;
+    /// q.push_to(&mut b)?;
+    /// let msg = Message::parse_validated(b.finish())?;
+    /// assert_eq!(msg.questions().next().unwrap()?.to_string(), "example.org. IN NS");
+    /// # Ok::<(), dnsbox::Error>(())
+    /// ```
     pub fn push_to<B: OutBuf>(&self, b: &mut MessageBuilder<B>) -> Result<()> {
         b.push_question(&self.name, self.qtype, self.qclass)
     }
@@ -427,6 +518,16 @@ pub struct OwnedRecord {
 
 impl OwnedRecord {
     /// Builds a record.
+    ///
+    /// ```
+    /// use dnsbox::{Class, NameBuf, OwnedRData, OwnedRecord, Rtype};
+    ///
+    /// let name: NameBuf = "example.com".parse()?;
+    /// let rdata = OwnedRData::from_text(Rtype::CAA, Class::IN, "0 issue \"letsencrypt.org\"")?;
+    /// let rr = OwnedRecord::new(&name, Class::IN, 3600, rdata);
+    /// assert_eq!(rr.to_string(), "example.com. 3600 IN CAA 0 issue \"letsencrypt.org\"");
+    /// # Ok::<(), dnsbox::Error>(())
+    /// ```
     pub fn new(name: impl ToName, class: Class, ttl: u32, rdata: OwnedRData) -> Self {
         OwnedRecord {
             name: NameBuf::from_name(name.to_name()),
@@ -471,6 +572,14 @@ impl OwnedRecord {
     }
 
     /// TYPE.
+    ///
+    /// ```
+    /// use dnsbox::{OwnedRecord, Rtype};
+    ///
+    /// let rr: OwnedRecord = "_imaps._tcp.example.com. 300 IN SRV 0 1 993 mail.example.com.".parse()?;
+    /// assert_eq!(rr.rtype(), Rtype::SRV);
+    /// # Ok::<(), dnsbox::Error>(())
+    /// ```
     #[inline]
     #[must_use]
     pub fn rtype(&self) -> Rtype {
@@ -483,6 +592,16 @@ impl OwnedRecord {
     /// # Errors
     ///
     /// As [`OwnedRData::parse`].
+    ///
+    /// ```
+    /// use dnsbox::rdata::RData;
+    /// use dnsbox::OwnedRecord;
+    ///
+    /// let rr: OwnedRecord = "_imaps._tcp.example.com. 300 IN SRV 0 1 993 mail.example.com.".parse()?;
+    /// let RData::Srv(srv) = rr.data()? else { panic!("an SRV") };
+    /// assert_eq!((srv.port, srv.target.to_string()), (993, "mail.example.com.".to_string()));
+    /// # Ok::<(), dnsbox::Error>(())
+    /// ```
     #[inline]
     pub fn data(&self) -> Result<RData<'_>> {
         self.rdata.parse(self.class)
@@ -494,6 +613,22 @@ impl OwnedRecord {
     /// # Errors
     ///
     /// As [`MessageBuilder::push_record`].
+    ///
+    /// ```
+    /// use dnsbox::{Message, MessageBuilder, OwnedRecord, Section};
+    ///
+    /// let rrs: Vec<OwnedRecord> = ["example.com. 300 IN NS ns1.example.com.", "ns1.example.com. 300 IN A 192.0.2.53"]
+    ///     .iter()
+    ///     .map(|s| s.parse())
+    ///     .collect::<Result<_, _>>()?;
+    /// let mut buf = [0u8; 512];
+    /// let mut b = MessageBuilder::new(&mut buf)?;
+    /// rrs[0].push_to(&mut b, Section::Authority)?;
+    /// rrs[1].push_to(&mut b, Section::Additional)?;
+    /// let msg = Message::parse_validated(b.finish())?;
+    /// assert_eq!((msg.header().nscount, msg.header().arcount), (1, 1));
+    /// # Ok::<(), dnsbox::Error>(())
+    /// ```
     pub fn push_to<B: OutBuf>(&self, b: &mut MessageBuilder<B>, section: Section) -> Result<()> {
         b.push_record(section, &self.name, self.class, self.ttl, &self.rdata)
     }
@@ -670,6 +805,15 @@ fn reserve(count: u16, len: usize, min_entry_len: usize) -> usize {
 
 impl OwnedMessage {
     /// An empty message with the given ID and flags.
+    ///
+    /// ```
+    /// use dnsbox::{Flags, OwnedMessage};
+    ///
+    /// let msg = OwnedMessage::new(42, Flags::default().with_qr(true).with_aa(true));
+    /// assert_eq!(msg.header()?.id, 42);
+    /// assert!(msg.questions.is_empty() && msg.answers.is_empty());
+    /// # Ok::<(), dnsbox::Error>(())
+    /// ```
     #[must_use]
     pub fn new(id: u16, flags: Flags) -> Self {
         OwnedMessage {
@@ -688,6 +832,26 @@ impl OwnedMessage {
     /// # Errors
     ///
     /// The first parse error met while walking the message.
+    ///
+    /// ```
+    /// use dnsbox::rdata::A;
+    /// use dnsbox::{Class, Message, MessageBuilder, NameBuf, OwnedMessage, Rtype};
+    ///
+    /// let name: NameBuf = "www.example".parse()?;
+    /// let mut qbuf = [0u8; 64];
+    /// let query = Message::parse(MessageBuilder::query(&mut qbuf, 5, &name, Rtype::A, Class::IN)?.finish())?;
+    /// let mut buf = [0u8; 128];
+    /// let mut b = MessageBuilder::response(&mut buf, &query)?;
+    /// b.push_answer(&name, Class::IN, 60, &A::new([192, 0, 2, 1].into()))?;
+    /// let response = Message::parse(b.finish())?;
+    /// // Edit a received response: here, cap the TTLs.
+    /// let mut owned = OwnedMessage::from_message(&response)?;
+    /// for rr in &mut owned.answers {
+    ///     rr.ttl = rr.ttl.min(30);
+    /// }
+    /// assert_eq!(owned.answers[0].to_string(), "www.example. 30 IN A 192.0.2.1");
+    /// # Ok::<(), dnsbox::Error>(())
+    /// ```
     pub fn from_message(msg: &Message<'_>) -> Result<Self> {
         let h = msg.header();
         let len = msg.as_bytes().len();
@@ -718,6 +882,20 @@ impl OwnedMessage {
     /// # Errors
     ///
     /// The first error [`Message::validate`] finds.
+    ///
+    /// ```
+    /// use dnsbox::{Error, OwnedMessage, Rtype};
+    ///
+    /// let wire = b"\x12\x34\x01\x00\x00\x01\x00\x00\x00\x00\x00\x00\
+    ///              \x07example\x03com\x00\x00\x0f\x00\x01";
+    /// let msg = OwnedMessage::from_wire(wire)?;
+    /// assert_eq!((msg.id, msg.questions[0].qtype), (0x1234, Rtype::MX));
+    /// // Trailing garbage is rejected.
+    /// let mut longer = wire.to_vec();
+    /// longer.push(0);
+    /// assert_eq!(OwnedMessage::from_wire(&longer), Err(Error::TrailingData));
+    /// # Ok::<(), Error>(())
+    /// ```
     pub fn from_wire(wire: &[u8]) -> Result<Self> {
         Self::from_message(&Message::parse_validated(wire)?)
     }
@@ -728,6 +906,17 @@ impl OwnedMessage {
     ///
     /// [`Error::CountOverflow`] if a section holds more than 65535
     /// entries.
+    ///
+    /// ```
+    /// use dnsbox::{Flags, OwnedMessage, OwnedRecord};
+    ///
+    /// let mut msg = OwnedMessage::new(9, Flags::default().with_qr(true));
+    /// msg.answers.push("example. 60 IN A 192.0.2.1".parse::<OwnedRecord>()?);
+    /// msg.answers.push("example. 60 IN A 192.0.2.2".parse::<OwnedRecord>()?);
+    /// let h = msg.header()?;
+    /// assert_eq!((h.id, h.qdcount, h.ancount), (9, 0, 2));
+    /// # Ok::<(), dnsbox::Error>(())
+    /// ```
     pub fn header(&self) -> Result<Header> {
         let count = |n: usize| u16::try_from(n).map_err(|_| Error::CountOverflow);
         Ok(Header {
@@ -742,6 +931,16 @@ impl OwnedMessage {
 
     /// The records of a section (empty for [`Section::Question`]; see
     /// [`questions`](Self::questions)).
+    ///
+    /// ```
+    /// use dnsbox::{Flags, OwnedMessage, OwnedRecord, Section};
+    ///
+    /// let mut msg = OwnedMessage::new(1, Flags::default());
+    /// msg.authority.push("example. 3600 IN NS ns1.example.".parse::<OwnedRecord>()?);
+    /// let counts: Vec<usize> = Section::ALL.iter().map(|&s| msg.section(s).len()).collect();
+    /// assert_eq!(counts, [0, 0, 1, 0]);
+    /// # Ok::<(), dnsbox::Error>(())
+    /// ```
     #[must_use]
     pub fn section(&self, section: Section) -> &[OwnedRecord] {
         match section {
@@ -754,6 +953,17 @@ impl OwnedMessage {
 
     /// The records of a section, mutably (`None` for
     /// [`Section::Question`]).
+    ///
+    /// ```
+    /// use dnsbox::{Flags, OwnedMessage, OwnedRecord, Section};
+    ///
+    /// let mut msg = OwnedMessage::new(1, Flags::default());
+    /// let rr: OwnedRecord = "example. 60 IN TXT \"hello\"".parse()?;
+    /// msg.section_mut(Section::Additional).expect("a record section").push(rr);
+    /// assert_eq!(msg.additional.len(), 1);
+    /// assert!(msg.section_mut(Section::Question).is_none());
+    /// # Ok::<(), dnsbox::Error>(())
+    /// ```
     pub fn section_mut(&mut self, section: Section) -> Option<&mut Vec<OwnedRecord>> {
         match section {
             Section::Question => None,
@@ -765,6 +975,17 @@ impl OwnedMessage {
 
     /// Every record (answer, authority, additional) with its section, in
     /// wire order.
+    ///
+    /// ```
+    /// use dnsbox::{Flags, OwnedMessage, OwnedRecord, Section};
+    ///
+    /// let mut msg = OwnedMessage::new(1, Flags::default().with_qr(true));
+    /// msg.answers.push("www.example. 60 IN A 192.0.2.1".parse::<OwnedRecord>()?);
+    /// msg.additional.push("ns.example. 60 IN A 192.0.2.53".parse::<OwnedRecord>()?);
+    /// let lines: Vec<String> = msg.records().map(|(s, rr)| format!("{s}: {rr}")).collect();
+    /// assert_eq!(lines, ["ANSWER: www.example. 60 IN A 192.0.2.1", "ADDITIONAL: ns.example. 60 IN A 192.0.2.53"]);
+    /// # Ok::<(), dnsbox::Error>(())
+    /// ```
     pub fn records(&self) -> impl Iterator<Item = (Section, &OwnedRecord)> {
         let answers = self.answers.iter().map(|rr| (Section::Answer, rr));
         let authority = self.authority.iter().map(|rr| (Section::Authority, rr));
@@ -773,12 +994,39 @@ impl OwnedMessage {
     }
 
     /// The first OPT record of the additional section (RFC 6891 §6.1.1).
+    ///
+    /// ```
+    /// use dnsbox::edns::OptHeader;
+    /// use dnsbox::{Class, MessageBuilder, NameBuf, OwnedMessage, Rtype};
+    ///
+    /// let name: NameBuf = "example.com".parse()?;
+    /// let mut b = MessageBuilder::query_vec(1, &name, Rtype::A, Class::IN)?;
+    /// b.push_edns(OptHeader::new(1232), &())?;
+    /// let msg = OwnedMessage::from_wire(&b.finish())?;
+    /// let opt = msg.opt().expect("EDNS");
+    /// assert_eq!((opt.rtype(), opt.class.get()), (Rtype::OPT, 1232));
+    /// # Ok::<(), dnsbox::Error>(())
+    /// ```
     #[must_use]
     pub fn opt(&self) -> Option<&OwnedRecord> {
         self.additional.iter().find(|rr| rr.rtype() == Rtype::OPT)
     }
 
     /// The EDNS header fields of the first OPT record (RFC 6891 §6.1.3).
+    ///
+    /// ```
+    /// use dnsbox::edns::OptHeader;
+    /// use dnsbox::{Class, MessageBuilder, NameBuf, OwnedMessage, Rtype};
+    ///
+    /// let name: NameBuf = "example.com".parse()?;
+    /// let mut b = MessageBuilder::query_vec(1, &name, Rtype::DNSKEY, Class::IN)?;
+    /// b.push_edns(OptHeader::new(4096).with_dnssec_ok(true), &())?;
+    /// let msg = OwnedMessage::from_wire(&b.finish())?;
+    /// let edns = msg.opt_header().expect("EDNS");
+    /// assert_eq!(edns.udp_payload_size, 4096);
+    /// assert!(edns.dnssec_ok());
+    /// # Ok::<(), dnsbox::Error>(())
+    /// ```
     #[must_use]
     pub fn opt_header(&self) -> Option<OptHeader> {
         self.opt()
@@ -787,6 +1035,14 @@ impl OwnedMessage {
 
     /// The full response code: the header RCODE combined with the extended
     /// RCODE of the OPT record, if any (RFC 6891 §6.1.3).
+    ///
+    /// ```
+    /// use dnsbox::{Flags, OwnedMessage, Rcode};
+    ///
+    /// let msg = OwnedMessage::new(1, Flags::default().with_qr(true).with_rcode(Rcode::SERVFAIL));
+    /// assert_eq!(msg.effective_rcode(), Rcode::SERVFAIL); // no OPT record
+    /// # Ok::<(), dnsbox::Error>(())
+    /// ```
     #[must_use]
     pub fn effective_rcode(&self) -> Rcode {
         match self.opt_header() {
@@ -839,6 +1095,19 @@ impl OwnedMessage {
     ///
     /// [`Error::BufferTooSmall`] beyond 65535 octets or
     /// [`Error::CountOverflow`] beyond 65535 entries in a section.
+    ///
+    /// ```
+    /// use dnsbox::{Flags, Message, OwnedMessage, OwnedRecord};
+    ///
+    /// let mut msg = OwnedMessage::new(3, Flags::default().with_qr(true));
+    /// msg.answers.push("www.example. 60 IN A 192.0.2.1".parse::<OwnedRecord>()?);
+    /// msg.answers.push("www.example. 60 IN A 192.0.2.2".parse::<OwnedRecord>()?);
+    /// let wire = msg.to_vec()?;
+    /// // The second owner name is compressed to a pointer.
+    /// assert_eq!(wire.len(), 12 + (13 + 10 + 4) + (2 + 10 + 4));
+    /// assert_eq!(Message::parse_validated(&wire)?.header().ancount, 2);
+    /// # Ok::<(), dnsbox::Error>(())
+    /// ```
     pub fn to_vec(&self) -> Result<Vec<u8>> {
         let mut b = MessageBuilder::new_vec();
         self.write_to(&mut b)?;
@@ -881,6 +1150,19 @@ impl Message<'_> {
     /// # Errors
     ///
     /// As [`OwnedMessage::from_message`].
+    ///
+    /// ```
+    /// use dnsbox::{Class, Message, MessageBuilder, NameBuf, Rtype};
+    ///
+    /// let name: NameBuf = "example.com".parse()?;
+    /// let mut buf = [0u8; 64];
+    /// let wire = MessageBuilder::query(&mut buf, 77, &name, Rtype::A, Class::IN)?.finish();
+    /// let owned = Message::parse(wire)?.to_owned_message()?;
+    /// wire.fill(0); // the copy does not borrow the buffer
+    /// assert_eq!(owned.id, 77);
+    /// assert_eq!(owned.questions[0].to_string(), "example.com. IN A");
+    /// # Ok::<(), dnsbox::Error>(())
+    /// ```
     #[inline]
     pub fn to_owned_message(&self) -> Result<OwnedMessage> {
         OwnedMessage::from_message(self)
@@ -889,6 +1171,17 @@ impl Message<'_> {
 
 impl Question<'_> {
     /// Copies the question into an [`OwnedQuestion`].
+    ///
+    /// ```
+    /// use dnsbox::{Class, Message, MessageBuilder, NameBuf, OwnedQuestion, Rtype};
+    ///
+    /// let name: NameBuf = "example.com".parse()?;
+    /// let mut buf = [0u8; 64];
+    /// let wire = MessageBuilder::query(&mut buf, 1, &name, Rtype::HTTPS, Class::IN)?.finish();
+    /// let q: OwnedQuestion = Message::parse(wire)?.questions().next().unwrap()?.to_owned_question();
+    /// assert_eq!((q.name, q.qtype), (name, Rtype::HTTPS));
+    /// # Ok::<(), dnsbox::Error>(())
+    /// ```
     #[inline]
     #[must_use]
     pub fn to_owned_question(&self) -> OwnedQuestion {
@@ -903,6 +1196,24 @@ impl Record<'_> {
     /// # Errors
     ///
     /// As [`OwnedRecord::from_record`].
+    ///
+    /// ```
+    /// use dnsbox::rdata::A;
+    /// use dnsbox::{Class, Message, MessageBuilder, NameBuf, OwnedRecord};
+    ///
+    /// let name: NameBuf = "example".parse()?;
+    /// let mut buf = [0u8; 128];
+    /// let mut b = MessageBuilder::new(&mut buf)?;
+    /// b.push_answer(&name, Class::IN, 60, &A::new([192, 0, 2, 1].into()))?;
+    /// let msg = Message::parse(b.finish())?;
+    /// // Keep the records once the message buffer is reused.
+    /// let mut cache: Vec<OwnedRecord> = Vec::new();
+    /// for rr in msg.answers() {
+    ///     cache.push(rr?.to_owned_record()?);
+    /// }
+    /// assert_eq!(cache[0].name, name);
+    /// # Ok::<(), dnsbox::Error>(())
+    /// ```
     #[inline]
     pub fn to_owned_record(&self) -> Result<OwnedRecord> {
         OwnedRecord::from_record(self)

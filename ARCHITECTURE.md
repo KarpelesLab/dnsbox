@@ -620,7 +620,7 @@ newtype**. Use the crate-internal macro from `src/macros.rs` (it is
 ```rust
 open_enum! {
     /// An EDNS(0) option code (RFC 6891 §6.1.2, IANA "DNS EDNS0 Option Codes").
-    pub struct OptionCode(u16), generic "OPT", aliases { "CLIENT-SUBNET" => ECS };
+    pub struct OptionCode(u16) in dnsbox::edns, generic "OPT", aliases { "CLIENT-SUBNET" => ECS };
     /// Client subnet (RFC 7871).
     ECS = 8 => "ECS",
     /// Cookie (RFC 7873).
@@ -637,7 +637,10 @@ PartialOrd, Ord, Default`), one constant per line, `new`, `get`,
 the integer otherwise). Use an empty generic prefix
 (`generic ""`) for registries whose presentation format is the bare number
 (e.g. DNSSEC algorithms); use `generic "key"` for SvcParamKeys (`key65535`,
-RFC 9460 §2.1). Add extra inherent methods in a separate `impl` block.
+RFC 9460 §2.1). `in <path>` is the public module the type is reached
+through (`dnsbox`, `dnsbox::rdata`, ...): the generated methods carry
+doctests that import it from there and exercise the first registered
+value. Add extra inherent methods in a separate `impl` block.
 `Rtype` and `Class` are built this way.
 
 Put the **complete current IANA registry** in when you create one, one
@@ -891,6 +894,27 @@ common traits, `Display`/`FromStr` pairs, iteration by reference).
   list), and use a `WireWriter` rather than `Vec<u8>` as `OutBuf` unless
   `alloc` is required. Examples go where rustdoc renders them: on the
   public item, not on a private module (`rustdoc::private_doc_tests`).
+  Every public function and method has one too (CI enforces the
+  nightly-only `rustdoc::missing_doc_code_examples` lint); for items a
+  macro generates, the macro writes the example (`open_enum!`, the
+  `Flags` bit accessors).
+- **Links to feature-gated items.** `cargo doc` must be clean in every
+  feature combination, so an intra-doc link to an item behind a feature
+  the documented item does not itself need is written as a reference
+  link whose definition depends on the feature, falling back to the
+  crate's feature table:
+
+  ```rust
+  /// [`HmacKey`] (feature `tsig`) implements it with `purecrypto`.
+  ///
+  #[cfg_attr(feature = "tsig", doc = "[`HmacKey`]: super::HmacKey")]
+  #[cfg_attr(not(feature = "tsig"), doc = "[`HmacKey`]: crate#cargo-features")]
+  pub trait TsigKey { /* ... */ }
+  ```
+
+  Module docs use the inner form (`#![cfg_attr(..., doc = "...")]`)
+  after their last `//!` line. CI builds the docs for every feature
+  combination with `-D warnings`.
   The crate docs (`src/lib.rs`) hold the guided tour; `examples/` holds
   complete programs.
 
@@ -952,8 +976,12 @@ common traits, `Display`/`FromStr` pairs, iteration by reference).
   are enabled) and runs every doctest. CI additionally builds the docs
   with `-D missing_docs -D rustdoc::private-doc-tests
   -D rustdoc::unescaped-backticks` (stable, and nightly with
-  `--cfg docsrs` as docs.rs does), runs the offline examples, builds the
-  no_std targets with `alloc` and `tsig`, fuzzes every target for 60 s
+  `--cfg docsrs` as docs.rs does), builds, lints and documents every
+  feature combination with `cargo hack --feature-powerset` (tests and
+  examples up to pairs of features), enforces doctest examples with the
+  nightly `rustdoc::missing_doc_code_examples` lint, runs the offline
+  examples, builds the no_std target with every combination of the
+  no_std features, fuzzes every target for 60 s
   with `-a`, and builds the benchmarks and checks that the three libraries
   agree on every fixture. If you touch `fuzz/` or `benches/`, build them
   too (`cargo +nightly fuzz build -a` in `fuzz/`, `cargo test --release`

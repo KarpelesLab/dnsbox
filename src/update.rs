@@ -115,6 +115,19 @@ impl<B: OutBuf> UpdateBuilder<B> {
     ///
     /// [`Error::SectionOrder`] if `builder` already holds a question or
     /// record, [`Error::BufferTooSmall`] if the zone section does not fit.
+    ///
+    /// ```
+    /// use dnsbox::update::UpdateBuilder;
+    /// use dnsbox::{Class, Message, MessageBuilder, NameBuf, Opcode, Rtype};
+    ///
+    /// let zone: NameBuf = "example.com".parse()?;
+    /// let mut buf = [0u8; 512];
+    /// let u = UpdateBuilder::new(MessageBuilder::new(&mut buf)?, &zone, Class::IN)?;
+    /// let msg = Message::parse_validated(u.finish())?;
+    /// assert_eq!(msg.flags().opcode(), Opcode::UPDATE);
+    /// assert_eq!(msg.questions().next().unwrap()?.qtype(), Rtype::SOA); // the zone section
+    /// # Ok::<(), dnsbox::Error>(())
+    /// ```
     pub fn new(mut builder: MessageBuilder<B>, zone: impl ToName, class: Class) -> Result<Self> {
         if !builder.is_empty() {
             return Err(Error::SectionOrder);
@@ -129,24 +142,84 @@ impl<B: OutBuf> UpdateBuilder<B> {
     }
 
     /// The zone class.
+    ///
+    /// ```
+    /// use dnsbox::update::UpdateBuilder;
+    /// use dnsbox::{Class, MessageBuilder, NameBuf};
+    ///
+    /// let zone: NameBuf = "example.com".parse()?;
+    /// let mut buf = [0u8; 512];
+    /// let u = UpdateBuilder::new(MessageBuilder::new(&mut buf)?, &zone, Class::IN)?;
+    /// assert_eq!(u.zone_class(), Class::IN); // the class of added records
+    /// # Ok::<(), dnsbox::Error>(())
+    /// ```
     #[inline]
     pub const fn zone_class(&self) -> Class {
         self.class
     }
 
     /// The underlying builder (ID, flags, checkpoints, signing).
+    ///
+    /// ```
+    /// use dnsbox::rdata::A;
+    /// use dnsbox::update::UpdateBuilder;
+    /// use dnsbox::{Class, Message, MessageBuilder, NameBuf};
+    ///
+    /// let zone: NameBuf = "example.com".parse()?;
+    /// let host: NameBuf = "host.example.com".parse()?;
+    /// let mut buf = [0u8; 512];
+    /// let mut u = UpdateBuilder::new(MessageBuilder::new(&mut buf)?, &zone, Class::IN)?;
+    /// u.builder().set_id(0x2136);
+    /// // Undo a tentative change with a checkpoint.
+    /// let cp = u.builder().checkpoint();
+    /// u.add(&host, 300, &A::new([192, 0, 2, 9].into()))?;
+    /// u.builder().rollback(cp);
+    /// let msg = Message::parse(u.finish())?;
+    /// assert_eq!((msg.id(), msg.header().nscount), (0x2136, 0));
+    /// # Ok::<(), dnsbox::Error>(())
+    /// ```
     #[inline]
     pub fn builder(&mut self) -> &mut MessageBuilder<B> {
         &mut self.inner
     }
 
     /// Returns the underlying builder.
+    ///
+    /// ```
+    /// use dnsbox::rdata::A;
+    /// use dnsbox::update::UpdateBuilder;
+    /// use dnsbox::{Class, Message, MessageBuilder, NameBuf};
+    ///
+    /// let zone: NameBuf = "example.com".parse()?;
+    /// let host: NameBuf = "host.example.com".parse()?;
+    /// let mut buf = [0u8; 512];
+    /// let mut u = UpdateBuilder::new(MessageBuilder::new(&mut buf)?, &zone, Class::IN)?;
+    /// u.add(&host, 300, &A::new([192, 0, 2, 9].into()))?;
+    /// // Back to the plain builder, e.g. to sign with TSIG or SIG(0).
+    /// let b = u.into_builder();
+    /// assert_eq!(Message::parse(b.finish())?.header().nscount, 1);
+    /// # Ok::<(), dnsbox::Error>(())
+    /// ```
     #[inline]
     pub fn into_builder(self) -> MessageBuilder<B> {
         self.inner
     }
 
     /// Finishes the message.
+    ///
+    /// ```
+    /// use dnsbox::update::{UpdateBuilder, UpdateMessage};
+    /// use dnsbox::{Class, Message, MessageBuilder, NameBuf};
+    ///
+    /// let zone: NameBuf = "example.com".parse()?;
+    /// let gone: NameBuf = "old.example.com".parse()?;
+    /// let mut buf = [0u8; 512];
+    /// let mut u = UpdateBuilder::new(MessageBuilder::new(&mut buf)?, &zone, Class::IN)?;
+    /// u.delete_name(&gone)?;
+    /// let wire = u.finish();
+    /// assert!(UpdateMessage::new(Message::parse(wire)?)?.validate().is_ok());
+    /// # Ok::<(), dnsbox::Error>(())
+    /// ```
     #[inline]
     pub fn finish(self) -> B::Output {
         self.inner.finish()
@@ -166,6 +239,21 @@ impl<B: OutBuf> UpdateBuilder<B> {
     /// # Errors
     ///
     /// See the [type documentation](UpdateBuilder).
+    ///
+    /// ```
+    /// use dnsbox::update::{Prerequisite, UpdateBuilder, UpdateMessage};
+    /// use dnsbox::{Class, Error, Message, MessageBuilder, NameBuf, Rtype};
+    ///
+    /// let zone: NameBuf = "example.com".parse()?;
+    /// let host: NameBuf = "mail.example.com".parse()?;
+    /// let mut buf = [0u8; 512];
+    /// let mut u = UpdateBuilder::new(MessageBuilder::new(&mut buf)?, &zone, Class::IN)?;
+    /// u.require_rrset_exists(&host, Rtype::MX)?;
+    /// assert_eq!(u.require_rrset_exists(&host, Rtype::OPT), Err(Error::InvalidUpdate)); // not an RRset type
+    /// let update = UpdateMessage::new(Message::parse(u.finish())?)?;
+    /// assert!(matches!(update.prerequisites().next(), Some(Ok(Prerequisite::RrsetExists { rtype: Rtype::MX, .. }))));
+    /// # Ok::<(), Error>(())
+    /// ```
     pub fn require_rrset_exists(&mut self, name: impl ToName, rtype: Rtype) -> Result<()> {
         Self::rrset_type(rtype)?;
         self.inner
@@ -180,6 +268,26 @@ impl<B: OutBuf> UpdateBuilder<B> {
     /// # Errors
     ///
     /// See the [type documentation](UpdateBuilder).
+    ///
+    /// ```
+    /// use dnsbox::rdata::A;
+    /// use dnsbox::update::{Prerequisite, UpdateBuilder, UpdateMessage};
+    /// use dnsbox::{Class, Message, MessageBuilder, NameBuf};
+    ///
+    /// // Compare-and-swap: only if host's A RRset is exactly { 192.0.2.1 }.
+    /// let zone: NameBuf = "example.com".parse()?;
+    /// let host: NameBuf = "host.example.com".parse()?;
+    /// let (old, new) = (A::new([192, 0, 2, 1].into()), A::new([192, 0, 2, 2].into()));
+    /// let mut buf = [0u8; 512];
+    /// let mut u = UpdateBuilder::new(MessageBuilder::new(&mut buf)?, &zone, Class::IN)?;
+    /// u.require_rr(&host, &old)?;
+    /// u.delete_rr(&host, &old)?;
+    /// u.add(&host, 300, &new)?;
+    /// let update = UpdateMessage::new(Message::parse(u.finish())?)?;
+    /// let Some(Ok(Prerequisite::RrExists(rr))) = update.prerequisites().next() else { panic!() };
+    /// assert_eq!(rr.to_string(), "host.example.com. 0 IN A 192.0.2.1");
+    /// # Ok::<(), dnsbox::Error>(())
+    /// ```
     pub fn require_rr<D: ComposeRdata + ?Sized>(
         &mut self,
         name: impl ToName,
@@ -196,6 +304,24 @@ impl<B: OutBuf> UpdateBuilder<B> {
     /// # Errors
     ///
     /// See the [type documentation](UpdateBuilder).
+    ///
+    /// ```
+    /// use dnsbox::rdata::Cname;
+    /// use dnsbox::update::UpdateBuilder;
+    /// use dnsbox::{Class, Message, MessageBuilder, NameBuf, Rtype};
+    ///
+    /// // Add a CNAME only if the name has no A RRset yet.
+    /// let zone: NameBuf = "example.com".parse()?;
+    /// let (alias, target): (NameBuf, NameBuf) = ("www.example.com".parse()?, "web.example.com".parse()?);
+    /// let mut buf = [0u8; 512];
+    /// let mut u = UpdateBuilder::new(MessageBuilder::new(&mut buf)?, &zone, Class::IN)?;
+    /// u.require_rrset_absent(&alias, Rtype::A)?;
+    /// u.add(&alias, 300, &Cname::new(target.as_name()))?;
+    /// let msg = Message::parse_validated(u.finish())?;
+    /// let prereq = msg.answers().next().unwrap()?;
+    /// assert_eq!((prereq.class(), prereq.rtype(), prereq.rdata().len()), (Class::NONE, Rtype::A, 0));
+    /// # Ok::<(), dnsbox::Error>(())
+    /// ```
     pub fn require_rrset_absent(&mut self, name: impl ToName, rtype: Rtype) -> Result<()> {
         Self::rrset_type(rtype)?;
         self.inner
@@ -208,6 +334,20 @@ impl<B: OutBuf> UpdateBuilder<B> {
     /// # Errors
     ///
     /// See the [type documentation](UpdateBuilder).
+    ///
+    /// ```
+    /// use dnsbox::update::{Prerequisite, UpdateBuilder, UpdateMessage};
+    /// use dnsbox::{Class, Message, MessageBuilder, NameBuf};
+    ///
+    /// let zone: NameBuf = "example.com".parse()?;
+    /// let host: NameBuf = "host.example.com".parse()?;
+    /// let mut buf = [0u8; 512];
+    /// let mut u = UpdateBuilder::new(MessageBuilder::new(&mut buf)?, &zone, Class::IN)?;
+    /// u.require_name_in_use(&host)?; // only touch existing hosts
+    /// let update = UpdateMessage::new(Message::parse(u.finish())?)?;
+    /// assert!(matches!(update.prerequisites().next(), Some(Ok(Prerequisite::NameInUse(n))) if n == host.as_name()));
+    /// # Ok::<(), dnsbox::Error>(())
+    /// ```
     pub fn require_name_in_use(&mut self, name: impl ToName) -> Result<()> {
         self.inner
             .push_record(PREREQUISITE, name, Class::ANY, 0, &empty(Rtype::ANY))
@@ -218,6 +358,24 @@ impl<B: OutBuf> UpdateBuilder<B> {
     /// # Errors
     ///
     /// See the [type documentation](UpdateBuilder).
+    ///
+    /// ```
+    /// use dnsbox::rdata::A;
+    /// use dnsbox::update::UpdateBuilder;
+    /// use dnsbox::{Class, Message, MessageBuilder, NameBuf, Rtype};
+    ///
+    /// // Claim a fresh name: fails with YXDOMAIN on the server if it exists.
+    /// let zone: NameBuf = "example.com".parse()?;
+    /// let host: NameBuf = "new-host.example.com".parse()?;
+    /// let mut buf = [0u8; 512];
+    /// let mut u = UpdateBuilder::new(MessageBuilder::new(&mut buf)?, &zone, Class::IN)?;
+    /// u.require_name_absent(&host)?;
+    /// u.add(&host, 300, &A::new([192, 0, 2, 77].into()))?;
+    /// let msg = Message::parse_validated(u.finish())?;
+    /// let prereq = msg.answers().next().unwrap()?;
+    /// assert_eq!((prereq.class(), prereq.rtype()), (Class::NONE, Rtype::ANY));
+    /// # Ok::<(), dnsbox::Error>(())
+    /// ```
     pub fn require_name_absent(&mut self, name: impl ToName) -> Result<()> {
         self.inner
             .push_record(PREREQUISITE, name, Class::NONE, 0, &empty(Rtype::ANY))
@@ -228,6 +386,23 @@ impl<B: OutBuf> UpdateBuilder<B> {
     /// # Errors
     ///
     /// See the [type documentation](UpdateBuilder).
+    ///
+    /// ```
+    /// use dnsbox::rdata::Txt;
+    /// use dnsbox::update::UpdateBuilder;
+    /// use dnsbox::{Class, Message, MessageBuilder, NameBuf};
+    ///
+    /// // An ACME DNS-01 challenge record.
+    /// let zone: NameBuf = "example.com".parse()?;
+    /// let name: NameBuf = "_acme-challenge.example.com".parse()?;
+    /// let mut buf = [0u8; 512];
+    /// let mut u = UpdateBuilder::new(MessageBuilder::new(&mut buf)?, &zone, Class::IN)?;
+    /// u.add(&name, 60, &Txt::from_wire(b"\x0fgfj9Xq...Rg85nM")?)?;
+    /// let msg = Message::parse_validated(u.finish())?;
+    /// let rr = msg.authority().next().unwrap()?;
+    /// assert_eq!((rr.class(), rr.ttl()), (Class::IN, 60));
+    /// # Ok::<(), dnsbox::Error>(())
+    /// ```
     pub fn add<D: ComposeRdata + ?Sized>(
         &mut self,
         name: impl ToName,
@@ -244,6 +419,21 @@ impl<B: OutBuf> UpdateBuilder<B> {
     /// # Errors
     ///
     /// See the [type documentation](UpdateBuilder).
+    ///
+    /// ```
+    /// use dnsbox::update::{UpdateBuilder, UpdateMessage, UpdateOp};
+    /// use dnsbox::{Class, Message, MessageBuilder, NameBuf, Rtype};
+    ///
+    /// // Remove the challenge record once the certificate is issued.
+    /// let zone: NameBuf = "example.com".parse()?;
+    /// let name: NameBuf = "_acme-challenge.example.com".parse()?;
+    /// let mut buf = [0u8; 512];
+    /// let mut u = UpdateBuilder::new(MessageBuilder::new(&mut buf)?, &zone, Class::IN)?;
+    /// u.delete_rrset(&name, Rtype::TXT)?;
+    /// let update = UpdateMessage::new(Message::parse(u.finish())?)?;
+    /// assert!(matches!(update.updates().next(), Some(Ok(UpdateOp::DeleteRrset { rtype: Rtype::TXT, .. }))));
+    /// # Ok::<(), dnsbox::Error>(())
+    /// ```
     pub fn delete_rrset(&mut self, name: impl ToName, rtype: Rtype) -> Result<()> {
         Self::rrset_type(rtype)?;
         self.inner
@@ -255,6 +445,21 @@ impl<B: OutBuf> UpdateBuilder<B> {
     /// # Errors
     ///
     /// See the [type documentation](UpdateBuilder).
+    ///
+    /// ```
+    /// use dnsbox::update::UpdateBuilder;
+    /// use dnsbox::{Class, Message, MessageBuilder, NameBuf, Rtype};
+    ///
+    /// let zone: NameBuf = "example.com".parse()?;
+    /// let host: NameBuf = "decommissioned.example.com".parse()?;
+    /// let mut buf = [0u8; 512];
+    /// let mut u = UpdateBuilder::new(MessageBuilder::new(&mut buf)?, &zone, Class::IN)?;
+    /// u.delete_name(&host)?;
+    /// let msg = Message::parse_validated(u.finish())?;
+    /// let rr = msg.authority().next().unwrap()?;
+    /// assert_eq!((rr.class(), rr.rtype(), rr.ttl()), (Class::ANY, Rtype::ANY, 0));
+    /// # Ok::<(), dnsbox::Error>(())
+    /// ```
     pub fn delete_name(&mut self, name: impl ToName) -> Result<()> {
         self.inner
             .push_record(UPDATE, name, Class::ANY, 0, &empty(Rtype::ANY))
@@ -265,6 +470,23 @@ impl<B: OutBuf> UpdateBuilder<B> {
     /// # Errors
     ///
     /// See the [type documentation](UpdateBuilder).
+    ///
+    /// ```
+    /// use dnsbox::rdata::A;
+    /// use dnsbox::update::{UpdateBuilder, UpdateMessage, UpdateOp};
+    /// use dnsbox::{Class, Message, MessageBuilder, NameBuf};
+    ///
+    /// // Take one address out of a round-robin set.
+    /// let zone: NameBuf = "example.com".parse()?;
+    /// let pool: NameBuf = "pool.example.com".parse()?;
+    /// let mut buf = [0u8; 512];
+    /// let mut u = UpdateBuilder::new(MessageBuilder::new(&mut buf)?, &zone, Class::IN)?;
+    /// u.delete_rr(&pool, &A::new([192, 0, 2, 3].into()))?;
+    /// let update = UpdateMessage::new(Message::parse(u.finish())?)?;
+    /// let Some(Ok(UpdateOp::DeleteRr(rr))) = update.updates().next() else { panic!() };
+    /// assert_eq!(rr.to_string(), "pool.example.com. 0 NONE A 192.0.2.3");
+    /// # Ok::<(), dnsbox::Error>(())
+    /// ```
     pub fn delete_rr<D: ComposeRdata + ?Sized>(
         &mut self,
         name: impl ToName,
@@ -279,6 +501,23 @@ impl<B: OutBuf> UpdateBuilder<B> {
     /// # Errors
     ///
     /// As [`MessageBuilder::push_additional`].
+    ///
+    /// ```
+    /// use dnsbox::rdata::{A, Ns};
+    /// use dnsbox::update::UpdateBuilder;
+    /// use dnsbox::{Class, Message, MessageBuilder, NameBuf};
+    ///
+    /// // Delegate a subzone, with glue for its name server.
+    /// let zone: NameBuf = "example.com".parse()?;
+    /// let (sub, ns): (NameBuf, NameBuf) = ("lab.example.com".parse()?, "ns.lab.example.com".parse()?);
+    /// let mut buf = [0u8; 512];
+    /// let mut u = UpdateBuilder::new(MessageBuilder::new(&mut buf)?, &zone, Class::IN)?;
+    /// u.add(&sub, 3600, &Ns::new(ns.as_name()))?;
+    /// u.push_additional(&ns, Class::IN, 3600, &A::new([192, 0, 2, 53].into()))?;
+    /// let msg = Message::parse_validated(u.finish())?;
+    /// assert_eq!((msg.header().nscount, msg.header().arcount), (1, 1));
+    /// # Ok::<(), dnsbox::Error>(())
+    /// ```
     pub fn push_additional<D: ComposeRdata + ?Sized>(
         &mut self,
         name: impl ToName,
@@ -337,6 +576,23 @@ pub enum Prerequisite<'a> {
 
 impl<'a> Prerequisite<'a> {
     /// The owner name the prerequisite is about.
+    ///
+    /// ```
+    /// use dnsbox::update::{UpdateBuilder, UpdateMessage};
+    /// use dnsbox::{Class, Message, MessageBuilder, NameBuf, Rtype};
+    ///
+    /// let zone: NameBuf = "example.com".parse()?;
+    /// let host: NameBuf = "host.example.com".parse()?;
+    /// let mut buf = [0u8; 512];
+    /// let mut u = UpdateBuilder::new(MessageBuilder::new(&mut buf)?, &zone, Class::IN)?;
+    /// u.require_rrset_exists(&host, Rtype::A)?;
+    /// u.require_name_in_use(&host)?;
+    /// let update = UpdateMessage::new(Message::parse(u.finish())?)?;
+    /// for p in update.prerequisites() {
+    ///     assert_eq!(p?.name(), host.as_name());
+    /// }
+    /// # Ok::<(), dnsbox::Error>(())
+    /// ```
     #[must_use]
     pub fn name(&self) -> Name<'a> {
         match *self {
@@ -354,6 +610,26 @@ impl<'a> Prerequisite<'a> {
     ///
     /// [`Error::InvalidUpdate`] (FORMERR) on an invalid combination of
     /// class, type, TTL and RDATA.
+    ///
+    /// ```
+    /// use dnsbox::rdata::UnknownRdata;
+    /// use dnsbox::update::Prerequisite;
+    /// use dnsbox::{Class, Error, Message, MessageBuilder, NameBuf, Rtype};
+    ///
+    /// let host: NameBuf = "host.example.com".parse()?;
+    /// let mut buf = [0u8; 256];
+    /// let mut b = MessageBuilder::new(&mut buf)?;
+    /// // CLASS NONE, empty RDATA: "no A RRset" (RFC 2136 §2.4.3) ...
+    /// b.push_answer(&host, Class::NONE, 0, &UnknownRdata::new(Rtype::A, &[]))?;
+    /// // ... but a non-zero TTL is a FORMERR.
+    /// b.push_answer(&host, Class::NONE, 60, &UnknownRdata::new(Rtype::A, &[]))?;
+    /// let msg = Message::parse(b.finish())?;
+    /// let mut rrs = msg.answers();
+    /// let p = Prerequisite::classify(rrs.next().unwrap()?, Class::IN)?;
+    /// assert!(matches!(p, Prerequisite::RrsetAbsent { rtype: Rtype::A, .. }));
+    /// assert_eq!(Prerequisite::classify(rrs.next().unwrap()?, Class::IN).unwrap_err(), Error::InvalidUpdate);
+    /// # Ok::<(), Error>(())
+    /// ```
     pub fn classify(rr: Record<'a>, zone_class: Class) -> Result<Self> {
         if rr.ttl() != 0 {
             return Err(Error::InvalidUpdate);
@@ -427,6 +703,23 @@ pub enum UpdateOp<'a> {
 
 impl<'a> UpdateOp<'a> {
     /// The owner name the operation applies to.
+    ///
+    /// ```
+    /// use dnsbox::rdata::A;
+    /// use dnsbox::update::{UpdateBuilder, UpdateMessage};
+    /// use dnsbox::{Class, Message, MessageBuilder, NameBuf, Rtype};
+    ///
+    /// let zone: NameBuf = "example.com".parse()?;
+    /// let host: NameBuf = "host.example.com".parse()?;
+    /// let mut buf = [0u8; 512];
+    /// let mut u = UpdateBuilder::new(MessageBuilder::new(&mut buf)?, &zone, Class::IN)?;
+    /// u.delete_rrset(&host, Rtype::A)?;
+    /// u.add(&host, 300, &A::new([192, 0, 2, 5].into()))?;
+    /// let update = UpdateMessage::new(Message::parse(u.finish())?)?;
+    /// let names: Vec<String> = update.updates().map(|op| op.map(|op| op.name().to_string())).collect::<Result<_, _>>()?;
+    /// assert_eq!(names, ["host.example.com.", "host.example.com."]);
+    /// # Ok::<(), dnsbox::Error>(())
+    /// ```
     #[must_use]
     pub fn name(&self) -> Name<'a> {
         match *self {
@@ -441,6 +734,24 @@ impl<'a> UpdateOp<'a> {
     ///
     /// [`Error::InvalidUpdate`] (FORMERR) on an invalid combination of
     /// class, type, TTL and RDATA.
+    ///
+    /// ```
+    /// use dnsbox::rdata::A;
+    /// use dnsbox::update::UpdateOp;
+    /// use dnsbox::{Class, Error, Message, MessageBuilder, NameBuf};
+    ///
+    /// let host: NameBuf = "host.example.com".parse()?;
+    /// let a = A::new([192, 0, 2, 5].into());
+    /// let mut buf = [0u8; 256];
+    /// let mut b = MessageBuilder::new(&mut buf)?;
+    /// b.push_authority(&host, Class::IN, 300, &a)?; // zone class: add
+    /// b.push_authority(&host, Class::CH, 300, &a)?; // another class: FORMERR
+    /// let msg = Message::parse(b.finish())?;
+    /// let mut rrs = msg.authority();
+    /// assert!(matches!(UpdateOp::classify(rrs.next().unwrap()?, Class::IN)?, UpdateOp::Add(_)));
+    /// assert_eq!(UpdateOp::classify(rrs.next().unwrap()?, Class::IN).unwrap_err(), Error::InvalidUpdate);
+    /// # Ok::<(), Error>(())
+    /// ```
     pub fn classify(rr: Record<'a>, zone_class: Class) -> Result<Self> {
         let (class, rtype) = (rr.class(), rr.rtype());
         Ok(if class == Class::ANY {
@@ -521,6 +832,18 @@ impl<'a> UpdateMessage<'a> {
     ///
     /// [`Error::InvalidUpdate`] if it is not, or the parse error of the
     /// zone entry.
+    ///
+    /// ```
+    /// use dnsbox::update::UpdateMessage;
+    /// use dnsbox::{Class, Error, Message, MessageBuilder, NameBuf, Rtype};
+    ///
+    /// // A plain SOA query is not an UPDATE.
+    /// let zone: NameBuf = "example.com".parse()?;
+    /// let mut buf = [0u8; 512];
+    /// let query = MessageBuilder::query(&mut buf, 1, &zone, Rtype::SOA, Class::IN)?.finish();
+    /// assert_eq!(UpdateMessage::new(Message::parse(query)?).unwrap_err(), Error::InvalidUpdate);
+    /// # Ok::<(), Error>(())
+    /// ```
     pub fn new(msg: Message<'a>) -> Result<Self> {
         if msg.flags().opcode() != Opcode::UPDATE || msg.header().qdcount != 1 {
             return Err(Error::InvalidUpdate);
@@ -533,6 +856,20 @@ impl<'a> UpdateMessage<'a> {
     }
 
     /// The underlying message.
+    ///
+    /// ```
+    /// use dnsbox::update::{UpdateBuilder, UpdateMessage};
+    /// use dnsbox::{Class, Message, MessageBuilder, NameBuf};
+    ///
+    /// let zone: NameBuf = "example.com".parse()?;
+    /// let mut buf = [0u8; 512];
+    /// let mut u = UpdateBuilder::new(MessageBuilder::new(&mut buf)?, &zone, Class::IN)?;
+    /// u.builder().set_id(99);
+    /// let update = UpdateMessage::new(Message::parse(u.finish())?)?;
+    /// // The response echoes the ID (RFC 2136 §3.8).
+    /// assert_eq!(update.message().id(), 99);
+    /// # Ok::<(), dnsbox::Error>(())
+    /// ```
     #[inline]
     #[must_use]
     pub const fn message(&self) -> Message<'a> {
@@ -540,6 +877,18 @@ impl<'a> UpdateMessage<'a> {
     }
 
     /// The zone section entry.
+    ///
+    /// ```
+    /// use dnsbox::update::{UpdateBuilder, UpdateMessage};
+    /// use dnsbox::{Class, Message, MessageBuilder, NameBuf};
+    ///
+    /// let zone: NameBuf = "example.com".parse()?;
+    /// let mut buf = [0u8; 512];
+    /// let u = UpdateBuilder::new(MessageBuilder::new(&mut buf)?, &zone, Class::IN)?;
+    /// let update = UpdateMessage::new(Message::parse(u.finish())?)?;
+    /// assert_eq!(update.zone().to_string(), "example.com. IN SOA");
+    /// # Ok::<(), dnsbox::Error>(())
+    /// ```
     #[inline]
     #[must_use]
     pub const fn zone(&self) -> Question<'a> {
@@ -547,6 +896,20 @@ impl<'a> UpdateMessage<'a> {
     }
 
     /// The zone name (ZNAME).
+    ///
+    /// ```
+    /// use dnsbox::update::{UpdateBuilder, UpdateMessage};
+    /// use dnsbox::{Class, Message, MessageBuilder, NameBuf};
+    ///
+    /// let zone: NameBuf = "example.com".parse()?;
+    /// let mut buf = [0u8; 512];
+    /// let u = UpdateBuilder::new(MessageBuilder::new(&mut buf)?, &zone, Class::IN)?;
+    /// let update = UpdateMessage::new(Message::parse(u.finish())?)?;
+    /// // A server answers NOTAUTH for zones it is not primary for.
+    /// let ours: NameBuf = "example.com".parse()?;
+    /// assert_eq!(update.zone_name(), ours.as_name());
+    /// # Ok::<(), dnsbox::Error>(())
+    /// ```
     #[inline]
     #[must_use]
     pub const fn zone_name(&self) -> Name<'a> {
@@ -554,6 +917,18 @@ impl<'a> UpdateMessage<'a> {
     }
 
     /// The zone class (ZCLASS).
+    ///
+    /// ```
+    /// use dnsbox::update::{UpdateBuilder, UpdateMessage};
+    /// use dnsbox::{Class, Message, MessageBuilder, NameBuf};
+    ///
+    /// let zone: NameBuf = "example.com".parse()?;
+    /// let mut buf = [0u8; 512];
+    /// let u = UpdateBuilder::new(MessageBuilder::new(&mut buf)?, &zone, Class::IN)?;
+    /// let update = UpdateMessage::new(Message::parse(u.finish())?)?;
+    /// assert_eq!(update.zone_class(), Class::IN);
+    /// # Ok::<(), dnsbox::Error>(())
+    /// ```
     #[inline]
     #[must_use]
     pub const fn zone_class(&self) -> Class {
@@ -562,12 +937,43 @@ impl<'a> UpdateMessage<'a> {
 
     /// Whether `name` is at or below the zone name: servers answer NOTZONE
     /// for prerequisites or updates outside the zone (§3.2, §3.4.1.3).
+    ///
+    /// ```
+    /// use dnsbox::update::{UpdateBuilder, UpdateMessage};
+    /// use dnsbox::{Class, Message, MessageBuilder, NameBuf};
+    ///
+    /// let zone: NameBuf = "example.com".parse()?;
+    /// let mut buf = [0u8; 512];
+    /// let u = UpdateBuilder::new(MessageBuilder::new(&mut buf)?, &zone, Class::IN)?;
+    /// let update = UpdateMessage::new(Message::parse(u.finish())?)?;
+    /// let (inside, apex, outside): (NameBuf, NameBuf, NameBuf) =
+    ///     ("www.example.com".parse()?, "EXAMPLE.com".parse()?, "example.org".parse()?);
+    /// assert!(update.in_zone(&inside.as_name()) && update.in_zone(&apex.as_name()));
+    /// assert!(!update.in_zone(&outside.as_name())); // NOTZONE
+    /// # Ok::<(), dnsbox::Error>(())
+    /// ```
     #[must_use]
     pub fn in_zone(&self, name: &Name<'_>) -> bool {
         name.is_subdomain_of(&self.zone.name())
     }
 
     /// The prerequisite section (answer section), classified.
+    ///
+    /// ```
+    /// use dnsbox::update::{Prerequisite, UpdateBuilder, UpdateMessage};
+    /// use dnsbox::{Class, Message, MessageBuilder, NameBuf, Rtype};
+    ///
+    /// let zone: NameBuf = "example.com".parse()?;
+    /// let host: NameBuf = "host.example.com".parse()?;
+    /// let mut buf = [0u8; 512];
+    /// let mut u = UpdateBuilder::new(MessageBuilder::new(&mut buf)?, &zone, Class::IN)?;
+    /// u.require_name_in_use(&host)?;
+    /// u.require_rrset_absent(&host, Rtype::CNAME)?;
+    /// let update = UpdateMessage::new(Message::parse(u.finish())?)?;
+    /// let prereqs: Vec<Prerequisite<'_>> = update.prerequisites().collect::<Result<_, _>>()?;
+    /// assert!(matches!(prereqs[..], [Prerequisite::NameInUse(_), Prerequisite::RrsetAbsent { .. }]));
+    /// # Ok::<(), dnsbox::Error>(())
+    /// ```
     pub fn prerequisites(&self) -> Prerequisites<'a> {
         Prerequisites {
             inner: self.msg.answers(),
@@ -577,6 +983,29 @@ impl<'a> UpdateMessage<'a> {
     }
 
     /// The update section (authority section), classified.
+    ///
+    /// ```
+    /// use dnsbox::rdata::A;
+    /// use dnsbox::update::{UpdateBuilder, UpdateMessage, UpdateOp};
+    /// use dnsbox::{Class, Message, MessageBuilder, NameBuf, Rtype};
+    ///
+    /// let zone: NameBuf = "example.com".parse()?;
+    /// let host: NameBuf = "host.example.com".parse()?;
+    /// let mut buf = [0u8; 512];
+    /// let mut u = UpdateBuilder::new(MessageBuilder::new(&mut buf)?, &zone, Class::IN)?;
+    /// u.delete_rrset(&host, Rtype::A)?;
+    /// u.add(&host, 300, &A::new([192, 0, 2, 6].into()))?;
+    /// let update = UpdateMessage::new(Message::parse(u.finish())?)?;
+    /// let mut adds = 0;
+    /// for op in update.updates() {
+    ///     if let UpdateOp::Add(rr) = op? {
+    ///         assert_eq!(rr.ttl(), 300);
+    ///         adds += 1;
+    ///     }
+    /// }
+    /// assert_eq!(adds, 1);
+    /// # Ok::<(), dnsbox::Error>(())
+    /// ```
     pub fn updates(&self) -> Updates<'a> {
         Updates {
             inner: self.msg.authority(),
@@ -586,6 +1015,23 @@ impl<'a> UpdateMessage<'a> {
     }
 
     /// The additional data section.
+    ///
+    /// ```
+    /// use dnsbox::rdata::{A, Ns};
+    /// use dnsbox::update::{UpdateBuilder, UpdateMessage};
+    /// use dnsbox::{Class, Message, MessageBuilder, NameBuf, Rtype};
+    ///
+    /// let zone: NameBuf = "example.com".parse()?;
+    /// let (sub, ns): (NameBuf, NameBuf) = ("lab.example.com".parse()?, "ns.lab.example.com".parse()?);
+    /// let mut buf = [0u8; 512];
+    /// let mut u = UpdateBuilder::new(MessageBuilder::new(&mut buf)?, &zone, Class::IN)?;
+    /// u.add(&sub, 3600, &Ns::new(ns.as_name()))?;
+    /// u.push_additional(&ns, Class::IN, 3600, &A::new([192, 0, 2, 53].into()))?;
+    /// let update = UpdateMessage::new(Message::parse(u.finish())?)?;
+    /// let glue = update.additional().next().unwrap()?;
+    /// assert_eq!((glue.name(), glue.rtype()), (ns.as_name(), Rtype::A));
+    /// # Ok::<(), dnsbox::Error>(())
+    /// ```
     #[inline]
     pub fn additional(&self) -> Records<'a> {
         self.msg.additional()
@@ -598,6 +1044,22 @@ impl<'a> UpdateMessage<'a> {
     ///
     /// [`Error::InvalidUpdate`] for the first invalid prerequisite or
     /// update, or the parse error of a malformed record.
+    ///
+    /// ```
+    /// use dnsbox::rdata::UnknownRdata;
+    /// use dnsbox::update::{UpdateBuilder, UpdateMessage};
+    /// use dnsbox::{Class, Error, Message, MessageBuilder, NameBuf, Rtype};
+    ///
+    /// // A hand-made update deleting an RRset but with a TTL: FORMERR (§3.4.1.3).
+    /// let zone: NameBuf = "example.com".parse()?;
+    /// let host: NameBuf = "host.example.com".parse()?;
+    /// let mut buf = [0u8; 512];
+    /// let mut u = UpdateBuilder::new(MessageBuilder::new(&mut buf)?, &zone, Class::IN)?;
+    /// u.builder().push_authority(&host, Class::ANY, 60, &UnknownRdata::new(Rtype::A, &[]))?;
+    /// let update = UpdateMessage::new(Message::parse(u.finish())?)?;
+    /// assert_eq!(update.validate(), Err(Error::InvalidUpdate));
+    /// # Ok::<(), Error>(())
+    /// ```
     pub fn validate(&self) -> Result<()> {
         for p in self.prerequisites() {
             p?;

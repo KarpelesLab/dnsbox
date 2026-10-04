@@ -83,6 +83,11 @@
 //! }
 //! # }
 //! ```
+#![cfg_attr(feature = "alloc", doc = "\n[`ZoneCollation`]: ZoneCollation")]
+#![cfg_attr(
+    not(feature = "alloc"),
+    doc = "\n[`ZoneCollation`]: crate#cargo-features"
+)]
 
 mod alg;
 #[cfg(feature = "dnssec")]

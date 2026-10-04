@@ -24,11 +24,11 @@ use {super::DigestType, crate::rdata::Ds};
 ///
 /// A typical walk down from a trust anchor:
 ///
-/// 1. the root's keys from [`from_ds`](Self::from_ds) with the root
+/// 1. the root's keys from [`from_ds`] with the root
 ///    trust anchor's DS records (or [`from_anchors`](Self::from_anchors));
 /// 2. the child's DS RRset authenticated with
 ///    [`verify_rrset`](Self::verify_rrset) of the parent's keys;
-/// 3. the child's keys from [`from_ds`](Self::from_ds) with that DS RRset;
+/// 3. the child's keys from [`from_ds`] with that DS RRset;
 ///    a proven absence of DS ([`Denial::UnsignedDelegation`]) or a DS
 ///    RRset without supported algorithms
 ///    ([`Error::UnsupportedAlgorithm`]) makes the child insecure instead;
@@ -117,6 +117,11 @@ use {super::DigestType, crate::rdata::Ds};
 /// ```
 ///
 /// [`Denial::UnsignedDelegation`]: super::Denial::UnsignedDelegation
+#[cfg_attr(feature = "dnssec-digest", doc = "[`from_ds`]: Self::from_ds")]
+#[cfg_attr(
+    not(feature = "dnssec-digest"),
+    doc = "[`from_ds`]: crate#cargo-features"
+)]
 #[derive(Clone, Copy, Debug)]
 pub struct TrustedKeys<'a, K> {
     zone: Name<'a>,
@@ -406,7 +411,13 @@ where
     /// # Errors
     ///
     /// Fails with [`Error::KeyMismatch`] if no anchor is in the set, and
-    /// otherwise as [`from_ds`](Self::from_ds).
+    /// otherwise as [`from_ds`].
+    ///
+    #[cfg_attr(feature = "dnssec-digest", doc = "[`from_ds`]: Self::from_ds")]
+    #[cfg_attr(
+        not(feature = "dnssec-digest"),
+        doc = "[`from_ds`]: crate#cargo-features"
+    )]
     pub fn from_anchors<'t, 's, V, B, T, S>(
         verifier: &V,
         dnskeys: Rrset<'a, K>,

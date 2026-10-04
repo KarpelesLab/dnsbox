@@ -127,7 +127,11 @@ struct Entry {
 /// # Ok::<(), dnsbox::Error>(())
 /// ```
 ///
-/// [`verify`]: Self::verify
+#[cfg_attr(feature = "dnssec-digest", doc = "[`verify`]: Self::verify")]
+#[cfg_attr(
+    not(feature = "dnssec-digest"),
+    doc = "[`verify`]: crate#cargo-features"
+)]
 #[derive(Clone, Debug)]
 pub struct ZoneCollation {
     apex: NameBuf,

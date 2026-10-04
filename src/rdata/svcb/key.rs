@@ -17,7 +17,7 @@ open_enum! {
     /// assert!(SvcParamKey::new(65300).is_private_use());
     /// # Ok::<(), dnsbox::Error>(())
     /// ```
-    pub struct SvcParamKey(u16), generic "key";
+    pub struct SvcParamKey(u16) in dnsbox::rdata, generic "key";
     /// Keys that clients must understand to use the record (RFC 9460 §8).
     MANDATORY = 0 => "mandatory",
     /// Additional supported ALPN protocol IDs (RFC 9460 §7.1).

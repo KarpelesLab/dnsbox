@@ -92,7 +92,7 @@ impl<V: Verifier + ?Sized> Verifier for &V {
 
 /// Creates DNSSEC signatures with one private key.
 ///
-/// [`SigningKey`](super::SigningKey) implements it with `purecrypto`;
+/// [`SigningKey`] implements it with `purecrypto`;
 /// implement it to sign with a key held elsewhere (an HSM, a KMS, ...).
 ///
 /// ```
@@ -108,6 +108,9 @@ impl<V: Verifier + ?Sized> Verifier for &V {
 /// # }
 /// # Ok::<(), dnsbox::Error>(())
 /// ```
+///
+#[cfg_attr(feature = "dnssec", doc = "[`SigningKey`]: super::SigningKey")]
+#[cfg_attr(not(feature = "dnssec"), doc = "[`SigningKey`]: crate#cargo-features")]
 pub trait Signer {
     /// The key's algorithm.
     fn algorithm(&self) -> Algorithm;

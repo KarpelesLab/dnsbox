@@ -30,7 +30,7 @@ open_enum! {
     /// assert_eq!(TkeyMode::new(7).to_string(), "7");
     /// # Ok::<(), dnsbox::Error>(())
     /// ```
-    pub struct TkeyMode(u16), generic "";
+    pub struct TkeyMode(u16) in dnsbox::rdata, generic "";
     /// Server assignment: the server sends keying material encrypted
     /// under the resolver's KEY (RFC 2930 §4.4).
     SERVER_ASSIGNMENT = 1 => "SERVER-ASSIGNMENT",

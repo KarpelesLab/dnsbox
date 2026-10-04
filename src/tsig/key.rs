@@ -12,7 +12,7 @@ pub const MAX_MAC_LEN: usize = 64;
 ///
 /// Implementations wrap a real MAC from a crypto library; dnsbox only
 /// feeds bytes in the order RFC 8945 §4.3 prescribes. See [`TsigKey`] for
-/// an implementation, and [`HmacState`](super::HmacState) (feature `tsig`)
+/// an implementation, and [`HmacState`] (feature `tsig`)
 /// for the `purecrypto` one.
 ///
 /// ```
@@ -28,6 +28,9 @@ pub const MAX_MAC_LEN: usize = 64;
 ///     (out, len)
 /// }
 /// ```
+///
+#[cfg_attr(feature = "tsig", doc = "[`HmacState`]: super::HmacState")]
+#[cfg_attr(not(feature = "tsig"), doc = "[`HmacState`]: crate#cargo-features")]
 pub trait TsigMac {
     /// Feeds message bytes.
     fn update(&mut self, data: &[u8]);
@@ -45,7 +48,7 @@ pub trait TsigMac {
 
 /// A TSIG key: its name, its algorithm, and a factory for keyed MACs.
 ///
-/// [`HmacKey`](super::HmacKey) (feature `tsig`) implements it with
+/// [`HmacKey`] (feature `tsig`) implements it with
 /// `purecrypto`. Other backends implement both traits:
 ///
 /// ```
@@ -87,6 +90,9 @@ pub trait TsigMac {
 ///     }
 /// }
 /// ```
+///
+#[cfg_attr(feature = "tsig", doc = "[`HmacKey`]: super::HmacKey")]
+#[cfg_attr(not(feature = "tsig"), doc = "[`HmacKey`]: crate#cargo-features")]
 pub trait TsigKey {
     /// The MAC computation this key produces.
     type Mac: TsigMac;

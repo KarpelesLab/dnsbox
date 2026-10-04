@@ -299,6 +299,35 @@ impl<B: OutBuf> MessageBuilder<B> {
     /// [`Error::BufferTooSmall`] if `options` do not fit: the reserve is
     /// then restored, and the caller can retry with fewer options (e.g.
     /// `&()`). Otherwise as [`push_edns`](Self::push_edns).
+    ///
+    /// ```
+    /// use dnsbox::builder::Truncation;
+    /// use dnsbox::edns::{Nsid, OptHeader};
+    /// use dnsbox::rdata::A;
+    /// use dnsbox::{Class, Message, MessageBuilder, NameBuf, Rtype, Section};
+    ///
+    /// let name: NameBuf = "pool.example".parse()?;
+    /// let mut qbuf = [0u8; 512];
+    /// let mut q = MessageBuilder::query(&mut qbuf, 1, &name, Rtype::A, Class::IN)?;
+    /// q.push_edns(OptHeader::new(512), &())?;
+    /// let query = Message::parse(q.finish())?;
+    ///
+    /// // Far too many addresses for 512 bytes: the answer is truncated, yet the
+    /// // OPT record still fits thanks to the reserve.
+    /// let mut buf = [0u8; 4096];
+    /// let mut b = MessageBuilder::new(&mut buf)?;
+    /// b.set_limit(512);
+    /// b.set_truncation(Truncation::SetTc);
+    /// let opt = b.start_response_edns(&query, 1232)?.expect("query had EDNS");
+    /// let pool: Vec<A> = (0..=255).map(|i| A::new([192, 0, 2, i].into())).collect();
+    /// b.push_rrset(Section::Answer, &name, Class::IN, 60, &pool)?;
+    /// b.push_reserved_edns(opt, &Nsid::new(b"ns1"))
+    ///     .or_else(|_| b.push_reserved_edns(opt, &()))?; // no room for NSID: retry bare
+    /// let resp = Message::parse_validated(b.finish())?;
+    /// assert!(resp.flags().tc());
+    /// assert!(resp.edns()?.is_some());
+    /// # Ok::<(), dnsbox::Error>(())
+    /// ```
     pub fn push_reserved_edns<O: ComposeOptions + ?Sized>(
         &mut self,
         header: OptHeader,

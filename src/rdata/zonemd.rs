@@ -21,7 +21,7 @@ open_enum! {
     /// assert_eq!(ZonemdScheme::SIMPLE.get(), 1);
     /// assert_eq!(ZonemdScheme::new(240).to_string(), "240");
     /// ```
-    pub struct ZonemdScheme(u8), generic "";
+    pub struct ZonemdScheme(u8) in dnsbox::rdata, generic "";
     /// Simple ZONEMD collation (RFC 8976 §3.3.1).
     SIMPLE = 1 => "SIMPLE",
 }
@@ -39,7 +39,7 @@ open_enum! {
     /// assert_eq!(ZonemdHashAlg::SHA512.digest_len(), Some(64));
     /// assert_eq!(ZonemdHashAlg::new(240).digest_len(), None);
     /// ```
-    pub struct ZonemdHashAlg(u8), generic "";
+    pub struct ZonemdHashAlg(u8) in dnsbox::rdata, generic "";
     /// SHA-384 (RFC 8976 §2.2.3).
     SHA384 = 1 => "SHA384",
     /// SHA-512 (RFC 8976 §2.2.3).

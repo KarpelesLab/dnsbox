@@ -22,7 +22,7 @@ open_enum! {
     /// assert_eq!(CertType::new(9).to_string(), "9");
     /// # Ok::<(), dnsbox::Error>(())
     /// ```
-    pub struct CertType(u16), generic "";
+    pub struct CertType(u16) in dnsbox::rdata, generic "";
     /// X.509 as per PKIX (RFC 4398 §2.1).
     PKIX = 1 => "PKIX",
     /// SPKI certificate (RFC 4398 §2.1).

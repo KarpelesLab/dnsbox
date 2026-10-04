@@ -60,6 +60,15 @@ impl<'a> CharStr<'a> {
     /// # Errors
     ///
     /// [`Error::CharStringTooLong`] if `bytes` is longer than 255 bytes.
+    ///
+    /// ```
+    /// use dnsbox::{CharStr, Error};
+    ///
+    /// let s = CharStr::new(b"google-site-verification=abc")?;
+    /// assert_eq!(s.len(), 28);
+    /// assert_eq!(CharStr::new(&[0; 300]), Err(Error::CharStringTooLong));
+    /// # Ok::<(), Error>(())
+    /// ```
     #[inline]
     pub const fn new(bytes: &'a [u8]) -> Result<Self> {
         if bytes.len() > Self::MAX_LEN {
@@ -76,6 +85,15 @@ impl<'a> CharStr<'a> {
     }
 
     /// The payload bytes.
+    ///
+    /// ```
+    /// use dnsbox::WireReader;
+    ///
+    /// // The first string of a TXT record's RDATA.
+    /// let mut r = WireReader::new(b"\x0bv=spf1 -all");
+    /// assert_eq!(r.read_char_string()?.as_bytes(), b"v=spf1 -all");
+    /// # Ok::<(), dnsbox::Error>(())
+    /// ```
     #[inline]
     #[must_use]
     pub const fn as_bytes(&self) -> &'a [u8] {
@@ -83,6 +101,14 @@ impl<'a> CharStr<'a> {
     }
 
     /// Payload length in bytes.
+    ///
+    /// ```
+    /// use dnsbox::CharStr;
+    ///
+    /// // The wire form is one length octet longer.
+    /// assert_eq!(CharStr::new(b"hello")?.len(), 5);
+    /// # Ok::<(), dnsbox::Error>(())
+    /// ```
     #[inline]
     #[must_use]
     pub const fn len(&self) -> usize {
@@ -90,6 +116,15 @@ impl<'a> CharStr<'a> {
     }
 
     /// Whether the payload is empty.
+    ///
+    /// ```
+    /// use dnsbox::CharStr;
+    ///
+    /// assert!(CharStr::new(b"")?.is_empty());
+    /// assert_eq!(CharStr::new(b"")?.to_string(), "\"\"");
+    /// assert!(!CharStr::new(b"x")?.is_empty());
+    /// # Ok::<(), dnsbox::Error>(())
+    /// ```
     #[inline]
     #[must_use]
     pub const fn is_empty(&self) -> bool {
@@ -100,8 +135,25 @@ impl<'a> CharStr<'a> {
     ///
     /// # Errors
     ///
-    /// [`Error::BufferTooSmall`] if `c` has no room for them; nothing is
-    /// written then.
+    /// [`Error::BufferTooSmall`] if `c` has no room for them (the length
+    /// octet may have been written, as with
+    /// [`Composer::put_char_string`]; callers composing a whole record
+    /// roll back, as the message builder does).
+    ///
+    /// ```
+    /// use dnsbox::{CharStr, Error, WireWriter};
+    ///
+    /// // HINFO RDATA: two character-strings.
+    /// let mut buf = [0u8; 16];
+    /// let mut w = WireWriter::new(&mut buf);
+    /// CharStr::new(b"ARM")?.compose(&mut w)?;
+    /// CharStr::new(b"Linux")?.compose(&mut w)?;
+    /// assert_eq!(w.as_bytes(), b"\x03ARM\x05Linux");
+    /// let mut small = [0u8; 3];
+    /// let mut w = WireWriter::new(&mut small);
+    /// assert_eq!(CharStr::new(b"ARM")?.compose(&mut w), Err(Error::BufferTooSmall));
+    /// # Ok::<(), Error>(())
+    /// ```
     #[inline]
     pub fn compose<C: Composer + ?Sized>(&self, c: &mut C) -> Result<()> {
         c.put_char_string(self.0)
@@ -149,6 +201,18 @@ impl<'a> CharStrs<'a> {
     /// # Errors
     ///
     /// [`Error::UnexpectedEof`] if the last string is cut short.
+    ///
+    /// ```
+    /// use dnsbox::charstr::CharStrs;
+    /// use dnsbox::Error;
+    ///
+    /// // A TXT RDATA with a long DKIM key split over two strings.
+    /// let strings = CharStrs::new(b"\x07v=DKIM1\x09k=rsa; p=")?;
+    /// assert_eq!(strings.iter().count(), 2);
+    /// assert_eq!(CharStrs::new(b""), Ok(CharStrs::default()));
+    /// assert_eq!(CharStrs::new(b"\x09k=rsa"), Err(Error::UnexpectedEof));
+    /// # Ok::<(), Error>(())
+    /// ```
     pub fn new(wire: &'a [u8]) -> Result<Self> {
         let mut rest = wire;
         while let [len, tail @ ..] = rest {
@@ -158,6 +222,14 @@ impl<'a> CharStrs<'a> {
     }
 
     /// The encoded bytes (length octets included).
+    ///
+    /// ```
+    /// use dnsbox::charstr::CharStrs;
+    ///
+    /// let rdata = b"\x02ab\x00";
+    /// assert_eq!(CharStrs::new(rdata)?.as_wire(), rdata); // length octets included
+    /// # Ok::<(), dnsbox::Error>(())
+    /// ```
     #[inline]
     #[must_use]
     pub const fn as_wire(&self) -> &'a [u8] {
@@ -165,6 +237,15 @@ impl<'a> CharStrs<'a> {
     }
 
     /// Whether the sequence holds no strings.
+    ///
+    /// ```
+    /// use dnsbox::charstr::CharStrs;
+    ///
+    /// assert!(CharStrs::new(b"")?.is_empty());
+    /// // One empty string is not an empty sequence.
+    /// assert!(!CharStrs::new(b"\x00")?.is_empty());
+    /// # Ok::<(), dnsbox::Error>(())
+    /// ```
     #[inline]
     #[must_use]
     pub const fn is_empty(&self) -> bool {
@@ -172,6 +253,17 @@ impl<'a> CharStrs<'a> {
     }
 
     /// Iterates over the strings.
+    ///
+    /// ```
+    /// use dnsbox::charstr::CharStrs;
+    ///
+    /// // An SPF record split over two strings is read as their concatenation
+    /// // (RFC 7208 §3.3).
+    /// let strings = CharStrs::new(b"\x0dv=spf1 ip4:19\x0f2.0.2.0/24 -all")?;
+    /// let spf: Vec<u8> = strings.iter().flat_map(|s| s.as_bytes().iter().copied()).collect();
+    /// assert_eq!(spf, b"v=spf1 ip4:192.0.2.0/24 -all");
+    /// # Ok::<(), dnsbox::Error>(())
+    /// ```
     #[inline]
     pub fn iter(&self) -> CharStrIter<'a> {
         CharStrIter(self.0)

@@ -20,7 +20,7 @@ open_enum! {
     /// assert_eq!(Algorithm::new(200).to_string(), "200");
     /// # Ok::<(), dnsbox::Error>(())
     /// ```
-    pub struct Algorithm(u8), generic "";
+    pub struct Algorithm(u8) in dnsbox::dnssec, generic "";
     /// Delete DS / delete DNSKEY (RFC 4034 §A.1, RFC 8078 §4).
     DELETE = 0 => "DELETE",
     /// RSA/MD5 — deprecated, MUST NOT be used (RFC 6725, RFC 8624).
@@ -110,7 +110,7 @@ open_enum! {
     /// assert_eq!(DigestType::SHA1.digest_len(), Some(20));
     /// # Ok::<(), dnsbox::Error>(())
     /// ```
-    pub struct DigestType(u8), generic "", aliases {
+    pub struct DigestType(u8) in dnsbox::dnssec, generic "", aliases {
         "SHA1" => SHA1,
         "SHA256" => SHA256,
         "SHA384" => SHA384,
@@ -154,7 +154,7 @@ open_enum! {
     /// assert_eq!("SHA-1".parse::<Nsec3HashAlgorithm>()?, Nsec3HashAlgorithm::SHA1);
     /// # Ok::<(), dnsbox::Error>(())
     /// ```
-    pub struct Nsec3HashAlgorithm(u8), generic "", aliases { "SHA1" => SHA1 };
+    pub struct Nsec3HashAlgorithm(u8) in dnsbox::dnssec, generic "", aliases { "SHA1" => SHA1 };
     /// SHA-1 (RFC 5155 §5).
     SHA1 = 1 => "SHA-1",
 }
