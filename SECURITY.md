@@ -165,6 +165,10 @@ caller's job:
 - **TSIG**: replay protection beyond the time window (remember the last
   Time Signed per key), and matching responses to queries (ID, question)
   are yours. A custom `TsigMac::verify` must compare in constant time.
+- **TKEY**: `tkey` only builds and reads the RFC 2930 messages. Their
+  authentication (TSIG or SIG(0) over the whole message, RFC 2930 §4),
+  the key exchange itself and the validity window (`Tkey::is_valid_at`
+  with a trustworthy `now`) are yours.
 - **Validate early** when you need to: `Message::parse` is lazy and reports
   an error only when the faulty part is reached; `parse_validated` checks
   everything up front.
@@ -197,14 +201,19 @@ caller's job:
   (`tests/fuzz_regressions.rs`). For the audit below, after earlier
   rounds, every target ran for 400 seconds on four workers with overflow
   checks against the final code (0.6 to 9.6 million executions per
-  target) without a crash.
+  target) without a crash. After the work-limits round and the new record
+  types, every target ran again for 120 seconds on four workers with
+  overflow checks (0.4 to 6.1 million executions per target), without a
+  crash.
 - **Tests**: truncation at every offset for every parser, property tests
   (`tests/proptest_roundtrip.rs`), a corpus of real responses from BIND,
   NSD, Knot, PowerDNS and Unbound (`tests/corpus/`), tool-level interop
   with BIND, ldns, dnspython, and Knot DNS and Unbound in CI (whose
-  bogus, insecure and secure verdicts dnsbox's validation must match,
-  `tests/interop_knot.rs`), RFC test vectors, and one regression test per
-  audit finding (`tests/security_audit.rs`).
+  bogus, insecure and secure verdicts dnsbox's validation must match
+  within one default `ValidationBudget` per response, so the KeyTrap
+  limits are checked against legitimate chains, `tests/interop_knot.rs`),
+  RFC test vectors, and one regression test per audit finding
+  (`tests/security_audit.rs`).
 
 ## Audit history
 

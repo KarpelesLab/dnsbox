@@ -232,19 +232,29 @@ signatures), through the pluggable `Verifier` / `Signer` traits.
 
 ## Known gaps
 
-Nothing above is open; these are the limits to know about before 1.0:
+Nothing above is open. The gaps found by the Milestone 9 review are
+closed: AMTRELAY, DSYNC and TKEY have typed RDATA (with DOA, HHIT and
+BRID); Knot DNS and Unbound interop runs in CI; work an attacker controls
+is bounded by library limits on by default (`ZoneLimits`,
+`ValidationBudget`); `cargo doc` is clean in every feature combination.
+What remains to know before 1.0:
 
-- AMTRELAY (RFC 8777), DSYNC (RFC 9859) and TKEY (RFC 2930) have
-  mnemonics but no typed RDATA: they round-trip as RFC 3597 opaque data.
-- Knot (`kdig`, `kzonecheck`) and Unbound tools were not available for
-  tool-level interop; their servers are covered by captured responses only.
-- Work limits that depend on the caller's context are caller duties, not
-  library limits (SECURITY.md): capping the records read from an untrusted
-  zone file (one `$GENERATE` line yields up to 65 536 records), and
-  bounding the RRsets, RRSIGs and keys handed to `TrustedKeys` per
-  response. `FsIncludes` must not be used with untrusted zone files.
-- `cargo doc` without `--all-features` reports broken intra-doc links to
-  feature-gated items; docs.rs and CI build with all features.
+- Record types defined only by drafts that neither BIND nor dnspython
+  implements round-trip as RFC 3597 opaque data: IPN and CLA
+  (draft-johnson-dns-ipn-cla, expired), UNECE and ISO
+  (draft-woodcock-faltstrom-external-registry-rrtypes, still changing).
+  UINFO, UID, GID and UNSPEC are reserved without a format and stay
+  opaque by design.
+- TKEY (RFC 2930): dnsbox builds and reads the messages (`tkey`) but does
+  no key exchange (Diffie-Hellman, GSS-API). Its presentation format is
+  BIND's, with the key and other-data sizes, which dnspython does not
+  write or read (`tests/corpus/dnspython/gen_rdata.py` skips TKEY).
+- Zone transfer limits (`XfrProcessor::with_max_records`,
+  `with_max_messages`) are opt-in with no default, since zones range from
+  one record to millions.
+- Knot DNS and Unbound interop needs their tools, so it runs only in
+  GitHub CI (`.github/workflows/interop.yml`); `cargo test` checks a kept
+  subset of a CI run offline.
 
 ## Out of scope
 

@@ -34,14 +34,76 @@ with a regression test in `tests/security_audit.rs`:
 - **Info**: denial proofs accepted a zone's apex as one of its own
   delegations, and the zone's own records as denying the DS at its apex;
   both are now `Bogus(ZoneCut)`.
-- `SECURITY.md` is the final threat model: attacker model, guarantees, the
-  work bound of every operation, every authentication check, the caller
-  duties (cap records read from untrusted zone files, as one `$GENERATE`
-  yields up to 65 536; never use `FsIncludes` on untrusted input; bound
-  the RRsets handed to `TrustedKeys`) and the audit findings.
+
+Findings of the work-limits round (`SECURITY.md`): the work an attacker
+controls is now bounded by library limits, on by default, instead of
+caller duties.
+
+- **Medium**: KeyTrap (CVE-2023-50387). `TrustedKeys` bounded each call
+  to 16 verifications, but not a response, and tried every (RRSIG, key)
+  pair. A `ValidationBudget` now bounds a whole response (the
+  `*_with_budget` methods; 32 verifications by default), and each call
+  tries at most 8 RRSIGs per RRset, 4 keys per RRSIG (key tag collisions)
+  and the first 32 DNSKEYs (`ValidationLimits`).
+- **Medium**: NSEC3 closest-encloser hashing (CVE-2023-50868): proofs
+  hashed through `ValidationBudget::nsec3_hasher` stop at 64 hashes per
+  budget, as `BogusReason::LimitExceeded`.
+- **Medium**: one `$GENERATE` line yields up to 65 536 records, and
+  `zone::parse` collected them without limit. `ZoneLimits` (on
+  `ZoneReader`, `Records` and `zone::parse_with_limits`) caps records
+  (1 000 000), records per `$GENERATE`, `$INCLUDE` depth and count, total
+  input, line and token length by default.
+- **Medium**: `FsIncludes` opened any path a zone file named (absolute
+  paths, `..`, symbolic links, devices and FIFOs). `FsIncludes::new` is
+  now confined to its directory and reads regular files only, within the
+  input limit.
+- **Low**: `OwnedMessage::from_message` reserved room for what the header
+  counts claimed (some 70 MB for a 12-octet header); it now reserves what
+  the message can hold.
+- **Low**: `serde` read message sections of any length; it refuses more
+  than 65535 entries while reading.
+- `SECURITY.md` is the threat model: attacker model, guarantees, the
+  work bound and default limit of every operation, every authentication
+  check, the caller duties (one `ValidationBudget` per response, the
+  confined `FsIncludes` or an own `IncludeResolver` for untrusted zone
+  files, transfer limits for untrusted servers) and the audit findings.
 
 ### Added
 
+- Typed RDATA for the last types that had a mnemonic but no format:
+  AMTRELAY (RFC 8777, `Amtrelay` with `AmtrelayRelay`; relay types 4-127
+  are kept and written in the RFC 3597 form), DSYNC (RFC 9859, `Dsync`
+  and the `DsyncScheme` registry, `Dsync::is_usable`), TKEY (RFC 2930,
+  `Tkey` and the `TkeyMode` registry, `Tkey::with_error`,
+  `Tkey::is_valid_at`), HHIT and BRID (RFC 9886) and DOA
+  (draft-durand-doa-over-dns, as BIND implements it), each with wire and
+  presentation format, tested with the RFC examples and BIND's and
+  dnspython's vectors.
+- `tkey` module: `build_query`, `build_response` and `find` for the
+  RFC 2930 §4 message shapes (no key exchange).
+- Work limits: `Error::LimitExceeded`; `ZoneLimits` with
+  `ZoneReader::with_limits`, `Records::with_limits` and
+  `zone::parse_with_limits`; `IncludeResolver::load_limited` (a default
+  method) and `FsIncludes::unconfined`; `ValidationBudget`,
+  `ValidationLimits`, `TrustedKeys::from_ds_with_budget`,
+  `from_anchors_with_budget`, `verify_rrset_with_budget`,
+  `verify_answer_with_budget`, `ValidationBudget::nsec3_hasher` and
+  `BogusReason::LimitExceeded`; `XfrProcessor::with_max_records` and
+  `with_max_messages` (opt-in).
+- Tool-level interop with Knot DNS 3.5 and Unbound 1.19 in CI
+  (`.github/workflows/interop.yml`, `tests/corpus/knot/run.sh`):
+  Knot-signed zones for six algorithms and three denial chains, `knotd`
+  and `kdig` exchanges (EDNS, TSIG with six HMACs, AXFR/IXFR, UPDATE,
+  JSON), the `interop_probe` example's own queries (TKEY included), 96
+  Unbound validation cases whose verdicts dnsbox must match within the
+  default `ValidationBudget`, Knot's reading of dnsbox's text of every
+  type, and dnsbox-signed zones checked by `kzonecheck`, ldns and BIND;
+  `tests/interop_knot.rs` checks a kept subset offline.
+- Every public item has a doctest example (the nightly
+  `rustdoc::missing_doc_code_examples` lint is denied in CI), and
+  intra-doc links resolve in every feature combination (CI checks the
+  feature powerset with `cargo hack`: build, clippy, docs, and every
+  `no_std` combination for Cortex-M).
 - Documentation (Milestone 9): an `# Errors` section on every fallible
   public function and a runnable example on every public module, type,
   trait and free function and on the main methods, using RFC test vectors
@@ -73,6 +135,26 @@ with a regression test in `tests/security_audit.rs`:
 
 ### Changed
 
+- **Breaking**: AMTRELAY, DSYNC, TKEY, DOA, HHIT and BRID parse to their
+  new `RData` variants instead of `RData::Unknown`, and display in their
+  presentation format instead of the RFC 3597 form.
+- **Breaking**: `zone::parse`, `ZoneReader` and `Records` apply
+  `ZoneLimits::DEFAULT`; going over a limit is `Error::LimitExceeded`
+  (`ZoneLimits::UNLIMITED` for trusted files; it keeps the `$INCLUDE`
+  depth at 8). Too deep or too many `$INCLUDE`s are now `LimitExceeded`
+  instead of `BadInclude`.
+- **Breaking**: `FsIncludes::new` serves only regular files inside its
+  directory; `FsIncludes::unconfined` keeps the previous, BIND-like
+  behaviour for trusted files.
+- **Breaking**: `TrustedKeys` calls cut short by a limit return
+  `Error::LimitExceeded` instead of `BadSignature`, and look at no more
+  RRSIGs, keys per RRSIG and DNSKEYs than `ValidationLimits` allow. The
+  methods without a budget use a fresh default one per call.
+- `ValidationBudget` is `Send` but not `Sync` (it counts in `Cell`s so
+  that one budget is shared by reference across the calls of a
+  response), the one exception to the crate's `Send + Sync` types.
+- The documentation of `CharStr::compose` says that the length octet can
+  be written when the buffer is too small for the rest.
 - CERT `Display` writes the algorithm as a mnemonic (`RSASHA256`,
   `ECDSAP256SHA256`, `ED25519`, ...) where IANA, BIND and dnspython agree,
   and as a number otherwise; it used to always write a number.

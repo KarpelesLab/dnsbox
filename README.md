@@ -14,9 +14,9 @@ DNSSEC, SVCB/HTTPS, TSIG, and more).
 > zone transfers, zone files and the long tail of record types, all
 > documented with examples, fuzzed, security-audited
 > ([SECURITY.md](SECURITY.md)) and checked against BIND, ldns, dnspython
-> and live servers. The API went through its 1.0 review; until 1.0 is
-> tagged, releases may still break it (see
-> [Stability and MSRV policy](#stability-and-msrv-policy)).
+> and live servers, and against Knot DNS and Unbound in CI. The API went
+> through its 1.0 review; until 1.0 is tagged, releases may still break it
+> (see [Stability and MSRV policy](#stability-and-msrv-policy)).
 
 ## Goals
 
