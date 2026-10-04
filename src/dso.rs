@@ -97,7 +97,7 @@ pub trait ParseDsoTlv<'a>: Sized {
     /// The TLV type.
     const TYPE: DsoType;
 
-    /// Parses DSO-DATA; fails with [`Error::MalformedDso`] on a bad
+    /// Parses DSO-DATA; fails with [`Error::InvalidDso`] on a bad
     /// length.
     fn parse_data(data: &'a [u8]) -> Result<Self>;
 }
@@ -124,7 +124,7 @@ impl ComposeDsoTlv for DsoTlv<'_> {
 /// Reads a fixed-size array from DSO-DATA that must have exactly `N`
 /// bytes.
 fn exact<const N: usize>(data: &[u8]) -> Result<[u8; N]> {
-    data.try_into().map_err(|_| Error::MalformedDso)
+    data.try_into().map_err(|_| Error::InvalidDso)
 }
 
 /// The Keepalive TLV (RFC 8490 §7.1): both values are in milliseconds;
@@ -233,7 +233,7 @@ pub struct DsoMessage<'a> {
 
 impl<'a> DsoMessage<'a> {
     /// Parses the header: opcode must be DSO ([`Error::WrongType`]
-    /// otherwise) and all four counts zero ([`Error::MalformedDso`], RFC
+    /// otherwise) and all four counts zero ([`Error::InvalidDso`], RFC
     /// 8490 §5.4). TLVs are decoded lazily; see
     /// [`validate`](Self::validate).
     pub fn parse(buf: &'a [u8]) -> Result<Self> {
@@ -243,7 +243,7 @@ impl<'a> DsoMessage<'a> {
         }
         if header.qdcount != 0 || header.ancount != 0 || header.nscount != 0 || header.arcount != 0
         {
-            return Err(Error::MalformedDso);
+            return Err(Error::InvalidDso);
         }
         Ok(DsoMessage { buf, header })
     }
@@ -334,25 +334,25 @@ impl<'a> DsoMessage<'a> {
     /// - Encryption Padding, if present, is not primary, appears once and
     ///   is the last TLV (§7.3).
     ///
-    /// Fails with [`Error::MalformedDso`] (or the framing error).
+    /// Fails with [`Error::InvalidDso`] (or the framing error).
     pub fn validate(&self) -> Result<()> {
         let mut count = 0usize;
         let mut padded = false;
         for tlv in self.tlvs() {
             let tlv = tlv?;
             if padded {
-                return Err(Error::MalformedDso);
+                return Err(Error::InvalidDso);
             }
             if tlv.dso_type == DsoType::ENCRYPTION_PADDING {
                 if count == 0 {
-                    return Err(Error::MalformedDso);
+                    return Err(Error::InvalidDso);
                 }
                 padded = true;
             }
             count += 1;
         }
         if count == 0 && !self.is_response() {
-            return Err(Error::MalformedDso);
+            return Err(Error::InvalidDso);
         }
         Ok(())
     }
@@ -440,7 +440,7 @@ impl<B: OutBuf> DsoBuilder<B> {
     /// Starts a request with a (non-zero) message ID (§5.4).
     pub fn request(buf: B, id: u16) -> Result<Self> {
         if id == 0 {
-            return Err(Error::MalformedDso);
+            return Err(Error::InvalidDso);
         }
         Self::new(buf, id, Flags::default())
     }
@@ -454,7 +454,7 @@ impl<B: OutBuf> DsoBuilder<B> {
     /// set).
     pub fn response(buf: B, request: &DsoMessage<'_>, rcode: Rcode) -> Result<Self> {
         if request.is_response() || request.is_unidirectional() {
-            return Err(Error::MalformedDso);
+            return Err(Error::InvalidDso);
         }
         Self::new(
             buf,
@@ -499,7 +499,7 @@ impl<B: OutBuf> DsoBuilder<B> {
         }
         if dso_type == DsoType::ENCRYPTION_PADDING && self.tlvs == 0 {
             // Padding is never the primary TLV (§7.3).
-            return Err(Error::MalformedDso);
+            return Err(Error::InvalidDso);
         }
         let start = self.buf.as_bytes().len();
         let res = (|| {
@@ -526,7 +526,7 @@ impl<B: OutBuf> DsoBuilder<B> {
     /// message grows to the next multiple of `block` that fits it.
     pub fn pad_to(&mut self, block: usize) -> Result<()> {
         if block == 0 {
-            return Err(Error::MalformedDso);
+            return Err(Error::InvalidDso);
         }
         let with_header = self.len() + 4;
         let pad = (block - with_header % block) % block;
@@ -557,11 +557,11 @@ impl<B: OutBuf> DsoBuilder<B> {
     }
 
     /// Finishes the message. A request or unidirectional message must have
-    /// a primary TLV ([`Error::MalformedDso`] otherwise).
+    /// a primary TLV ([`Error::InvalidDso`] otherwise).
     pub fn finish(self) -> Result<B::Output> {
         let header = Header::parse(self.as_bytes())?;
         if self.tlvs == 0 && !header.flags.qr() {
-            return Err(Error::MalformedDso);
+            return Err(Error::InvalidDso);
         }
         Ok(self.buf.into_output())
     }
@@ -674,12 +674,12 @@ mod tests {
         assert!(DsoBuilder::response(WireWriter::new(&mut [0u8; 64]), &m, Rcode::NOERROR).is_err());
         assert_eq!(
             DsoBuilder::request(WireWriter::new(&mut [0u8; 64]), 0).err(),
-            Some(Error::MalformedDso)
+            Some(Error::InvalidDso)
         );
         // A request without a primary TLV.
         let mut empty = [0u8; 64];
         let b = DsoBuilder::request(WireWriter::new(&mut empty), 3).unwrap();
-        assert_eq!(b.finish().err(), Some(Error::MalformedDso));
+        assert_eq!(b.finish().err(), Some(Error::InvalidDso));
     }
 
     #[test]
@@ -707,13 +707,13 @@ mod tests {
         // Padding cannot be primary.
         let mut buf = [0u8; 64];
         let mut b = DsoBuilder::request(WireWriter::new(&mut buf), 7).unwrap();
-        assert_eq!(b.pad_to(16), Err(Error::MalformedDso));
+        assert_eq!(b.pad_to(16), Err(Error::InvalidDso));
         assert_eq!(
             b.push(&EncryptionPadding { padding: &[0; 3] }),
-            Err(Error::MalformedDso)
+            Err(Error::InvalidDso)
         );
         b.push(&RetryDelay { delay: 1 }).unwrap();
-        assert_eq!(b.pad_to(0), Err(Error::MalformedDso));
+        assert_eq!(b.pad_to(0), Err(Error::InvalidDso));
     }
 
     #[test]
@@ -726,29 +726,29 @@ mod tests {
         for i in [4, 7, 9, 11] {
             let mut m = KEEPALIVE_REQUEST.to_vec();
             m[i] = 1;
-            assert_eq!(DsoMessage::parse(&m).err(), Some(Error::MalformedDso));
+            assert_eq!(DsoMessage::parse(&m).err(), Some(Error::InvalidDso));
         }
         // Wrong Keepalive / Retry Delay lengths.
-        assert_eq!(Keepalive::parse_data(&[0; 7]), Err(Error::MalformedDso));
-        assert_eq!(Keepalive::parse_data(&[0; 9]), Err(Error::MalformedDso));
-        assert_eq!(RetryDelay::parse_data(&[0; 5]), Err(Error::MalformedDso));
+        assert_eq!(Keepalive::parse_data(&[0; 7]), Err(Error::InvalidDso));
+        assert_eq!(Keepalive::parse_data(&[0; 9]), Err(Error::InvalidDso));
+        assert_eq!(RetryDelay::parse_data(&[0; 5]), Err(Error::InvalidDso));
         // Padding as primary, or not last.
         let mut m = KEEPALIVE_REQUEST[..12].to_vec();
         m.extend_from_slice(&[0, 3, 0, 1, 0]);
         assert_eq!(
             DsoMessage::parse_validated(&m).err(),
-            Some(Error::MalformedDso)
+            Some(Error::InvalidDso)
         );
         let mut m = KEEPALIVE_REQUEST.to_vec();
         m.extend_from_slice(&[0, 3, 0, 0, 0, 2, 0, 4, 0, 0, 0, 1]);
         assert_eq!(
             DsoMessage::parse_validated(&m).err(),
-            Some(Error::MalformedDso)
+            Some(Error::InvalidDso)
         );
         // A request with no TLV.
         assert_eq!(
             DsoMessage::parse_validated(&KEEPALIVE_REQUEST[..12]).err(),
-            Some(Error::MalformedDso)
+            Some(Error::InvalidDso)
         );
         // Every truncation fails cleanly.
         for end in 0..KEEPALIVE_REQUEST.len() {

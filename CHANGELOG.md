@@ -45,6 +45,10 @@ Every change that can break a caller is listed here:
 - `#[must_use]` on the pure functions and methods (constructors,
   accessors, conversions, `with_*` builders) and on the iterator types:
   ignoring their result is now a warning.
+- `Error::MalformedUpdate`, `MalformedXfr` and `MalformedDso` are renamed
+  `InvalidUpdate`, `InvalidXfr` and `InvalidDso`: one `Error` for the
+  whole crate, with `Invalid*` for malformed input (as `InvalidRdata`,
+  `InvalidText`, `InvalidOption`) and `Bad*` for failed checks.
 
 
 ### Added
@@ -56,6 +60,10 @@ Every change that can break a caller is listed here:
   `sig0::Validity` and `ZoneError`; `ZoneError` implements
   `core::error::Error` without `std`; `tests/api.rs` checks that the
   public types are `Send + Sync` and implement the common traits.
+- `From<ZonemdFailure> for Error` (and `ZonemdFailure::source`), so ZONEMD
+  verification composes with `?` like every other error of the crate.
+- Crate documentation: the Cargo features table, the error policy and
+  the API conventions.
 - Initial scaffold: DNS header parsing and encoding (`Header`, `Flags`,
   `Opcode`, `Rcode`).
 - Foundation (RFC 1035, 3596, 3597, 4343): bounds-checked `WireReader` /
@@ -119,8 +127,8 @@ Every change that can break a caller is listed here:
   `OptNotRoot`, `UnsupportedAlgorithm`, `InvalidKey`, `BadSignature`,
   `SignatureExpired`, `SignatureNotYetValid`, `KeyMismatch`,
   `RrsetMismatch`, `MisplacedSignature`, `BadMacSize`, `BadKey`, `BadTime`,
-  `BadTrunc`, `Unsigned`, `TsigErrorResponse`, `MalformedUpdate`,
-  `MalformedXfr`, `ErrorResponse`, `MalformedDso`.
+  `BadTrunc`, `Unsigned`, `TsigErrorResponse`, `InvalidUpdate`,
+  `InvalidXfr`, `ErrorResponse`, `InvalidDso`.
 - Optional dependency on `purecrypto` 0.9 (`default-features = false`) for
   all cryptography; dnsbox implements none itself.
 - Assurance: cargo-fuzz targets (`edns`, `message`, `name`, `rdata`,

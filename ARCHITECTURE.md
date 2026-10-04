@@ -941,7 +941,7 @@ src/dnssec/
 - **UPDATE** (`update`): section aliases `ZONE`, `PREREQUISITE`,
   `UPDATE`, `ADDITIONAL`; `UpdateBuilder` has one method per RFC 2136
   §2.4/§2.5 form; `UpdateMessage` classifies prerequisites and updates and
-  reports FORMERR conditions as `Error::MalformedUpdate` (NOTZONE is left
+  reports FORMERR conditions as `Error::InvalidUpdate` (NOTZONE is left
   to the caller via `in_zone`).
 - **XFR** (`xfr`): `XfrProcessor` is fed one message at a time and keeps
   only integers between messages; events borrow from the current message.

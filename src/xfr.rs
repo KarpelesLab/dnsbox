@@ -194,7 +194,7 @@ enum State {
 /// NOERROR ([`Error::ErrorResponse`] otherwise), the ID (if set with
 /// [`with_id`](Self::with_id)), and at most one question matching the
 /// zone and query type. Record-sequence violations are
-/// [`Error::MalformedXfr`]. Only the answer section is processed; TSIG and
+/// [`Error::InvalidXfr`]. Only the answer section is processed; TSIG and
 /// OPT records elsewhere are ignored. After an error the processor stays
 /// failed.
 #[derive(Clone)]
@@ -303,7 +303,7 @@ impl XfrProcessor {
 
     fn check_message(&self, msg: &Message<'_>) -> Result<()> {
         match self.state {
-            State::Done | State::Failed => return Err(Error::MalformedXfr),
+            State::Done | State::Failed => return Err(Error::InvalidXfr),
             _ => {}
         }
         let flags = msg.flags();
@@ -311,22 +311,22 @@ impl XfrProcessor {
             return Err(Error::ErrorResponse);
         }
         if !flags.qr() || flags.opcode() != Opcode::QUERY {
-            return Err(Error::MalformedXfr);
+            return Err(Error::InvalidXfr);
         }
         if let Some(id) = self.id
             && msg.id() != id
         {
-            return Err(Error::MalformedXfr);
+            return Err(Error::InvalidXfr);
         }
         match msg.header().qdcount {
             0 => {}
             1 => {
                 let q = msg.questions().next().ok_or(Error::UnexpectedEof)??;
                 if q.name() != self.zone.as_name() || q.qtype() != self.qtype {
-                    return Err(Error::MalformedXfr);
+                    return Err(Error::InvalidXfr);
                 }
             }
-            _ => return Err(Error::MalformedXfr),
+            _ => return Err(Error::InvalidXfr),
         }
         Ok(())
     }
@@ -337,7 +337,7 @@ impl XfrProcessor {
         self.records = self.records.saturating_add(1);
         let soa = if rr.rtype() == Rtype::SOA {
             if rr.name() != self.zone.as_name() {
-                return Err(Error::MalformedXfr);
+                return Err(Error::InvalidXfr);
             }
             Some(rr.data_as::<Soa<'a>>()?)
         } else {
@@ -360,14 +360,14 @@ impl XfrProcessor {
                     )
                 }
             }
-            (State::Start, None) => return Err(Error::MalformedXfr),
+            (State::Start, None) => return Err(Error::InvalidXfr),
             (State::First { serial }, Some(soa)) if soa.serial == serial => {
                 self.style = Some(XfrStyle::Full);
                 (State::Done, XfrEvent::End { soa, record })
             }
             (State::First { serial }, Some(soa)) => {
                 if self.qtype != Rtype::IXFR {
-                    return Err(Error::MalformedXfr);
+                    return Err(Error::InvalidXfr);
                 }
                 self.style = Some(XfrStyle::Incremental);
                 (
@@ -381,7 +381,7 @@ impl XfrProcessor {
             }
             (State::Full { serial }, Some(soa)) => {
                 if soa.serial != serial {
-                    return Err(Error::MalformedXfr);
+                    return Err(Error::InvalidXfr);
                 }
                 (State::Done, XfrEvent::End { soa, record })
             }
@@ -405,13 +405,13 @@ impl XfrProcessor {
                         XfrEvent::DeleteStart { soa, record },
                     )
                 } else {
-                    return Err(Error::MalformedXfr);
+                    return Err(Error::InvalidXfr);
                 }
             }
             (State::Adding { serial, to }, None) => {
                 (State::Adding { serial, to }, XfrEvent::Add(record))
             }
-            (State::Done | State::Failed, _) => return Err(Error::MalformedXfr),
+            (State::Done | State::Failed, _) => return Err(Error::InvalidXfr),
         };
         self.state = state;
         Ok(event)

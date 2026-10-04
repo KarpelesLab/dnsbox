@@ -407,7 +407,34 @@ impl fmt::Display for ZonemdFailure {
 }
 
 #[cfg(feature = "dnssec-digest")]
-impl core::error::Error for ZonemdFailure {}
+impl core::error::Error for ZonemdFailure {
+    fn source(&self) -> Option<&(dyn core::error::Error + 'static)> {
+        match self {
+            ZonemdFailure::Malformed(e) => Some(e),
+            _ => None,
+        }
+    }
+}
+
+#[cfg(feature = "dnssec-digest")]
+impl From<ZonemdFailure> for Error {
+    /// The closest [`Error`]: the collation error for
+    /// [`Malformed`](ZonemdFailure::Malformed),
+    /// [`BadSignature`](Error::BadSignature) for a digest mismatch,
+    /// [`UnsupportedAlgorithm`](Error::UnsupportedAlgorithm) for an
+    /// unsupported scheme or hash algorithm, and
+    /// [`InvalidRdata`](Error::InvalidRdata) otherwise.
+    fn from(f: ZonemdFailure) -> Error {
+        match f {
+            ZonemdFailure::Malformed(e) => e,
+            ZonemdFailure::DigestMismatch => Error::BadSignature,
+            ZonemdFailure::UnsupportedScheme | ZonemdFailure::UnsupportedHashAlgorithm => {
+                Error::UnsupportedAlgorithm
+            }
+            _ => Error::InvalidRdata,
+        }
+    }
+}
 
 /// A successful ZONEMD verification: the ZONEMD RR that matched.
 #[cfg(feature = "dnssec-digest")]

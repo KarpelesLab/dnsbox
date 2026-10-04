@@ -163,7 +163,7 @@ www  300  CNAME @
 
 | Feature          | Default | What it adds |
 |------------------|---------|--------------|
-| `std`            | yes     | `std::error::Error`, `std::io` TCP helpers (implies `alloc`) |
+| `std`            | yes     | `std::io` TCP helpers, `$INCLUDE` from the file system (implies `alloc`) |
 | `alloc`          |         | `Vec`-backed builders, owned message types (`OwnedMessage`, ...) |
 | `dnssec-digest`  |         | DS digests and NSEC3 hashing (no `alloc`); ZONEMD digests (with `alloc`) |
 | `dnssec`         |         | DNSSEC and SIG(0) signature verification and signing (implies `alloc`, `dnssec-digest`) |

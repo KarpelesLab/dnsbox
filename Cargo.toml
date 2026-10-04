@@ -19,7 +19,9 @@ rustdoc-args = ["--cfg", "docsrs"]
 default = ["std"]
 # Heap-backed conveniences: owned record types, growable message builders.
 alloc = ["serde?/alloc"]
-# `std::error::Error` impls and `std::io` integration. Pulls in `alloc`.
+# `std::io` integration (TCP message reading/writing, `$INCLUDE` from the
+# file system). Pulls in `alloc`. (The error types implement
+# `core::error::Error` without it.)
 std   = ["alloc"]
 # DNSSEC digests (DS digests, NSEC3 hashing) through purecrypto; no_std, no alloc.
 dnssec-digest = ["dep:purecrypto", "purecrypto/hash"]

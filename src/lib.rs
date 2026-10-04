@@ -16,7 +16,7 @@
 //!    of record types — see `ROADMAP.md` for the plan.
 //!
 //! The crate is `no_std`; the `alloc` and `std` features add owned types and
-//! standard-library integration.
+//! standard-library integration (see [Cargo features](#cargo-features)).
 //!
 //! ## Parsing
 //!
@@ -68,6 +68,54 @@
 //! `"MX"` or `"TYPE65534"` in human-readable formats and as integers
 //! otherwise, names as presentation strings, [`Flags`] as a struct of
 //! bits, and, with `alloc`, the owned types.
+//!
+//! ## Cargo features
+//!
+//! Every feature is additive, and the crate builds with none of them
+//! (`no_std`, no allocation, no dependencies). Items that need a feature
+//! are labelled with it in the documentation.
+//!
+//! | Feature | Default | Adds |
+//! |---------|---------|------|
+//! | `std` | yes | `std::io` TCP helpers ([`tcp::read_message`], [`tcp::write_message`]), `$INCLUDE` from the file system ([`zone::FsIncludes`]); implies `alloc` |
+//! | `alloc` | | `Vec`-backed builders ([`MessageBuilder::new_vec`]), the owned types ([`owned`]), [`zone::ZoneReader::records`] and [`zone::parse`], DNSSEC RRset sorting and ZONEMD collation, the SIG(0) adapters over the DNSSEC traits |
+//! | `dnssec-digest` | | DS digests and NSEC3 hashing ([`dnssec::verify_ds`], [`dnssec::nsec3_hash`]) without `alloc`; with `alloc`, ZONEMD digests |
+//! | `dnssec` | | DNSSEC and SIG(0) signature verification and signing: RSA, ECDSA P-256/P-384, Ed25519, Ed448; implies `alloc` and `dnssec-digest` |
+//! | `tsig` | | the TSIG HMAC backend ([`tsig::HmacKey`]: HMAC-MD5, SHA-1, SHA-2) |
+//! | `cookie-siphash` | | RFC 9018 server cookies ([`edns::ServerCookie::generate`] / [`verify`](edns::ServerCookie::verify)) |
+//! | `serde` | | `Serialize` / `Deserialize` (`no_std`) for the registries, names, header flags and, with `alloc`, the owned types |
+//!
+//! dnsbox never implements cryptography: the crypto features enable the
+//! optional, `no_std` [`purecrypto`](https://crates.io/crates/purecrypto)
+//! dependency. Every crypto-using API sits behind a trait
+//! ([`dnssec::Verifier`], [`dnssec::Signer`], [`tsig::TsigKey`],
+//! [`sig0::Sig0Signer`], ...) so other backends can be plugged in, and the
+//! wire-format side (signed data, MAC input, canonical forms) works without
+//! any feature.
+//!
+//! ## Errors
+//!
+//! Fallible functions return [`Result<T>`](Result) with the crate-wide
+//! [`Error`]: one byte, `Copy`, `#[non_exhaustive]`. Zone-file errors carry
+//! their position ([`zone::ZoneError`]) and convert into [`Error`] with `?`.
+//! Parsing never panics on hostile input; see `SECURITY.md`.
+//!
+//! ## Conventions
+//!
+//! - Protocol numbers ([`Rtype`], [`Class`], [`Opcode`], [`Rcode`],
+//!   [`edns::OptionCode`], [`dnssec::Algorithm`], ...) are open newtypes:
+//!   unknown values round-trip, `Display` prints the mnemonic or the
+//!   generic form (`TYPE65534`) and `FromStr` parses both back.
+//! - Views borrow the caller's buffer (`Message<'a>`, `Name<'a>`, every
+//!   type in [`rdata`]); `parse` / `from_wire` read wire data, `from_text`
+//!   presentation format; `as_wire` returns a view's wire form, `as_bytes`
+//!   the contents of a buffer or an opaque field.
+//! - Builders write into an [`OutBuf`]: a [`WireWriter`] over a caller's
+//!   `&mut [u8]` (`new`), or, with `alloc`, a `Vec<u8>` (`new_vec`); any
+//!   `OutBuf` (`from_buf`). `set_*` methods configure a builder in place;
+//!   `with_*` methods take a value and return it modified (builder style).
+//! - Every public type is `Send` and `Sync` (when its type parameters
+//!   are).
 //!
 //! See `ARCHITECTURE.md` in the repository for the module layout and the
 //! extension recipes (adding record types, EDNS options, ...).

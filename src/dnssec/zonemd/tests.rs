@@ -1145,3 +1145,22 @@ mod digest {
         );
     }
 }
+
+#[cfg(feature = "dnssec-digest")]
+#[test]
+fn failure_into_error() {
+    use core::error::Error as _;
+    let malformed = ZonemdFailure::Malformed(Error::BufferTooSmall);
+    assert_eq!(Error::from(malformed), Error::BufferTooSmall);
+    assert!(malformed.source().is_some());
+    assert_eq!(
+        Error::from(ZonemdFailure::DigestMismatch),
+        Error::BadSignature
+    );
+    assert_eq!(
+        Error::from(ZonemdFailure::UnsupportedHashAlgorithm),
+        Error::UnsupportedAlgorithm
+    );
+    assert_eq!(Error::from(ZonemdFailure::NoZonemd), Error::InvalidRdata);
+    assert!(ZonemdFailure::NoZonemd.source().is_none());
+}

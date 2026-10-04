@@ -16,7 +16,7 @@
 //!
 //! [`UpdateBuilder`] writes these forms; [`UpdateMessage`] classifies them
 //! when parsing, applying the FORMERR rules of §3.2 and §3.4.1.3 (reported
-//! as [`Error::MalformedUpdate`]).
+//! as [`Error::InvalidUpdate`]).
 //!
 //! ```
 //! use dnsbox::{Class, Message, MessageBuilder, NameBuf, Rtype};
@@ -123,7 +123,7 @@ impl<B: OutBuf> UpdateBuilder<B> {
         if is_rrset_type(rtype) {
             Ok(())
         } else {
-            Err(Error::MalformedUpdate)
+            Err(Error::InvalidUpdate)
         }
     }
 
@@ -257,39 +257,39 @@ impl<'a> Prerequisite<'a> {
     }
 
     /// Classifies a prerequisite RR (§3.2), failing with
-    /// [`Error::MalformedUpdate`] (FORMERR) on an invalid combination.
+    /// [`Error::InvalidUpdate`] (FORMERR) on an invalid combination.
     pub fn classify(rr: Record<'a>, zone_class: Class) -> Result<Self> {
         if rr.ttl() != 0 {
-            return Err(Error::MalformedUpdate);
+            return Err(Error::InvalidUpdate);
         }
         let (name, rtype, empty) = (rr.name(), rr.rtype(), rr.rdata().is_empty());
         let class = rr.class();
         Ok(if class == Class::ANY {
             if !empty {
-                return Err(Error::MalformedUpdate);
+                return Err(Error::InvalidUpdate);
             }
             if rtype == Rtype::ANY {
                 Prerequisite::NameInUse(name)
             } else if is_rrset_type(rtype) {
                 Prerequisite::RrsetExists { name, rtype }
             } else {
-                return Err(Error::MalformedUpdate);
+                return Err(Error::InvalidUpdate);
             }
         } else if class == Class::NONE {
             if !empty {
-                return Err(Error::MalformedUpdate);
+                return Err(Error::InvalidUpdate);
             }
             if rtype == Rtype::ANY {
                 Prerequisite::NameAbsent(name)
             } else if is_rrset_type(rtype) {
                 Prerequisite::RrsetAbsent { name, rtype }
             } else {
-                return Err(Error::MalformedUpdate);
+                return Err(Error::InvalidUpdate);
             }
         } else if class == zone_class && is_rrset_type(rtype) {
             Prerequisite::RrExists(rr)
         } else {
-            return Err(Error::MalformedUpdate);
+            return Err(Error::InvalidUpdate);
         })
     }
 }
@@ -324,12 +324,12 @@ impl<'a> UpdateOp<'a> {
     }
 
     /// Classifies an update RR (§3.4.1.3 prescan), failing with
-    /// [`Error::MalformedUpdate`] (FORMERR) on an invalid combination.
+    /// [`Error::InvalidUpdate`] (FORMERR) on an invalid combination.
     pub fn classify(rr: Record<'a>, zone_class: Class) -> Result<Self> {
         let (class, rtype) = (rr.class(), rr.rtype());
         Ok(if class == Class::ANY {
             if rr.ttl() != 0 || !rr.rdata().is_empty() {
-                return Err(Error::MalformedUpdate);
+                return Err(Error::InvalidUpdate);
             }
             if rtype == Rtype::ANY {
                 UpdateOp::DeleteName(rr.name())
@@ -339,17 +339,17 @@ impl<'a> UpdateOp<'a> {
                     rtype,
                 }
             } else {
-                return Err(Error::MalformedUpdate);
+                return Err(Error::InvalidUpdate);
             }
         } else if class == Class::NONE {
             if rr.ttl() != 0 || !is_rrset_type(rtype) {
-                return Err(Error::MalformedUpdate);
+                return Err(Error::InvalidUpdate);
             }
             UpdateOp::DeleteRr(rr)
         } else if class == zone_class && is_rrset_type(rtype) {
             UpdateOp::Add(rr)
         } else {
-            return Err(Error::MalformedUpdate);
+            return Err(Error::InvalidUpdate);
         })
     }
 }
@@ -364,14 +364,14 @@ pub struct UpdateMessage<'a> {
 impl<'a> UpdateMessage<'a> {
     /// Wraps a message, checking that it is an UPDATE (opcode 5) with
     /// exactly one zone entry of type SOA (§3.1.1); fails with
-    /// [`Error::MalformedUpdate`] otherwise.
+    /// [`Error::InvalidUpdate`] otherwise.
     pub fn new(msg: Message<'a>) -> Result<Self> {
         if msg.flags().opcode() != Opcode::UPDATE || msg.header().qdcount != 1 {
-            return Err(Error::MalformedUpdate);
+            return Err(Error::InvalidUpdate);
         }
         let zone = msg.questions().next().ok_or(Error::UnexpectedEof)??;
         if zone.qtype() != Rtype::SOA {
-            return Err(Error::MalformedUpdate);
+            return Err(Error::InvalidUpdate);
         }
         Ok(UpdateMessage { msg, zone })
     }
@@ -613,14 +613,11 @@ mod tests {
             Rtype::TSIG,
             Rtype::new(0),
         ] {
-            assert_eq!(
-                u.require_rrset_exists(n("x"), t),
-                Err(Error::MalformedUpdate)
-            );
-            assert_eq!(u.delete_rrset(n("x"), t), Err(Error::MalformedUpdate));
+            assert_eq!(u.require_rrset_exists(n("x"), t), Err(Error::InvalidUpdate));
+            assert_eq!(u.delete_rrset(n("x"), t), Err(Error::InvalidUpdate));
             assert_eq!(
                 u.add(n("x"), 0, &UnknownRdata::new(t, &[])),
-                Err(Error::MalformedUpdate)
+                Err(Error::InvalidUpdate)
             );
         }
         // Section order: no prerequisites after updates.
@@ -674,11 +671,11 @@ mod tests {
             let mut it = up.prerequisites();
             assert_eq!(
                 it.next().unwrap().err(),
-                Some(Error::MalformedUpdate),
+                Some(Error::InvalidUpdate),
                 "{class} {rtype} {ttl}"
             );
             assert!(it.next().is_none());
-            assert_eq!(up.validate(), Err(Error::MalformedUpdate));
+            assert_eq!(up.validate(), Err(Error::InvalidUpdate));
         }
         let bad_up = [
             (Class::ANY, Rtype::A, 1, &[][..]),
@@ -695,7 +692,7 @@ mod tests {
             let up = UpdateMessage::new(Message::parse(&wire).unwrap()).unwrap();
             assert_eq!(
                 up.updates().next().unwrap().err(),
-                Some(Error::MalformedUpdate),
+                Some(Error::InvalidUpdate),
                 "{class} {rtype} {ttl}"
             );
         }
@@ -718,7 +715,7 @@ mod tests {
         let q = b.finish().to_vec();
         assert_eq!(
             UpdateMessage::new(Message::parse(&q).unwrap()).err(),
-            Some(Error::MalformedUpdate)
+            Some(Error::InvalidUpdate)
         );
         // Zone type must be SOA, and exactly one zone.
         for (count, qtype) in [(1, Rtype::A), (2, Rtype::SOA), (0, Rtype::SOA)] {
@@ -731,7 +728,7 @@ mod tests {
             let m = b.finish().to_vec();
             assert_eq!(
                 UpdateMessage::new(Message::parse(&m).unwrap()).err(),
-                Some(Error::MalformedUpdate)
+                Some(Error::InvalidUpdate)
             );
         }
         // Truncated zone entry.

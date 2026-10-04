@@ -188,7 +188,7 @@ fn axfr_across_messages() {
     assert!(p.is_done());
     assert_eq!(p.style(), Some(XfrStyle::Full));
     // Nothing may follow the end.
-    assert_eq!(run(&mut p, &msgs[3..]).err(), Some(Error::MalformedXfr));
+    assert_eq!(run(&mut p, &msgs[3..]).err(), Some(Error::InvalidXfr));
 }
 
 #[test]
@@ -275,10 +275,10 @@ fn malformed_streams() {
         };
         let res = run(&mut p, core::slice::from_ref(&msg));
         // Once failed, the processor stays failed.
-        assert_eq!(run(&mut p, &[msg]).err(), Some(Error::MalformedXfr));
+        assert_eq!(run(&mut p, &[msg]).err(), Some(Error::InvalidXfr));
         res.err()
     };
-    let e = Some(Error::MalformedXfr);
+    let e = Some(Error::InvalidXfr);
     // First record is not the SOA.
     assert_eq!(bad(Rtype::AXFR, None, &[Rr::Ns(Z, "a")]), e);
     // SOA of another zone.
@@ -325,19 +325,19 @@ fn malformed_streams() {
     let wrong_id = message(Z, Some(Rtype::AXFR), 6, Rcode::NOERROR, &ok_rrs);
     assert_eq!(
         p.process(&Message::parse(&wrong_id).unwrap()).err(),
-        Some(Error::MalformedXfr)
+        Some(Error::InvalidXfr)
     );
     let mut p = XfrProcessor::axfr(n(Z));
     let wrong_q = message("other", Some(Rtype::AXFR), 0, Rcode::NOERROR, &ok_rrs);
     assert_eq!(
         p.process(&Message::parse(&wrong_q).unwrap()).err(),
-        Some(Error::MalformedXfr)
+        Some(Error::InvalidXfr)
     );
     let mut p = XfrProcessor::axfr(n(Z));
     let wrong_t = message(Z, Some(Rtype::IXFR), 0, Rcode::NOERROR, &ok_rrs);
     assert_eq!(
         p.process(&Message::parse(&wrong_t).unwrap()).err(),
-        Some(Error::MalformedXfr)
+        Some(Error::InvalidXfr)
     );
     // Not a response.
     let mut q = message(Z, Some(Rtype::AXFR), 0, Rcode::NOERROR, &ok_rrs);
@@ -345,7 +345,7 @@ fn malformed_streams() {
     let mut p = XfrProcessor::axfr(n(Z));
     assert_eq!(
         p.process(&Message::parse(&q).unwrap()).err(),
-        Some(Error::MalformedXfr)
+        Some(Error::InvalidXfr)
     );
 }
 

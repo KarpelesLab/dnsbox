@@ -2,6 +2,23 @@ use core::fmt;
 
 /// Errors produced while parsing or building DNS messages.
 ///
+/// dnsbox has **one error type** for everything that can fail — wire and
+/// text parsing, building, DNSSEC, TSIG, SIG(0), UPDATE, XFR, DSO. It is a
+/// one-byte, `Copy`, allocation-free enum, so returning it costs nothing
+/// on the hot path and it works without `alloc`. The variants name what
+/// was wrong rather than where: `Invalid*` for malformed input of some kind
+/// ([`InvalidRdata`](Self::InvalidRdata), [`InvalidText`](Self::InvalidText),
+/// [`InvalidOption`](Self::InvalidOption), [`InvalidUpdate`](Self::InvalidUpdate),
+/// ...), `Bad*` for failed checks (compression pointers, signatures, and the
+/// TSIG error codes of RFC 8945), the rest for specific conditions.
+///
+/// Two error types add context and convert into `Error` with `?`:
+/// [`ZoneError`](crate::zone::ZoneError) (the position of a zone-file
+/// error) and `dnssec::ZonemdFailure` (which RFC 8976 §4 check failed).
+/// Outcomes that are answers rather than failures of the call — a DNSSEC
+/// [`DenialStatus`](crate::dnssec::DenialStatus), a truncated
+/// [`Outcome`](crate::builder::Outcome) — are ordinary return values.
+///
 /// The enum is `#[non_exhaustive]`: new variants are added as new parts of
 /// the protocol are implemented. Match on the variants you care about and
 /// keep a wildcard arm.
@@ -126,16 +143,16 @@ pub enum Error {
     /// A dynamic-update prerequisite or update RR has an invalid
     /// class/type/TTL/RDATA combination (RFC 2136 §3.2.4, §3.4.1.3), or the
     /// zone section is malformed (RFC 2136 §3.1.1). Servers answer FORMERR.
-    MalformedUpdate,
+    InvalidUpdate,
     /// A zone-transfer response stream violates RFC 5936 §2.2 / RFC 1995 §4
     /// (bad SOA sequence, records after the end, question mismatch).
-    MalformedXfr,
+    InvalidXfr,
     /// A response carries an error RCODE where success was required (e.g. a
     /// refused zone transfer, RFC 5936 §2.2.1).
     ErrorResponse,
     /// A DNS Stateful Operations message is malformed: non-zero section
     /// counts, bad TLV framing or placement (RFC 8490 §5.4, §7.3).
-    MalformedDso,
+    InvalidDso,
 }
 
 /// Shorthand for `core::result::Result<T, dnsbox::Error>`.
@@ -184,12 +201,23 @@ impl fmt::Display for Error {
             Error::BadTrunc => "TSIG MAC truncated below policy",
             Error::Unsigned => "message is not signed",
             Error::TsigErrorResponse => "peer reported a TSIG error in an unsigned response",
-            Error::MalformedUpdate => "malformed dynamic update",
-            Error::MalformedXfr => "malformed zone transfer stream",
+            Error::InvalidUpdate => "malformed dynamic update",
+            Error::InvalidXfr => "malformed zone transfer stream",
             Error::ErrorResponse => "response carries an error RCODE",
-            Error::MalformedDso => "malformed DSO message",
+            Error::InvalidDso => "malformed DSO message",
         })
     }
 }
 
 impl core::error::Error for Error {}
+
+#[cfg(test)]
+mod tests {
+    use super::Error;
+
+    #[test]
+    fn small_and_copy() {
+        assert_eq!(core::mem::size_of::<Error>(), 1);
+        assert_eq!(core::mem::size_of::<crate::Result<()>>(), 1);
+    }
+}
