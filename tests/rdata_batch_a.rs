@@ -53,7 +53,12 @@ fn build(buf: &mut [u8]) -> &mut [u8] {
         RData::Openpgpkey(Openpgpkey::new(b"\x98\x33\x04")),
         RData::Dname(Dname::new(target.as_name())),
         RData::Uri(Uri::new(10, 1, b"https://example.com/").unwrap()),
-        RData::Cert(Cert::new(CertType::PKIX, 0, 0, b"\x30\x00")),
+        RData::Cert(Cert::new(
+            CertType::PKIX,
+            0,
+            dnsbox::dnssec::Algorithm::new(0),
+            b"\x30\x00",
+        )),
         RData::Dhcid(Dhcid::from_wire(&dhcid).unwrap()),
     ];
 

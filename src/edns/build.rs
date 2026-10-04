@@ -3,14 +3,15 @@
 
 use super::{ComposeOption, ComposeOptions, OptData, OptHeader, PaddingLen};
 use crate::builder::MessageBuilder;
+use crate::message::Message;
 use crate::name::Name;
 use crate::rdata::ComposeRdata;
 use crate::wire::{Composer, NameEncoding, OutBuf};
-use crate::{Error, Result, Rtype};
+use crate::{Error, Rcode, Result, Rtype};
 
 /// Size of an OPT record without its RDATA: root owner (1), TYPE (2),
 /// CLASS (2), TTL (4), RDLENGTH (2).
-const OPT_RR_OVERHEAD: usize = 11;
+pub const OPT_RR_OVERHEAD: usize = 11;
 
 /// Size of an option's code and length fields.
 const OPTION_HEADER: usize = 4;
@@ -193,5 +194,94 @@ impl<B: OutBuf> MessageBuilder<B> {
         let pad = u16::try_from(pad).map_err(|_| Error::BufferTooSmall)?;
         let data = Padded { options, pad };
         self.push_additional(Name::ROOT, header.class(), header.ttl(), &data)
+    }
+
+    /// Starts the skeleton of a response to `query`, like
+    /// [`start_response`](Self::start_response), and prepares the EDNS
+    /// echo RFC 6891 §7 requires: if the query carried an OPT record,
+    /// returns the [`OptHeader`] for the response
+    /// ([`OptHeader::response_to`] with our `udp_payload_size`) and adds
+    /// [`OPT_RR_OVERHEAD`] bytes to the [reserve](Self::set_reserve), so the
+    /// OPT record still fits when the answer is truncated. Add the answers,
+    /// then append the OPT record with
+    /// [`push_reserved_edns`](Self::push_reserved_edns).
+    ///
+    /// If the query's EDNS version is above 0, the RCODE is set to BADVERS
+    /// (header bits here, extended bits in the returned header; RFC 6891
+    /// §6.1.3) and the response should carry nothing else.
+    ///
+    /// For a UDP response, cap the size first with
+    /// [`set_limit`](Self::set_limit) at the smaller of our maximum and the
+    /// query's [effective payload size](OptHeader::effective_udp_payload_size)
+    /// (RFC 6891 §6.2.5).
+    ///
+    /// Fails with the parse error if the query's OPT record is malformed
+    /// or duplicated ([`Error::DuplicateOpt`], [`Error::OptNotRoot`]: answer
+    /// FORMERR, RFC 6891 §6.1.1), and like
+    /// [`start_response`](Self::start_response) otherwise. On error the
+    /// builder is unchanged.
+    ///
+    /// ```
+    /// use dnsbox::{Class, Message, MessageBuilder, NameBuf, Rtype};
+    /// use dnsbox::edns::OptHeader;
+    /// use dnsbox::rdata::A;
+    ///
+    /// // A query with EDNS (DO set).
+    /// let name: NameBuf = "example.com".parse()?;
+    /// let mut qbuf = [0u8; 512];
+    /// let mut q = MessageBuilder::query(&mut qbuf, 7, &name, Rtype::A, Class::IN)?;
+    /// q.push_edns(OptHeader::new(1232).with_dnssec_ok(true), &())?;
+    /// let query = Message::parse(q.finish())?;
+    ///
+    /// let mut buf = [0u8; 512];
+    /// let mut b = MessageBuilder::new(&mut buf)?;
+    /// let opt = b.start_response_edns(&query, 1232)?.expect("query had EDNS");
+    /// b.push_answer(&name, Class::IN, 300, &A::new([192, 0, 2, 1].into()))?;
+    /// b.push_reserved_edns(opt, &())?;
+    /// let resp = Message::parse_validated(b.finish())?;
+    /// let edns = resp.edns()?.expect("OPT echoed");
+    /// assert!(edns.dnssec_ok() && edns.udp_payload_size() == 1232);
+    /// # Ok::<(), dnsbox::Error>(())
+    /// ```
+    pub fn start_response_edns(
+        &mut self,
+        query: &Message<'_>,
+        udp_payload_size: u16,
+    ) -> Result<Option<OptHeader>> {
+        let edns = query.edns()?;
+        self.start_response(query)?;
+        let Some(edns) = edns else {
+            return Ok(None);
+        };
+        let mut header = OptHeader::response_to(edns.header(), udp_payload_size);
+        if edns.version() > 0 {
+            header = header.with_rcode(Rcode::BADVERS);
+            self.set_rcode(Rcode::BADVERS);
+        }
+        self.set_reserve(self.reserve().saturating_add(OPT_RR_OVERHEAD));
+        Ok(Some(header))
+    }
+
+    /// Releases the [`OPT_RR_OVERHEAD`] bytes reserved by
+    /// [`start_response_edns`](Self::start_response_edns) and appends the
+    /// OPT record with [`push_edns`](Self::push_edns).
+    ///
+    /// The reserve only guarantees room for an OPT record without options;
+    /// if `options` do not fit, this fails with
+    /// [`Error::BufferTooSmall`], the reserve is restored, and the caller
+    /// can retry with fewer options (e.g. `&()`). Push it before any TSIG
+    /// or SIG(0) record.
+    pub fn push_reserved_edns<O: ComposeOptions + ?Sized>(
+        &mut self,
+        header: OptHeader,
+        options: &O,
+    ) -> Result<()> {
+        let reserve = self.reserve();
+        self.set_reserve(reserve.saturating_sub(OPT_RR_OVERHEAD));
+        let res = self.push_edns(header, options);
+        if res.is_err() {
+            self.set_reserve(reserve);
+        }
+        res
     }
 }

@@ -160,6 +160,28 @@ impl OptHeader {
         ((self.extended_rcode as u32) << 24) | ((self.version as u32) << 16) | self.flags.0 as u32
     }
 
+    /// The OPT header of a response to a query whose OPT header is
+    /// `query` (RFC 6891 §7): our own `udp_payload_size`, version 0, the
+    /// DO bit copied from the query (RFC 3225 §3), the other flags clear
+    /// and an extended RCODE of 0.
+    ///
+    /// If the query's version is above 0 the response must carry RCODE
+    /// BADVERS instead (RFC 6891 §6.1.3); see [`Self::rcode`] and
+    /// [`MessageBuilder::start_response_edns`](crate::MessageBuilder::start_response_edns),
+    /// which handles it.
+    ///
+    /// ```
+    /// use dnsbox::edns::OptHeader;
+    ///
+    /// let q = OptHeader::new(4096).with_dnssec_ok(true).with_version(0);
+    /// let r = OptHeader::response_to(q, 1232);
+    /// assert_eq!((r.udp_payload_size, r.version, r.dnssec_ok()), (1232, 0, true));
+    /// ```
+    #[inline]
+    pub const fn response_to(query: OptHeader, udp_payload_size: u16) -> Self {
+        OptHeader::new(udp_payload_size).with_dnssec_ok(query.dnssec_ok())
+    }
+
     /// The UDP payload size, raised to 512 if smaller (RFC 6891 §6.2.5).
     #[inline]
     pub const fn effective_udp_payload_size(&self) -> u16 {

@@ -3,6 +3,7 @@
 use core::fmt;
 
 use super::{ComposeRdata, ParseRdata};
+use crate::dnssec::Algorithm;
 use crate::wire::{Composer, WireReader};
 use crate::{Result, Rtype};
 
@@ -43,9 +44,9 @@ pub struct Cert<'a> {
     /// Key tag of the key the certificate is for, computed as for DNSKEY
     /// (RFC 4398 §2, RFC 4034 Appendix B); zero if not applicable.
     pub key_tag: u16,
-    /// DNSSEC algorithm number of the key (RFC 4398 §2, IANA "Domain Name
+    /// DNSSEC algorithm of the key (RFC 4398 §2, IANA "Domain Name
     /// System Security (DNSSEC) Algorithm Numbers"); zero if unknown.
-    pub algorithm: u8,
+    pub algorithm: Algorithm,
     /// The certificate or CRL: the rest of the RDATA (RFC 4398 §2).
     pub certificate: &'a [u8],
 }
@@ -56,7 +57,7 @@ impl<'a> Cert<'a> {
     pub const fn new(
         cert_type: CertType,
         key_tag: u16,
-        algorithm: u8,
+        algorithm: Algorithm,
         certificate: &'a [u8],
     ) -> Self {
         Cert {
@@ -75,7 +76,7 @@ impl<'a> ParseRdata<'a> for Cert<'a> {
         Ok(Cert {
             cert_type: CertType::new(rdata.read_u16()?),
             key_tag: rdata.read_u16()?,
-            algorithm: rdata.read_u8()?,
+            algorithm: Algorithm::new(rdata.read_u8()?),
             certificate: rdata.read_rest(),
         })
     }
@@ -89,7 +90,7 @@ impl ComposeRdata for Cert<'_> {
     fn compose_rdata<C: Composer + ?Sized>(&self, c: &mut C) -> Result<()> {
         c.put_u16(self.cert_type.get())?;
         c.put_u16(self.key_tag)?;
-        c.put_u8(self.algorithm)?;
+        c.put_u8(self.algorithm.get())?;
         c.put_bytes(self.certificate)
     }
 }
@@ -103,14 +104,14 @@ impl fmt::Display for Cert<'_> {
         if self.certificate.is_empty() {
             let [t0, t1] = self.cert_type.get().to_be_bytes();
             let [k0, k1] = self.key_tag.to_be_bytes();
-            return crate::text::fmt_generic_rdata(f, &[t0, t1, k0, k1, self.algorithm]);
+            return crate::text::fmt_generic_rdata(f, &[t0, t1, k0, k1, self.algorithm.get()]);
         }
         write!(
             f,
             "{} {} {} {}",
             self.cert_type,
             self.key_tag,
-            self.algorithm,
+            self.algorithm.get(),
             crate::text::Base64(self.certificate)
         )
     }
@@ -133,9 +134,9 @@ mod tests {
             panic!("not CERT")
         };
         assert_eq!(c.cert_type, CertType::PGP);
-        assert_eq!(c, Cert::new(CertType::PGP, 0, 0, &wire[5..]));
+        assert_eq!(c, Cert::new(CertType::PGP, 0, Algorithm::new(0), &wire[5..]));
         // An IPKIX URL with key tag 12345 and algorithm 8 (RSASHA256).
-        let c = Cert::new(CertType::IPKIX, 12345, 8, b"https://example.com/c.der");
+        let c = Cert::new(CertType::IPKIX, 12345, Algorithm::RSASHA256, b"https://example.com/c.der");
         let wire = compose(&c);
         assert_eq!(&wire[..5], b"\x00\x04\x30\x39\x08");
         round_trip(

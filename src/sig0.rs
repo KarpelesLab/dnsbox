@@ -19,6 +19,13 @@
 //! slices (no allocation): hash them in order, or concatenate them for
 //! algorithms that need the whole message (Ed25519).
 //!
+//! With the `alloc` feature, [`DnssecSig0Signer`] and [`DnssecSig0Verifier`]
+//! adapt any DNSSEC [`Signer`](crate::dnssec::Signer) /
+//! [`Verifier`](crate::dnssec::Verifier) — in particular the
+//! purecrypto-backed [`SigningKey`](crate::dnssec::SigningKey) and
+//! [`PurecryptoVerifier`](crate::dnssec::PurecryptoVerifier) of the
+//! `dnssec` feature — to these traits, giving SIG(0) RSA, ECDSA and EdDSA.
+//!
 //! Validity times are 32-bit seconds since the epoch compared with RFC
 //! 1982 serial arithmetic, as in RFC 4034 §3.1.5. RFC 2931 §3.1 suggests a
 //! validity window of a few minutes around the signing time.
@@ -281,6 +288,144 @@ pub fn verify<'a, V: Sig0Verifier + ?Sized>(
     let data = SignedData::new(&record.data, msg.as_bytes(), Some(record.start), request)?;
     verifier.verify(&record.data, &data.parts())?;
     Ok(record)
+}
+
+/// A SIG(0) signer backed by a DNSSEC [`Signer`](crate::dnssec::Signer)
+/// (e.g. [`SigningKey`](crate::dnssec::SigningKey) with the `dnssec`
+/// feature): the key published as a KEY record named `name` with KEY flags
+/// `flags` (RFC 2535 §3.1.2, RFC 2931 §2; `dnssec-keygen -T KEY -n HOST`
+/// uses 512).
+///
+/// The signed data is concatenated into a temporary buffer, since the
+/// DNSSEC signer takes one slice.
+///
+/// ```
+/// # #[cfg(feature = "dnssec")] {
+/// use dnsbox::dnssec::{Algorithm, PurecryptoVerifier, SigningKey};
+/// use dnsbox::sig0::{self, DnssecSig0Signer, DnssecSig0Verifier, Validity};
+/// use dnsbox::{Class, Message, MessageBuilder, NameBuf, Rtype};
+///
+/// let key = SigningKey::from_private_bytes(Algorithm::ED25519, &[7; 32])?;
+/// let name: NameBuf = "client.example".parse()?;
+/// let signer = DnssecSig0Signer::new(&key, name.as_name(), 512);
+///
+/// let mut buf = [0u8; 512];
+/// let mut b = MessageBuilder::query(&mut buf, 1, &name, Rtype::A, Class::IN)?;
+/// sig0::sign(&mut b, &signer, Validity::around(1_800_000_000, 300), None)?;
+/// let msg = Message::parse(b.finish())?;
+///
+/// // The receiver knows the KEY record.
+/// let verifier = DnssecSig0Verifier::new(PurecryptoVerifier, name.as_name(), signer.key());
+/// sig0::verify(&msg, &verifier, 1_800_000_000, None)?;
+/// # }
+/// # Ok::<(), dnsbox::Error>(())
+/// ```
+#[cfg(feature = "alloc")]
+#[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
+#[derive(Clone, Copy, Debug)]
+pub struct DnssecSig0Signer<'n, S> {
+    signer: S,
+    name: Name<'n>,
+    flags: u16,
+    key_tag: u16,
+}
+
+#[cfg(feature = "alloc")]
+impl<'n, S: crate::dnssec::Signer> DnssecSig0Signer<'n, S> {
+    /// Wraps `signer`, whose public key is the KEY record `name` with KEY
+    /// flags `flags` and protocol 3. The key tag is computed from them
+    /// (RFC 4034 Appendix B).
+    pub fn new(signer: S, name: Name<'n>, flags: u16) -> Self {
+        let key_tag = crate::dnssec::key_tag(flags, 3, signer.algorithm(), signer.public_key());
+        DnssecSig0Signer {
+            signer,
+            name,
+            flags,
+            key_tag,
+        }
+    }
+
+    /// The KEY record data to publish for this signer (RFC 2931 §2).
+    pub fn key(&self) -> crate::rdata::Key<'_> {
+        crate::rdata::Key::new(
+            self.flags,
+            3,
+            self.signer.algorithm(),
+            self.signer.public_key(),
+        )
+    }
+}
+
+#[cfg(feature = "alloc")]
+impl<S: crate::dnssec::Signer> Sig0Signer for DnssecSig0Signer<'_, S> {
+    fn algorithm(&self) -> Algorithm {
+        self.signer.algorithm()
+    }
+
+    fn key_tag(&self) -> u16 {
+        self.key_tag
+    }
+
+    fn signer_name(&self) -> Name<'_> {
+        self.name
+    }
+
+    fn signature_len(&self) -> usize {
+        self.signer.signature_len()
+    }
+
+    fn sign(&self, data: &[&[u8]], out: &mut [u8]) -> Result<usize> {
+        self.signer.sign(&data.concat(), out)
+    }
+}
+
+/// A SIG(0) verifier backed by a DNSSEC
+/// [`Verifier`](crate::dnssec::Verifier) (e.g.
+/// [`PurecryptoVerifier`](crate::dnssec::PurecryptoVerifier) with the
+/// `dnssec` feature) for one KEY record: `name` and its record data `key`.
+///
+/// A SIG(0) whose signer name, algorithm or key tag does not match the KEY
+/// fails with [`Error::BadKey`]; otherwise the verifier's error is returned
+/// ([`Error::BadSignature`], [`Error::InvalidKey`],
+/// [`Error::UnsupportedAlgorithm`]). See [`DnssecSig0Signer`] for an
+/// example.
+#[cfg(feature = "alloc")]
+#[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
+#[derive(Clone, Copy, Debug)]
+pub struct DnssecSig0Verifier<'k, V> {
+    verifier: V,
+    name: Name<'k>,
+    key: crate::rdata::Key<'k>,
+}
+
+#[cfg(feature = "alloc")]
+impl<'k, V: crate::dnssec::Verifier> DnssecSig0Verifier<'k, V> {
+    /// Checks signatures made with the KEY record `name` / `key`.
+    pub const fn new(verifier: V, name: Name<'k>, key: crate::rdata::Key<'k>) -> Self {
+        DnssecSig0Verifier {
+            verifier,
+            name,
+            key,
+        }
+    }
+}
+
+#[cfg(feature = "alloc")]
+impl<V: crate::dnssec::Verifier> Sig0Verifier for DnssecSig0Verifier<'_, V> {
+    fn verify(&self, sig: &Sig<'_>, data: &[&[u8]]) -> Result<()> {
+        if sig.signer_name != self.name
+            || sig.algorithm != self.key.algorithm
+            || sig.key_tag != self.key.key_tag()
+        {
+            return Err(Error::BadKey);
+        }
+        self.verifier.verify(
+            self.key.algorithm,
+            self.key.public_key,
+            &data.concat(),
+            sig.signature,
+        )
+    }
 }
 
 #[cfg(test)]

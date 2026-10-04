@@ -68,10 +68,10 @@ impl<B: OutBuf> MessageBuilder<B> {
     /// caller's to add.
     ///
     /// EDNS: if the query carried an OPT record, RFC 6891 §7 requires one
-    /// in the response (also when it is truncated). Reserve its size with
-    /// [`set_reserve`](Self::set_reserve) before adding answers, and append
-    /// it last with [`push_additional`](Self::push_additional) after
-    /// releasing the reserve.
+    /// in the response (also when it is truncated).
+    /// [`start_response_edns`](Self::start_response_edns) does this
+    /// skeleton plus the EDNS bookkeeping (DO echo, BADVERS, reserved room
+    /// for the OPT record).
     ///
     /// Fails with [`Error::SectionOrder`](crate::Error::SectionOrder) if
     /// anything was written already, or with the parse error if the
@@ -112,14 +112,14 @@ impl<'b> MessageBuilder<WireWriter<'b>> {
     /// [`start_query`](Self::start_query).
     ///
     /// ```
-    /// use dnsbox::{Class, Message, MessageBuilder, Name, NameBuf, Rtype};
-    /// use dnsbox::rdata::UnknownRdata;
+    /// use dnsbox::{Class, Message, MessageBuilder, NameBuf, Rtype};
+    /// use dnsbox::edns::OptHeader;
     ///
     /// let name: NameBuf = "example.com".parse()?;
     /// let mut buf = [0u8; 512];
     /// let mut b = MessageBuilder::query(&mut buf, 0x1234, &name, Rtype::AAAA, Class::IN)?;
-    /// // EDNS hook: an empty OPT record advertising a 1232-byte payload.
-    /// b.push_additional(Name::ROOT, Class::new(1232), 0, &UnknownRdata::new(Rtype::OPT, &[]))?;
+    /// // EDNS: an OPT record without options advertising a 1232-byte payload.
+    /// b.push_edns(OptHeader::new(1232), &())?;
     /// let msg = Message::parse_validated(b.finish())?;
     /// assert!(msg.flags().rd() && !msg.flags().qr());
     /// assert_eq!(msg.header().arcount, 1);

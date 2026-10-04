@@ -38,6 +38,11 @@ fn replay(target: &str, check: Check) -> usize {
 }
 
 #[test]
+fn edns() {
+    assert!(replay("edns", checks::edns) > 0);
+}
+
+#[test]
 fn message() {
     assert!(replay("message", checks::message) > 0);
 }
@@ -67,7 +72,8 @@ fn text() {
 #[test]
 fn seed_prefixes() {
     let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("fuzz/seeds");
-    let targets: [(&str, Check); 5] = [
+    let targets: [(&str, Check); 6] = [
+        ("edns", checks::edns),
         ("message", checks::message),
         ("name", checks::name),
         ("rdata", checks::rdata),

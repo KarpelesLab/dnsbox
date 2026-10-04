@@ -6,11 +6,12 @@ so it never affects the crate's MSRV or dependency tree.
 
 | Target      | What it checks |
 |-------------|----------------|
-| `message`   | `Message::parse`, every lazy iterator, typed RDATA of every record, `validate`, and parse → build → parse identity (with and without compression, rebuild is a fixed point) |
+| `edns`      | OPT RDATA framing and every EDNS(0) option through the generic `EdnsOption` dispatch: display, re-compose to the same TLV, re-parse |
+| `message`   | `Message::parse`, every lazy iterator, typed RDATA of every record, `validate`, and parse → build → parse identity (with and without compression, rebuild is a fixed point); plus the protocol views: EDNS, TSIG/SIG(0) placement, UPDATE, NOTIFY, AXFR/IXFR processing, DSO |
 | `name`      | name decompression at any offset (pointer hardening), `Name`/`NameBuf` invariants: labels, flattening, parents, canonical order, case-insensitive equality and hashing, presentation round trip |
 | `rdata`     | every record type through the generic `RData` dispatch — registered types are found through the registry, so new types are fuzzed automatically — then display, re-compose, re-parse, canonical form and embedding in a built message |
 | `roundtrip` | build → parse identity: a byte-driven sequence of builder operations (questions, records of any registered type, compression toggles, size limits, checkpoints and rollbacks) must parse back exactly; failed pushes and rollbacks must leave the bytes untouched |
-| `text`      | presentation-format parsing: names (escapes), types, classes |
+| `text`      | presentation-format parsing: names (escapes), types, classes, SVCB/HTTPS RDATA (display re-parses to the same value) |
 
 The properties live in [`src/lib.rs`](src/lib.rs), which the crate's own
 test suite also includes (`tests/fuzz_regressions.rs`,

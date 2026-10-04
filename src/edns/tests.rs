@@ -513,3 +513,91 @@ fn mutations_never_panic() {
         exercise(&wire[..end]);
     }
 }
+
+/// A query for example.com/A with the given OPT headers (none, one, two).
+fn query_with(opts: &[OptHeader]) -> Vec<u8> {
+    let name: NameBuf = "example.com".parse().unwrap();
+    let mut buf = [0u8; 512];
+    let mut b = MessageBuilder::query(&mut buf, 0x4242, &name, Rtype::A, Class::IN).unwrap();
+    for h in opts {
+        b.push_edns(*h, &()).unwrap();
+    }
+    b.finish().to_vec()
+}
+
+#[test]
+fn response_edns_echo() {
+    use crate::builder::{Outcome, Truncation};
+    use crate::rdata::A;
+
+    let name: NameBuf = "example.com".parse().unwrap();
+    let addrs: Vec<A> = (0..60u8).map(|i| A::new([192, 0, 2, i].into())).collect();
+
+    // No EDNS in the query: no OPT, no reserve.
+    let wire = query_with(&[]);
+    let q = Message::parse(&wire).unwrap();
+    let mut buf = [0u8; 512];
+    let mut b = MessageBuilder::new(&mut buf).unwrap();
+    assert_eq!(b.start_response_edns(&q, 1232), Ok(None));
+    assert_eq!(b.reserve(), 0);
+
+    // EDNS with DO: echoed; the reserve keeps room for the OPT record even
+    // when the answer is truncated at a 512-byte limit (RFC 6891 §7).
+    let wire = query_with(&[OptHeader::new(4096).with_dnssec_ok(true)]);
+    let q = Message::parse(&wire).unwrap();
+    let mut buf = [0u8; 512];
+    let mut b = MessageBuilder::new(&mut buf).unwrap();
+    b.set_truncation(Truncation::SetTc);
+    let opt = b.start_response_edns(&q, 1232).unwrap().unwrap();
+    assert_eq!(opt, OptHeader::new(1232).with_dnssec_ok(true));
+    assert_eq!(b.reserve(), OPT_RR_OVERHEAD);
+    assert_eq!(
+        b.push_rrset(Section::Answer, &name, Class::IN, 300, &addrs),
+        Ok(Outcome::Truncated)
+    );
+    b.push_reserved_edns(opt, &()).unwrap();
+    assert_eq!(b.reserve(), 0);
+    let r = Message::parse_validated(b.finish()).unwrap();
+    assert!(r.flags().tc() && r.flags().qr());
+    assert_eq!(r.id(), 0x4242);
+    let e = r.edns().unwrap().unwrap();
+    assert!(e.dnssec_ok());
+    assert_eq!((e.udp_payload_size(), e.version()), (1232, 0));
+
+    // Options that do not fit in the reserve: error, reserve restored.
+    let mut buf = [0u8; 512];
+    let mut b = MessageBuilder::new(&mut buf).unwrap();
+    b.set_truncation(Truncation::SetTc);
+    let opt = b.start_response_edns(&q, 1232).unwrap().unwrap();
+    // Fill the answer one record at a time until it no longer fits.
+    for a in &addrs {
+        if b.push_rrset(Section::Answer, &name, Class::IN, 300, [a]) == Ok(Outcome::Truncated) {
+            break;
+        }
+    }
+    assert!(b.header().flags.tc());
+    let big = Nsid::new(&[0u8; 64]);
+    assert_eq!(b.push_reserved_edns(opt, &big), Err(Error::BufferTooSmall));
+    assert_eq!(b.reserve(), OPT_RR_OVERHEAD);
+    b.push_reserved_edns(opt, &()).unwrap();
+
+    // EDNS version 1: BADVERS split between header and OPT.
+    let wire = query_with(&[OptHeader::new(1232).with_version(1)]);
+    let q = Message::parse(&wire).unwrap();
+    let mut buf = [0u8; 512];
+    let mut b = MessageBuilder::new(&mut buf).unwrap();
+    let opt = b.start_response_edns(&q, 1232).unwrap().unwrap();
+    b.push_reserved_edns(opt, &()).unwrap();
+    let r = Message::parse_validated(b.finish()).unwrap();
+    assert_eq!(r.effective_rcode(), Ok(Rcode::BADVERS));
+    assert_eq!(r.edns().unwrap().unwrap().version(), 0);
+
+    // Two OPT records: error, builder untouched.
+    let wire = query_with(&[OptHeader::new(1232), OptHeader::new(1232)]);
+    let q = Message::parse(&wire).unwrap();
+    let mut buf = [0u8; 512];
+    let mut b = MessageBuilder::new(&mut buf).unwrap();
+    assert_eq!(b.start_response_edns(&q, 1232), Err(Error::DuplicateOpt));
+    assert_eq!((b.len(), b.reserve()), (12, 0));
+    assert_eq!(b.header().id, 0);
+}

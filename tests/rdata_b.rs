@@ -292,7 +292,7 @@ fn build_all(buf: &mut [u8]) -> (usize, Vec<String>) {
         Rkey {
             flags: 0,
             protocol: 1,
-            algorithm: 7,
+            algorithm: dnsbox::dnssec::Algorithm::new(7),
             public_key: &[1, 2, 3]
         },
         "0 1 7 AQID"

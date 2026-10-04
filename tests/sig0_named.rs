@@ -265,3 +265,63 @@ fn signed_data_matches_rfc_layout() {
     assert_eq!(&header[10..], &[0, 0]); // ARCOUNT without the SIG(0)
     assert_eq!(body, &wire[12..rec.start]);
 }
+
+/// The library's own DNSSEC backend verifies BIND's SIG(0) signatures
+/// through the SIG(0) adapters, and re-signs the Ed25519 update byte for
+/// byte.
+#[cfg(feature = "dnssec")]
+#[test]
+fn dnssec_backend_adapters() {
+    use dnsbox::dnssec::{PurecryptoVerifier, SigningKey};
+    use dnsbox::rdata::Key as KeyRdata;
+    use dnsbox::sig0::{DnssecSig0Signer, DnssecSig0Verifier};
+
+    for (file, key) in keys() {
+        let wire = data(file);
+        let msg = Message::parse_validated(&wire).unwrap();
+        let rec = sig0::find(&msg).unwrap().unwrap();
+        // `dnssec-keygen -T KEY -n HOST` keys: flags 512, protocol 3.
+        let rdata = KeyRdata::new(512, 3, Algorithm::new(key.algorithm), &key.public);
+        assert_eq!(rdata.key_tag(), key.tag, "{file}");
+        let v = DnssecSig0Verifier::new(PurecryptoVerifier, key.name.as_name(), rdata);
+        let now = rec.data.inception + 300;
+        assert_eq!(sig0::verify(&msg, &v, now, None), Ok(rec), "{file}");
+        let mut bad = wire.clone();
+        bad[rec.start - 1] ^= 1;
+        let m = Message::parse(&bad).unwrap();
+        assert!(sig0::verify(&m, &v, now, None).is_err(), "{file}");
+        // A different KEY: BADKEY.
+        let other = KeyRdata::new(512, 3, Algorithm::new(key.algorithm), &[1; 32]);
+        let v = DnssecSig0Verifier::new(PurecryptoVerifier, key.name.as_name(), other);
+        assert_eq!(sig0::verify(&msg, &v, now, None), Err(Error::BadKey));
+    }
+
+    // Ed25519 is deterministic: re-signing reproduces BIND's message.
+    let [(file, key), ..] = keys();
+    let wire = data(file);
+    let msg = Message::parse(&wire).unwrap();
+    let rec = sig0::find(&msg).unwrap().unwrap();
+    let sk = SigningKey::from_private_bytes(Algorithm::ED25519, &b64(ED25519_SEED)).unwrap();
+    let signer = DnssecSig0Signer::new(&sk, key.name.as_name(), 512);
+    assert_eq!(signer.key().public_key, &key.public[..]);
+    let mut buf = [0u8; 1024];
+    let mut b = MessageBuilder::new(&mut buf).unwrap();
+    b.set_id(msg.id());
+    b.set_flags(msg.flags());
+    for q in msg.questions() {
+        b.copy_question(&q.unwrap()).unwrap();
+    }
+    for item in msg.records() {
+        let (section, rr) = item.unwrap();
+        if rr.start() == rec.start {
+            break;
+        }
+        b.copy_record(section, &rr).unwrap();
+    }
+    let validity = Validity {
+        inception: rec.data.inception,
+        expiration: rec.data.expiration,
+    };
+    sig0::sign(&mut b, &signer, validity, None).unwrap();
+    assert_eq!(b.finish(), &wire[..]);
+}

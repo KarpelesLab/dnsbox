@@ -12,7 +12,15 @@
 //!   including types registered after this file was written;
 //! - [`roundtrip`]: build → parse identity of builder-generated messages, plus
 //!   atomic pushes and checkpoint rollback;
-//! - [`text`]: presentation-format parsing (names, types, classes).
+//! - [`text`]: presentation-format parsing (names, types, classes, and
+//!   SVCB/HTTPS RDATA, RFC 9460 Appendix A);
+//! - [`edns`]: OPT RDATA framing and every typed EDNS(0) option
+//!   (RFC 6891 §6.1.2), including options registered after this file was
+//!   written.
+//!
+//! [`message`] also runs the protocol views over each parsed message:
+//! EDNS, TSIG and SIG(0) placement, UPDATE classification, NOTIFY,
+//! AXFR/IXFR processing and DSO.
 //!
 //! Only the `&mut [u8]` builder is used, so the checks also run against a
 //! crate built without the `alloc` feature.
@@ -23,6 +31,8 @@ use std::string::{String, ToString};
 use std::sync::OnceLock;
 use std::vec::Vec;
 
+use dnsbox::edns::{ComposeOption, EdnsOption, Opt};
+use dnsbox::rdata::{Https, Svcb};
 use dnsbox::wire::Canonical;
 use dnsbox::{
     Class, ComposeRdata, Error, Flags, Header, Message, MessageBuilder, Name, NameBuf, RData,
@@ -597,6 +607,7 @@ pub fn message(data: &[u8]) {
     };
     let h = msg.header();
     assert_eq!(msg.as_bytes(), data);
+    check_protocol_views(&msg, data);
 
     // Questions: at most QDCOUNT items, an error ends the iteration.
     let mut q_ok = 0usize;
@@ -712,6 +723,134 @@ pub fn message(data: &[u8]) {
                 q_err || all_err || !typed_ok || e == Error::TrailingData,
                 "validate failed with {e} but every entry parsed"
             );
+        }
+    }
+}
+
+// ---------------------------------------------------------------------------
+// EDNS(0) and the protocol views.
+// ---------------------------------------------------------------------------
+
+/// Composes an option TLV with a plain writer.
+fn tlv_bytes<O: ComposeOption + ?Sized>(o: &O) -> Vec<u8> {
+    let mut buf = std::vec![0u8; 4 + MAX_MESSAGE];
+    let mut w = WireWriter::new(&mut buf);
+    o.compose_tlv(&mut w)
+        .expect("an option fits its own length");
+    w.written().to_vec()
+}
+
+/// OPT RDATA whose framing was accepted: the raw options re-compose to the
+/// same bytes, and every option that decodes re-composes to its own TLV
+/// and decodes again to the same value (RFC 6891 §6.1.2).
+pub fn check_opt(opt: Opt<'_>) {
+    let mut all = Vec::new();
+    for raw in opt.raw_options() {
+        let tlv = tlv_bytes(&raw);
+        all.extend_from_slice(&tlv);
+        let _ = raw.to_string();
+        let Ok(o) = raw.parse() else { continue };
+        assert_eq!(o.code(), raw.code, "{o}");
+        let text = o.to_string();
+        let again = tlv_bytes(&o);
+        assert_eq!(again, tlv, "{text}: option does not re-compose");
+        let back = EdnsOption::parse(raw.code, WireReader::new(&again[4..])).expect("re-parse");
+        assert_eq!(back, o, "{text}");
+        assert_eq!(back.to_string(), text);
+    }
+    assert_eq!(all, opt.as_bytes(), "options do not cover the OPT RDATA");
+    assert_eq!(opt.options().count(), opt.raw_options().count());
+    if opt.validate().is_ok() {
+        assert!(opt.options().all(|o| o.is_ok()));
+    }
+    let _ = opt.to_string();
+}
+
+/// OPT RDATA (RFC 6891 §6.1.2): framing, then [`check_opt`].
+pub fn edns(data: &[u8]) {
+    match Opt::new(data) {
+        Ok(opt) => {
+            assert_eq!(opt.as_bytes(), data);
+            check_opt(opt);
+        }
+        Err(e) => assert!(
+            matches!(e, Error::UnexpectedEof | Error::InvalidOption),
+            "{e}"
+        ),
+    }
+}
+
+/// The higher-level views over a parsed message must never panic, and
+/// their accessors must agree with the message.
+fn check_protocol_views(msg: &Message<'_>, data: &[u8]) {
+    match msg.edns() {
+        Ok(Some(e)) => {
+            let _ = e.header().to_string();
+            assert_eq!(e.version(), e.header().version);
+            let rcode = msg.effective_rcode().expect("EDNS parsed");
+            assert_eq!(rcode.header_bits(), msg.flags().rcode().header_bits());
+            check_opt(e.opt());
+        }
+        Ok(None) => assert_eq!(msg.effective_rcode(), Ok(msg.flags().rcode())),
+        Err(_) => assert!(msg.effective_rcode().is_err()),
+    }
+    if let Ok(Some(t)) = dnsbox::tsig::find(msg) {
+        assert!(t.start >= Header::LEN && t.start < data.len());
+    }
+    if let Ok(Some(s)) = dnsbox::sig0::find(msg) {
+        assert!(s.start >= Header::LEN && s.start < data.len());
+        assert_eq!(s.data.type_covered.get(), 0);
+    }
+    if let Ok(u) = dnsbox::update::UpdateMessage::new(*msg) {
+        for p in u.prerequisites() {
+            if p.map(|p| std::format!("{p:?}")).is_err() {
+                break;
+            }
+        }
+        for op in u.updates() {
+            if op.map(|op| std::format!("{op:?}")).is_err() {
+                break;
+            }
+        }
+    }
+    if let Ok(n) = dnsbox::notify::NotifyMessage::new(*msg) {
+        let _ = (n.soa(), n.serial());
+    }
+    if let Some(Ok(q)) = msg.questions().next() {
+        for mut p in [
+            dnsbox::xfr::XfrProcessor::axfr(q.name()),
+            dnsbox::xfr::XfrProcessor::ixfr(q.name(), msg.id().into()),
+        ] {
+            if let Ok(events) = p.process(msg) {
+                for e in events.take(usize::from(u16::MAX) + 1) {
+                    if e.map(|e| std::format!("{e:?}")).is_err() {
+                        break;
+                    }
+                }
+            }
+            // A finished or failed processor refuses further messages.
+            if p.is_done() {
+                assert!(p.process(msg).is_err());
+            }
+        }
+    }
+    if let Ok(d) = dnsbox::dso::DsoMessage::parse(data) {
+        let ok = d.validate().is_ok();
+        let mut tlvs_ok = true;
+        for t in d.tlvs() {
+            match t {
+                Ok(t) => {
+                    let _ = std::format!("{t:?}");
+                }
+                Err(_) => {
+                    tlvs_ok = false;
+                    break;
+                }
+            }
+        }
+        if ok {
+            assert!(tlvs_ok);
+            assert!(d.primary().is_ok());
         }
     }
 }
@@ -1001,5 +1140,24 @@ pub fn text(data: &[u8]) {
         assert_eq!(shown.parse::<Class>(), Ok(c), "{shown}");
         assert_eq!(std::format!("CLASS{}", c.get()).parse::<Class>(), Ok(c));
     }
+    check_svcb_text(s);
     let _: String = s.to_string();
+}
+
+/// SVCB / HTTPS presentation format (RFC 9460 §2.1, Appendix A): anything
+/// accepted displays as text that parses back to the same RDATA.
+fn check_svcb_text(s: &str) {
+    let mut buf = std::vec![0u8; s.len() * 4 + 512];
+    let Ok(svcb) = Svcb::from_text(s, &mut buf) else {
+        return;
+    };
+    let shown = svcb.to_string();
+    let mut buf2 = std::vec![0u8; shown.len() * 4 + 512];
+    let again = Svcb::from_text(&shown, &mut buf2)
+        .unwrap_or_else(|e| panic!("{shown:?}: display does not re-parse: {e}"));
+    assert_eq!(again, svcb, "{shown}");
+    let rdata = RData::Svcb(svcb);
+    check_rdata(Rtype::SVCB, Class::IN, &rdata);
+    let https = Https::from(svcb);
+    assert_eq!(https.to_string(), shown);
 }

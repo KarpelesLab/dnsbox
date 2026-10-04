@@ -242,7 +242,7 @@ mod message;
 mod opt;
 mod record;
 
-pub use build::PaddingPolicy;
+pub use build::{OPT_RR_OVERHEAD, PaddingPolicy};
 pub use compose::{ComposeOptions, OptData};
 pub use opt::{Opt, Options, RawOption, RawOptions};
 pub use record::{Edns, EdnsFlags, OptHeader};

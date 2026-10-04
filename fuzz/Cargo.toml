@@ -27,6 +27,13 @@ test = false
 doc = false
 
 [[bin]]
+name = "edns"
+path = "fuzz_targets/edns.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
 name = "message"
 path = "fuzz_targets/message.rs"
 test = false
