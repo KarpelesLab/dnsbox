@@ -99,6 +99,32 @@ fn main() -> Result<(), dnsbox::Error> {
 }
 ```
 
+### Zone files
+
+```rust
+use dnsbox::zone::ZoneReader;
+
+fn main() -> Result<(), dnsbox::Error> {
+    let zone = "\
+$ORIGIN example.com.
+$TTL 1h
+@    SOA  ns1 hostmaster ( 2024010101 2h 15m 2w 1h )
+     NS   ns1
+ns1  A    192.0.2.1
+www  300  CNAME @
+";
+    // Streams records without allocating: RDATA goes into `buf`.
+    let mut reader = ZoneReader::new(zone);
+    let mut buf = [0u8; 1024];
+    let mut lines = Vec::new();
+    while let Some(rr) = reader.next_record(&mut buf)? {
+        lines.push(rr.to_string());
+    }
+    assert_eq!(lines[3], "www.example.com. 300 IN CNAME example.com.");
+    Ok(())
+}
+```
+
 ## What is covered
 
 - **Core** (RFC 1035, 3596, 3597, 2181, 4343): zero-copy `Message` views,
@@ -119,6 +145,10 @@ fn main() -> Result<(), dnsbox::Error> {
   key tags, DS digests, NSEC3 hashing, RRSIG validation logic, and with the
   `dnssec` feature RSA, ECDSA P-256/P-384, Ed25519 and Ed448 verification
   and signing.
+- **Zone files** (RFC 1035 §5): a streaming, allocation-free master-file
+  reader (`$ORIGIN`, `$TTL`, `$INCLUDE`, BIND's `$GENERATE`, TTL units,
+  RFC 3597 generic RDATA, errors with line and column) and
+  presentation-format parsing of RDATA (`ParseRdataText`).
 - **Transactions and zone transfer**: TSIG (RFC 8945), SIG(0) (RFC 2931),
   dynamic UPDATE (RFC 2136), NOTIFY (RFC 1996), AXFR/IXFR (RFC 5936,
   RFC 1995) stream processing, DNS Stateful Operations (RFC 8490).

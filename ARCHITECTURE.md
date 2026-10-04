@@ -68,6 +68,17 @@ src/
   notify.rs       NOTIFY (RFC 1996)
   xfr.rs, xfr/    AXFR/IXFR (RFC 5936, RFC 1995): queries, XfrProcessor
   dso.rs          DNS Stateful Operations (RFC 8490): TLVs, DsoBuilder
+  zone/           presentation format and master files (RFC 1035 §5):
+    lexer.rs      tokenizer: blanks, comments, parentheses, quotes,
+                  escapes, positions                    [crate-internal]
+    scanner.rs    Scanner (RDATA field reader + shared field parsers),
+                  Token, Unescape, parse_ttl
+    reader.rs     ZoneReader (streaming, allocation-free), ZoneRecord,
+                  Entry/Include, ZoneError (line/column)
+    generate.rs   BIND $GENERATE ranges and substitutions
+    records.rs    alloc: Records iterator, ZoneRecordBuf, $INCLUDE via
+                  IncludeResolver (FsIncludes with std), parse()
+    tests.rs      RFC 1035 §5.3 zone, signed zone, directives, errors
 tests/
   captures.rs     real wire captures, truncation and mutation tests
   builder_truncation.rs  truncation / TCP stream tests on captures
@@ -213,6 +224,14 @@ pub trait ComposeRdata {
     fn rtype(&self) -> Rtype;
     fn compose_rdata<C: Composer + ?Sized>(&self, c: &mut C) -> Result<()>;
 }
+
+pub trait ParseRdataText {           // presentation format -> wire
+    fn parse_text<B: OutBuf + ?Sized>(s: &mut Scanner<'_>, out: &mut B) -> Result<()> {
+        Err(Error::NoTextFormat)     // default: only `\# len hex` accepted
+    }
+    fn from_text<'b>(text: &str, buf: &'b mut [u8]) -> Result<Self>
+    where Self: ParseRdata<'b>;      // provided: text -> wire -> view
+}
 ```
 
 - `parse_rdata` gets a reader whose window is exactly the RDATA. Just read
@@ -256,7 +275,9 @@ rdata_registry! {
 `rdata_registry!` lines are `RTYPE_CONST => Variant(Type),` and generate the
 `#[non_exhaustive] enum RData<'a>` (plus `RData::Unknown(UnknownRdata)`),
 `RData::parse(rtype, class, reader)`, `RData::is_known(rtype)`,
-`ComposeRdata for RData` and `Display for RData`. A compile-time assertion
+`RData::parse_text(rtype, class, scanner, out)` (text → wire, through each
+type's `ParseRdataText`; see below), `ComposeRdata for RData` and
+`Display for RData`. A compile-time assertion
 checks that each line's constant equals the type's `ParseRdata::RTYPE`.
 Lines may carry attributes (e.g. `#[cfg(feature = "alloc")]`).
 
@@ -282,7 +303,11 @@ Dispatch rules (`RData::parse`):
    catch-all files such as `dnssec.rs`: small files keep parallel branches
    from conflicting.
 2. **Define the view struct** with public fields named after the RFC.
-3. **Implement `ParseRdata<'a>`, `ComposeRdata` and `Display`.**
+3. **Implement `ParseRdata<'a>`, `ComposeRdata`, `Display` and
+   `ParseRdataText`** (the registry requires the last one; see
+   [the text recipe](#recipe-adding-text-parsing-for-a-type), or write
+   `impl super::ParseRdataText for Foo<'_> {}` if the type has no
+   presentation format of its own).
 4. **Register it**: add `<file>,` to `rdata_modules!` and
    `RTYPE => Variant(Type),` to `rdata_registry!`, both in sorted position
    (the `Rtype` constant already exists — `rtype.rs` holds the complete
@@ -397,7 +422,129 @@ super::single_name::single_name_rdata! {
 ```
 
 (arguments: docs, type, `Rtype` constant, field, `NameEncoding` variant for
-composing, reader method for parsing).
+composing, reader method for parsing). The macro also implements
+`ParseRdataText` (one `<domain-name>`).
+
+### Recipe: adding text parsing for a type
+
+Presentation-format parsing (zone files, `nsupdate`-style tools, test
+fixtures) is one trait per type, `ParseRdataText`, dispatched by
+`RData::parse_text(rtype, class, &mut scanner, &mut out)`. It turns the
+type's text form (RFC 1035 §5.1 for the classic types, the "Presentation
+Format" section of each later RFC) into the **wire form**, appended to an
+`OutBuf` (a `WireWriter` over a caller's `&mut [u8]`, or a `Vec<u8>`), so
+it allocates nothing; `ParseRdataText::from_text(text, &mut buf)` then
+returns the typed view and `zone::ZoneReader` uses it for every record.
+
+Every registered type already implements the trait; types without a
+real implementation have a one-line stub,
+`impl super::ParseRdataText for Foo<'_> {}`, whose provided `parse_text`
+fails with `Error::NoTextFormat` (such types can only be written in the
+RFC 3597 generic form `\# <length> <hex>`, which the dispatcher accepts
+for every type). Adding text parsing to a type:
+
+1. **Replace the stub** in `src/rdata/<type>.rs` (inside the family
+   macro if the whole family shares one format) with an implementation
+   that reads the fields in RFC order with the `Scanner` methods and
+   writes them with the `Composer` methods `out` provides — the same
+   order and encodings as `compose_rdata`, names with the same
+   `NameEncoding`.
+2. **Only read your fields.** Do not call `s.finish()`, validate the
+   output, or clean up after an error: the dispatcher handles `\#` first,
+   then calls you, then rejects leftover tokens (`InvalidText`), checks
+   the 65535-octet limit, runs the type's **wire parser** over what you
+   wrote (whatever `parse_rdata` rejects is rejected in text too), and
+   truncates `out` back on any error. Report malformed text as
+   `InvalidText` (the scanner methods do), unknown mnemonics as
+   `UnknownMnemonic`, bad values as `InvalidRdata`.
+3. **`Display` and `parse_text` must be inverses**: what `Display` prints
+   must parse back to RDATA that displays identically. Accept every form
+   the RFC (and, where it is more liberal, BIND) accepts: numbers *and*
+   mnemonics where both are allowed, base64/hex split over several
+   tokens, TTL units for time fields BIND accepts them in.
+4. **Test** in the type's file with the helpers of
+   `crate::rdata::tests`: `text_round_trip(rtype, text, wire, display)`
+   checks text → wire, the wire round trip (`round_trip`: Display,
+   re-compose, truncation), Display → the same wire, the generic form →
+   the same wire, and that no prefix of `text` panics; `text_error(rtype,
+   text)` returns the error of a rejected text, `text_parse` the wire of
+   an accepted one. Relative names are completed with
+   `TEXT_ORIGIN` (`example.`). Use the RFC's presentation examples and
+   add malformed cases asserting the exact error.
+5. Nothing else: no registry line, no shared file. The fuzz property
+   `check_text_round_trip` (`fuzz/src/lib.rs`, replayed on stable by
+   `tests/fuzz_regressions.rs`, the corpus and the property tests) checks
+   Display → `parse_text` for every type as soon as the stub is replaced.
+
+Worked example (`src/rdata/mx.rs`):
+
+```rust
+use super::{ComposeRdata, ParseRdata, ParseRdataText};
+use crate::wire::{Composer, NameEncoding, OutBuf, WireReader};
+use crate::zone::Scanner;
+
+impl ParseRdataText for Mx<'_> {
+    /// `<preference> <exchange>` (RFC 1035 §3.3.9).
+    fn parse_text<B: OutBuf + ?Sized>(s: &mut Scanner<'_>, out: &mut B) -> Result<()> {
+        out.put_u16(s.u16()?)?;
+        s.name_into(out, NameEncoding::Compressible)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::rdata::tests::{text_error, text_round_trip};
+    use crate::{Error, Rtype};
+
+    #[test]
+    fn text() {
+        // RFC 1035 §5.3 ("MX 10 VENERA"), origin `example.`.
+        text_round_trip(Rtype::MX, "10 VENERA", b"\x00\x0a\x06VENERA\x07example\x00",
+                        "10 VENERA.example.");
+        assert_eq!(text_error(Rtype::MX, "65536 a."), Error::InvalidText);
+        assert_eq!(text_error(Rtype::MX, "10"), Error::UnexpectedEof);
+    }
+}
+```
+
+A type with binary fields (sketch, SSHFP-shaped: RFC 4255 §3.2 allows
+the hex fingerprint to be split by blanks):
+
+```rust
+fn parse_text<B: OutBuf + ?Sized>(s: &mut Scanner<'_>, out: &mut B) -> Result<()> {
+    out.put_u8(s.u8()?)?;   // algorithm
+    out.put_u8(s.u8()?)?;   // fingerprint type
+    s.hex_rest_into(out)?;  // all remaining tokens
+    Ok(())
+}
+```
+
+Scanner methods (each takes the next token; a missing one is
+`UnexpectedEof`, a malformed one `InvalidText`):
+
+| Field | Method |
+|-------|--------|
+| decimal integers | `s.u8()`, `s.u16()`, `s.u32()` |
+| time values with units (`1h30m`) | `s.ttl()` (also `zone::parse_ttl`) |
+| DNSSEC timestamps | `s.timestamp()` (`YYYYMMDDHHmmSS` or seconds) |
+| mnemonics, any `FromStr<Err = Error>` | `s.parse::<Rtype>()`, `s.parse::<Algorithm>()`, ... |
+| addresses | `s.ipv4()`, `s.ipv6()` |
+| domain names (relative to the origin, `@`) | `s.name_into(out, encoding)`, `s.name()` → `NameBuf` |
+| `<character-string>` | `s.char_string_into(out)`; all remaining: `s.char_strings_into(out)` |
+| hex | one token: `s.hex_into(out)`; the rest of the entry: `s.hex_rest_into(out)` |
+| base64 | `s.base64_into(out)`; the rest: `s.base64_rest_into(out)` |
+| base32hex (NSEC3) | `s.base32hex_into(out)` |
+| NSEC/NSEC3/CSYNC type bitmap | `s.type_bitmap_into(out)` (the rest of the entry) |
+| anything else | `s.word()` (unquoted), `s.token()`, `s.next_token()` (`None` at the end), `s.peek()`, `s.is_at_end()` → `Token`: `as_bytes`, `as_str`, `is("TCP")` (case-insensitive), `is_quoted`, `unescape()`, `u8/u16/u32` |
+
+The `*_into` methods return the number of octets written where useful.
+Length-prefixed fields: write a placeholder and patch it, e.g.
+`let at = out.pos(); out.put_u8(0)?; let n = s.hex_into(out)?;
+out.patch(at, &[u8::try_from(n).map_err(|_| Error::InvalidRdata)?])?;`
+(or `out.put_u16_prefixed(|o| ...)`). Special tokens (NSEC3's `-` for an
+empty salt, ...) are handled with `s.word()?` / `Token::is`. Types whose
+fields need random access to the output (SVCB sorts its SvcParams) may
+use `OutBuf::as_bytes_mut` (see `rdata/svcb/text.rs`).
 
 ### Shared field types
 
@@ -409,9 +556,11 @@ composing, reader method for parsing).
   `TypeBitmap::compose(&[Rtype], composer)`; `Display` is the mnemonic
   list.
 - `text::{Hex, Base64, Base32Hex}` — `Display` adapters. The matching
-  decoders are crate-internal: `util::base64::decode` and
-  `util::base32hex::decode` (no_std, no allocation); reuse them rather
-  than writing new ones.
+  decoders are crate-internal: `util::base64::decode` (and the
+  incremental `util::base64::Decoder`) and `util::base32hex::decode`
+  (no_std, no allocation); reuse them rather than writing new ones. For
+  presentation-format parsing use the `zone::Scanner` methods, which wrap
+  them.
 
 ## Protocol-number registries: `open_enum!`
 
@@ -751,10 +900,18 @@ src/dnssec/
   pass.
 - The builder never compresses against differently-cased names, and does
   not compress names beyond offset 0x3fff (not addressable by pointers).
-- Not yet implemented (Milestone 7): owned message types, zone-file
-  parsing (presentation-format *parsing* hooks for RDATA will be added as
-  a separate trait plus one more arm in `rdata_registry!`; SVCB/HTTPS
-  already have an inherent `from_text`), `dig`-style message display,
-  serde.
+- Zone files (`zone`): `ZoneReader` is a lending reader (RDATA goes to
+  the caller's buffer), so it is not an `Iterator`; `records()` (`alloc`)
+  is. Errors carry line and column and the reader resynchronises on the
+  next entry. `$INCLUDE` is reported as `Entry::Include` by the core
+  reader and followed only by `Records` with an `IncludeResolver`
+  (depth- and count-limited). Without `$TTL` and without an earlier
+  explicit TTL, an SOA's MINIMUM is the default TTL (BIND's behaviour);
+  `$GENERATE` follows BIND's syntax and yields at most `MAX_GENERATE`
+  records. The owner field is "present" only when the line starts with a
+  non-blank character (RFC 1035 §5.1).
+- Not yet implemented (Milestone 7): owned message types, `dig`-style
+  message display, serde; text parsing for the record types that still
+  have a `ParseRdataText` stub.
 - Do not edit `ROADMAP.md` or `CHANGELOG.md` on feature branches; the
   integrator does.
