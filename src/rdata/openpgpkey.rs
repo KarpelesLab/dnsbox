@@ -2,9 +2,10 @@
 
 use core::fmt;
 
-use super::{ComposeRdata, ParseRdata};
-use crate::wire::{Composer, WireReader};
-use crate::{Result, Rtype};
+use super::{ComposeRdata, ParseRdata, ParseRdataText};
+use crate::wire::{Composer, OutBuf, WireReader};
+use crate::zone::Scanner;
+use crate::{Error, Result, Rtype};
 
 /// `OPENPGPKEY` record data: an OpenPGP Transferable Public Key in binary
 /// form (RFC 7929 §2.1, RFC 4880 §11.1).
@@ -24,7 +25,17 @@ impl<'a> Openpgpkey<'a> {
     }
 }
 
-impl super::ParseRdataText for Openpgpkey<'_> {}
+impl ParseRdataText for Openpgpkey<'_> {
+    /// The key in base64 (RFC 7929 §2.3), which may be split across blanks
+    /// and lines. At least one octet is required (an empty key has only
+    /// the generic form, as in BIND).
+    fn parse_text<B: OutBuf + ?Sized>(s: &mut Scanner<'_>, out: &mut B) -> Result<()> {
+        if s.base64_rest_into(out)? == 0 {
+            return Err(Error::UnexpectedEof);
+        }
+        Ok(())
+    }
+}
 
 impl<'a> ParseRdata<'a> for Openpgpkey<'a> {
     const RTYPE: Rtype = Rtype::OPENPGPKEY;
@@ -60,7 +71,7 @@ impl fmt::Display for Openpgpkey<'_> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::rdata::tests::{compose, parse, round_trip};
+    use crate::rdata::tests::{compose, parse, round_trip, text_error, text_round_trip};
     use crate::testutil::hex;
     use crate::{Class, RData};
 
@@ -87,5 +98,34 @@ mod tests {
             "\\# 0"
         );
         round_trip(Rtype::OPENPGPKEY, b"\x01", "AQ==");
+    }
+
+    #[test]
+    fn text() {
+        // RFC 7929 §2.3: base64, here split across tokens and lines the
+        // way zone files present long keys.
+        let wire = hex("98330457f7e7bc16");
+        text_round_trip(Rtype::OPENPGPKEY, "mDMEV/fnvBY=", &wire, "mDMEV/fnvBY=");
+        text_round_trip(Rtype::OPENPGPKEY, "( mDME\n V/fn vBY= )", &wire, "mDMEV/fnvBY=");
+        text_round_trip(Rtype::OPENPGPKEY, "AQ==", b"\x01", "AQ==");
+        // A longer key: 300 octets survive the round trip.
+        let key: std::vec::Vec<u8> = (0..300u16).map(|i| (i * 7) as u8).collect();
+        let b64 = std::string::ToString::to_string(&crate::text::Base64(&key));
+        let split = std::format!("( {}\n {} )", &b64[..100], &b64[100..]);
+        text_round_trip(Rtype::OPENPGPKEY, &split, &key, &b64);
+    }
+
+    #[test]
+    fn text_malformed() {
+        for (text, err) in [
+            // An empty key: only `\# 0` expresses it.
+            ("", Error::UnexpectedEof),
+            ("mDMEV/fnvBY", Error::InvalidText),
+            ("mDMEV/fnvBY=x", Error::InvalidText),
+            ("mDME*/fnvBY=", Error::InvalidText),
+            ("\"mDMEV/fnvBY=\"", Error::InvalidText),
+        ] {
+            assert_eq!(text_error(Rtype::OPENPGPKEY, text), err, "{text:?}");
+        }
     }
 }

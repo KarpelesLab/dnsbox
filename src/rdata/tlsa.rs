@@ -4,9 +4,10 @@
 
 use core::fmt;
 
-use super::{ComposeRdata, ParseRdata};
-use crate::wire::{Composer, WireReader};
-use crate::{Result, Rtype};
+use super::{ComposeRdata, ParseRdata, ParseRdataText};
+use crate::wire::{Composer, OutBuf, WireReader};
+use crate::zone::Scanner;
+use crate::{Error, Result, Rtype};
 
 open_enum! {
     /// A DANE certificate usage (RFC 6698 §2.1.1, IANA "TLSA Certificate
@@ -93,7 +94,22 @@ macro_rules! dane_rdata {
             }
         }
 
-        impl super::ParseRdataText for $ty<'_> {}
+        impl ParseRdataText for $ty<'_> {
+            /// `<usage> <selector> <matching-type> <data>` (RFC 6698 §2.2):
+            /// three decimal numbers and the association data in
+            /// hexadecimal, which may be split across blanks and lines.
+            /// At least one octet is required (empty data has only the
+            /// generic form, as in BIND).
+            fn parse_text<B: OutBuf + ?Sized>(s: &mut Scanner<'_>, out: &mut B) -> Result<()> {
+                out.put_u8(s.u8()?)?;
+                out.put_u8(s.u8()?)?;
+                out.put_u8(s.u8()?)?;
+                if s.hex_rest_into(out)? == 0 {
+                    return Err(Error::UnexpectedEof);
+                }
+                Ok(())
+            }
+        }
 
         impl<'a> ParseRdata<'a> for $ty<'a> {
             const RTYPE: Rtype = Rtype::$rt;
@@ -164,9 +180,9 @@ dane_rdata! {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::rdata::tests::{compose, parse, round_trip};
+    use crate::rdata::tests::{compose, parse, round_trip, text_error, text_round_trip};
     use crate::testutil::hex;
-    use crate::{Class, Error, RData};
+    use crate::{Class, RData};
     use std::string::ToString;
     use std::vec::Vec;
 
@@ -261,5 +277,68 @@ mod tests {
             parse(Rtype::TLSA, Class::IN, b"\x03\x01"),
             Err(Error::UnexpectedEof)
         );
+    }
+
+    #[test]
+    fn text() {
+        // RFC 6698 §2.3, exactly as presented there (the zone-file
+        // parentheses enclose the whole RDATA).
+        let w = wire(
+            [0, 0, 1],
+            "d2abde240d7cd3ee6b4b28c54df034b97983a1d16e8a410e4561cb106618e971",
+        );
+        let shown = "0 0 1 D2ABDE240D7CD3EE6B4B28C54DF034B97983A1D16E8A410E4561CB106618E971";
+        text_round_trip(
+            Rtype::TLSA,
+            "(\n   0 0 1 d2abde240d7cd3ee6b4b28c54df034b9\n         7983a1d16e8a410e4561cb106618e971 )",
+            &w,
+            shown,
+        );
+        let data = "92003ba34942dc74152e2f2c408d29eca5a520e7f2e06bb944f4dca346baf63c\
+                    1b177615d466f6c4b71c216a50292bd58c9ebdd2f74e38fe51ffd48c43326cbc";
+        text_round_trip(
+            Rtype::TLSA,
+            "(\n   1 1 2 92003ba34942dc74152e2f2c408d29ec\n         \
+             a5a520e7f2e06bb944f4dca346baf63c\n         \
+             1b177615d466f6c4b71c216a50292bd5\n         \
+             8c9ebdd2f74e38fe51ffd48c43326cbc )",
+            &wire([1, 1, 2], data),
+            &std::format!("1 1 2 {}", data.to_ascii_uppercase()),
+        );
+        // SMIMEA (RFC 8162 §2.1) has the same presentation format.
+        let w = wire(
+            [3, 1, 1],
+            "d2abde240d7cd3ee6b4b28c54df034b97983a1d16e8a410e4561cb106618e971",
+        );
+        text_round_trip(
+            Rtype::SMIMEA,
+            "3 1 1 d2abde240d7cd3ee6b4b28c54df034b97983a1d16e8a410e4561cb106618e971",
+            &w,
+            "3 1 1 D2ABDE240D7CD3EE6B4B28C54DF034B97983A1D16E8A410E4561CB106618E971",
+        );
+        // Private-use and unassigned values round-trip as numbers.
+        text_round_trip(Rtype::TLSA, "255 255 255 00", b"\xff\xff\xff\x00", "255 255 255 00");
+        text_round_trip(Rtype::SMIMEA, "4 2 3 Ab", b"\x04\x02\x03\xab", "4 2 3 AB");
+    }
+
+    #[test]
+    fn text_malformed() {
+        for rtype in [Rtype::TLSA, Rtype::SMIMEA] {
+            for (text, err) in [
+                ("", Error::UnexpectedEof),
+                ("3 1", Error::UnexpectedEof),
+                // No association data: only the generic form expresses it.
+                ("3 1 1", Error::UnexpectedEof),
+                ("256 1 1 00", Error::InvalidText),
+                ("3 1 x 00", Error::InvalidText),
+                // RFC 7218 acronyms are not part of the presentation format.
+                ("DANE-EE 1 1 00", Error::InvalidText),
+                ("3 1 1 abc", Error::InvalidText),
+                ("3 1 1 zz", Error::InvalidText),
+                ("3 1 1 \"00\"", Error::InvalidText),
+            ] {
+                assert_eq!(text_error(rtype, text), err, "{rtype} {text:?}");
+            }
+        }
     }
 }

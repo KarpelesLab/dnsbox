@@ -2,10 +2,11 @@
 
 use core::fmt;
 
-use super::{ComposeRdata, ParseRdata};
+use super::{ComposeRdata, ParseRdata, ParseRdataText};
 use crate::charstr::CharStr;
 use crate::name::Name;
-use crate::wire::{Composer, NameEncoding, WireReader};
+use crate::wire::{Composer, NameEncoding, OutBuf, WireReader};
+use crate::zone::Scanner;
 use crate::{Result, Rtype};
 
 /// `NAPTR` record data: a Naming Authority Pointer, one rule of a Dynamic
@@ -37,7 +38,20 @@ pub struct Naptr<'a> {
     pub replacement: Name<'a>,
 }
 
-impl super::ParseRdataText for Naptr<'_> {}
+impl ParseRdataText for Naptr<'_> {
+    /// `<order> <preference> <flags> <services> <regexp> <replacement>`
+    /// (RFC 3403 §4.1): two numbers, three `<character-string>`s (quoted
+    /// or not; RFC 1035 §5.1 escapes apply, so a backslash in a regexp is
+    /// written `\\`) and a domain name.
+    fn parse_text<B: OutBuf + ?Sized>(s: &mut Scanner<'_>, out: &mut B) -> Result<()> {
+        out.put_u16(s.u16()?)?;
+        out.put_u16(s.u16()?)?;
+        s.char_string_into(out)?;
+        s.char_string_into(out)?;
+        s.char_string_into(out)?;
+        s.name_into(out, NameEncoding::Lowercase)
+    }
+}
 
 impl<'a> ParseRdata<'a> for Naptr<'a> {
     const RTYPE: Rtype = Rtype::NAPTR;
@@ -92,7 +106,9 @@ impl fmt::Display for Naptr<'_> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::rdata::tests::{compose, parse, round_trip};
+    use crate::rdata::tests::{
+        compose, parse, round_trip, text_error, text_parse, text_round_trip,
+    };
     use crate::{Class, Error, Message, RData};
     use std::string::ToString;
     use std::vec::Vec;
@@ -206,4 +222,86 @@ mod tests {
         );
     }
 
+    #[test]
+    fn text() {
+        // RFC 3403 §6.1, with the regexp's backslashes escaped as master
+        // files require (RFC 1035 §5.1).
+        text_round_trip(
+            Rtype::NAPTR,
+            r#"100 10 "" "" "/urn:cid:.+@([^\\.]+\\.)(.*)$/\\2/i" ."#,
+            &wire(
+                100,
+                10,
+                [b"", b"", br"/urn:cid:.+@([^\.]+\.)(.*)$/\2/i"],
+                b"\x00",
+            ),
+            r#"100 10 "" "" "/urn:cid:.+@([^\\.]+\\.)(.*)$/\\2/i" ."#,
+        );
+        // RFC 3403 §6.1, second step; flags and services unquoted.
+        text_round_trip(
+            Rtype::NAPTR,
+            r#"100 50 a z3950+N2L+N2C "" cidserver.example.com."#,
+            &wire(
+                100,
+                50,
+                [b"a", b"z3950+N2L+N2C", b""],
+                b"\x09cidserver\x07example\x03com\x00",
+            ),
+            r#"100 50 "a" "z3950+N2L+N2C" "" cidserver.example.com."#,
+        );
+        // RFC 3403 §6.2 (ENUM), split over lines.
+        text_round_trip(
+            Rtype::NAPTR,
+            "( 100 10 \"u\" \"E2U+sip\"\n  \"!^.*$!sip:information@foo.se!i\" . )",
+            &wire(
+                100,
+                10,
+                [b"u", b"E2U+sip", b"!^.*$!sip:information@foo.se!i"],
+                b"\x00",
+            ),
+            r#"100 10 "u" "E2U+sip" "!^.*$!sip:information@foo.se!i" ."#,
+        );
+        // An "s" rule (RFC 3403 §4.1) with a relative replacement,
+        // completed with the origin.
+        text_round_trip(
+            Rtype::NAPTR,
+            r#"100 100 s http+I2R "" _http._tcp"#,
+            &wire(
+                100,
+                100,
+                [b"s", b"http+I2R", b""],
+                b"\x05_http\x04_tcp\x07example\x00",
+            ),
+            r#"100 100 "s" "http+I2R" "" _http._tcp.example."#,
+        );
+        // Unescaped backslashes are escape characters (RFC 1035 §5.1, as
+        // in BIND): `\.` is a plain dot.
+        assert_eq!(
+            text_parse(Rtype::NAPTR, r#"1 2 "" "" "a\.b" ."#),
+            Ok(wire(1, 2, [b"", b"", b"a.b"], b"\x00"))
+        );
+    }
+
+    #[test]
+    fn text_malformed() {
+        for (text, err) in [
+            ("", Error::UnexpectedEof),
+            ("100 10", Error::UnexpectedEof),
+            (r#"100 10 "" "" """#, Error::UnexpectedEof),
+            (r#"100 10 "" "" "" . extra"#, Error::InvalidText),
+            (r#"65536 10 "" "" "" ."#, Error::InvalidText),
+            (r#"100 x "" "" "" ."#, Error::InvalidText),
+            (r#"100 10 "" "" "" "a.""#, Error::InvalidText),
+            (r#"100 10 "" "" "unterminated ."#, Error::InvalidText),
+            (r#"100 10 "" "" "\256" ."#, Error::InvalidText),
+            // A backslash and a digit start a three-digit `\DDD` escape:
+            // the RFC's unescaped `\2` back-reference is malformed.
+            (r#"100 10 "" "" "/(.*)/\2/" ."#, Error::InvalidText),
+            (r#"100 10 "" "" "" a..b"#, Error::EmptyLabel),
+        ] {
+            assert_eq!(text_error(Rtype::NAPTR, text), err, "{text}");
+        }
+        let long = std::format!("100 10 \"\" \"\" \"{}\" .", "x".repeat(256));
+        assert_eq!(text_error(Rtype::NAPTR, &long), Error::CharStringTooLong);
+    }
 }

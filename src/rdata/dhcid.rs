@@ -2,8 +2,9 @@
 
 use core::fmt;
 
-use super::{ComposeRdata, ParseRdata};
-use crate::wire::{Composer, WireReader};
+use super::{ComposeRdata, ParseRdata, ParseRdataText};
+use crate::wire::{Composer, OutBuf, WireReader};
+use crate::zone::Scanner;
 use crate::{Error, Result, Rtype};
 
 /// `DHCID` record data: the DHCP client identity associated with a name
@@ -73,7 +74,17 @@ impl<'a> Dhcid<'a> {
     }
 }
 
-impl super::ParseRdataText for Dhcid<'_> {}
+impl ParseRdataText for Dhcid<'_> {
+    /// The whole RDATA in base64 (RFC 4701 §3.1), which may be split
+    /// across blanks and lines; it must decode to at least the two type
+    /// codes (3 octets).
+    fn parse_text<B: OutBuf + ?Sized>(s: &mut Scanner<'_>, out: &mut B) -> Result<()> {
+        if s.base64_rest_into(out)? == 0 {
+            return Err(Error::UnexpectedEof);
+        }
+        Ok(())
+    }
+}
 
 impl<'a> ParseRdata<'a> for Dhcid<'a> {
     const RTYPE: Rtype = Rtype::DHCID;
@@ -105,7 +116,7 @@ impl fmt::Display for Dhcid<'_> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::rdata::tests::{parse, round_trip};
+    use crate::rdata::tests::{parse, round_trip, text_error, text_round_trip};
     use crate::testutil::hex;
     use crate::{Class, RData};
 
@@ -155,5 +166,47 @@ mod tests {
         let d = Dhcid::from_wire(b"\x00\x02\x01").unwrap();
         assert!(d.digest().is_empty());
         round_trip(Rtype::DHCID, b"\x00\x02\x01", "AAIB");
+    }
+
+    #[test]
+    fn text() {
+        // RFC 4701 §3.6, exactly as presented there: the base64 is split
+        // mid-quantum across lines.
+        for (text, wire, shown) in [
+            (
+                "( AAIBY2/AuCccgoJbsaxcQc9TUapptP69l\n  OjxfNuVAA2kjEA= )",
+                "000201636fc0b8271c82825bb1ac5c41cf5351aa69b4febd94e8f17cdb95000da48c40",
+                "AAIBY2/AuCccgoJbsaxcQc9TUapptP69lOjxfNuVAA2kjEA=",
+            ),
+            (
+                "( AAEBOSD+XR3Os/0LozeXVqcNc7FwCfQdW\n  L3b/NaiUDlW2No= )",
+                "0001013920fe5d1dceb3fd0ba3379756a70d73b17009f41d58bddbfcd6a2503956d8da",
+                "AAEBOSD+XR3Os/0LozeXVqcNc7FwCfQdWL3b/NaiUDlW2No=",
+            ),
+            (
+                "( AAABxLmlskllE0MVjd57zHcWmEH3pCQ6V\n  ytcKD//7es/deY= )",
+                "000001c4b9a5b249651343158dde7bcc77169841f7a4243a572b5c283fffedeb3f75e6",
+                "AAABxLmlskllE0MVjd57zHcWmEH3pCQ6VytcKD//7es/deY=",
+            ),
+        ] {
+            text_round_trip(Rtype::DHCID, text, &hex(wire), shown);
+        }
+        text_round_trip(Rtype::DHCID, "AAIB", b"\x00\x02\x01", "AAIB");
+    }
+
+    #[test]
+    fn text_malformed() {
+        for (text, err) in [
+            ("", Error::UnexpectedEof),
+            // Shorter than the two type codes (RFC 4701 §3.3).
+            ("AAI=", Error::InvalidRdata),
+            ("AA==", Error::InvalidRdata),
+            ("AAIB=", Error::InvalidText),
+            ("AAI", Error::InvalidText),
+            ("AA!B", Error::InvalidText),
+            ("\"AAIB\"", Error::InvalidText),
+        ] {
+            assert_eq!(text_error(Rtype::DHCID, text), err, "{text:?}");
+        }
     }
 }

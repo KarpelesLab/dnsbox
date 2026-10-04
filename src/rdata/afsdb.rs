@@ -2,9 +2,10 @@
 
 use core::fmt;
 
-use super::{ComposeRdata, ParseRdata};
+use super::{ComposeRdata, ParseRdata, ParseRdataText};
 use crate::name::Name;
-use crate::wire::{Composer, NameEncoding, WireReader};
+use crate::wire::{Composer, NameEncoding, OutBuf, WireReader};
+use crate::zone::Scanner;
 use crate::{Result, Rtype};
 
 /// `AFSDB` record data: an AFS cell database or DCE authenticated name
@@ -25,7 +26,14 @@ impl Afsdb<'_> {
     pub const DCE: u16 = 2;
 }
 
-impl super::ParseRdataText for Afsdb<'_> {}
+impl ParseRdataText for Afsdb<'_> {
+    /// `<subtype> <hostname>` (RFC 1183 §1): a decimal number and a domain
+    /// name, relative to the origin unless it ends in a dot.
+    fn parse_text<B: OutBuf + ?Sized>(s: &mut Scanner<'_>, out: &mut B) -> Result<()> {
+        out.put_u16(s.u16()?)?;
+        s.name_into(out, NameEncoding::Lowercase)
+    }
+}
 
 impl<'a> ParseRdata<'a> for Afsdb<'a> {
     const RTYPE: Rtype = Rtype::AFSDB;
@@ -61,8 +69,8 @@ impl fmt::Display for Afsdb<'_> {
 
 #[cfg(test)]
 mod tests {
-    use crate::Rtype;
-    use crate::rdata::tests::round_trip;
+    use crate::rdata::tests::{round_trip, text_error, text_round_trip};
+    use crate::{Error, Rtype};
 
     #[test]
     fn rfc1183_example() {
@@ -73,5 +81,42 @@ mod tests {
             "1 bigbird.toto.com.",
         );
         round_trip(Rtype::AFSDB, b"\x00\x02\x00", "2 .");
+    }
+
+    #[test]
+    fn text() {
+        // RFC 1183 §1 example (toaster.com's AFS and DCE servers).
+        text_round_trip(
+            Rtype::AFSDB,
+            "1 jack.toaster.com.",
+            b"\x00\x01\x04jack\x07toaster\x03com\x00",
+            "1 jack.toaster.com.",
+        );
+        text_round_trip(
+            Rtype::AFSDB,
+            "2 tracy",
+            b"\x00\x02\x05tracy\x07example\x00",
+            "2 tracy.example.",
+        );
+        text_round_trip(
+            Rtype::AFSDB,
+            "( 65535\n BIGBIRD.TOTO.COM. )",
+            b"\xff\xff\x07BIGBIRD\x04TOTO\x03COM\x00",
+            "65535 BIGBIRD.TOTO.COM.",
+        );
+    }
+
+    #[test]
+    fn text_malformed() {
+        for (text, err) in [
+            ("", Error::UnexpectedEof),
+            ("1", Error::UnexpectedEof),
+            ("65536 a.", Error::InvalidText),
+            ("AFS a.", Error::InvalidText),
+            ("1 a. b.", Error::InvalidText),
+            ("1 a..", Error::EmptyLabel),
+        ] {
+            assert_eq!(text_error(Rtype::AFSDB, text), err, "{text:?}");
+        }
     }
 }

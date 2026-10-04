@@ -1,0 +1,34 @@
+$ORIGIN example.
+$TTL 1h
+_ldap._tcp SRV 0 1 389 old-slow-box
+  SRV 0 0 0 .
+naptr NAPTR 100 10 "u" "E2U+sip" "!^.*$!sip:information@foo.se!i" .
+  NAPTR 100 10 "" "" "/urn:cid:.+@([^\\.]+\\.)(.*)$/\\2/i" .
+  NAPTR 100 50 a z3950+N2L+N2C "" cidserver.example.com.
+caa CAA 0 issue "ca1.example.net; account=230123"
+  CAA 128 tbs "Unknown"
+  CAA 0 iodef mailto:security@example.com
+host SSHFP 2 1 123456789abcdef67890123456789abcdef67890
+  SSHFP 4 2 ( a87f1b687ac0e57d2a081a2f2826723
+              34d90ed316d2b818ca9580ea384d924
+              01 )
+_443._tcp.www TLSA ( 0 0 1 d2abde240d7cd3ee6b4b28c54df034b9
+                           7983a1d16e8a410e4561cb106618e971 )
+smime SMIMEA 3 1 1 d2abde240d7cd3ee6b4b28c54df034b97983a1d16e8a410e4561cb106618e971
+pgp OPENPGPKEY ( mDME V/fnvBY= )
+frobozz DNAME frobozz-division.acme.example.
+_ftp._tcp URI 10 1 "ftp://ftp1.example.com/public"
+cert CERT 65534 65535 PRIVATEOID ( MxFcby9k/yvedMfQgKzhH5er0Mu/vILz45IkskceFGgiWCn/GxHhai6V
+                                   AuHAoNUz4YoU1tVfSCSqQYn6//11U6Nld80jEeC8aTrO+KKmCaY= )
+  CERT PGP 0 0 mDMEV/fnvBY=
+chi DHCID ( AAEBOSD+XR3Os/0LozeXVqcNc7FwCfQdW
+            L3b/NaiUDlW2No= )
+rp RP louie.trantor.umd.edu. LAM1.people.umd.edu.
+toaster AFSDB 1 jack.toaster.com.
+relay X25 311061700956
+sh ISDN 150862028003217 004
+  RT 2 Relay.Prime.COM.
+kx KX 10 kx1
+bad SSHFP 2 1
+bad TLSA 3 1 1 abc
+bad URI 10 1 ""

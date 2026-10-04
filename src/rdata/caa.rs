@@ -2,8 +2,9 @@
 
 use core::fmt;
 
-use super::{ComposeRdata, ParseRdata};
-use crate::wire::{Composer, WireReader};
+use super::{ComposeRdata, ParseRdata, ParseRdataText};
+use crate::wire::{Composer, OutBuf, WireReader};
+use crate::zone::Scanner;
 use crate::{Error, Result, Rtype};
 
 /// `CAA` record data: a Certification Authority Authorization property
@@ -70,7 +71,28 @@ const fn valid_tag(tag: &[u8]) -> bool {
     true
 }
 
-impl super::ParseRdataText for Caa<'_> {}
+impl ParseRdataText for Caa<'_> {
+    /// `<flags> <tag> <value>` (RFC 8659 §4.1.1): the flags as a decimal
+    /// number, the tag as an unquoted token, and the value either as a
+    /// contiguous run of characters or as a quoted string (RFC 1035 §5.1
+    /// escapes apply). The value is not a `<character-string>`: it may
+    /// exceed 255 octets.
+    fn parse_text<B: OutBuf + ?Sized>(s: &mut Scanner<'_>, out: &mut B) -> Result<()> {
+        out.put_u8(s.u8()?)?;
+        // Tags are short ASCII alphanumerics; the wire parser checks them.
+        let mut tag = [0u8; 255];
+        let mut len = 0;
+        for b in s.word()?.unescape() {
+            *tag.get_mut(len).ok_or(Error::InvalidRdata)? = b?;
+            len += 1;
+        }
+        out.put_char_string(tag.get(..len).unwrap_or(&[]))?;
+        for b in s.token()?.unescape() {
+            out.put_u8(b?)?;
+        }
+        Ok(())
+    }
+}
 
 impl<'a> ParseRdata<'a> for Caa<'a> {
     const RTYPE: Rtype = Rtype::CAA;
@@ -119,7 +141,7 @@ impl fmt::Display for Caa<'_> {
 mod tests {
     use super::*;
     use crate::Class;
-    use crate::rdata::tests::{compose, parse, round_trip};
+    use crate::rdata::tests::{compose, parse, round_trip, text_error, text_parse, text_round_trip};
     use crate::wire::WireWriter;
 
     #[test]
@@ -197,5 +219,86 @@ mod tests {
         let mut w = WireWriter::new(&mut buf);
         assert_eq!(bad.compose_rdata(&mut w), Err(Error::InvalidRdata));
         assert!(w.written().is_empty());
+    }
+
+    #[test]
+    fn text() {
+        // RFC 8659 §4.2–4.4 and §4.1 examples.
+        for (text, wire) in [
+            (r#"0 issue "ca1.example.net""#, &b"\x00\x05issueca1.example.net"[..]),
+            (
+                r#"0 issue "ca1.example.net; account=230123""#,
+                b"\x00\x05issueca1.example.net; account=230123",
+            ),
+            (r#"0 issue ";""#, b"\x00\x05issue;"),
+            (r#"0 issuewild "ca2.example.org""#, b"\x00\x09issuewildca2.example.org"),
+            (
+                r#"0 iodef "mailto:security@example.com""#,
+                b"\x00\x05iodefmailto:security@example.com",
+            ),
+            (
+                r#"0 iodef "https://iodef.example.com/""#,
+                b"\x00\x05iodefhttps://iodef.example.com/",
+            ),
+            (r#"128 tbs "Unknown""#, b"\x80\x03tbsUnknown"),
+            // RFC 8657 §3: account and validation-method parameters.
+            (
+                r#"0 issue "example.net; accounturi=https://example.net/account/1234""#,
+                b"\x00\x05issueexample.net; accounturi=https://example.net/account/1234",
+            ),
+        ] {
+            text_round_trip(Rtype::CAA, text, wire, text);
+        }
+        // RFC 8659 §4.1.1: the value may also be a contiguous run of
+        // characters; tags keep their case; escapes in the value.
+        text_round_trip(
+            Rtype::CAA,
+            "0 Issue ca1.example.net",
+            b"\x00\x05Issueca1.example.net",
+            r#"0 Issue "ca1.example.net""#,
+        );
+        text_round_trip(Rtype::CAA, r#"0 issue """#, b"\x00\x05issue", r#"0 issue """#);
+        text_round_trip(
+            Rtype::CAA,
+            r#"( 0 issue "a\"b\\\000\255" )"#,
+            b"\x00\x05issuea\"b\\\x00\xff",
+            r#"0 issue "a\"b\\\000\255""#,
+        );
+        // An escaped tag octet that is alphanumeric is fine.
+        assert_eq!(
+            text_parse(Rtype::CAA, r#"0 \105ssue x"#),
+            Ok(b"\x00\x05issuex".to_vec())
+        );
+        // The value is not a <character-string>: longer than 255 octets.
+        let long = "x".repeat(1000);
+        let mut wire = b"\x00\x05issue".to_vec();
+        wire.extend_from_slice(long.as_bytes());
+        let text = std::format!("0 issue \"{long}\"");
+        text_round_trip(Rtype::CAA, &text, &wire, &text);
+    }
+
+    #[test]
+    fn text_malformed() {
+        for (text, err) in [
+            ("", Error::UnexpectedEof),
+            ("0", Error::UnexpectedEof),
+            ("0 issue", Error::UnexpectedEof),
+            ("256 issue x", Error::InvalidText),
+            ("-1 issue x", Error::InvalidText),
+            (r#"0 "issue" x"#, Error::InvalidText),
+            (r#"0 issue "x" y"#, Error::InvalidText),
+            (r#"0 issue "x"#, Error::InvalidText),
+            (r#"0 issue "\999""#, Error::InvalidText),
+            // RFC 8659 §4.1: tags are non-empty ASCII letters and digits.
+            ("0 is-sue x", Error::InvalidRdata),
+            (r#"0 is\032sue x"#, Error::InvalidRdata),
+        ] {
+            assert_eq!(text_error(Rtype::CAA, text), err, "{text}");
+        }
+        let long_tag = std::format!("0 {} x", "a".repeat(256));
+        assert_eq!(text_error(Rtype::CAA, &long_tag), Error::InvalidRdata);
+        // Past the 65535-octet RDATA limit.
+        let huge = std::format!("0 issue {}", "x".repeat(65535));
+        assert!(text_parse(Rtype::CAA, &huge).is_err());
     }
 }

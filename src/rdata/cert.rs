@@ -2,10 +2,11 @@
 
 use core::fmt;
 
-use super::{ComposeRdata, ParseRdata};
+use super::{ComposeRdata, ParseRdata, ParseRdataText};
 use crate::dnssec::Algorithm;
-use crate::wire::{Composer, WireReader};
-use crate::{Result, Rtype};
+use crate::wire::{Composer, OutBuf, WireReader};
+use crate::zone::Scanner;
+use crate::{Error, Result, Rtype};
 
 open_enum! {
     /// A CERT certificate type (RFC 4398 §2.1, IANA "Certificate Types").
@@ -69,7 +70,24 @@ impl<'a> Cert<'a> {
     }
 }
 
-impl super::ParseRdataText for Cert<'_> {}
+impl ParseRdataText for Cert<'_> {
+    /// `<type> <key-tag> <algorithm> <certificate>` (RFC 4398 §2.2): the
+    /// type as a mnemonic (`PKIX`, `PGP`, ...) or a decimal number, the key
+    /// tag as a decimal number, the algorithm as a DNSSEC algorithm
+    /// mnemonic (`RSASHA256`, ...) or a decimal number, and the
+    /// certificate in base64, which may be split across blanks and lines.
+    /// At least one octet is required (an empty certificate has only the
+    /// generic form, as in BIND).
+    fn parse_text<B: OutBuf + ?Sized>(s: &mut Scanner<'_>, out: &mut B) -> Result<()> {
+        out.put_u16(s.parse::<CertType>()?.get())?;
+        out.put_u16(s.u16()?)?;
+        out.put_u8(s.parse::<Algorithm>()?.get())?;
+        if s.base64_rest_into(out)? == 0 {
+            return Err(Error::UnexpectedEof);
+        }
+        Ok(())
+    }
+}
 
 impl<'a> ParseRdata<'a> for Cert<'a> {
     const RTYPE: Rtype = Rtype::CERT;
@@ -122,8 +140,8 @@ impl fmt::Display for Cert<'_> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::rdata::tests::{compose, parse, round_trip};
-    use crate::{Class, Error, RData};
+    use crate::rdata::tests::{compose, parse, round_trip, text_error, text_round_trip};
+    use crate::{Class, RData};
     use std::string::ToString;
 
     #[test]
@@ -163,5 +181,74 @@ mod tests {
             parse(Rtype::CERT, Class::IN, b"\x00\x01\x00\x02"),
             Err(Error::UnexpectedEof)
         );
+    }
+
+    /// Decodes base64 test data.
+    fn b64(text: &str) -> std::vec::Vec<u8> {
+        let mut buf = std::vec![0u8; text.len()];
+        let n = crate::util::base64::decode(text.as_bytes(), &mut buf).unwrap();
+        buf.truncate(n);
+        buf
+    }
+
+    #[test]
+    fn text() {
+        // RFC 4398 §2.2: mnemonics or numbers for the type and the
+        // algorithm. A record from BIND's system-test zones: numeric type,
+        // private algorithm, base64 split across lines.
+        let cert = "MxFcby9k/yvedMfQgKzhH5er0Mu/vILz45IkskceFGgiWCn/GxHhai6V\
+                    AuHAoNUz4YoU1tVfSCSqQYn6//11U6Nld80jEeC8aTrO+KKmCaY=";
+        let mut wire = b"\xff\xfe\xff\xff\xfe".to_vec();
+        wire.extend(b64(cert));
+        text_round_trip(
+            Rtype::CERT,
+            "65534 65535 PRIVATEOID ( MxFcby9k/yvedMfQgKzhH5er0Mu/vILz45IkskceFGgiWCn/GxHhai6V\n \
+             AuHAoNUz4YoU1tVfSCSqQYn6//11U6Nld80jEeC8aTrO+KKmCaY= )",
+            &wire,
+            &std::format!("65534 65535 254 {cert}"),
+        );
+        // Mnemonic type (RFC 4398 §2.1), any case, mnemonic algorithm
+        // (RFC 4034 Appendix A.1).
+        text_round_trip(
+            Rtype::CERT,
+            "pgp 0 0 mDMEV/fnvBY=",
+            b"\x00\x03\x00\x00\x00\x98\x33\x04\x57\xf7\xe7\xbc\x16",
+            "PGP 0 0 mDMEV/fnvBY=",
+        );
+        text_round_trip(
+            Rtype::CERT,
+            "IPKIX 12345 RSASHA256 aHR0cHM6Ly9leGFtcGxl LmNvbS9jLmRlcg==",
+            b"\x00\x04\x30\x39\x08https://example.com/c.der",
+            "IPKIX 12345 8 aHR0cHM6Ly9leGFtcGxlLmNvbS9jLmRlcg==",
+        );
+        text_round_trip(Rtype::CERT, "1 2 3 AQ==", b"\x00\x01\x00\x02\x03\x01", "PKIX 2 3 AQ==");
+        text_round_trip(
+            Rtype::CERT,
+            "URI 0 DELETE AQ==",
+            b"\x00\xfd\x00\x00\x00\x01",
+            "URI 0 0 AQ==",
+        );
+    }
+
+    #[test]
+    fn text_malformed() {
+        for (text, err) in [
+            ("", Error::UnexpectedEof),
+            ("PGP 0", Error::UnexpectedEof),
+            // An empty certificate: only the generic form expresses it.
+            ("PGP 0 0", Error::UnexpectedEof),
+            // Both registries have bare-number generic forms, so an unknown
+            // mnemonic is malformed text.
+            ("X509 0 0 AQ==", Error::InvalidText),
+            ("65536 0 0 AQ==", Error::InvalidText),
+            ("PGP 65536 0 AQ==", Error::InvalidText),
+            ("PGP 0 NOSUCHALG AQ==", Error::InvalidText),
+            ("PGP 0 256 AQ==", Error::InvalidText),
+            ("PGP 0 0 AQ=", Error::InvalidText),
+            ("PGP 0 0 A?==", Error::InvalidText),
+            ("\"PGP\" 0 0 AQ==", Error::InvalidText),
+        ] {
+            assert_eq!(text_error(Rtype::CERT, text), err, "{text:?}");
+        }
     }
 }

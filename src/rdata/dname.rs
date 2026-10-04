@@ -14,7 +14,7 @@ super::single_name::single_name_rdata! {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::rdata::tests::{compose, parse, round_trip};
+    use crate::rdata::tests::{compose, parse, round_trip, text_error, text_round_trip};
     use crate::wire::{Canonical, WireWriter};
     use crate::{Class, ComposeRdata, Error, Message, NameBuf, RData, Rtype};
     use std::string::ToString;
@@ -33,6 +33,29 @@ mod tests {
             parse(Rtype::DNAME, Class::IN, b"\x01a\x00\x00"),
             Err(Error::TrailingData)
         );
+    }
+
+    #[test]
+    fn text() {
+        // RFC 6672 §2.3 / §3: "frobozz.example. DNAME
+        // frobozz-division.acme.example.", and a relative target
+        // (completed with the origin, `example.`).
+        text_round_trip(
+            Rtype::DNAME,
+            "frobozz-division.acme.example.",
+            b"\x10frobozz-division\x04acme\x07example\x00",
+            "frobozz-division.acme.example.",
+        );
+        text_round_trip(
+            Rtype::DNAME,
+            "Frobozz-Division.acme",
+            b"\x10Frobozz-Division\x04acme\x07example\x00",
+            "Frobozz-Division.acme.example.",
+        );
+        assert_eq!(text_error(Rtype::DNAME, ""), Error::UnexpectedEof);
+        assert_eq!(text_error(Rtype::DNAME, "a. b."), Error::InvalidText);
+        assert_eq!(text_error(Rtype::DNAME, "\"a.\""), Error::InvalidText);
+        assert_eq!(text_error(Rtype::DNAME, "a..b."), Error::EmptyLabel);
     }
 
     #[test]

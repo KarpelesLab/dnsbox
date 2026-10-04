@@ -3,9 +3,10 @@
 
 use core::fmt;
 
-use super::{ComposeRdata, ParseRdata};
-use crate::wire::{Composer, WireReader};
-use crate::{Result, Rtype};
+use super::{ComposeRdata, ParseRdata, ParseRdataText};
+use crate::wire::{Composer, OutBuf, WireReader};
+use crate::zone::Scanner;
+use crate::{Error, Result, Rtype};
 
 open_enum! {
     /// An SSHFP public key algorithm number (RFC 4255 §3.1.1, IANA "SSHFP
@@ -64,7 +65,20 @@ impl<'a> Sshfp<'a> {
     }
 }
 
-impl super::ParseRdataText for Sshfp<'_> {}
+impl ParseRdataText for Sshfp<'_> {
+    /// `<algorithm> <fp-type> <fingerprint>` (RFC 4255 §3.2): two decimal
+    /// numbers and the fingerprint in hexadecimal, which may be split
+    /// across blanks and lines. At least one octet is required (an empty
+    /// fingerprint has only the generic form, as in BIND).
+    fn parse_text<B: OutBuf + ?Sized>(s: &mut Scanner<'_>, out: &mut B) -> Result<()> {
+        out.put_u8(s.u8()?)?;
+        out.put_u8(s.u8()?)?;
+        if s.hex_rest_into(out)? == 0 {
+            return Err(Error::UnexpectedEof);
+        }
+        Ok(())
+    }
+}
 
 impl<'a> ParseRdata<'a> for Sshfp<'a> {
     const RTYPE: Rtype = Rtype::SSHFP;
@@ -115,8 +129,7 @@ impl fmt::Display for Sshfp<'_> {
 mod tests {
     use super::*;
     use crate::Class;
-    use crate::Error;
-    use crate::rdata::tests::{compose, parse, round_trip};
+    use crate::rdata::tests::{compose, parse, round_trip, text_error, text_round_trip};
     use crate::testutil::hex;
     use std::string::ToString;
 
@@ -164,5 +177,63 @@ mod tests {
         // No fingerprint: generic form.
         round_trip(Rtype::SSHFP, b"\x01\x01", "\\# 2 0101");
         assert_eq!(parse(Rtype::SSHFP, Class::IN, b"\x01"), Err(Error::UnexpectedEof));
+    }
+
+    #[test]
+    fn text() {
+        // RFC 4255 §3.3:
+        //   host.example.  SSHFP 2 1 123456789abcdef67890123456789abcdef67890
+        let mut wire = std::vec![2, 1];
+        wire.extend(hex("123456789abcdef67890123456789abcdef67890"));
+        text_round_trip(
+            Rtype::SSHFP,
+            "2 1 123456789abcdef67890123456789abcdef67890",
+            &wire,
+            "2 1 123456789ABCDEF67890123456789ABCDEF67890",
+        );
+        // RFC 6594 §3: an ECDSA key with a SHA-256 fingerprint, split
+        // across lines as zone files do (RFC 4255 §3.2).
+        let mut wire = std::vec![3, 2];
+        wire.extend(hex(
+            "821eb6c1c98d9cc827ab7f456304c0f14785b7008d9e8646a8519de80849afc7",
+        ));
+        text_round_trip(
+            Rtype::SSHFP,
+            "3 2 (\n 821eb6c1c98d9cc827ab7f456304c0f1\n 4785b7008d9e8646a8519de80849afc7 )",
+            &wire,
+            "3 2 821EB6C1C98D9CC827AB7F456304C0F14785B7008D9E8646A8519DE80849AFC7",
+        );
+        // RFC 7479 §3 (Ed25519, SHA-256), split at odd digit counts.
+        let mut wire = std::vec![4, 2];
+        wire.extend(hex(
+            "a87f1b687ac0e57d2a081a2f282672334d90ed316d2b818ca9580ea384d92401",
+        ));
+        text_round_trip(
+            Rtype::SSHFP,
+            "4 2 ( a87f1b687ac0e57d2a081a2f2826723\n 34d90ed316d2b818ca9580ea384d924\n 01 )",
+            &wire,
+            "4 2 A87F1B687AC0E57D2A081A2F282672334D90ED316D2B818CA9580EA384D92401",
+        );
+        // Unassigned numbers round-trip; digits may be split anywhere.
+        text_round_trip(Rtype::SSHFP, "255 9 0 0 a B", b"\xff\x09\x00\xab", "255 9 00AB");
+    }
+
+    #[test]
+    fn text_malformed() {
+        for (text, err) in [
+            ("", Error::UnexpectedEof),
+            ("2", Error::UnexpectedEof),
+            // No fingerprint: only the generic form can express it.
+            ("2 1", Error::UnexpectedEof),
+            ("256 1 00", Error::InvalidText),
+            ("2 -1 00", Error::InvalidText),
+            // SSHFP numbers have no mnemonics in the presentation format.
+            ("RSA 1 00", Error::InvalidText),
+            ("2 1 0", Error::InvalidText),
+            ("2 1 0g", Error::InvalidText),
+            ("2 1 \"00\"", Error::InvalidText),
+        ] {
+            assert_eq!(text_error(Rtype::SSHFP, text), err, "{text:?}");
+        }
     }
 }

@@ -531,6 +531,7 @@ Scanner methods (each takes the next token; a missing one is
 | addresses | `s.ipv4()`, `s.ipv6()` |
 | domain names (relative to the origin, `@`) | `s.name_into(out, encoding)`, `s.name()` → `NameBuf` |
 | `<character-string>` | `s.char_string_into(out)`; all remaining: `s.char_strings_into(out)` |
+| unprefixed string to the end of the RDATA (CAA value, URI target) | `for b in s.token()?.unescape() { out.put_u8(b?)?; }` |
 | hex | one token: `s.hex_into(out)`; the rest of the entry: `s.hex_rest_into(out)` |
 | base64 | `s.base64_into(out)`; the rest: `s.base64_rest_into(out)` |
 | base32hex (NSEC3) | `s.base32hex_into(out)` |
@@ -538,6 +539,10 @@ Scanner methods (each takes the next token; a missing one is
 | anything else | `s.word()` (unquoted), `s.token()`, `s.next_token()` (`None` at the end), `s.peek()`, `s.is_at_end()` → `Token`: `as_bytes`, `as_str`, `is("TCP")` (case-insensitive), `is_quoted`, `unescape()`, `u8/u16/u32` |
 
 The `*_into` methods return the number of octets written where useful.
+A trailing hex/base64 field that needs at least one octet in text (as in
+BIND: SSHFP, TLSA, CERT, OPENPGPKEY, DHCID, ...) checks that count and
+fails with `UnexpectedEof` when it is 0; `Display` writes RDATA with an
+empty field in the generic form instead.
 Length-prefixed fields: write a placeholder and patch it, e.g.
 `let at = out.pos(); out.put_u8(0)?; let n = s.hex_into(out)?;
 out.patch(at, &[u8::try_from(n).map_err(|_| Error::InvalidRdata)?])?;`

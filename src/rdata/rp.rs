@@ -2,9 +2,10 @@
 
 use core::fmt;
 
-use super::{ComposeRdata, ParseRdata};
+use super::{ComposeRdata, ParseRdata, ParseRdataText};
 use crate::name::Name;
-use crate::wire::{Composer, NameEncoding, WireReader};
+use crate::wire::{Composer, NameEncoding, OutBuf, WireReader};
+use crate::zone::Scanner;
 use crate::{Result, Rtype};
 
 /// `RP` record data: the responsible person for a domain
@@ -18,7 +19,14 @@ pub struct Rp<'a> {
     pub txt: Name<'a>,
 }
 
-impl super::ParseRdataText for Rp<'_> {}
+impl ParseRdataText for Rp<'_> {
+    /// `<mbox-dname> <txt-dname>` (RFC 1183 §2.2): two domain names,
+    /// relative to the origin unless they end in a dot; `.` for none.
+    fn parse_text<B: OutBuf + ?Sized>(s: &mut Scanner<'_>, out: &mut B) -> Result<()> {
+        s.name_into(out, NameEncoding::Lowercase)?;
+        s.name_into(out, NameEncoding::Lowercase)
+    }
+}
 
 impl<'a> ParseRdata<'a> for Rp<'a> {
     const RTYPE: Rtype = Rtype::RP;
@@ -54,7 +62,7 @@ impl fmt::Display for Rp<'_> {
 
 #[cfg(test)]
 mod tests {
-    use crate::rdata::tests::{compose, parse, round_trip};
+    use crate::rdata::tests::{compose, parse, round_trip, text_error, text_round_trip};
     use crate::rdata::{RData, Rp};
     use crate::wire::{Canonical, WireWriter};
     use crate::{Class, ComposeRdata, Error, Rtype};
@@ -92,5 +100,43 @@ mod tests {
             parse(Rtype::RP, Class::IN, b"\x00"),
             Err(Error::UnexpectedEof)
         );
+    }
+
+    #[test]
+    fn text() {
+        // RFC 1183 §2.2 examples (case preserved; `.` for "no TXT").
+        text_round_trip(
+            Rtype::RP,
+            "louie.trantor.umd.edu.  LAM1.people.umd.edu.",
+            b"\x05louie\x07trantor\x03umd\x03edu\x00\x04LAM1\x06people\x03umd\x03edu\x00",
+            "louie.trantor.umd.edu. LAM1.people.umd.edu.",
+        );
+        text_round_trip(
+            Rtype::RP,
+            "louie.trantor.umd.edu. .",
+            b"\x05louie\x07trantor\x03umd\x03edu\x00\x00",
+            "louie.trantor.umd.edu. .",
+        );
+        // Relative names and `@` use the origin.
+        text_round_trip(
+            Rtype::RP,
+            "( hostmaster\n @ )",
+            b"\x0ahostmaster\x07example\x00\x07example\x00",
+            "hostmaster.example. example.",
+        );
+        text_round_trip(Rtype::RP, ". .", b"\x00\x00", ". .");
+    }
+
+    #[test]
+    fn text_malformed() {
+        for (text, err) in [
+            ("", Error::UnexpectedEof),
+            ("a.", Error::UnexpectedEof),
+            ("a. b. c.", Error::InvalidText),
+            ("\"a.\" b.", Error::InvalidText),
+            ("a..b. c.", Error::EmptyLabel),
+        ] {
+            assert_eq!(text_error(Rtype::RP, text), err, "{text:?}");
+        }
     }
 }
