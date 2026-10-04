@@ -1,7 +1,8 @@
 //! Interop corpus: real responses from BIND, NSD, Knot DNS, PowerDNS
-//! (authoritative and recursor), Unbound, Knot Resolver and the large public
-//! resolvers, stored as hex under `tests/corpus/` (see
-//! `tests/corpus/capture.py` for how each was obtained).
+//! (authoritative and recursor), Unbound, Knot Resolver, Cloudflare and the
+//! large public resolvers, a local BIND serving DNSSEC-signed zones, and
+//! dnspython-built messages, stored as hex under `tests/corpus/` (see
+//! `tests/corpus/README.md` for where each comes from).
 //!
 //! Every message must validate, survive parse → build → parse unchanged
 //! (and rebuild to a fixed point), and reject every truncation. Record
@@ -51,7 +52,7 @@ fn corpus() -> Vec<(PathBuf, Vec<u8>)> {
 #[test]
 fn corpus_is_populated() {
     let c = corpus();
-    assert!(c.len() >= 40, "only {} corpus files", c.len());
+    assert!(c.len() >= 170, "only {} corpus files", c.len());
 }
 
 #[test]

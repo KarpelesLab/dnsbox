@@ -96,7 +96,14 @@ tests/
                   for byte, truncate, mutate)
   *_named.rs      BIND 9.18 interop (TSIG, SIG(0), UPDATE, XFR); the
                   binary captures live in tests/data/named/
-  corpus.rs, corpus/   interop corpus (BIND, NSD, Knot, PowerDNS, ...)
+  corpus.rs, corpus/   interop corpus (BIND, NSD, Knot, PowerDNS, ...);
+                  corpus/README.md says where every file comes from
+  interop_zones.rs     BIND/ldns zone files, signed zones (every
+                  algorithm, NSEC/NSEC3/Opt-Out, ZONEMD) and local named
+                  responses (corpus/bind9/, corpus/ldns/)
+  interop_dnspython.rs dnspython RDATA text/wire, TSIG, UPDATE, EDNS,
+                  ZONEMD (corpus/dnspython/)
+  dnssec_corpus.rs     corpus DNSSEC validated from the root anchors
   fuzz_regressions.rs  fuzz seeds/regressions replayed on stable
   proptest_roundtrip.rs, no_alloc.rs   property tests, allocation check
   dig_display.rs  Message Display vs BIND dig 9.18 output (tests/data/dig/)
@@ -892,7 +899,11 @@ common traits, `Display`/`FromStr` pairs, iteration by reference).
     parse identity of generated messages.
   - `tests/corpus/` + `tests/corpus.rs` — real responses from BIND, NSD,
     Knot, PowerDNS, Unbound, Knot Resolver and public resolvers (hex files
-    written by `tests/corpus/capture.py`); all must validate and round-trip.
+    written by `tests/corpus/capture.py`), a local `named` and dnspython;
+    all must validate and round-trip, and display as `dig` does. Zone
+    files, signed zones and other artifacts of BIND, ldns and dnspython
+    sit beside them (`interop_*.rs`); `tests/corpus/README.md` documents
+    every source and how to regenerate it.
   - `tests/no_alloc.rs` — the hot path under a counting allocator, run with
     `--no-default-features` in CI.
   - `benches/` — separate package: criterion comparisons against
