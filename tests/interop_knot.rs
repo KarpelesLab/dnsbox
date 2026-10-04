@@ -1974,7 +1974,7 @@ fn dnsbox_verdict(case: &str, qname: &NameBuf, qtype: Rtype, zone: &NameBuf) -> 
     }
     let mut scratch = Vec::new();
     let root = name("interop");
-    let (k, s) = dnskeys(&fetch("dnskey-interop."), &root);
+    let (k, s) = dnskeys(&fetch("dnskey-interop"), &root);
     let Ok(mut keys) = TrustedKeys::from_ds_with_budget(
         &PurecryptoVerifier,
         Rrset::new(root.as_name(), Class::IN, k),
@@ -1996,7 +1996,7 @@ fn dnsbox_verdict(case: &str, qname: &NameBuf, qtype: Rtype, zone: &NameBuf) -> 
     }
     below.reverse();
     for child in &below {
-        let ds_msg = fetch(&format!("ds-{child}"));
+        let ds_msg = fetch(&format!("ds-{}", child.to_string().trim_end_matches('.')));
         let budget = ValidationBudget::new();
         let (ds, ds_sigs) = rrset_in(&ds_msg, Section::Answer, child, Rtype::DS);
         if ds.is_empty() {
@@ -2058,7 +2058,13 @@ fn dnsbox_verdict(case: &str, qname: &NameBuf, qtype: Rtype, zone: &NameBuf) -> 
         {
             return Verdict::Bogus;
         }
-        let (k, s) = dnskeys(&fetch(&format!("dnskey-{child}")), child);
+        let (k, s) = dnskeys(
+            &fetch(&format!(
+                "dnskey-{}",
+                child.to_string().trim_end_matches('.')
+            )),
+            child,
+        );
         let Ok(child_keys) = TrustedKeys::from_ds_with_budget(
             &PurecryptoVerifier,
             Rrset::new(child.as_name(), Class::IN, k),

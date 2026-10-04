@@ -583,10 +583,10 @@ ucase() {
     echo "unbound-upstream/$case" >"$WORK/knot.label"
     uq "$case/answer" +dnssec "$qname" "$qtype"
     uq "$case/cd" +dnssec +cdflag "$qname" "$qtype"
-    uq "$case/dnskey-interop." +dnssec +cdflag interop. DNSKEY
+    uq "$case/dnskey-interop" +dnssec +cdflag interop. DNSKEY
     for a in $(ancestors "$zone"); do
-        uq "$case/ds-$a" +dnssec +cdflag "$a" DS
-        uq "$case/dnskey-$a" +dnssec +cdflag "$a" DNSKEY
+        uq "$case/ds-${a%.}" +dnssec +cdflag "$a" DS
+        uq "$case/dnskey-${a%.}" +dnssec +cdflag "$a" DNSKEY
     done
     echo "$case $qname $qtype $zone $expected" >>"$OUT/unbound/cases.txt"
 }
