@@ -879,10 +879,15 @@ common traits, `Display`/`FromStr` pairs, iteration by reference).
   `RData::is_known`), so registering a type is enough to get it fuzzed and
   property-tested:
   - `fuzz/` — cargo-fuzz targets (`edns`, `message`, `name`, `rdata`,
-    `roundtrip`, `text`), its own workspace; `message` also runs the
-    protocol views (EDNS, TSIG/SIG(0), UPDATE, NOTIFY, XFR, DSO); the properties live in `fuzz/src/lib.rs`
+    `roundtrip`, `text`, and for the trust decisions `denial`, `dnssec`,
+    `sign`, `zone`), its own workspace; `message` also runs the
+    protocol views (EDNS, TSIG/SIG(0), UPDATE, NOTIFY, XFR, DSO); the
+    properties live in `fuzz/src/lib.rs` and `fuzz/src/security.rs`
     and are also replayed on stable by `tests/fuzz_regressions.rs` over
     `fuzz/seeds/` and `fuzz/regressions/` (put every fixed crash there).
+    Run the fuzzers with `-a` (overflow checks), as CI does.
+  - `tests/security_audit.rs` — one regression test per finding of the
+    security audit (`SECURITY.md`).
   - `tests/proptest_roundtrip.rs` — build → parse and parse → build →
     parse identity of generated messages.
   - `tests/corpus/` + `tests/corpus.rs` — real responses from BIND, NSD,

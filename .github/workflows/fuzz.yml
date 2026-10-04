@@ -18,7 +18,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        target: [edns, message, name, rdata, roundtrip, text]
+        target: [edns, message, name, rdata, roundtrip, text, denial, dnssec, sign, zone]
     steps:
       - uses: actions/checkout@v6
 
@@ -38,11 +38,12 @@ jobs:
 
       # The prebuilt cargo-fuzz is a musl binary and defaults to building
       # for its own target, where the sanitizers cannot link: name the
-      # runner's target explicitly.
+      # runner's target explicitly. `-a` (debug assertions) makes integer
+      # overflow a crash instead of a silent wrap.
       - name: Fuzz for 60 seconds
         run: |
           mkdir -p fuzz/corpus/${{ matrix.target }}
-          cargo fuzz run --target x86_64-unknown-linux-gnu ${{ matrix.target }} \
+          cargo fuzz run -a --target x86_64-unknown-linux-gnu ${{ matrix.target }} \
             fuzz/corpus/${{ matrix.target }} fuzz/seeds/${{ matrix.target }} \
             -- -max_total_time=60 -max_len=4096
 

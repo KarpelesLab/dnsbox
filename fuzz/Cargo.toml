@@ -13,11 +13,15 @@ cargo-fuzz = true
 libfuzzer-sys = "0.4"
 dnsbox = { path = ".." }
 
-# `src/lib.rs` is also compiled into dnsbox's own tests, where `alloc` means
-# dnsbox's feature; here it is always on (dnsbox's default features).
+# `src/lib.rs` is also compiled into dnsbox's own tests, where `alloc`,
+# `dnssec`, `dnssec-digest` and `tsig` mean dnsbox's features; here they are
+# always on.
 [features]
-default = ["alloc"]
+default = ["alloc", "dnssec", "tsig"]
 alloc = []
+dnssec-digest = ["dnsbox/dnssec-digest"]
+dnssec = ["alloc", "dnssec-digest", "dnsbox/dnssec"]
+tsig = ["dnsbox/tsig"]
 
 # Not part of any other workspace: this crate needs nightly and libFuzzer.
 [workspace]
@@ -70,6 +74,34 @@ bench = false
 [[bin]]
 name = "text"
 path = "fuzz_targets/text.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "denial"
+path = "fuzz_targets/denial.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "dnssec"
+path = "fuzz_targets/dnssec.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "sign"
+path = "fuzz_targets/sign.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "zone"
+path = "fuzz_targets/zone.rs"
 test = false
 doc = false
 bench = false

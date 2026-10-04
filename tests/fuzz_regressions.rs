@@ -67,18 +67,41 @@ fn text() {
     assert!(replay("text", checks::text) > 0);
 }
 
+#[test]
+fn denial() {
+    assert!(replay("denial", checks::security::denial) > 0);
+}
+
+#[test]
+fn dnssec() {
+    assert!(replay("dnssec", checks::security::dnssec) > 0);
+}
+
+#[test]
+fn sign() {
+    assert!(replay("sign", checks::security::sign) > 0);
+}
+
+#[test]
+fn zone() {
+    assert!(replay("zone", checks::security::zone) > 0);
+}
+
 /// The checks also hold for every prefix of every seed (cheap extra
 /// coverage of the truncation paths without a fuzzer).
 #[test]
 fn seed_prefixes() {
     let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("fuzz/seeds");
-    let targets: [(&str, Check); 6] = [
+    // (Not `dnssec` and `sign`: every prefix would run the real crypto.)
+    let targets: [(&str, Check); 8] = [
         ("edns", checks::edns),
         ("message", checks::message),
         ("name", checks::name),
         ("rdata", checks::rdata),
         ("roundtrip", checks::roundtrip),
         ("text", checks::text),
+        ("denial", checks::security::denial),
+        ("zone", checks::security::zone),
     ];
     for (target, check) in targets {
         for entry in fs::read_dir(root.join(target)).expect("seed dir") {

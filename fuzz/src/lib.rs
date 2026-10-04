@@ -23,6 +23,9 @@
 //! EDNS, TSIG and SIG(0) placement, UPDATE classification, NOTIFY,
 //! AXFR/IXFR processing and DSO.
 //!
+//! The trust decisions (denial proofs, chain of trust, TSIG and SIG(0),
+//! zone files with includes and ZONEMD) are checked in [`security`].
+//!
 //! Only the `&mut [u8]` builder is used, so the checks also run against a
 //! crate built without the `alloc` feature; the owned-type checks
 //! ([`check_owned`]) are compiled only with `alloc`.
@@ -32,6 +35,9 @@ use std::hash::{Hash, Hasher};
 use std::string::{String, ToString};
 use std::sync::OnceLock;
 use std::vec::Vec;
+
+#[path = "security.rs"]
+pub mod security;
 
 use dnsbox::edns::{ComposeOption, EdnsOption, Opt};
 use dnsbox::rdata::{Https, Svcb};
@@ -494,6 +500,20 @@ pub fn check_rdata(rtype: Rtype, class: Class, d: &RData<'_>) {
     assert_eq!(back.to_string(), text, "{rtype}");
 }
 
+/// One wire form per value: RDATA without compression pointers (no octet
+/// of 0xc0 or above, so certainly none) re-encodes to exactly the octets it
+/// was parsed from. DNSSEC signs the re-encoded form of parsed records
+/// (`RecordRdata`), so two encodings of one value would let a signature
+/// over one authenticate the other.
+fn check_wire_identity(d: &RData<'_>, raw: &[u8]) {
+    if raw.iter().any(|&b| b >= 0xc0) {
+        return;
+    }
+    let mut wire = Vec::new();
+    compose_plain(d, false, &mut wire).expect("composed before");
+    assert_eq!(wire, raw, "{}: parsing is not injective", d.rtype());
+}
+
 /// Every record type through the generic dispatch:
 /// `[type choice: 3][class choice: 1-3][prefix: u8][message...]`. The
 /// RDATA is the message after `prefix` bytes, so compression pointers in it
@@ -514,6 +534,7 @@ pub fn rdata(data: &[u8]) {
                 assert_eq!(d.rtype(), rtype);
             }
             check_rdata(rtype, class, &d);
+            check_wire_identity(&d, msg.get(prefix..).unwrap_or(&[]));
         }
         Err(e) => {
             // Unknown types never fail: their RDATA is opaque (RFC 3597).
