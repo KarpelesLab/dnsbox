@@ -8,8 +8,10 @@ High-performance DNS message parsing and building for Rust — queries and
 responses, zero-copy, `no_std`, with broad RFC extension coverage (EDNS(0),
 DNSSEC, SVCB/HTTPS, TSIG, and more).
 
-> **Status:** early development. The API is not stable and most of the
-> functionality is still on the [roadmap](ROADMAP.md).
+> **Status:** pre-1.0. Wire formats, EDNS(0), DNSSEC, SVCB/HTTPS, TSIG and
+> the long tail of record types are implemented; the API may still change.
+> See the [roadmap](ROADMAP.md) for what is left (zone-file parsing, owned
+> types, serde, 1.0 API review).
 
 ## Goals
 
@@ -50,6 +52,93 @@ fn main() -> Result<(), dnsbox::Error> {
     Ok(())
 }
 ```
+
+### EDNS(0): a query and the response echo
+
+```rust
+use dnsbox::{Class, Message, MessageBuilder, NameBuf, Rtype};
+use dnsbox::edns::{Nsid, OptHeader};
+use dnsbox::rdata::Aaaa;
+
+fn main() -> Result<(), dnsbox::Error> {
+    let name: NameBuf = "example.com".parse()?;
+
+    // Query: RD set, EDNS with DO and an NSID request.
+    let mut qbuf = [0u8; 512];
+    let mut q = MessageBuilder::query(&mut qbuf, 0xbeef, &name, Rtype::AAAA, Class::IN)?;
+    q.push_edns(OptHeader::new(1232).with_dnssec_ok(true), &Nsid::REQUEST)?;
+    let query = Message::parse_validated(q.finish())?;
+
+    // Response skeleton: ID, flags, question and the OPT echo (RFC 6891 §7);
+    // room for the OPT record is reserved even if the answer is truncated.
+    let mut rbuf = [0u8; 512];
+    let mut r = MessageBuilder::new(&mut rbuf)?;
+    let opt = r.start_response_edns(&query, 1232)?.expect("query had EDNS");
+    r.push_answer(&name, Class::IN, 300, &Aaaa::new("2001:db8::1".parse().unwrap()))?;
+    r.push_reserved_edns(opt, &Nsid::new(b"ns1"))?;
+
+    let resp = Message::parse_validated(r.finish())?;
+    let edns = resp.edns()?.expect("echoed");
+    assert!(edns.dnssec_ok());
+    assert_eq!(edns.get::<Nsid>().transpose()?.map(|n| n.id), Some(&b"ns1"[..]));
+    Ok(())
+}
+```
+
+### SVCB / HTTPS
+
+```rust
+use dnsbox::rdata::Https;
+
+fn main() -> Result<(), dnsbox::Error> {
+    let mut buf = [0u8; 256];
+    let https = Https::from_text("1 . alpn=h3,h2 port=8443 ipv4hint=192.0.2.1", &mut buf)?;
+    assert_eq!(https.params.port(), Some(8443));
+    assert_eq!(https.to_string(), r#"1 . alpn="h3,h2" port=8443 ipv4hint=192.0.2.1"#);
+    Ok(())
+}
+```
+
+## What is covered
+
+- **Core** (RFC 1035, 3596, 3597, 2181, 4343): zero-copy `Message` views,
+  hardened name decompression, whole-message validation, a compressing
+  builder with atomic pushes, RRset-level truncation (TC) and size limits,
+  query/response constructors, TCP framing and stream reassembly.
+- **EDNS(0)** (RFC 6891): OPT view and builder, extended RCODE, DO/CO flags,
+  the full option-code registry and typed options — Client Subnet, Cookies
+  (with RFC 9018 server cookies), Padding with RFC 8467 policies, TCP
+  keepalive, Extended DNS Errors, NSID, Chain, Key tag, Expire, Zone
+  version, Report-Channel, DAU/DHU/N3U.
+- **Record types**: about 80 typed RDATA formats — the RFC 1035 set, SRV,
+  NAPTR, CAA, SSHFP, TLSA, SMIMEA, OPENPGPKEY, DNAME, URI, CERT, DHCID, LOC,
+  RP, AFSDB, ILNP, EUI48/64, CSYNC, ZONEMD, APL, IPSECKEY, HIP, KX, SVCB and
+  HTTPS (all RFC 9460 SvcParams), the DNSSEC types and the legacy types —
+  each with presentation-format `Display`; unknown types round-trip.
+- **DNSSEC** (RFC 4033–4035, 5155, 6840): canonical form and RRset order,
+  key tags, DS digests, NSEC3 hashing, RRSIG validation logic, and with the
+  `dnssec` feature RSA, ECDSA P-256/P-384, Ed25519 and Ed448 verification
+  and signing.
+- **Transactions and zone transfer**: TSIG (RFC 8945), SIG(0) (RFC 2931),
+  dynamic UPDATE (RFC 2136), NOTIFY (RFC 1996), AXFR/IXFR (RFC 5936,
+  RFC 1995) stream processing, DNS Stateful Operations (RFC 8490).
+
+## Features
+
+| Feature          | Default | What it adds |
+|------------------|---------|--------------|
+| `std`            | yes     | `std::error::Error`, `std::io` TCP helpers (implies `alloc`) |
+| `alloc`          |         | `Vec`-backed builders, owned helpers |
+| `dnssec-digest`  |         | DS digests and NSEC3 hashing (no `alloc`) |
+| `dnssec`         |         | DNSSEC and SIG(0) signature verification and signing (implies `alloc`, `dnssec-digest`) |
+| `tsig`           |         | TSIG HMAC backend (HMAC-MD5/SHA-1/SHA-2) |
+| `cookie-siphash` |         | RFC 9018 server cookie generation and verification |
+
+dnsbox never implements cryptography itself: the crypto features pull in
+the optional, `no_std`-capable [`purecrypto`](https://crates.io/crates/purecrypto)
+crate. Every crypto-using API sits behind a trait, so other backends can be
+plugged in, and all wire-format work (signed data, MAC input, canonical
+forms) is available without these features.
 
 See [ARCHITECTURE.md](ARCHITECTURE.md) for the design and extension guide.
 

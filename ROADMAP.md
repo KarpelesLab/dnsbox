@@ -23,8 +23,16 @@ order of work. Items are checked off as they land.
   round-trip losslessly (RFC 3597).
 - **`no_std` first.** The core works with neither `alloc` nor `std`. `alloc`
   adds owned types and growable builders; `std` adds `std::io` glue.
-- **Minimal dependencies.** None in the core. Optional integrations (serde,
-  async I/O, crypto backends for DNSSEC/TSIG) live behind features.
+- **Minimal dependencies.** None in the core. Cryptography (digests, HMAC,
+  SipHash, RSA/ECDSA/EdDSA) is never implemented in dnsbox: it comes from
+  the optional `purecrypto` dependency (`default-features = false`, no_std
+  capable), enabled per feature (`dnssec-digest`, `dnssec`, `tsig`,
+  `cookie-siphash`). Every crypto-using API sits behind a trait
+  (`dnssec::{Signer, Verifier}`, `tsig::{TsigKey, TsigMac}`,
+  `sig0::{Sig0Signer, Sig0Verifier}`) so alternative backends can be
+  plugged in, and all wire-format work (signed data, MAC input, canonical
+  forms, key tags) works without it. Other optional integrations (serde,
+  async I/O) live behind features too.
 - **MSRV 1.89**, edition 2024. MSRV bumps are minor-version changes.
 
 ## Milestone 0 — Foundation
@@ -32,120 +40,161 @@ order of work. Items are checked off as they land.
 - [x] Crate scaffold, CI, release automation
 - [x] Error type
 - [x] Header (RFC 1035 §4.1.1): ID, flags, opcode, rcode, section counts
-- [ ] Bounds-checked wire reader (cursor over `&[u8]`) and writer (cursor
+- [x] Bounds-checked wire reader (cursor over `&[u8]`) and writer (cursor
       over `&mut [u8]`), the primitives every later layer builds on
-- [ ] Open newtypes: `Rtype`, `Class`, with IANA mnemonics and parsing from
+- [x] Open newtypes: `Rtype`, `Class`, with IANA mnemonics and parsing from
       text mnemonics (`A`, `TYPE65534`, `IN`, `CLASS3`)
 
 ## Milestone 1 — Core RFC 1035 parsing
 
-- [ ] Domain names
-  - [ ] Wire-format label parsing with compression pointers (RFC 1035 §4.1.4)
-  - [ ] Hardening: forward/self-pointer rejection, hop limit, 255-octet name
+- [x] Domain names
+  - [x] Wire-format label parsing with compression pointers (RFC 1035 §4.1.4)
+  - [x] Hardening: forward/self-pointer rejection, hop limit, 255-octet name
         limit, 63-octet label limit
-  - [ ] Borrowed `Name<'a>` (lazy, pointer-following) and an inline/owned
+  - [x] Borrowed `Name<'a>` (lazy, pointer-following) and an inline/owned
         uncompressed form
-  - [ ] Case-insensitive comparison and hashing (RFC 4343), canonical
+  - [x] Case-insensitive comparison and hashing (RFC 4343), canonical
         ordering (RFC 4034 §6.1)
-  - [ ] Presentation format with escapes (`\.`, `\DDD`)
-  - [ ] Reserved label types: reject extended label types (RFC 6891 §5)
-- [ ] `Message<'a>` view: header + section iterators (question, answer,
+  - [x] Presentation format with escapes (`\.`, `\DDD`)
+  - [x] Reserved label types: reject extended label types (RFC 6891 §5)
+- [x] `Message<'a>` view: header + section iterators (question, answer,
       authority, additional), validated against section counts
-- [ ] `Question` and `Record` views (name, type, class, TTL, raw RDATA)
-- [ ] Unknown-type RDATA passthrough (RFC 3597)
-- [ ] Typed RDATA for the RFC 1035 set: A, NS, CNAME, SOA, PTR, MX, TXT,
+- [x] `Question` and `Record` views (name, type, class, TTL, raw RDATA)
+- [x] Unknown-type RDATA passthrough (RFC 3597)
+- [x] Typed RDATA for the RFC 1035 set: A, NS, CNAME, SOA, PTR, MX, TXT,
       HINFO, plus AAAA (RFC 3596)
-- [ ] Whole-message validation mode (walk once, report the first error) for
+- [x] Whole-message validation mode (walk once, report the first error) for
       callers that want to fail fast before iterating
 
 ## Milestone 2 — Building messages
 
-- [ ] `MessageBuilder` over `&mut [u8]` with typestate or runtime-checked
-      section ordering (question → answer → authority → additional)
-- [ ] Name compression with a fixed-size, allocation-free suffix table;
+- [x] `MessageBuilder` over `&mut [u8]` with runtime-checked section
+      ordering (question → answer → authority → additional)
+- [x] Name compression with a fixed-size, allocation-free suffix table;
       option to disable compression (and never compress inside RDATA of
       types where RFC 3597 forbids it)
-- [ ] Automatic section counts
-- [ ] Size limits and truncation: stop at a max size, set TC, roll back the
-      partial RRset (RFC 2181 §9)
-- [ ] Convenience constructors: query for (name, type), response skeleton
-      from a parsed query (copies ID, opcode, RD, question, EDNS echo)
-- [ ] Growable `Vec`-backed builder (`alloc`)
-- [ ] TCP framing helpers (2-byte length prefix, RFC 1035 §4.2.2 / RFC 7766)
+- [x] Automatic section counts
+- [x] Size limits and truncation: stop at a max size, set TC, roll back the
+      partial RRset (RFC 2181 §9); `Truncation::Error` / `SetTc` policies,
+      reserve for OPT/TSIG, `copy_section` / `copy_message`
+- [x] Convenience constructors: query for (name, type), response skeleton
+      from a parsed query (copies ID, opcode, RD, CD, question; EDNS echo
+      with `start_response_edns`)
+- [x] Growable `Vec`-backed builder (`alloc`)
+- [x] TCP framing helpers (2-byte length prefix, RFC 1035 §4.2.2 / RFC 7766):
+      frame splitting, allocation-free `FrameReassembler`, `std::io`
+      helpers, length-prefixed builder
+- [x] Appending pre-encoded records (`push_raw_records`) and copying parsed
+      records with name recompression
 
 ## Milestone 3 — EDNS(0)
 
-- [ ] OPT pseudo-record (RFC 6891): UDP payload size, extended RCODE,
-      version, DO bit, option iteration and building
-- [ ] Options:
-  - [ ] Client Subnet (RFC 7871)
-  - [ ] Cookies (RFC 7873, RFC 9018 interoperable server cookies)
-  - [ ] Padding (RFC 7830) with RFC 8467 padding policies in the builder
-  - [ ] TCP keepalive (RFC 7828)
-  - [ ] Extended DNS Errors (RFC 8914)
-  - [ ] NSID (RFC 5001)
-  - [ ] Chain query (RFC 7901), Key tag (RFC 8145), Expire (RFC 7314)
-  - [ ] Zone version (RFC 9660), Report-Channel (RFC 9567)
-  - [ ] DAU/DHU/N3U (RFC 6975)
-- [ ] Unknown options pass through untouched
+- [x] OPT pseudo-record (RFC 6891): UDP payload size, extended RCODE
+      (combined with the header RCODE), version, DO bit (other flag bits
+      preserved), option iteration and building; open `OptionCode` with
+      the full IANA registry
+- [x] Options:
+  - [x] Client Subnet (RFC 7871)
+  - [x] Cookies (RFC 7873, RFC 9018 interoperable server cookies; SipHash
+        from purecrypto behind `cookie-siphash`)
+  - [x] Padding (RFC 7830) with RFC 8467 padding policies in the builder
+  - [x] TCP keepalive (RFC 7828)
+  - [x] Extended DNS Errors (RFC 8914)
+  - [x] NSID (RFC 5001)
+  - [x] Chain query (RFC 7901), Key tag (RFC 8145), Expire (RFC 7314)
+  - [x] Zone version (RFC 9660), Report-Channel (RFC 9567)
+  - [x] DAU/DHU/N3U (RFC 6975)
+- [x] Unknown options pass through untouched
 
 ## Milestone 4 — Record type coverage
 
-- [ ] SRV (RFC 2782), NAPTR (RFC 3403), CAA (RFC 8659), SSHFP (RFC 4255,
+- [x] SRV (RFC 2782), NAPTR (RFC 3403), CAA (RFC 8659), SSHFP (RFC 4255,
       RFC 6594), TLSA (RFC 6698), SMIMEA (RFC 8162), OPENPGPKEY (RFC 7929)
-- [ ] DNAME (RFC 6672), LOC (RFC 1876), RP / AFSDB (RFC 1183), URI
+- [x] DNAME (RFC 6672), LOC (RFC 1876), RP / AFSDB (RFC 1183), URI
       (RFC 7553), CERT (RFC 4398), DHCID (RFC 4701), NID/L32/L64/LP
       (RFC 6742), EUI48/EUI64 (RFC 7043), CSYNC (RFC 7477), ZONEMD
-      (RFC 8976), APL (RFC 3123), IPSECKEY (RFC 4025), HIP (RFC 8005)
-- [ ] SVCB and HTTPS (RFC 9460) with typed SvcParams: mandatory, alpn,
+      (RFC 8976; wire format only, no zone digest computation), APL
+      (RFC 3123), IPSECKEY (RFC 4025), HIP (RFC 8005), KX (RFC 2230)
+- [x] SVCB and HTTPS (RFC 9460) with typed SvcParams: mandatory, alpn,
       no-default-alpn, port, ipv4hint, ipv6hint, ech, dohpath (RFC 9461),
-      ohttp (RFC 9540); unknown keys pass through
-- [ ] Obsolete/legacy types parsed as opaque RDATA with mnemonics
-- [ ] Presentation-format (zone-file style) `Display` for every typed RDATA
+      ohttp (RFC 9540), plus tls-supported-groups, docpath, pvd, oots;
+      unknown keys pass through; `SvcbBuilder`; presentation parsing
+      (`Svcb::from_text`)
+- [x] Obsolete/legacy types: X25, ISDN, RT, GPOS, NSAP, NSAP-PTR, PX, A6,
+      NXT, EID, NIMLOC, ATMA, SINK, NINFO, RKEY, TALINK, SPF, AVC, RESINFO,
+      WALLET typed; UINFO/UID/GID/UNSPEC opaque with mnemonics
+- [x] Presentation-format (zone-file style) `Display` for every typed RDATA
 
-## Milestone 5 — DNSSEC wire support
+## Milestone 5 — DNSSEC
 
-- [ ] DNSKEY, RRSIG, NSEC, DS (RFC 4034), NSEC3, NSEC3PARAM (RFC 5155),
-      CDS/CDNSKEY (RFC 7344, RFC 8078)
-- [ ] Type bitmap parsing and building
-- [ ] Canonical RR form and canonical RRset ordering (RFC 4034 §6)
-- [ ] Key tag computation, DS digest input construction
-- [ ] NSEC3 hashing
-- [ ] Optional `dnssec-verify` feature: signature verification against a
-      pluggable crypto backend (RSA/SHA-2, ECDSA P-256/P-384, Ed25519/Ed448)
-      — the core never hard-depends on a crypto crate
+Wire format and validation logic live in dnsbox and need no crypto; the
+digest and signature calls come from `purecrypto` behind features
+(`dnssec-digest`: DS digests and NSEC3 hashing, no `alloc`; `dnssec`:
+signatures), through the pluggable `Verifier` / `Signer` traits.
+
+- [x] DNSKEY, RRSIG, NSEC, DS (RFC 4034), NSEC3, NSEC3PARAM (RFC 5155),
+      CDS/CDNSKEY (RFC 7344, RFC 8078 delete forms), KEY/SIG (RFC 2535,
+      RFC 2931), DLV/TA
+- [x] Open newtypes for algorithm numbers, DS digest types and NSEC3 hash
+      algorithms (IANA registries)
+- [x] Type bitmap parsing and building
+- [x] Canonical RR form and canonical RRset ordering (RFC 4034 §6,
+      RFC 6840 §5.1), allocation-free
+- [x] Key tag computation, DS digest input construction
+- [x] NSEC3 hashing (base32hex owner names)
+- [x] RRSIG validation logic: signed data, labels/wildcard reconstruction,
+      RFC 1982 validity window, key matching (RFC 4035 §5.3)
+- [x] Signature verification and signing via purecrypto (`dnssec`
+      feature): RSA/SHA-1, RSA/SHA-1-NSEC3, RSA/SHA-256, RSA/SHA-512, ECDSA
+      P-256/P-384, Ed25519, Ed448; DNSKEY/DS generation from keys. GOST,
+      SM2/SM3, DSA and RSA/MD5 are not supported (`UnsupportedAlgorithm`)
+- [ ] Authenticated denial of existence: full NSEC/NSEC3 proof checking
+      (RFC 4035 §5.4, RFC 5155 §8; partial: `Nsec::covers`, NSEC3 hashing
+      and canonical ordering are in place, closest-encloser proofs are not)
 
 ## Milestone 6 — Transactions, updates and zone transfer
 
-- [ ] TSIG (RFC 8945): record parsing, MAC input construction, signing and
-      verification via a pluggable HMAC backend
-- [ ] SIG(0) (RFC 2931) wire support
-- [ ] Dynamic UPDATE (RFC 2136) message helpers (zone/prerequisite/update
-      sections, deletion encodings)
-- [ ] NOTIFY (RFC 1996)
-- [ ] AXFR/IXFR (RFC 5936, RFC 1995) multi-message stream helpers
-- [ ] DNS Stateful Operations (RFC 8490) TLV framing
+- [x] TSIG (RFC 8945): record parsing, MAC input construction, signing and
+      verification (requests, responses, TCP streams, error responses)
+      through the `TsigKey` / `TsigMac` traits; HMAC-MD5/SHA-1/SHA-2 from
+      purecrypto behind the `tsig` feature
+- [x] SIG(0) (RFC 2931): signed-data construction, sign/find/verify through
+      `Sig0Signer` / `Sig0Verifier`; RSA/ECDSA/EdDSA via the DNSSEC
+      backend adapters
+- [x] Dynamic UPDATE (RFC 2136) message helpers (zone/prerequisite/update
+      sections, every prerequisite and deletion encoding)
+- [x] NOTIFY (RFC 1996)
+- [x] AXFR/IXFR (RFC 5936, RFC 1995) multi-message stream helpers
+- [x] DNS Stateful Operations (RFC 8490) TLV framing
 
 ## Milestone 7 — Text formats and owned data (`alloc`)
 
 - [ ] Owned `OwnedMessage` / `OwnedRecord` types with conversion from views
 - [ ] Zone-file / presentation-format parser (RFC 1035 §5) for records
-- [ ] `dig`-style message `Display`
+      (partial: names, types and classes parse from text; SVCB/HTTPS have
+      `from_text`; crate-internal base64/base32hex decoders exist)
+- [ ] `dig`-style message `Display` (partial: questions and records
+      already display in zone-file style)
 - [ ] Optional `serde` support
 
 ## Milestone 8 — Performance and assurance
 
-- [ ] Criterion benchmarks: parse/iterate/build for typical queries,
+- [x] Criterion benchmarks: parse/iterate/build for typical queries,
       large responses, heavily compressed messages; comparisons against
-      `hickory-proto` and `domain`
-- [ ] cargo-fuzz targets: message parsing, name decompression, RDATA,
-      build→parse round-trip, presentation-format parser
-- [ ] Property tests: build→parse and parse→build→parse identity
-- [ ] Interop corpus: real-world captures, plus responses from BIND,
-      Unbound, Knot and PowerDNS
-- [ ] Allocation-free hot path verified in CI (no-alloc build + tests)
+      `hickory-proto` and `domain` (`benches/`, `BENCH.md`)
+- [x] cargo-fuzz targets: message parsing (plus EDNS, TSIG/SIG(0), UPDATE,
+      NOTIFY, XFR and DSO views), name decompression, RDATA (every
+      registered type), EDNS options, build→parse round-trip,
+      presentation-format parser (names, types, classes, SVCB/HTTPS; full
+      RDATA once the zone-file parser exists)
+- [x] Property tests: build→parse and parse→build→parse identity
+- [x] Interop corpus: real-world captures, plus responses from BIND,
+      Unbound, Knot and PowerDNS (also NSD, Knot Resolver, PowerDNS
+      Recursor, public resolvers)
+- [x] Allocation-free hot path verified in CI (no-alloc build + tests)
 - [ ] Hot-path tuning: branch layout of the name decoder, SIMD-free
-      bulk label scanning, compression table hashing
+      bulk label scanning, compression table hashing (baseline in
+      `BENCH.md`: `domain` is currently 11–31% faster on typical messages)
 
 ## Milestone 9 — 1.0
 

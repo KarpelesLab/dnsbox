@@ -33,6 +33,8 @@ src/
                   frame splitting, FrameReassembler, std::io helpers
   text.rs         presentation-format helpers: escaping, Hex, Base64,
                   Base32Hex, RFC 3597 generic RDATA
+  util/           crate-internal helpers: base64.rs, base32hex.rs
+                  (no_std, allocation-free decoders)
   message/
     mod.rs        Message<'a>, Section, Question, Record, iterators, validate
     tests.rs
@@ -40,6 +42,8 @@ src/
     mod.rs        ParseRdata / ComposeRdata traits, rdata_modules!,
                   rdata_registry! -> RData<'a>
     <type>.rs     one file per record type or tight family
+    svcb/         SVCB/HTTPS (RFC 9460): SvcParamKey, SvcParams view,
+                  typed values (`rdata::svcparam`), SvcbBuilder, text
     bitmap.rs     TypeBitmap (NSEC/NSEC3/CSYNC window bitmaps)
     unknown.rs    UnknownRdata (RFC 3597 passthrough)
     tests.rs      shared test helpers (round_trip, parse, compose)
@@ -52,9 +56,14 @@ src/
     raw.rs        push_raw_records (pre-encoded records)
     framing.rs    new_tcp / from_buf_tcp (length-prefixed messages)
     tests.rs
+  edns/           EDNS(0) (RFC 6891): OPT view, OptHeader, option registry,
+                  typed options, builder support (see below)
+  dnssec/         DNSSEC (RFC 4033-4035, 5155): registries, canonical
+                  form, key tags, DS/NSEC3, RRSIG checks, backends
   tsig/           TSIG (RFC 8945): MAC input, signer/verifier, key traits,
                   hmac.rs = purecrypto HMAC backend (feature `tsig`)
-  sig0.rs         SIG(0) (RFC 2931): signed data, Sig0Signer/Sig0Verifier
+  sig0.rs         SIG(0) (RFC 2931): signed data, Sig0Signer/Sig0Verifier,
+                  adapters over the DNSSEC Signer/Verifier (`alloc`)
   update.rs       dynamic UPDATE (RFC 2136): UpdateBuilder, UpdateMessage
   notify.rs       NOTIFY (RFC 1996)
   xfr.rs, xfr/    AXFR/IXFR (RFC 5936, RFC 1995): queries, XfrProcessor
@@ -62,8 +71,16 @@ src/
 tests/
   captures.rs     real wire captures, truncation and mutation tests
   builder_truncation.rs  truncation / TCP stream tests on captures
+  edns.rs, svcb_captures.rs, dnssec_captures.rs, rdata_batch_a.rs,
+  rdata_b.rs      real captures per feature area (decode, rebuild byte
+                  for byte, truncate, mutate)
   *_named.rs      BIND 9.18 interop (TSIG, SIG(0), UPDATE, XFR); the
                   binary captures live in tests/data/named/
+  corpus.rs, corpus/   interop corpus (BIND, NSD, Knot, PowerDNS, ...)
+  fuzz_regressions.rs  fuzz seeds/regressions replayed on stable
+  proptest_roundtrip.rs, no_alloc.rs   property tests, allocation check
+fuzz/             cargo-fuzz targets (own workspace, nightly)
+benches/          criterion benchmarks (own package; see BENCH.md)
 ```
 
 Everything public is re-exported at the crate root when it is used often
@@ -276,8 +293,7 @@ Dispatch rules (`RData::parse`):
    truncation. Use RFC examples and real captures; add malformed cases
    (bad lengths, invalid fields) asserting the exact `Error`.
 
-Worked example (this is exactly how SRV should look; the Milestone 4 owner
-adds it):
+Worked example (a simplified version of `src/rdata/srv.rs`):
 
 ```rust
 //! SRV record data (RFC 2782).
@@ -392,8 +408,10 @@ composing, reader method for parsing).
   (&mut reader)` (consumes the rest of the RDATA), `iter()`, `contains()`,
   `TypeBitmap::compose(&[Rtype], composer)`; `Display` is the mnemonic
   list.
-- `text::{Hex, Base64, Base32Hex}` — `Display` adapters; decoders will be
-  added by the zone-file parser work.
+- `text::{Hex, Base64, Base32Hex}` — `Display` adapters. The matching
+  decoders are crate-internal: `util::base64::decode` and
+  `util::base32hex::decode` (no_std, no allocation); reuse them rather
+  than writing new ones.
 
 ## Protocol-number registries: `open_enum!`
 
@@ -441,7 +459,8 @@ src/edns/
   compose.rs    ComposeOptions (one option, [T], [T; N], tuples, (), Opt
                 echo), OptData (compose-only OPT RDATA)
   build.rs      MessageBuilder::push_edns / push_edns_padded, PaddingPolicy
-                (RFC 8467)
+                (RFC 8467), start_response_edns / push_reserved_edns
+                (RFC 6891 §7 echo), OPT_RR_OVERHEAD
   <option>.rs   one file per option or tight family (nsid.rs, ecs.rs,
                 cookie.rs, padding.rs, keepalive.rs, ede.rs, chain.rs,
                 key_tag.rs, expire.rs, zone_version.rs, report_channel.rs,
@@ -492,7 +511,8 @@ b.header(); b.as_bytes(); b.len(); b.section();
 let wire = b.finish();          // &mut [u8] (written part) or Vec<u8>
 
 // Convenience constructors (also query_vec / response_vec with alloc,
-// and start_query / start_response on any empty builder):
+// and start_query / start_response / start_response_edns on any empty
+// builder):
 let mut b = MessageBuilder::query(&mut buf, id, name, Rtype::A, Class::IN)?; // QUERY + RD
 let mut b = MessageBuilder::response(&mut buf, &parsed_query)?; // ID, opcode,
                                 // RD, CD, question copied; QR set
@@ -529,10 +549,13 @@ let frame = b.finish();                         // prefix + message
   call `b.truncate()` yourself if they were required (e.g. in-domain glue).
   Record-level pushes are never affected, so OPT/TSIG can be appended after
   truncation; `set_reserve(n)` keeps `n` bytes free for them.
-- **EDNS hook:** `start_response` does not echo EDNS (no OPT types in the
-  builder). The EDNS module should add the echo on top of it: reserve the
-  OPT size, then append the OPT record last with `push_additional`.
-  `copy_message` already reserves room for and preserves the source OPT.
+- **EDNS echo** (RFC 6891 §7): `start_response_edns(&query, our_udp_size)`
+  is `start_response` plus the OPT bookkeeping — it returns the response
+  `OptHeader` (DO copied, version 0, BADVERS for a query version above 0)
+  when the query had EDNS, and reserves `edns::OPT_RR_OVERHEAD` bytes so
+  a truncated response still has room for the OPT record; append it last
+  with `push_reserved_edns(header, &options)`. `copy_message` reserves
+  room for and preserves the source OPT.
 - `from_buf` with a non-empty buffer leaves the prefix alone (e.g. a TCP
   length placeholder); compression offsets are relative to the message.
 
@@ -559,7 +582,8 @@ plus a pointer, and register the newly written labels whose offset is
 
 - One `Error` enum (`#[non_exhaustive]`, `Copy`), one `Result<T>` alias.
   Add variants as needed (keep them small and data-free, with a doc comment
-  citing the RFC section and a `Display` string). Prefer reusing:
+  citing the RFC section and a `Display` string). Prefer reusing (e.g.
+  `BadSignature` covers DNSSEC, TSIG and SIG(0) failures alike):
   `UnexpectedEof` (truncation / counts), `TrailingData`, `InvalidRdata`
   (bad field value or length), `InvalidText` / `UnknownMnemonic`
   (presentation parsing), `BufferTooSmall` (output full or limit hit).
@@ -589,8 +613,9 @@ plus a pointer, and register the newly written labels whose offset is
   automatically through the registry (`Rtype::all()` filtered by
   `RData::is_known`), so registering a type is enough to get it fuzzed and
   property-tested:
-  - `fuzz/` — cargo-fuzz targets (`message`, `name`, `rdata`, `roundtrip`,
-    `text`), its own workspace; the properties live in `fuzz/src/lib.rs`
+  - `fuzz/` — cargo-fuzz targets (`edns`, `message`, `name`, `rdata`,
+    `roundtrip`, `text`), its own workspace; `message` also runs the
+    protocol views (EDNS, TSIG/SIG(0), UPDATE, NOTIFY, XFR, DSO); the properties live in `fuzz/src/lib.rs`
     and are also replayed on stable by `tests/fuzz_regressions.rs` over
     `fuzz/seeds/` and `fuzz/regressions/` (put every fixed crash there).
   - `tests/proptest_roundtrip.rs` — build → parse and parse → build →
@@ -622,11 +647,19 @@ signature verification come from the optional `purecrypto` dependency
 work — signed data / MAC input construction, canonical forms, key tags, DS
 digest input, NSEC3 hashing *input* — lives in dnsbox and works without it;
 only the actual primitive calls are gated. Features enable what they need
-with explicit `dep:` syntax, for example:
+with explicit `dep:` syntax:
 
-```toml
-dnssec-verify = ["dep:purecrypto", "purecrypto/hash", "purecrypto/rsa", "purecrypto/ec"]
-```
+| Feature          | purecrypto features         | Provides |
+|------------------|-----------------------------|----------|
+| `dnssec-digest`  | `hash`                      | DS digests, NSEC3 hashing (no `alloc`) |
+| `dnssec`         | `hash`, `alloc`, `rsa`, `ec` | RRSIG/SIG(0) verification and signing (`PurecryptoVerifier`, `SigningKey`) |
+| `tsig`           | `hash`                      | TSIG HMAC backend (`HmacKey`) |
+| `cookie-siphash` | `mac`                       | RFC 9018 server cookies (`ServerCookie::generate` / `verify`) |
+
+Every crypto-using API sits behind a trait (`dnssec::{Signer, Verifier}`,
+`tsig::{TsigKey, TsigMac}`, `sig0::{Sig0Signer, Sig0Verifier}`) so other
+backends can be plugged in without these features. MAC and signature
+comparisons are constant time and come from purecrypto.
 
 ### DNSSEC (`src/dnssec/`)
 
@@ -663,6 +696,9 @@ src/dnssec/
 - Canonical RDATA comes from each type's `NameEncoding` through
   `wire::Canonical`; NSEC next names are `Plain` (RFC 6840 §5.1).
 - The type bitmap shared with CSYNC is `rdata::TypeBitmap` (`bitmap.rs`).
+- The `Algorithm` newtype is shared by DNSKEY/RRSIG/DS and also by SIG,
+  KEY, CERT and RKEY.
+
 ## Transactions, updates and zone transfers (Milestone 6)
 
 - **TSIG** (`tsig`): the MAC is behind two traits, `TsigKey` (name,
@@ -681,9 +717,11 @@ src/dnssec/
   written uncompressed, like BIND. Replay caching is the caller's job.
 - **SIG(0)** (`sig0`): `SignedData` builds the exact signed byte stream
   as a few slices; signing/verification go through the minimal
-  `Sig0Signer`/`Sig0Verifier` traits. `Sig.algorithm` is a raw `u8` until
-  the DNSSEC algorithm newtype exists (TODO for the integrator: wire the
-  DNSSEC signer/verifier backends to these traits).
+  `Sig0Signer`/`Sig0Verifier` traits. SIG RDATA is the DNSSEC branch's
+  `rdata::Sig` (same layout as RRSIG, typed `Algorithm`).
+  `DnssecSig0Signer` / `DnssecSig0Verifier` (`alloc`) adapt any DNSSEC
+  `Signer` / `Verifier`, so with the `dnssec` feature SIG(0) gets RSA,
+  ECDSA and EdDSA from purecrypto.
 - **UPDATE** (`update`): section aliases `ZONE`, `PREREQUISITE`,
   `UPDATE`, `ADDITIONAL`; `UpdateBuilder` has one method per RFC 2136
   §2.4/§2.5 form; `UpdateMessage` classifies prerequisites and updates and
@@ -713,9 +751,10 @@ src/dnssec/
   pass.
 - The builder never compresses against differently-cased names, and does
   not compress names beyond offset 0x3fff (not addressable by pointers).
-- Not yet implemented (owned by later milestones): EDNS, owned message
-  types, zone-file parsing (presentation-format *parsing*
-  hooks for RDATA will be added as a separate trait plus one more arm in
-  `rdata_registry!`).
+- Not yet implemented (Milestone 7): owned message types, zone-file
+  parsing (presentation-format *parsing* hooks for RDATA will be added as
+  a separate trait plus one more arm in `rdata_registry!`; SVCB/HTTPS
+  already have an inherent `from_text`), `dig`-style message display,
+  serde.
 - Do not edit `ROADMAP.md` or `CHANGELOG.md` on feature branches; the
   integrator does.
