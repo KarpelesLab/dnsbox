@@ -82,3 +82,59 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   Knot Resolver, public resolvers), BIND 9.18 interop tests for TSIG,
   SIG(0), UPDATE and XFR, an allocation-free hot-path test, and criterion
   benchmarks against hickory-proto and domain (`BENCH.md`).
+- Presentation-format parsing (RFC 1035 §5.1, RFC 3597 §5): the
+  `ParseRdataText` trait implemented by every registered record type (NULL
+  and OPT take only the generic `\# <length> <hex>` form, which every type
+  accepts), `RData::parse_text` / `RData::from_text` /
+  `RData::text_to_wire`, and the reusable `zone::Scanner` field readers
+  (numbers, TTL units, DNSSEC timestamps, names relative to an origin,
+  character-strings, hex, base64, base32hex, type bitmaps).
+- Master files (`zone` module, RFC 1035 §5, RFC 2308 §4): the
+  allocation-free streaming `ZoneReader` (quotes, escapes, parentheses,
+  comments, blank owners, `@`, `$ORIGIN`, `$TTL`, BIND's `$GENERATE`,
+  `$INCLUDE` reported as an `Entry`), errors with line and column and
+  recovery to the next entry; with `alloc`, the `Records` iterator with
+  `IncludeResolver` (bounded depth and count; `FsIncludes` with `std`),
+  `ZoneRecordBuf` and `zone::parse`.
+- Owned types (`alloc`): `OwnedMessage`, `OwnedQuestion`, `OwnedRecord`
+  and `OwnedRData` (uncompressed wire RDATA with the typed view decoded on
+  demand), converted from the views and written back through the builder;
+  from text with `OwnedRData::from_text`, `OwnedRecord`'s `FromStr` (one
+  master-file entry) and `From<ZoneRecord>` / `From<ZoneRecordBuf>`.
+- `dig`-style `Display` for `Message` and `OwnedMessage` (no allocation):
+  header and flags lines with `dig`'s warnings, the OPT pseudosection in
+  `dig` 9.18's option formats, the sections in BIND's columns and the
+  TSIG / SIG(0) pseudosections; checked against real `dig` output.
+- Optional `serde` feature (`no_std`): registries as mnemonics (integers in
+  compact formats), names as presentation strings, `Flags`, and the owned
+  types, whose RDATA is written in the RFC 3597 generic form and read in
+  that form, in the type's presentation format or as bytes.
+- Authenticated denial of existence (`dnssec::denial`): `NsecProof` and
+  `Nsec3Proof` (RFC 4035 §5.4, RFC 5155 §8, RFC 6840 §4, RFC 7129) for
+  NXDOMAIN, NODATA, empty non-terminals, wildcard answers and NODATA and
+  insecure delegations, returning `DenialStatus` (Secure / Insecure /
+  Bogus with a reason); Opt-Out is insecure (RFC 5155 §9.2); RFC 9276
+  iteration limits (`Nsec3Limits`) are checked before any hashing.
+- Chain of trust (`dnssec::chain`): `TrustedKeys` authenticates a DNSKEY
+  RRset from a DS RRset or trust anchors, verifies RRsets and wildcard
+  answers with their denial proof, never uses revoked keys, and caps the
+  signature work per call (`MAX_CRYPTO_OPERATIONS`, KeyTrap).
+- ZONEMD (RFC 8976, `dnssec::zonemd`): `ZoneCollation` for the SIMPLE
+  scheme, SHA-384/SHA-512 digests via purecrypto and verification per
+  §4; all RFC 8976 Appendix A examples reproduce.
+- New `Error` variants: `NoTextFormat`, `MissingTtl`, `BadInclude`.
+
+### Changed
+
+- Faster parsing and building, with the same results and hardening
+  (`BENCH.md`): a tighter name decoder with a suffix cache in the record
+  iterators, single-check fixed-field parsing, and a label-trie name
+  compression table checked against the message bytes. dnsbox is now
+  faster than `domain` and `hickory-proto` on every benchmark.
+- `MessageBuilder::new_vec()` starts with 512 bytes of capacity;
+  `MAX_PROBES` now limits only wrong compression candidates per name.
+- SVCB/HTTPS: the reserved SvcParamKey 65535 ("Invalid key", RFC 9460
+  §14.3.2) is refused in wire RDATA too, as it already was in
+  presentation text and by `SvcbBuilder`.
+- SVCB/HTTPS `from_text` reports a missing priority or target as
+  `UnexpectedEof` instead of `InvalidText`.

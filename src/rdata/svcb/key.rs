@@ -40,9 +40,9 @@ open_enum! {
 }
 
 impl SvcParamKey {
-    /// Key 65535, reserved as the "Invalid key" (RFC 9460 §14.3.2). It
-    /// is passed through when parsing but never written by
-    /// [`SvcbBuilder`](super::SvcbBuilder).
+    /// Key 65535, reserved as the "Invalid key" (RFC 9460 §14.3.2). RDATA
+    /// using it is malformed: wire and presentation parsing refuse it, and
+    /// [`SvcbBuilder`](super::SvcbBuilder) never writes it.
     pub const INVALID: SvcParamKey = SvcParamKey::new(65535);
 
     /// Whether the key is in the private-use range 65280–65534

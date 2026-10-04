@@ -135,13 +135,7 @@ impl ParseRdataText for Tsig<'_> {
 /// A 48-bit decimal number of seconds (the TSIG Time Signed field,
 /// RFC 8945 §4.2).
 fn time_signed(t: Token<'_>) -> Result<u64> {
-    let digits = t.as_bytes();
-    if digits.is_empty() || digits.len() > 15 || !digits.iter().all(u8::is_ascii_digit) {
-        return Err(Error::InvalidText);
-    }
-    let v = digits
-        .iter()
-        .fold(0u64, |v, &d| v * 10 + u64::from(d - b'0'));
+    let v: u64 = crate::zone::decimal(t.as_bytes())?;
     if v > MAX_TIME_SIGNED {
         return Err(Error::InvalidText);
     }

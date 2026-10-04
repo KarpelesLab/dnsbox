@@ -280,6 +280,10 @@ fn malformed_wire() {
         // Keys not strictly increasing.
         ("0001 00 00030002 0035 00010003026832", Error::InvalidRdata),
         ("0001 00 00030002 0035 00030002 0035", Error::InvalidRdata),
+        // The reserved "Invalid key" 65535 (RFC 9460 §14.3.2), alone or
+        // after other keys.
+        ("0001 00 ffff0000", Error::InvalidRdata),
+        ("0001 00 fffe0001 7f ffff0002 0022", Error::InvalidRdata),
         // mandatory: odd length, unsorted, contains key 0.
         ("0001 00 0000000300 0100 00010003026832", Error::InvalidRdata),
         (
@@ -340,11 +344,11 @@ fn malformed_wire() {
 
 #[test]
 fn accepted_wire_edge_cases() {
-    // Unknown and reserved keys pass through with any value.
+    // Unknown and private-use keys pass through with any value.
     round_trip(
         Rtype::SVCB,
-        &hex("0001 00 ff000000 fffe0001 7f ffff0002 0022"),
-        r#"1 . key65280 key65534="\127" key65535="\000\"""#,
+        &hex("0001 00 ff000000 fffe0001 7f"),
+        r#"1 . key65280 key65534="\127""#,
     );
     // AliasMode with SvcParams parses (recipients ignore them, §2.4.2).
     round_trip(Rtype::HTTPS, &hex("0000 00 000300020035"), "0 . port=53");
@@ -959,9 +963,7 @@ fn random_mutations_round_trip_through_text() {
         parsed += 1;
         let text = s.to_string();
         let _ = format!("{s:?}");
-        if s.params.contains(SvcParamKey::INVALID) {
-            continue;
-        }
+        assert!(!s.params.contains(SvcParamKey::INVALID), "{s}");
         let mut buf = [0u8; 1024];
         let again = Svcb::from_text(&text, &mut buf).unwrap_or_else(|e| panic!("{text}: {e}"));
         assert_eq!(compose(&again), wire, "{text}");

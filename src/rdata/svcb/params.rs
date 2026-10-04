@@ -72,6 +72,8 @@ impl fmt::Debug for SvcParam<'_> {
 ///
 /// - every SvcParam is complete (no truncation inside one);
 /// - keys are in strictly increasing order, so none is repeated;
+/// - the reserved "Invalid key" 65535 ([`SvcParamKey::INVALID`],
+///   RFC 9460 §14.3.2) does not appear;
 /// - every value has the format its key requires ([`SvcParamValue`]);
 /// - the RR is self-consistent (RFC 9460 §2.4.3): every key listed in
 ///   `mandatory` is present (§8), and `no-default-alpn` comes with `alpn`
@@ -92,7 +94,8 @@ impl<'a> SvcParams<'a> {
     ///
     /// Fails with [`Error::UnexpectedEof`] if the data ends inside a
     /// SvcParam and with [`Error::InvalidRdata`] if the keys are not
-    /// strictly increasing, a value is malformed, or the parameters are not
+    /// strictly increasing, the reserved key 65535 is used (RFC 9460
+    /// §14.3.2), a value is malformed, or the parameters are not
     /// self-consistent. The work is linear in the length of `wire`.
     pub fn new(wire: &'a [u8]) -> Result<Self> {
         let mut prev: Option<u16> = None;
@@ -102,7 +105,7 @@ impl<'a> SvcParams<'a> {
         let mut no_default_alpn = false;
         while !iter.0.is_empty() {
             let (key, value) = iter.next_checked()?;
-            if prev.is_some_and(|p| key.get() <= p) {
+            if prev.is_some_and(|p| key.get() <= p) || key == SvcParamKey::INVALID {
                 return Err(Error::InvalidRdata);
             }
             prev = Some(key.get());

@@ -545,6 +545,17 @@ impl<'a> Scanner<'a> {
     }
 }
 
+/// Parses a plain unsigned decimal number (digits only: no sign, no
+/// blanks, no escapes) that fits in `T`, or fails with
+/// [`Error::InvalidText`]. The shared helper for numeric sub-fields that
+/// are not whole tokens (APL prefixes, SvcParam ports, `$GENERATE`
+/// ranges, ...).
+pub(crate) fn decimal<T: TryFrom<u64>>(digits: &[u8]) -> Result<T> {
+    parse_decimal(digits)
+        .and_then(|v| T::try_from(v).ok())
+        .ok_or(Error::InvalidText)
+}
+
 /// Parses a plain unsigned decimal number (no sign, no blanks).
 fn parse_decimal(digits: &[u8]) -> Option<u64> {
     if digits.is_empty() {

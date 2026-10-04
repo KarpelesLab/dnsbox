@@ -58,13 +58,7 @@ impl Range {
 
 /// A plain decimal `u32`.
 fn number(digits: &[u8]) -> Result<u32> {
-    if digits.is_empty() || digits.len() > 10 || !digits.iter().all(u8::is_ascii_digit) {
-        return Err(Error::InvalidText);
-    }
-    let v = digits
-        .iter()
-        .fold(0u64, |v, d| v * 10 + u64::from(d - b'0'));
-    u32::try_from(v).map_err(|_| Error::InvalidText)
+    super::scanner::decimal(digits)
 }
 
 /// Bounded output cursor.

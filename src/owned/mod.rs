@@ -61,13 +61,25 @@
 //! RDATA is written in the RFC 3597 §5 generic form (`\# <length> <hex>`)
 //! in human-readable formats and as a byte string otherwise: the
 //! uncompressed wire bytes, so every record type, known or not,
-//! round-trips exactly. Deserialization checks it like
-//! [`OwnedRData::from_wire`] (typed formats must be valid for the record's
-//! class); missing sections of a message are empty.
+//! round-trips exactly. Human-readable input may also use the type's
+//! presentation format (`"10 mail.example.com."`, relative names completed
+//! with the root), parsed as [`OwnedRData::from_text`] does; byte strings
+//! are checked like [`OwnedRData::from_wire`]. Either way typed formats
+//! must be valid for the record's class. Missing sections of a message are
+//! empty.
+//!
+//! # Master files
+//!
+//! Records read from a master file (RFC 1035 §5) convert with
+//! `OwnedRecord::from` a [`ZoneRecord`] or [`ZoneRecordBuf`] (e.g. from
+//! [`zone::parse`](crate::zone::parse)); a single entry parses with
+//! [`str::parse`] ([`OwnedRecord`]'s [`FromStr`]), and standalone RDATA
+//! text with [`OwnedRData::from_text`].
 
 use alloc::boxed::Box;
 use alloc::vec::Vec;
 use core::fmt;
+use core::str::FromStr;
 
 use crate::builder::MessageBuilder;
 use crate::edns::OptHeader;
@@ -76,6 +88,7 @@ use crate::message::{Message, Question, Record, Section};
 use crate::name::{Name, NameBuf, ToName};
 use crate::rdata::{ComposeRdata, RData};
 use crate::wire::{Composer, OutBuf, WireReader};
+use crate::zone::{Entry, ZoneReader, ZoneRecord, ZoneRecordBuf};
 use crate::{Class, Error, Flags, Header, Rcode, Result, Rtype};
 
 #[cfg(feature = "serde")]
@@ -157,6 +170,38 @@ impl OwnedRData {
     pub fn from_wire(rtype: Rtype, class: Class, rdata: &[u8]) -> Result<Self> {
         let parsed = RData::parse(rtype, class, WireReader::new(rdata))?;
         Self::new(&parsed)
+    }
+
+    /// Parses the presentation format of `rtype`'s RDATA, or the RFC 3597
+    /// §5 generic form (`\\# <length> <hex>`), as it appears in a master
+    /// file (RFC 1035 §5.1) for a record of `class` ([`RData::parse_text`]).
+    /// Relative names are taken relative to the root.
+    ///
+    /// Fails with the parser's error, e.g. [`Error::NoTextFormat`] for a
+    /// type without a presentation format of its own given in that format.
+    ///
+    /// ```
+    /// use dnsbox::{Class, OwnedRData, Rtype};
+    ///
+    /// let mx = OwnedRData::from_text(Rtype::MX, Class::IN, "10 mail.example.com.")?;
+    /// assert_eq!(mx.as_bytes(), b"\x00\x0a\x04mail\x07example\x03com\x00");
+    /// let a = OwnedRData::from_text(Rtype::A, Class::IN, r"\# 4 C0000201")?;
+    /// assert_eq!(a.to_string(), "192.0.2.1");
+    /// # Ok::<(), dnsbox::Error>(())
+    /// ```
+    pub fn from_text(rtype: Rtype, class: Class, text: &str) -> Result<Self> {
+        let wire = RData::text_to_wire(rtype, class, text)?;
+        Ok(Self::from_checked(rtype, wire))
+    }
+
+    /// Wraps RDATA that [`RData::parse`] already accepted (uncompressed,
+    /// at most 65535 octets).
+    pub(crate) fn from_checked(rtype: Rtype, rdata: Vec<u8>) -> Self {
+        debug_assert!(rdata.len() <= MAX_RDATA_LEN);
+        OwnedRData {
+            rtype,
+            data: rdata.into_boxed_slice(),
+        }
     }
 
     /// The record type.
@@ -398,6 +443,86 @@ impl TryFrom<Record<'_>> for OwnedRecord {
     #[inline]
     fn try_from(rr: Record<'_>) -> Result<Self> {
         Self::from_record(&rr)
+    }
+}
+
+impl From<ZoneRecordBuf> for OwnedRecord {
+    /// A record read from a master file ([`zone::parse`](crate::zone::parse),
+    /// [`Records`](crate::zone::Records)); its RDATA is kept as read
+    /// (already checked, names uncompressed). The line number is dropped.
+    fn from(rr: ZoneRecordBuf) -> Self {
+        OwnedRecord {
+            name: rr.owner,
+            class: rr.class,
+            ttl: rr.ttl,
+            rdata: OwnedRData::from_checked(rr.rtype, rr.rdata),
+        }
+    }
+}
+
+impl From<ZoneRecord<'_>> for OwnedRecord {
+    /// A record read by a [`ZoneReader`]; see
+    /// `From<ZoneRecordBuf>`.
+    fn from(rr: ZoneRecord<'_>) -> Self {
+        OwnedRecord {
+            rdata: OwnedRData::from_checked(rr.rtype, rr.rdata.to_vec()),
+            name: rr.owner,
+            class: rr.class,
+            ttl: rr.ttl,
+        }
+    }
+}
+
+impl From<&ZoneRecord<'_>> for OwnedRecord {
+    /// See `From<ZoneRecord>`.
+    fn from(rr: &ZoneRecord<'_>) -> Self {
+        OwnedRecord {
+            name: rr.owner.clone(),
+            class: rr.class,
+            ttl: rr.ttl,
+            rdata: OwnedRData::from_checked(rr.rtype, rr.rdata.to_vec()),
+        }
+    }
+}
+
+impl FromStr for OwnedRecord {
+    type Err = Error;
+
+    /// Parses one master-file entry, `owner [ttl] [class] type rdata`
+    /// (RFC 1035 §5.1; TTL and class in either order), with the
+    /// [`ZoneReader`] rules: relative names are
+    /// relative to the root, the class defaults to IN, and a TTL is
+    /// required (an SOA's MINIMUM stands in for it). The entry may span
+    /// lines in parentheses and carry a comment.
+    ///
+    /// `$ORIGIN` and `$TTL` before the record apply to it.
+    ///
+    /// Fails with the reader's error ([`Error::MissingTtl`],
+    /// [`Error::InvalidText`], ...), with [`Error::UnexpectedEof`] for
+    /// text holding no record, and with [`Error::InvalidText`] for more
+    /// than one record (including a `$GENERATE` range of more than one)
+    /// or an `$INCLUDE`.
+    ///
+    /// ```
+    /// use dnsbox::{OwnedRecord, Rtype};
+    ///
+    /// let rr: OwnedRecord = "mail.example.com. 3600 IN MX 10 mx1.example.com.".parse()?;
+    /// assert_eq!(rr.rtype(), Rtype::MX);
+    /// assert_eq!(rr.to_string(), "mail.example.com. 3600 IN MX 10 mx1.example.com.");
+    /// # Ok::<(), dnsbox::Error>(())
+    /// ```
+    fn from_str(s: &str) -> Result<Self> {
+        let mut reader = ZoneReader::new(s);
+        let mut rdata = alloc::vec![0u8; MAX_RDATA_LEN];
+        let rr = match reader.next_entry(&mut rdata)? {
+            Some(Entry::Record(rr)) => OwnedRecord::from(rr),
+            Some(_) => return Err(Error::InvalidText),
+            None => return Err(Error::UnexpectedEof),
+        };
+        match reader.next_entry(&mut rdata)? {
+            None => Ok(rr),
+            Some(_) => Err(Error::InvalidText),
+        }
     }
 }
 

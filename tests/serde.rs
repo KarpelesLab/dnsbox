@@ -406,6 +406,43 @@ mod owned {
     }
 
     #[test]
+    fn presentation_rdata_is_accepted() {
+        // Human-readable input may use the type's presentation format
+        // (RFC 1035 §5.1); output stays in the lossless generic form.
+        let rr: OwnedRecord = from_json(
+            r#"{"name": "example.com.", "type": "MX", "class": "IN", "ttl": 300,
+                "rdata": "10 mail.example.com"}"#,
+        )
+        .unwrap();
+        assert_eq!(
+            rr.to_string(),
+            "example.com. 300 IN MX 10 mail.example.com."
+        );
+        assert_eq!(
+            serde_json::to_value(&rr).unwrap()["rdata"],
+            "\\# 20 000A046D61696C076578616D706C6503636F6D00"
+        );
+        let txt: OwnedRData =
+            from_json(r#"{"type": "TXT", "rdata": "\"v=spf1 -all\" second"}"#).unwrap();
+        assert_eq!(txt.to_string(), "\"v=spf1 -all\" \"second\"");
+        let svcb: OwnedRData =
+            from_json(r#"{"type": "HTTPS", "rdata": "1 . alpn=h2,h3 port=443"}"#).unwrap();
+        assert_eq!(svcb.to_string(), "1 . alpn=\"h2,h3\" port=443");
+        // Errors name the type and the parser's error.
+        let e = from_json::<OwnedRData>(r#"{"type": "A", "rdata": "192.0.2.256"}"#)
+            .unwrap_err()
+            .to_string();
+        assert!(e.contains("invalid A RDATA"), "{e}");
+        // The reserved SvcParamKey 65535 is refused (RFC 9460 §14.3.2),
+        // in text and in the generic form alike.
+        assert!(from_json::<OwnedRData>(r#"{"type": "SVCB", "rdata": "1 . key65535"}"#).is_err());
+        assert!(
+            from_json::<OwnedRData>(r#"{"type": "SVCB", "rdata": "\\# 7 0001 00 ffff0000"}"#)
+                .is_err()
+        );
+    }
+
+    #[test]
     fn invalid_records_are_rejected() {
         let rr = |rtype: &str, class: &str, rdata: &str| {
             from_json::<OwnedRecord>(&format!(

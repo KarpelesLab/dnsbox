@@ -1210,11 +1210,40 @@ fn check_zone(data: &[u8]) {
                     .data()
                     .unwrap_or_else(|e| panic!("{}: zone RDATA invalid: {e}", rr.owner));
                 check_rdata(rr.rtype, rr.class, &d);
+                #[cfg(feature = "alloc")]
+                check_owned_zone_record(&rr);
             }
             Ok(None) => return,
             Err(_) => {}
         }
     }
+}
+
+/// A record read from a master file copies into an [`OwnedRecord`]
+/// (feature `alloc`) with the same RDATA, which re-encodes to itself and
+/// whose display parses back (as one master-file entry) to the same record.
+///
+/// [`OwnedRecord`]: dnsbox::OwnedRecord
+#[cfg(feature = "alloc")]
+fn check_owned_zone_record(rr: &dnsbox::zone::ZoneRecord<'_>) {
+    let owned = dnsbox::OwnedRecord::from(rr);
+    assert_eq!(owned.rdata.as_bytes(), rr.rdata);
+    assert_eq!(dnsbox::OwnedRecord::from(rr.clone()), owned);
+    assert_eq!(
+        dnsbox::OwnedRData::new(&owned.rdata).as_ref(),
+        Ok(&owned.rdata),
+        "{owned}"
+    );
+    let shown = owned.to_string();
+    assert_eq!(shown, rr.to_string());
+    let again: dnsbox::OwnedRecord = shown
+        .parse()
+        .unwrap_or_else(|e| panic!("{shown:?}: owned record display does not parse back: {e}"));
+    assert_eq!(again, owned, "{shown}");
+    assert!(
+        again.name.as_name().eq_exact(&owned.name.as_name()),
+        "{shown}"
+    );
 }
 
 /// Presentation format parses back (RFC 1035 §5.1, RFC 3597 §5): the
@@ -1230,11 +1259,9 @@ fn check_text_round_trip(rtype: Rtype, class: Class, text: &str) {
                 .unwrap_or_else(|e| panic!("{rtype} {text:?}: parse_text output invalid: {e}"));
             assert_eq!(again.to_string(), text, "{rtype}: text does not round-trip");
         }
-        Err(Error::NoTextFormat) => {}
-        // The SvcParamKey 65535 is reserved as "invalid" (RFC 9460
-        // §14.3.2): tolerated on the wire, refused when building.
-        Err(Error::InvalidRdata)
-            if (rtype == Rtype::SVCB || rtype == Rtype::HTTPS) && text.contains(" key65535") => {}
+        // Every registered type has a text format except NULL (generic
+        // form only, which its display uses) and the OPT pseudo-RR.
+        Err(Error::NoTextFormat) if rtype == Rtype::OPT => {}
         Err(e) => panic!("{rtype} {text:?}: display does not parse back: {e}"),
     }
 }

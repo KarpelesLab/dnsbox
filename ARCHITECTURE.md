@@ -972,15 +972,21 @@ src/dnssec/
   RFC 3597 §4 allows and `Canonical` lowercases the right ones.
   Conversions: `from_*` / `TryFrom` / `to_owned_*` from the views (typed
   RDATA must be valid), `push_to` / `write_to` / `to_vec` into a builder.
+  From text: `OwnedRData::from_text(rtype, class, text)` (presentation or
+  generic form, through `RData::parse_text`), `OwnedRecord: FromStr` (one
+  master-file entry, read with `ZoneReader`), and `From<ZoneRecord>` /
+  `From<ZoneRecordBuf>` for records read from a zone file (their RDATA is
+  already checked, so it is moved in as is).
 - **serde** (feature `serde`, `serde` with `default-features = false`, so
   `no_std`; `alloc` enables `serde/alloc`): protocol numbers as mnemonics or
   RFC 3597 generic forms in human-readable formats (numbers accepted on
   input) and integers otherwise; names as presentation strings; `Flags` as
   a struct of bits (raw word when compact); owned types as structs with
   RDATA in the RFC 3597 §5 generic form (`\# 4 C0000201`) or as bytes, so
-  every type round-trips exactly. Deserialized RDATA is validated like
-  `OwnedRData::from_wire`. Once the zone-file parser lands, presentation
-  RDATA can be accepted as an alternative input.
+  every type round-trips exactly. Human-readable input may instead use the
+  type's presentation format (`"10 mail.example.com."`), parsed like
+  `OwnedRData::from_text`; byte input is validated like
+  `OwnedRData::from_wire`.
 
 ## Decisions and limitations to know
 

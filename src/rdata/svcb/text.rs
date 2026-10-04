@@ -258,13 +258,7 @@ fn unescaped(value: &[u8]) -> Result<&[u8]> {
 
 /// A plain decimal number 0–65535 (no sign, no escapes).
 fn parse_u16(digits: &[u8]) -> Result<u16> {
-    if digits.is_empty() || digits.len() > 5 || !digits.iter().all(u8::is_ascii_digit) {
-        return Err(Error::InvalidText);
-    }
-    let v = digits
-        .iter()
-        .fold(0u32, |v, d| v * 10 + u32::from(d - b'0'));
-    u16::try_from(v).map_err(|_| Error::InvalidText)
+    crate::zone::decimal(digits)
 }
 
 /// An IP address in standard text form.

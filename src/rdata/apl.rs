@@ -5,7 +5,7 @@ use core::net::{IpAddr, Ipv4Addr, Ipv6Addr};
 
 use super::{ComposeRdata, ParseRdata, ParseRdataText};
 use crate::wire::{Composer, OutBuf, WireReader};
-use crate::zone::Scanner;
+use crate::zone::{Scanner, decimal};
 use crate::{Class, Error, Result, Rtype};
 
 /// `APL` record data: a list of address prefixes (RFC 3123 §4). Class IN
@@ -203,14 +203,6 @@ impl<'a> Iterator for AplIter<'a> {
 
 impl core::iter::FusedIterator for AplIter<'_> {}
 
-/// Parses an unsigned decimal number (digits only, no sign).
-fn decimal<T: core::str::FromStr>(text: &str) -> Result<T> {
-    if text.is_empty() || !text.bytes().all(|c| c.is_ascii_digit()) {
-        return Err(Error::InvalidText);
-    }
-    text.parse().map_err(|_| Error::InvalidText)
-}
-
 /// Parses one `[!]afi:address/prefix` item (RFC 3123 §5) and writes it.
 fn put_item_text<B: OutBuf + ?Sized>(text: &[u8], out: &mut B) -> Result<()> {
     let (negation, text) = match text.split_first() {
@@ -231,8 +223,8 @@ fn put_item_text<B: OutBuf + ?Sized>(text: &[u8], out: &mut B) -> Result<()> {
             .and_then(|f| core::str::from_utf8(f).ok())
             .ok_or(Error::InvalidText)
     };
-    let family: u16 = decimal(field(0..colon)?)?;
-    let prefix: u8 = decimal(field(slash + 1..text.len())?)?;
+    let family: u16 = decimal(field(0..colon)?.as_bytes())?;
+    let prefix: u8 = decimal(field(slash + 1..text.len())?.as_bytes())?;
     let address = field(colon + 1..slash)?;
     let (octets, len) = match family {
         AplItem::IPV4 => {

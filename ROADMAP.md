@@ -113,7 +113,7 @@ order of work. Items are checked off as they land.
 - [x] DNAME (RFC 6672), LOC (RFC 1876), RP / AFSDB (RFC 1183), URI
       (RFC 7553), CERT (RFC 4398), DHCID (RFC 4701), NID/L32/L64/LP
       (RFC 6742), EUI48/EUI64 (RFC 7043), CSYNC (RFC 7477), ZONEMD
-      (RFC 8976; wire format only, no zone digest computation), APL
+      (RFC 8976; zone digests in Milestone 5), APL
       (RFC 3123), IPSECKEY (RFC 4025), HIP (RFC 8005), KX (RFC 2230)
 - [x] SVCB and HTTPS (RFC 9460) with typed SvcParams: mandatory, alpn,
       no-default-alpn, port, ipv4hint, ipv6hint, ech, dohpath (RFC 9461),
@@ -148,9 +148,15 @@ signatures), through the pluggable `Verifier` / `Signer` traits.
       feature): RSA/SHA-1, RSA/SHA-1-NSEC3, RSA/SHA-256, RSA/SHA-512, ECDSA
       P-256/P-384, Ed25519, Ed448; DNSKEY/DS generation from keys. GOST,
       SM2/SM3, DSA and RSA/MD5 are not supported (`UnsupportedAlgorithm`)
-- [ ] Authenticated denial of existence: full NSEC/NSEC3 proof checking
-      (RFC 4035 §5.4, RFC 5155 §8; partial: `Nsec::covers`, NSEC3 hashing
-      and canonical ordering are in place, closest-encloser proofs are not)
+- [x] Authenticated denial of existence: NSEC/NSEC3 proof checking
+      (RFC 4035 §5.4, RFC 5155 §8, RFC 6840 §4, RFC 7129) with
+      closest-encloser proofs, Opt-Out as insecure and RFC 9276 iteration
+      limits (`dnssec::denial`)
+- [x] Chain of trust: DNSKEY authentication from DS or trust anchors,
+      RRset and wildcard-answer verification, KeyTrap work bound
+      (`dnssec::chain`)
+- [x] ZONEMD zone digest computation and verification (RFC 8976,
+      `dnssec::zonemd`)
 
 ## Milestone 6 — Transactions, updates and zone transfer
 
@@ -169,13 +175,13 @@ signatures), through the pluggable `Verifier` / `Signer` traits.
 
 ## Milestone 7 — Text formats and owned data (`alloc`)
 
-- [ ] Owned `OwnedMessage` / `OwnedRecord` types with conversion from views
-- [ ] Zone-file / presentation-format parser (RFC 1035 §5) for records
-      (partial: names, types and classes parse from text; SVCB/HTTPS have
-      `from_text`; crate-internal base64/base32hex decoders exist)
-- [ ] `dig`-style message `Display` (partial: questions and records
-      already display in zone-file style)
-- [ ] Optional `serde` support
+- [x] Owned `OwnedMessage` / `OwnedRecord` / `OwnedRData` types with
+      conversion from views, from zone-file records and from text
+- [x] Zone-file / presentation-format parser (RFC 1035 §5) for records:
+      `ParseRdataText` for every type, `ZoneReader` with `$ORIGIN`,
+      `$TTL`, `$INCLUDE` and `$GENERATE`
+- [x] `dig`-style message `Display`
+- [x] Optional `serde` support
 
 ## Milestone 8 — Performance and assurance
 
@@ -185,16 +191,16 @@ signatures), through the pluggable `Verifier` / `Signer` traits.
 - [x] cargo-fuzz targets: message parsing (plus EDNS, TSIG/SIG(0), UPDATE,
       NOTIFY, XFR and DSO views), name decompression, RDATA (every
       registered type), EDNS options, build→parse round-trip,
-      presentation-format parser (names, types, classes, SVCB/HTTPS; full
-      RDATA once the zone-file parser exists)
+      presentation-format parser (whole zone files; every type's
+      displayed RDATA parses back)
 - [x] Property tests: build→parse and parse→build→parse identity
 - [x] Interop corpus: real-world captures, plus responses from BIND,
       Unbound, Knot and PowerDNS (also NSD, Knot Resolver, PowerDNS
       Recursor, public resolvers)
 - [x] Allocation-free hot path verified in CI (no-alloc build + tests)
-- [ ] Hot-path tuning: branch layout of the name decoder, SIMD-free
-      bulk label scanning, compression table hashing (baseline in
-      `BENCH.md`: `domain` is currently 11–31% faster on typical messages)
+- [x] Hot-path tuning: name decoder and suffix cache, fixed-field
+      parsing, label-trie compression table (`BENCH.md`: faster than
+      `domain` and `hickory-proto` on every benchmark)
 
 ## Milestone 9 — 1.0
 

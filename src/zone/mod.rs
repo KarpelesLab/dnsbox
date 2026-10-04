@@ -97,6 +97,7 @@ pub use records::{
     DEFAULT_MAX_INCLUDE_DEPTH, DEFAULT_MAX_INCLUDES, IncludeResolver, NoIncludes, Records,
     ZoneRecordBuf, parse,
 };
+pub(crate) use scanner::decimal;
 pub use scanner::{Scanner, Token, Unescape, parse_ttl};
 
 #[cfg(test)]

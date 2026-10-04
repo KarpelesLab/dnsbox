@@ -1,10 +1,11 @@
 //! `serde` support for the owned types (features `serde` + `alloc`); the
 //! layout is documented on the [`owned`](crate::owned#serde) module.
 
+use alloc::string::String;
 use alloc::vec::Vec;
 use core::fmt;
 
-use serde::de::{self, Deserializer, SeqAccess, Unexpected, Visitor};
+use serde::de::{self, Deserializer, SeqAccess, Visitor};
 use serde::ser::Serializer;
 use serde::{Deserialize, Serialize};
 
@@ -34,40 +35,13 @@ impl Serialize for RdataRef<'_> {
     }
 }
 
-/// Deserialized RDATA bytes.
-struct RdataBuf(Vec<u8>);
-
-/// Parses the RFC 3597 §5 generic form: `\#`, the length in decimal, then
-/// the data in hexadecimal, possibly split by whitespace (absent for a
-/// length of 0).
-fn parse_generic(s: &str) -> Option<Vec<u8>> {
-    let mut words = s.split_ascii_whitespace();
-    if words.next()? != "\\#" {
-        return None;
-    }
-    let len = words.next()?;
-    if len.is_empty() || !len.bytes().all(|b| b.is_ascii_digit()) {
-        return None;
-    }
-    let len: usize = len.parse().ok()?;
-    if len > MAX_RDATA_LEN {
-        return None;
-    }
-    let mut out = Vec::with_capacity(len);
-    let mut high = None;
-    for b in words.flat_map(str::bytes) {
-        let nibble = (b as char).to_digit(16)? as u8;
-        match high.take() {
-            None => high = Some(nibble),
-            Some(h) => {
-                if out.len() == len {
-                    return None;
-                }
-                out.push((h << 4) | nibble);
-            }
-        }
-    }
-    (high.is_none() && out.len() == len).then_some(out)
+/// Deserialized RDATA: a presentation-format or RFC 3597 §5 generic
+/// string (human-readable formats), or the wire bytes.
+enum RdataBuf {
+    /// Text, parsed once the record type and class are known.
+    Text(String),
+    /// Uncompressed wire bytes.
+    Wire(Vec<u8>),
 }
 
 impl<'de> Deserialize<'de> for RdataBuf {
@@ -77,27 +51,27 @@ impl<'de> Deserialize<'de> for RdataBuf {
             type Value = RdataBuf;
 
             fn expecting(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-                f.write_str("RDATA as `\\# <length> <hex>` (RFC 3597 §5) or bytes")
+                f.write_str(
+                    "RDATA in presentation format, as `\\# <length> <hex>` (RFC 3597 §5) or bytes",
+                )
             }
 
             fn visit_str<E: de::Error>(self, v: &str) -> Result<RdataBuf, E> {
-                parse_generic(v)
-                    .map(RdataBuf)
-                    .ok_or_else(|| E::invalid_value(Unexpected::Str(v), &self))
+                Ok(RdataBuf::Text(v.into()))
             }
 
             fn visit_bytes<E: de::Error>(self, v: &[u8]) -> Result<RdataBuf, E> {
                 if v.len() > MAX_RDATA_LEN {
                     return Err(E::invalid_length(v.len(), &"at most 65535 octets"));
                 }
-                Ok(RdataBuf(v.to_vec()))
+                Ok(RdataBuf::Wire(v.to_vec()))
             }
 
             fn visit_byte_buf<E: de::Error>(self, v: Vec<u8>) -> Result<RdataBuf, E> {
                 if v.len() > MAX_RDATA_LEN {
                     return Err(E::invalid_length(v.len(), &"at most 65535 octets"));
                 }
-                Ok(RdataBuf(v))
+                Ok(RdataBuf::Wire(v))
             }
 
             fn visit_seq<A: SeqAccess<'de>>(self, mut seq: A) -> Result<RdataBuf, A::Error> {
@@ -111,7 +85,7 @@ impl<'de> Deserialize<'de> for RdataBuf {
                     }
                     out.push(b);
                 }
-                Ok(RdataBuf(out))
+                Ok(RdataBuf::Wire(out))
             }
         }
         if d.is_human_readable() {
@@ -122,10 +96,14 @@ impl<'de> Deserialize<'de> for RdataBuf {
     }
 }
 
-/// Builds validated RDATA for a deserialized record.
-fn rdata<E: de::Error>(rtype: Rtype, class: Class, data: &[u8]) -> Result<OwnedRData, E> {
-    OwnedRData::from_wire(rtype, class, data)
-        .map_err(|e| E::custom(format_args!("invalid {rtype} RDATA: {e}")))
+/// Builds validated RDATA for a deserialized record: text through
+/// [`OwnedRData::from_text`], bytes through [`OwnedRData::from_wire`].
+fn rdata<E: de::Error>(rtype: Rtype, class: Class, data: &RdataBuf) -> Result<OwnedRData, E> {
+    match data {
+        RdataBuf::Text(t) => OwnedRData::from_text(rtype, class, t),
+        RdataBuf::Wire(w) => OwnedRData::from_wire(rtype, class, w),
+    }
+    .map_err(|e| E::custom(format_args!("invalid {rtype} RDATA: {e}")))
 }
 
 // --- OwnedRData ----------------------------------------------------------------
@@ -163,7 +141,7 @@ impl<'de> Deserialize<'de> for OwnedRData {
     /// formats must be valid unless the data is empty.
     fn deserialize<D: Deserializer<'de>>(d: D) -> Result<Self, D::Error> {
         let r = RDataDe::deserialize(d)?;
-        rdata(r.rtype, Class::ANY, &r.rdata.0)
+        rdata(r.rtype, Class::ANY, &r.rdata)
     }
 }
 
@@ -256,7 +234,7 @@ impl<'de> Deserialize<'de> for OwnedRecord {
     fn deserialize<D: Deserializer<'de>>(d: D) -> Result<Self, D::Error> {
         let r = RecordDe::deserialize(d)?;
         Ok(OwnedRecord {
-            rdata: rdata(r.rtype, r.class, &r.rdata.0)?,
+            rdata: rdata(r.rtype, r.class, &r.rdata)?,
             name: r.name,
             class: r.class,
             ttl: r.ttl,
@@ -320,42 +298,5 @@ impl<'de> Deserialize<'de> for OwnedMessage {
             authority: m.authority,
             additional: m.additional,
         })
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn generic_form() {
-        assert_eq!(parse_generic("\\# 0"), Some(Vec::new()));
-        assert_eq!(parse_generic("  \\#  0  "), Some(Vec::new()));
-        assert_eq!(parse_generic("\\# 3 0a0B 0c"), Some(std::vec![10, 11, 12]));
-        assert_eq!(
-            parse_generic("\\# 3 0 a 0 b 0 c"),
-            Some(std::vec![10, 11, 12])
-        );
-        for bad in [
-            "",
-            "\\#",
-            "# 1 00",
-            "\\# 1",
-            "\\# 1 0",
-            "\\# 1 0000",
-            "\\# 2 00",
-            "\\# +1 00",
-            "\\# -1 00",
-            "\\# x 00",
-            "\\# 1 0g",
-            "\\# 65536 00",
-            "\\# 99999999999999999999999 00",
-            "\\#1 00",
-        ] {
-            assert_eq!(parse_generic(bad), None, "{bad:?}");
-        }
-        let mut s = std::string::String::from("\\# 65535 ");
-        s.push_str(&"ab".repeat(65535));
-        assert_eq!(parse_generic(&s).map(|v| v.len()), Some(65535));
     }
 }

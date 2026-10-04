@@ -327,3 +327,143 @@ fn update_messages_display_with_update_names() {
     let wire = m.to_vec().unwrap();
     assert_eq!(OwnedMessage::from_wire(&wire).unwrap(), m);
 }
+
+#[test]
+fn rdata_from_text() {
+    // Presentation format (RFC 1035 §5.1), relative names completed with
+    // the root.
+    let mx = OwnedRData::from_text(Rtype::MX, Class::IN, "10 mail.example.com").unwrap();
+    assert_eq!(mx.as_bytes(), b"\x00\x0a\x04mail\x07example\x03com\x00");
+    assert_eq!(mx.to_string(), "10 mail.example.com.");
+    // The RFC 3597 §5 generic form, for known and unknown types; hex may
+    // be split and in either case.
+    let generic = OwnedRData::from_text(
+        Rtype::MX,
+        Class::IN,
+        r"\# 20 000a046d61696c 076578616D706C6503636F6D00",
+    );
+    assert_eq!(generic.unwrap(), mx);
+    let unknown = OwnedRData::from_text(Rtype::new(65280), Class::IN, r"\# 3 0 a 0 b 0 c").unwrap();
+    assert_eq!(unknown.as_bytes(), [10, 11, 12]);
+    assert_eq!(
+        OwnedRData::from_text(Rtype::NULL, Class::IN, r"  \#  0  ")
+            .unwrap()
+            .as_bytes(),
+        b""
+    );
+    let mut big = std::string::String::from(r"\# 65535 ");
+    big.push_str(&"ab".repeat(65535));
+    assert_eq!(
+        OwnedRData::from_text(Rtype::NULL, Class::IN, &big)
+            .unwrap()
+            .as_bytes()
+            .len(),
+        65535
+    );
+    // Class-specific data of another class is kept opaque (RFC 3597 §4).
+    assert!(OwnedRData::from_text(Rtype::A, Class::CH, r"\# 3 C00002").is_ok());
+    for bad in [
+        "",
+        r"\#",
+        r"# 1 00",
+        r"\# 1",
+        r"\# 1 0",
+        r"\# 1 0000",
+        r"\# 2 00",
+        r"\# +1 00",
+        r"\# -1 00",
+        r"\# x 00",
+        r"\# 1 0g",
+        r"\# 65536 00",
+        r"\# 99999999999999999999999 00",
+        r"\#1 00",
+    ] {
+        assert!(
+            OwnedRData::from_text(Rtype::new(65280), Class::IN, bad).is_err(),
+            "{bad:?}"
+        );
+    }
+    // Typed formats are checked; leftover tokens are refused.
+    assert_eq!(
+        OwnedRData::from_text(Rtype::A, Class::IN, "192.0.2.256"),
+        Err(Error::InvalidText)
+    );
+    assert_eq!(
+        OwnedRData::from_text(Rtype::A, Class::IN, r"\# 3 C00002"),
+        Err(Error::UnexpectedEof)
+    );
+    assert_eq!(
+        OwnedRData::from_text(Rtype::A, Class::IN, "192.0.2.1 x"),
+        Err(Error::InvalidText)
+    );
+    assert_eq!(
+        OwnedRData::from_text(Rtype::NULL, Class::IN, "01"),
+        Err(Error::NoTextFormat)
+    );
+}
+
+#[test]
+fn record_from_zone_text() {
+    let zone = "$ORIGIN example.\n$TTL 300\n@ IN SOA ns hostmaster 1 7200 3600 1209600 300\n\
+                www A 192.0.2.1\nmail 60 MX 10 mx1\n";
+    let records = crate::zone::parse(zone).unwrap();
+    let owned: Vec<OwnedRecord> = records.iter().cloned().map(OwnedRecord::from).collect();
+    assert_eq!(owned.len(), 3);
+    assert_eq!(owned[1].to_string(), "www.example. 300 IN A 192.0.2.1");
+    assert_eq!(
+        owned[2].to_string(),
+        "mail.example. 60 IN MX 10 mx1.example."
+    );
+    // The borrowed reader's records convert the same way.
+    let mut reader = crate::zone::ZoneReader::new(zone);
+    let mut buf = [0u8; 512];
+    for want in &owned {
+        let rr = reader.next_record(&mut buf).unwrap().unwrap();
+        assert_eq!(&OwnedRecord::from(&rr), want);
+        assert_eq!(&OwnedRecord::from(rr), want);
+    }
+    // The owned record goes into a message like any other.
+    let mut msg = OwnedMessage::new(7, Flags::default());
+    msg.answers.clone_from(&owned);
+    let wire = msg.to_vec().unwrap();
+    let back = OwnedMessage::from_wire(&wire).unwrap();
+    assert_eq!(back.answers, owned);
+}
+
+#[test]
+fn record_from_str() {
+    let rr: OwnedRecord = "mail.example.com. 3600 IN MX 10 mx1.example.com."
+        .parse()
+        .unwrap();
+    assert_eq!((rr.rtype(), rr.ttl, rr.class), (Rtype::MX, 3600, Class::IN));
+    assert_eq!(
+        rr.to_string(),
+        "mail.example.com. 3600 IN MX 10 mx1.example.com."
+    );
+    // Display output parses back to the same record, multi-line entries
+    // and comments are fine, the class defaults to IN.
+    assert_eq!(rr.to_string().parse::<OwnedRecord>().unwrap(), rr);
+    let multi: OwnedRecord = "mail.example.com. 3600 MX ( 10 ; preference\n mx1.example.com. )"
+        .parse()
+        .unwrap();
+    assert_eq!(multi, rr);
+    // `$TTL` applies; the SOA MINIMUM stands in for a missing TTL.
+    let soa: OwnedRecord = ". SOA a. b. 1 2 3 4 5".parse().unwrap();
+    assert_eq!(soa.ttl, 5);
+    let a: OwnedRecord = "$TTL 60\nwww. A 192.0.2.1".parse().unwrap();
+    assert_eq!(a.ttl, 60);
+    for (text, err) in [
+        ("", Error::UnexpectedEof),
+        ("; only a comment\n", Error::UnexpectedEof),
+        ("www. A 192.0.2.1", Error::MissingTtl),
+        ("www. 60 A 192.0.2.256", Error::InvalidText),
+        (
+            "www. 60 A 192.0.2.1\nwww. 60 A 192.0.2.2",
+            Error::InvalidText,
+        ),
+        ("$INCLUDE other.zone", Error::InvalidText),
+        ("$GENERATE 1-2 h$ 60 A 192.0.2.$", Error::InvalidText),
+    ] {
+        assert_eq!(text.parse::<OwnedRecord>(), Err(err), "{text:?}");
+    }
+}
