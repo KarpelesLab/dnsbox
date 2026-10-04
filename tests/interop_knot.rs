@@ -1084,13 +1084,17 @@ fn tsig_keys() -> Vec<HmacKey<'static>> {
 /// Every TSIG-signed exchange with knotd: dnsbox verifies the request
 /// (kdig's, knsupdate's, the probe's) as a server would and every response
 /// message (knotd's) as the client would; those signed with a wrong secret
-/// or an unknown key are rejected with the error knotd gave.
+/// or an unknown key are rejected with the error knotd gave. (knotd's
+/// refusal of the probe's TKEY query is unsigned: [`knotd_refuses_tkey`].)
 #[test]
 fn tsig_exchanges_verify() {
     let keys = tsig_keys();
     let mut by_alg: BTreeMap<String, usize> = BTreeMap::new();
     let mut rejected = 0;
     for ex in exchanges("knot") {
+        if ex.label.ends_with("probe/tkey") {
+            continue;
+        }
         let q = ex.query();
         let Some(rec) = tsig::find(&q).unwrap() else {
             continue;
@@ -1840,6 +1844,47 @@ fn knotd_truncation() {
     .unwrap();
 }
 
+/// The probe's TKEY query (RFC 2930 §4.2, deleting the key that signs
+/// it, built by `dnsbox::tkey::build_query`): dnsbox reads it back and
+/// verifies its TSIG as a server would. knotd, which does no TKEY, answers
+/// REFUSED for the question, without a TKEY record and without signing
+/// the refusal (RFC 8945 §5.3 would have it signed; Knot 3.5 does not).
+#[test]
+fn knotd_refuses_tkey() {
+    let Some(ex) = exchange("knot/probe/tkey") else {
+        assert!(!live());
+        return;
+    };
+    let q = ex.query();
+    assert!(!q.flags().rd());
+    let question = q.questions().next().unwrap().unwrap();
+    assert_eq!(
+        (question.qtype(), question.qclass()),
+        (Rtype::TKEY, Class::ANY)
+    );
+    let rec = dnsbox::tkey::find(&q).unwrap().expect("TKEY record");
+    assert_eq!(rec.section, Section::Additional);
+    assert_eq!(rec.key_name, question.name());
+    assert_eq!(rec.data.mode, dnsbox::rdata::TkeyMode::KEY_DELETION);
+    assert!(rec.data.is_valid_at(rec.data.inception));
+    let tsig = tsig::find(&q).unwrap().expect("TSIG record");
+    let keys = tsig_keys();
+    let status = tsig::verify_request(&q, &keys[..], tsig.data.time_signed);
+    assert!(status.verified().is_some(), "TKEY query rejected");
+
+    let r = ex.response();
+    assert_eq!(r.id(), q.id());
+    assert!(r.flags().qr());
+    assert_eq!(r.flags().rcode(), Rcode::REFUSED);
+    let answered = r.questions().next().unwrap().unwrap();
+    assert_eq!(
+        (answered.name(), answered.qtype(), answered.qclass()),
+        (question.name(), question.qtype(), question.qclass())
+    );
+    assert!(dnsbox::tkey::find(&r).unwrap().is_none());
+    assert!(tsig::find(&r).unwrap().is_none());
+}
+
 // ---------------------------------------------------------------------
 // Unbound.
 // ---------------------------------------------------------------------
@@ -2356,6 +2401,12 @@ fn knot_reads_dnsbox_text_of_new_types() {
     for rtype in &unknown {
         assert!(new.contains(rtype.to_string().as_str()), "{rtype} omitted");
     }
+    // Knot 3.5 knows DSYNC (and writes it as dnsbox does, see the kdig
+    // tests), not the others.
+    assert_eq!(
+        unknown,
+        [Rtype::AMTRELAY, Rtype::HHIT, Rtype::BRID, Rtype::DOA].into()
+    );
     let (left_out, served): (Vec<Rr>, Vec<Rr>) =
         records.iter().map(rr).partition(|r| unknown.contains(&r.1));
     assert_eq!(sorted(left_out), sorted(omitted));

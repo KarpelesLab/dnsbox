@@ -254,7 +254,9 @@ What remains to know before 1.0:
   one record to millions.
 - Knot DNS and Unbound interop needs their tools, so it runs only in
   GitHub CI (`.github/workflows/interop.yml`); `cargo test` checks a kept
-  subset of a CI run offline.
+  subset of a CI run offline. Knot 3.5 reads DSYNC but not AMTRELAY,
+  HHIT, BRID or DOA, and `knotd` refuses TKEY, so those are checked
+  against BIND's and dnspython's vectors only.
 
 ## Out of scope
 

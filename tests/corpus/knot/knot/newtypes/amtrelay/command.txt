@@ -1,0 +1,1 @@
+kdig amtrelay.newtypes.example. TYPE260

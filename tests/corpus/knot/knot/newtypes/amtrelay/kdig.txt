@@ -1,0 +1,15 @@
+;; ->>HEADER<<- opcode: QUERY; status: NXDOMAIN; id: 39789
+;; Flags: qr aa rd; QUERY: 1; ANSWER: 0; AUTHORITY: 1; ADDITIONAL: 1
+
+;; EDNS PSEUDOSECTION:
+;; Version: 0; flags: ; UDP size: 1232 B; ext-rcode: NOERROR
+
+;; QUESTION SECTION:
+;; amtrelay.newtypes.example.		IN	TYPE260
+
+;; AUTHORITY SECTION:
+newtypes.example.   	3600	IN	SOA	ns1.newtypes.example. hostmaster.newtypes.example. 2026100501 7200 900 1209600 3600
+
+;; Received 105 B
+;; Time 2026-10-04 20:40:32 UTC
+;; From 127.0.0.1@5300(UDP) in 0.4 ms

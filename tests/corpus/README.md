@@ -225,7 +225,11 @@ queries for one zone; fifteen single responses are also kept as
 `knotd-ci-*.hex` and `unbound-ci-*.hex` for the corpus tests, with their
 `dig` rendering (made on the runner by `dig_reference.py`). To refresh:
 `gh run download <run> -n interop-knot-unbound -D /tmp/interop && python3
-tests/corpus/knot/keep.py /tmp/interop "run <run>, <date>"`.
+tests/corpus/knot/keep.py /tmp/interop "run <run>, <date>"`. The
+`newtypes` transfers and queries, `newtypes-omitted.txt` and
+`probe/tkey` were added by hand from run 37232865423 (2026-10-04), the
+first with them (unsigned or TSIG-signed with the fixed secret, so
+independent of the run's keys).
 
 `tests/interop_knot.rs` checks, as of the run's time (`knot/now`):
 
@@ -272,8 +276,10 @@ Knot answers an unknown TSIG key with NOTAUTH without a TSIG record
 client cookie with BADCOOKIE (mod-cookies' default); Knot 3.5 has no
 mnemonic for A6, ATMA, AVC, DLV, EID, GID, GPOS, HIP, ISDN, MB, MG, MR,
 NIMLOC, NINFO, NSAP, NSAP-PTR, NULL, NXT, PX, RKEY, SIG, SINK, TA,
-TALINK, UID, UINFO, UNSPEC, WKS and X25, and rejects a KEY without key
-data. With a single stub zone for `interop.`, Unbound timed out (then
+TALINK, UID, UINFO, UNSPEC, WKS and X25, nor for AMTRELAY, HHIT, BRID
+and DOA (it reads and writes DSYNC as dnsbox does), and rejects a KEY
+without key data; `knotd` does no TKEY and answers dnsbox's TSIG-signed
+TKEY query REFUSED without signing the answer. With a single stub zone for `interop.`, Unbound timed out (then
 SERVFAIL) on NXDOMAIN, wildcard and unsigned-delegation answers of the
 child zones, and on DS queries for names that are not zone cuts: `knotd`
 answers for every zone it serves with authority, so Unbound never saw the

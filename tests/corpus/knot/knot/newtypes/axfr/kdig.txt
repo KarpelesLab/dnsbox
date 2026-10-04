@@ -1,0 +1,12 @@
+;; AXFR for newtypes.example.
+newtypes.example.   	3600	IN	SOA	ns1.newtypes.example. hostmaster.newtypes.example. 2026100501 7200 900 1209600 3600
+newtypes.example.   	3600	IN	NS	ns1.newtypes.example.
+_dsync.newtypes.example.	3600	IN	DSYNC	CSYNC NOTIFY 5360 csync-scanner.example.net.
+*._dsync.newtypes.example.	3600	IN	DSYNC	CDS NOTIFY 5359 cds-scanner.example.net.
+child._dsync.newtypes.example.	3600	IN	DSYNC	CDS NOTIFY 5300 rr-endpoint.newtypes.example.
+ns1.newtypes.example.	3600	IN	A	192.0.2.53
+newtypes.example.   	3600	IN	SOA	ns1.newtypes.example. hostmaster.newtypes.example. 2026100501 7200 900 1209600 3600
+hmac-sha256.key.    	0	ANY	TSIG	hmac-sha256. 1791146432 300 32 81+ixxLk1C+4CuUVMbai2pr1jdKPXVoy0bQYLVbnMZg= 47922 NOERROR 0
+;; Received 435 B (1 messages, 7 records)
+;; Time 2026-10-04 20:40:32 UTC
+;; From 127.0.0.1@5300(TCP) in 0.7 ms

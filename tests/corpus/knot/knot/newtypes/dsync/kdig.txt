@@ -1,0 +1,15 @@
+;; ->>HEADER<<- opcode: QUERY; status: NOERROR; id: 23444
+;; Flags: qr aa rd; QUERY: 1; ANSWER: 1; AUTHORITY: 0; ADDITIONAL: 1
+
+;; EDNS PSEUDOSECTION:
+;; Version: 0; flags: ; UDP size: 1232 B; ext-rcode: NOERROR
+
+;; QUESTION SECTION:
+;; _dsync.newtypes.example.		IN	DSYNC
+
+;; ANSWER SECTION:
+_dsync.newtypes.example.	3600	IN	DSYNC	CSYNC NOTIFY 5360 csync-scanner.example.net.
+
+;; Received 96 B
+;; Time 2026-10-04 20:40:32 UTC
+;; From 127.0.0.1@5300(UDP) in 0.4 ms

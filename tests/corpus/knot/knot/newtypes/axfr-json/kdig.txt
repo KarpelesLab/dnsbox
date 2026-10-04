@@ -1,0 +1,125 @@
+[
+  {
+    "dateString": "2026-10-04T20:40:32+0000",
+    "dateSeconds": 1791146432,
+    "msgLength": 347,
+    "ID": 36757,
+    "QR": 1,
+    "Opcode": 0,
+    "AA": 1,
+    "TC": 0,
+    "RD": 1,
+    "RA": 0,
+    "AD": 0,
+    "CD": 0,
+    "RCODE": 0,
+    "QDCOUNT": 1,
+    "ANCOUNT": 7,
+    "NSCOUNT": 0,
+    "ARCOUNT": 1,
+    "QNAME": "newtypes.example.",
+    "QTYPE": 252,
+    "QTYPEname": "AXFR",
+    "QCLASS": 1,
+    "QCLASSname": "IN",
+    "answerRRs": [
+      {
+        "NAME": "newtypes.example.",
+        "TYPE": 6,
+        "TYPEname": "SOA",
+        "CLASS": 1,
+        "CLASSname": "IN",
+        "TTL": 3600,
+        "rdataSOA": "ns1.newtypes.example. hostmaster.newtypes.example. 2026100501 7200 900 1209600 3600",
+        "RDLENGTH": 71,
+        "RDATAHEX": "036E7331086E65777479706573076578616D706C65000A686F73746D6173746572086E65777479706573076578616D706C650078C3D71500001C20000003840012750000000E10"
+      },
+      {
+        "NAME": "newtypes.example.",
+        "TYPE": 2,
+        "TYPEname": "NS",
+        "CLASS": 1,
+        "CLASSname": "IN",
+        "TTL": 3600,
+        "rdataNS": "ns1.newtypes.example.",
+        "RDLENGTH": 22,
+        "RDATAHEX": "036E7331086E65777479706573076578616D706C6500"
+      },
+      {
+        "NAME": "_dsync.newtypes.example.",
+        "TYPE": 66,
+        "TYPEname": "DSYNC",
+        "CLASS": 1,
+        "CLASSname": "IN",
+        "TTL": 3600,
+        "rdataDSYNC": "CSYNC NOTIFY 5360 csync-scanner.example.net.",
+        "RDLENGTH": 32,
+        "RDATAHEX": "003E0114F00D6373796E632D7363616E6E6572076578616D706C65036E657400"
+      },
+      {
+        "NAME": "*._dsync.newtypes.example.",
+        "TYPE": 66,
+        "TYPEname": "DSYNC",
+        "CLASS": 1,
+        "CLASSname": "IN",
+        "TTL": 3600,
+        "rdataDSYNC": "CDS NOTIFY 5359 cds-scanner.example.net.",
+        "RDLENGTH": 30,
+        "RDATAHEX": "003B0114EF0B6364732D7363616E6E6572076578616D706C65036E657400"
+      },
+      {
+        "NAME": "child._dsync.newtypes.example.",
+        "TYPE": 66,
+        "TYPEname": "DSYNC",
+        "CLASS": 1,
+        "CLASSname": "IN",
+        "TTL": 3600,
+        "rdataDSYNC": "CDS NOTIFY 5300 rr-endpoint.newtypes.example.",
+        "RDLENGTH": 35,
+        "RDATAHEX": "003B0114B40B72722D656E64706F696E74086E65777479706573076578616D706C6500"
+      },
+      {
+        "NAME": "ns1.newtypes.example.",
+        "TYPE": 1,
+        "TYPEname": "A",
+        "CLASS": 1,
+        "CLASSname": "IN",
+        "TTL": 3600,
+        "rdataA": "192.0.2.53",
+        "RDLENGTH": 4,
+        "RDATAHEX": "C0000235"
+      },
+      {
+        "NAME": "newtypes.example.",
+        "TYPE": 6,
+        "TYPEname": "SOA",
+        "CLASS": 1,
+        "CLASSname": "IN",
+        "TTL": 3600,
+        "rdataSOA": "ns1.newtypes.example. hostmaster.newtypes.example. 2026100501 7200 900 1209600 3600",
+        "RDLENGTH": 71,
+        "RDATAHEX": "036E7331086E65777479706573076578616D706C65000A686F73746D6173746572086E65777479706573076578616D706C650078C3D71500001C20000003840012750000000E10"
+      }
+    ],
+    "additionalRRs": [
+      {
+        "NAME": "hmac-sha256.key.",
+        "TYPE": 250,
+        "TYPEname": "TSIG",
+        "CLASS": 255,
+        "CLASSname": "ANY",
+        "TTL": 0,
+        "rdataTSIG": "hmac-sha256. 1791146432 300 32 0N4Ng8etlgfAA/NTObckBxf/BKXurfstgsYJVmKaFEQ= 36757 NOERROR 0",
+        "RDLENGTH": 61,
+        "RDATAHEX": "0B686D61632D7368613235360000006AC2B9C0012C0020D0DE0D83C7AD9607C003F35339B7240717FF04A5EEADFB2D82C60956629A14448F9500000000"
+      }
+    ],
+    "EDNS": {
+      "Version": 0,
+      "FLAGS": [
+      ],
+      "RCODE": "NOERROR",
+      "UDPSIZE": 1232
+    }
+  }
+]
