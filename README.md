@@ -9,9 +9,9 @@ responses, zero-copy, `no_std`, with broad RFC extension coverage (EDNS(0),
 DNSSEC, SVCB/HTTPS, TSIG, and more).
 
 > **Status:** pre-1.0. Wire formats, EDNS(0), DNSSEC, SVCB/HTTPS, TSIG and
-> the long tail of record types are implemented; the API may still change.
-> See the [roadmap](ROADMAP.md) for what is left before 1.0 (rustdoc
-> examples everywhere, the final threat model, the stability policy).
+> the long tail of record types are implemented and documented with
+> examples; the API may still change. See the [roadmap](ROADMAP.md) for
+> what is left before 1.0 (the final threat model, the stability policy).
 
 ## Goals
 
@@ -124,6 +124,20 @@ www  300  CNAME @
     Ok(())
 }
 ```
+
+### More
+
+The [crate documentation](https://docs.rs/dnsbox) starts with a guided
+tour (parsing, typed RDATA, building, EDNS, truncation, TCP framing, zone
+files, DNSSEC, TSIG), and every public item has its own example. The
+[`examples/`](examples) directory holds small complete programs:
+
+| Example | Run with | What it does |
+|---------|----------|--------------|
+| [`stub_resolver`](examples/stub_resolver.rs) | `cargo run --example stub_resolver -- example.com AAAA` | queries a resolver over UDP with EDNS, falls back to TCP on truncation, prints the answer like `dig` |
+| [`zone2wire`](examples/zone2wire.rs) | `cargo run --example zone2wire -- db.example` | turns a zone file into the AXFR message stream a server would send, and reads it back |
+| [`dnssec_dig`](examples/dnssec_dig.rs) | `cargo run --example dnssec_dig --features dnssec` | validates captured responses from a trust anchor down (DS → DNSKEY → RRset) |
+| [`tsig_axfr`](examples/tsig_axfr.rs) | `cargo run --example tsig_axfr --features tsig` | a TSIG-signed zone transfer, over loopback or from a real server |
 
 ## What is covered
 
