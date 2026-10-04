@@ -1,0 +1,7 @@
+# dnsbox interop corpus: a real DNS response, unmodified.
+# server:   pdns-public-ns1.powerdns.com (PowerDNS Authoritative 4.9)
+# query:    powerdns.com. IN MX (options: none)
+# captured: 2026-10-04 over UDP, 94 bytes
+0f9d8400000100020000000108706f776572646e7303636f6d00000f0001c00c
+000f00010000012c00150019036d78310c6f70656e2d786368616e6765c015c0
+0c000f00010000012c0008004b036d7832c03000002904d0000000000000

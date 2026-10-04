@@ -1,0 +1,7 @@
+# dnsbox interop corpus: a real DNS response, unmodified.
+# server:   ns1.isc.org (BIND 9.20)
+# query:    version.bind. CH TXT (options: CH)
+# captured: 2026-10-04 over UDP, 75 bytes
+0bbf840000010001000100010776657273696f6e0462696e640000100003c00c
+0010000300000000000807392e32302e3237c00c00020003000000000002c00c
+00002904d0000000000000

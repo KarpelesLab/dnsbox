@@ -1,0 +1,7 @@
+# dnsbox interop corpus: a real DNS response, unmodified.
+# server:   ns1.isc.org (BIND 9.20)
+# query:    isc.org. IN ANY (options: none)
+# captured: 2026-10-04 over UDP, 90 bytes
+d8898400000100010000000103697363036f72670000ff0001c00c0006000100
+001c20002a066e732d696e74c00c0a686f73746d6173746572c00c78c3d60500
+001c2000000e10017a5e8000000e1000002904d0000000000000

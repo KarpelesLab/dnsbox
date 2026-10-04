@@ -1,0 +1,7 @@
+# dnsbox interop corpus: a real DNS response, unmodified.
+# server:   1.1.1.1 (Cloudflare)
+# query:    ckdhr.com. IN LOC (options: RD)
+# captured: 2026-10-04 over UDP, 66 bytes
+d5238180000100010000000105636b64687203636f6d00001d0001c00c001d00
+0100005460001000123513891704e870bf2e1400988cbc00002904d000000000
+0000

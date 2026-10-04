@@ -1,0 +1,5 @@
+# dnsbox interop corpus: a real DNS response, unmodified.
+# server:   1.1.1.1 (Cloudflare)
+# query:    google.com. IN TXT (options: RD NOEDNS TC)
+# captured: 2026-10-04 over UDP, 28 bytes
+c0f48380000100000000000006676f6f676c6503636f6d0000100001

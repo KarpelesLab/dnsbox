@@ -1,0 +1,6 @@
+# dnsbox interop corpus: a real DNS response, unmodified.
+# server:   ns1.isc.org (BIND 9.20)
+# query:    example.net. IN A (options: none)
+# captured: 2026-10-04 over UDP, 40 bytes
+951080050001000000000001076578616d706c65036e65740000010001000029
+04d0000000000000

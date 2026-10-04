@@ -1,0 +1,7 @@
+# dnsbox interop corpus: a real DNS response, unmodified.
+# server:   9.9.9.9 (Quad9)
+# query:    8.8.8.8.in-addr.arpa. IN PTR (options: RD)
+# captured: 2026-10-04 over UDP, 73 bytes
+601081800001000100000001013801380138013807696e2d6164647204617270
+6100000c0001c00c000c000100007c30000c03646e7306676f6f676c65000000
+290200000000000000

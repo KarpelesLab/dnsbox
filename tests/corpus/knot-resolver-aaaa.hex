@@ -1,0 +1,7 @@
+# dnsbox interop corpus: a real DNS response, unmodified.
+# server:   193.17.47.1 (Knot Resolver)
+# query:    www.nic.cz. IN AAAA (options: RD)
+# captured: 2026-10-04 over UDP, 67 bytes
+52c38180000100010000000103777777036e696302637a00001c0001c00c001c
+0001000003a300102001148800000003000000000000000200002904d0000000
+000000

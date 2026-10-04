@@ -1,0 +1,7 @@
+# dnsbox interop corpus: a real DNS response, unmodified.
+# server:   185.222.222.222 (PowerDNS Recursor 5.4)
+# query:    google.com. IN CAA (options: RD)
+# captured: 2026-10-04 over UDP, 66 bytes
+a39e8180000100010000000106676f6f676c6503636f6d0001010001c00c0101
+000100015180000f00056973737565706b692e676f6f67000029020000000000
+0000
