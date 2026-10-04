@@ -20,6 +20,38 @@
 //! The framing layer does not interpret the messages: a zero-length frame
 //! is returned as an empty message (which [`Message::parse`] rejects).
 //!
+//! # Examples
+//!
+//! Two queries pipelined on one connection, and the server side reading
+//! them back from a stream that delivers bytes in arbitrary pieces:
+//!
+//! ```
+//! use dnsbox::tcp::{FrameReassembler, MAX_FRAME_LEN, append_frame};
+//! use dnsbox::{Class, Message, MessageBuilder, NameBuf, Rtype, WireWriter};
+//!
+//! let name: NameBuf = "example.com".parse()?;
+//! let mut stream_buf = [0u8; 256];
+//! let mut stream = WireWriter::new(&mut stream_buf);
+//! for (id, qtype) in [(1, Rtype::A), (2, Rtype::AAAA)] {
+//!     let mut qbuf = [0u8; 128];
+//!     let q = MessageBuilder::query(&mut qbuf, id, &name, qtype, Class::IN)?.finish();
+//!     append_frame(&mut stream, q)?;
+//! }
+//! let stream = stream.into_written();
+//!
+//! let mut storage = vec![0u8; MAX_FRAME_LEN];
+//! let mut frames = FrameReassembler::new(&mut storage);
+//! let mut ids = Vec::new();
+//! for chunk in stream.chunks(7) {
+//!     frames.extend(chunk);
+//!     while let Some(msg) = frames.next_frame()? {
+//!         ids.push(Message::parse(msg)?.id());
+//!     }
+//! }
+//! assert_eq!(ids, [1, 2]);
+//! # Ok::<(), dnsbox::Error>(())
+//! ```
+//!
 //! [`Message::parse`]: crate::Message::parse
 
 use crate::builder::MAX_MESSAGE_LEN;
@@ -33,8 +65,11 @@ pub const PREFIX_LEN: usize = 2;
 /// [`FrameReassembler`] buffer of this size can hold any frame.
 pub const MAX_FRAME_LEN: usize = PREFIX_LEN + MAX_MESSAGE_LEN;
 
-/// The length prefix for a message of `msg_len` bytes, or
-/// [`Error::MessageTooLong`] if it exceeds 65535 bytes.
+/// The length prefix for a message of `msg_len` bytes.
+///
+/// # Errors
+///
+/// [`Error::MessageTooLong`] if `msg_len` exceeds 65535 bytes.
 ///
 /// ```
 /// assert_eq!(dnsbox::tcp::length_prefix(300), Ok([1, 44]));
@@ -48,8 +83,21 @@ pub const fn length_prefix(msg_len: usize) -> Result<[u8; 2]> {
 }
 
 /// Writes `msg` with its length prefix at the start of `out`, returning the
-/// number of bytes written (`msg.len() + 2`). Fails with
-/// [`Error::MessageTooLong`] or [`Error::BufferTooSmall`] without writing.
+/// number of bytes written (`msg.len() + 2`).
+///
+/// # Errors
+///
+/// [`Error::MessageTooLong`] if `msg` exceeds 65535 bytes,
+/// [`Error::BufferTooSmall`] if `out` is too short; nothing is written
+/// then.
+///
+/// ```
+/// let mut out = [0u8; 8];
+/// let n = dnsbox::tcp::write_frame(&mut out, b"query")?;
+/// assert_eq!(&out[..n], b"\x00\x05query");
+/// assert!(dnsbox::tcp::write_frame(&mut out, b"too long!").is_err());
+/// # Ok::<(), dnsbox::Error>(())
+/// ```
 pub fn write_frame(out: &mut [u8], msg: &[u8]) -> Result<usize> {
     let prefix = length_prefix(msg.len())?;
     let total = PREFIX_LEN + msg.len();
@@ -61,8 +109,27 @@ pub fn write_frame(out: &mut [u8], msg: &[u8]) -> Result<usize> {
 }
 
 /// Appends `msg` with its length prefix to `out` (a
-/// [`WireWriter`](crate::WireWriter), or a `Vec<u8>` with `alloc`). On
-/// error nothing is appended.
+/// [`WireWriter`](crate::WireWriter), or a `Vec<u8>` with `alloc`).
+///
+/// # Errors
+///
+/// [`Error::MessageTooLong`] if `msg` exceeds 65535 bytes,
+/// [`Error::BufferTooSmall`] if `out` cannot hold the frame; nothing is
+/// appended then.
+///
+/// ```
+/// use dnsbox::WireWriter;
+/// use dnsbox::tcp::append_frame;
+///
+/// // Pipelining two messages into one write buffer.
+/// let mut buf = [0u8; 16];
+/// let mut out = WireWriter::new(&mut buf);
+/// append_frame(&mut out, b"one")?;
+/// append_frame(&mut out, b"two")?;
+/// assert_eq!(out.as_bytes(), b"\x00\x03one\x00\x03two");
+/// assert!(append_frame(&mut out, b"three").is_err()); // 7 bytes, 6 left
+/// # Ok::<(), dnsbox::Error>(())
+/// ```
 pub fn append_frame<O: OutBuf + ?Sized>(out: &mut O, msg: &[u8]) -> Result<()> {
     let prefix = length_prefix(msg.len())?;
     let len = out.as_bytes().len();
@@ -132,6 +199,15 @@ pub const fn frames(buf: &[u8]) -> Frames<'_> {
 /// the bytes to keep until more data arrives.
 ///
 /// [`remainder`]: Frames::remainder
+///
+/// ```
+/// // Two messages and the start of a third, as one read returned them.
+/// let read = [0, 2, 0xab, 0xcd, 0, 1, 0xef, 0, 5, 1, 2];
+/// let mut frames = dnsbox::tcp::frames(&read);
+/// let messages: Vec<&[u8]> = frames.by_ref().collect();
+/// assert_eq!(messages, [&[0xab, 0xcd][..], &[0xef][..]]);
+/// assert_eq!(frames.remainder(), [0, 5, 1, 2]); // keep for the next read
+/// ```
 #[derive(Clone, Debug)]
 #[must_use = "iterators are lazy and do nothing unless consumed"]
 pub struct Frames<'a> {
@@ -302,10 +378,28 @@ impl<'b> FrameReassembler<'b> {
     }
 
     /// Returns the next complete message (without its prefix), or
-    /// `Ok(None)` if more data is needed. Fails with
+    /// `Ok(None)` if more data is needed.
+    ///
+    /// # Errors
+    ///
     /// [`Error::BufferTooSmall`] if the next frame is larger than the
     /// buffer and so can never be completed; see
     /// [`skip_frame`](Self::skip_frame).
+    ///
+    /// ```
+    /// use dnsbox::Error;
+    /// use dnsbox::tcp::FrameReassembler;
+    ///
+    /// let mut storage = [0u8; 8];
+    /// let mut r = FrameReassembler::new(&mut storage);
+    /// r.extend(&[0, 100, 1, 2]); // a 100-byte message announced
+    /// assert_eq!(r.next_frame(), Err(Error::BufferTooSmall));
+    /// assert!(r.skip_frame()); // discard it, including the 98 bytes to come
+    /// r.extend(&[0u8; 98]);
+    /// r.extend(&[0, 1, 42]);
+    /// assert_eq!(r.next_frame()?, Some(&[42][..]));
+    /// # Ok::<(), Error>(())
+    /// ```
     pub fn next_frame(&mut self) -> Result<Option<&[u8]>> {
         let pending = self.buf.get(self.start..self.end).unwrap_or(&[]);
         let Some(total) = frame_len(pending) else {
@@ -353,11 +447,30 @@ impl<'b> FrameReassembler<'b> {
 /// returning it, or `Ok(None)` if the stream ended cleanly before the
 /// first byte of a frame.
 ///
+/// # Errors
+///
 /// A message larger than `buf` fails with
 /// [`std::io::ErrorKind::InvalidData`] (wrapping
 /// [`Error::BufferTooSmall`]); the stream is then out of sync and should
 /// be closed. A stream ending inside a frame fails with
-/// [`std::io::ErrorKind::UnexpectedEof`].
+/// [`std::io::ErrorKind::UnexpectedEof`]. Other I/O errors of `r` are
+/// returned as they are (`Interrupted` reads are retried).
+///
+/// ```
+/// use dnsbox::tcp::{MAX_FRAME_LEN, read_message, write_message};
+///
+/// // Any `Read`/`Write` works: here an in-memory "connection".
+/// let mut wire = Vec::new();
+/// write_message(&mut wire, b"first")?;
+/// write_message(&mut wire, b"second")?;
+///
+/// let mut conn = &wire[..];
+/// let mut buf = vec![0u8; MAX_FRAME_LEN];
+/// assert_eq!(read_message(&mut conn, &mut buf)?, Some(&b"first"[..]));
+/// assert_eq!(read_message(&mut conn, &mut buf)?, Some(&b"second"[..]));
+/// assert_eq!(read_message(&mut conn, &mut buf)?, None); // clean end
+/// # Ok::<(), std::io::Error>(())
+/// ```
 #[cfg(feature = "std")]
 #[cfg_attr(docsrs, doc(cfg(feature = "std")))]
 pub fn read_message<'b, R: std::io::Read + ?Sized>(
@@ -385,8 +498,30 @@ pub fn read_message<'b, R: std::io::Read + ?Sized>(
 
 /// Writes `msg` with its length prefix to `w` (std only), handing both to
 /// the writer together where it supports vectored writes (RFC 7766 §8
-/// recommends sending them in one segment). Messages over 65535 bytes fail
-/// with [`std::io::ErrorKind::InvalidInput`].
+/// recommends sending them in one segment).
+///
+/// # Errors
+///
+/// [`std::io::ErrorKind::InvalidInput`] for a message over 65535 bytes,
+/// [`std::io::ErrorKind::WriteZero`] if the writer stops accepting data,
+/// and the other I/O errors of `w` (`Interrupted` writes are retried).
+///
+/// ```no_run
+/// use std::net::TcpStream;
+/// use dnsbox::tcp::{MAX_FRAME_LEN, read_message, write_message};
+/// use dnsbox::{Class, Message, MessageBuilder, NameBuf, Rtype};
+///
+/// let name: NameBuf = "example.com".parse()?;
+/// let mut qbuf = [0u8; 512];
+/// let query = MessageBuilder::query(&mut qbuf, 1, &name, Rtype::SOA, Class::IN)?.finish();
+///
+/// let mut conn = TcpStream::connect("192.0.2.53:53")?;
+/// write_message(&mut conn, query)?;
+/// let mut buf = vec![0u8; MAX_FRAME_LEN];
+/// let response = read_message(&mut conn, &mut buf)?.ok_or("closed")?;
+/// println!("{}", Message::parse(response)?);
+/// # Ok::<(), Box<dyn std::error::Error>>(())
+/// ```
 #[cfg(feature = "std")]
 #[cfg_attr(docsrs, doc(cfg(feature = "std")))]
 pub fn write_message<W: std::io::Write + ?Sized>(w: &mut W, msg: &[u8]) -> std::io::Result<()> {

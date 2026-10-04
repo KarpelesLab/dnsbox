@@ -39,9 +39,12 @@ impl ClientSubnet {
     pub const FAMILY_IPV6: u16 = 2;
 
     /// Builds the option, truncating `addr` to `source_prefix` bits
-    /// (RFC 7871 §6). Fails with [`Error::InvalidOption`] if a prefix
-    /// length exceeds the address width (32 or 128). In queries the scope
-    /// prefix must be 0 (§6).
+    /// (RFC 7871 §6). In queries the scope prefix must be 0 (§6).
+    ///
+    /// # Errors
+    ///
+    /// [`Error::InvalidOption`] if a prefix length exceeds the address
+    /// width (32 or 128).
     pub fn new(addr: IpAddr, source_prefix: u8, scope_prefix: u8) -> Result<Self> {
         let max = max_prefix(&addr);
         if source_prefix > max || scope_prefix > max {
@@ -86,8 +89,22 @@ impl ClientSubnet {
     }
 
     /// Returns a copy with the scope prefix replaced, as an authoritative
-    /// server does when answering (RFC 7871 §7.2.1). Fails with
-    /// [`Error::InvalidOption`] if it exceeds the address width.
+    /// server does when answering (RFC 7871 §7.2.1).
+    ///
+    /// # Errors
+    ///
+    /// [`Error::InvalidOption`] if `scope_prefix` exceeds the address
+    /// width.
+    ///
+    /// ```
+    /// use dnsbox::edns::ClientSubnet;
+    ///
+    /// let query = ClientSubnet::new("2001:db8:1234::1".parse().unwrap(), 56, 0)?;
+    /// let answer = query.with_scope_prefix(48)?;
+    /// assert_eq!(answer.to_string(), "ECS=2001:db8:1234::/56/48");
+    /// assert!(query.with_scope_prefix(129).is_err());
+    /// # Ok::<(), dnsbox::Error>(())
+    /// ```
     pub fn with_scope_prefix(self, scope_prefix: u8) -> Result<Self> {
         if scope_prefix > max_prefix(&self.addr) {
             return Err(Error::InvalidOption);

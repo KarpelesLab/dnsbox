@@ -16,6 +16,17 @@ use crate::{Class, Error, Result, Rtype};
 /// addresses (format 1, which must be ASCII digits) are written with a
 /// leading `+`. Unknown formats are accepted and displayed in the generic
 /// RFC 3597 form.
+///
+/// ```
+/// use dnsbox::rdata::{Atma, ParseRdataText};
+///
+/// // An E.164 ATM address.
+/// let mut buf = [0u8; 16];
+/// let atma = Atma::from_text("+1.2345", &mut buf)?;
+/// assert_eq!((atma.format, atma.address), (Atma::E164, &b"12345"[..]));
+/// assert_eq!(atma.to_string(), "+12345");
+/// # Ok::<(), dnsbox::Error>(())
+/// ```
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub struct Atma<'a> {
     /// The address format: [`Atma::AESA`], [`Atma::E164`] or another value.
@@ -31,6 +42,11 @@ impl Atma<'_> {
     pub const E164: u8 = 1;
 
     /// Checks that the address is non-empty and, for E.164, all digits.
+    ///
+    /// # Errors
+    ///
+    /// [`Error::UnexpectedEof`] for an empty address,
+    /// [`Error::InvalidRdata`] for a non-digit in an E.164 address.
     pub fn validate(&self) -> Result<()> {
         if self.address.is_empty() {
             return Err(Error::UnexpectedEof);

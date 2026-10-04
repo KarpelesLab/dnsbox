@@ -12,6 +12,16 @@ use crate::{Error, Result, Rtype};
 ///
 /// The RDATA is an identifier-type code, a digest-type code and a digest
 /// (RFC 4701 §3.3); it must hold at least the two codes, i.e. 3 bytes.
+///
+/// ```
+/// use dnsbox::rdata::{Dhcid, ParseRdataText};
+///
+/// let mut buf = [0u8; 8];
+/// let dhcid = Dhcid::from_text("AAIB", &mut buf)?;
+/// assert_eq!((dhcid.identifier_type(), dhcid.digest_type()), (2, 1));
+/// assert!(dhcid.digest().is_empty());
+/// # Ok::<(), dnsbox::Error>(())
+/// ```
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub struct Dhcid<'a> {
     data: &'a [u8],
@@ -30,8 +40,11 @@ impl<'a> Dhcid<'a> {
     pub const DIGEST_SHA256: u8 = 1;
 
     /// Wraps the RDATA bytes, which must hold at least the identifier-type
-    /// and digest-type codes (RFC 4701 §3.3), else
-    /// [`Error::InvalidRdata`].
+    /// and digest-type codes (RFC 4701 §3.3).
+    ///
+    /// # Errors
+    ///
+    /// [`Error::InvalidRdata`] if `data` is shorter than 3 bytes.
     #[inline]
     pub const fn from_wire(data: &'a [u8]) -> Result<Self> {
         if data.len() < 3 {

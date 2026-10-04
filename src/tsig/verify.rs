@@ -17,6 +17,28 @@ use crate::{Class, Error, Rcode, Result, Rtype};
 pub const MAX_UNSIGNED: usize = 99;
 
 /// A TSIG record found in a message by [`find`].
+///
+/// ```
+/// # #[cfg(feature = "tsig")] {
+/// use dnsbox::tsig::{self, HmacKey, TsigAlgorithm, TsigSigner};
+/// use dnsbox::{Class, Message, MessageBuilder, NameBuf, Rtype};
+///
+/// let key_name: NameBuf = "k".parse()?;
+/// let key = HmacKey::new(&key_name, TsigAlgorithm::HmacSha256, b"secret");
+/// let zone: NameBuf = "example.com".parse()?;
+/// let mut buf = [0u8; 256];
+/// let mut b = MessageBuilder::query(&mut buf, 7, &zone, Rtype::SOA, Class::IN)?;
+/// TsigSigner::request(&key).sign(&mut b, 1_700_000_000)?;
+/// let msg = Message::parse(b.finish())?;
+///
+/// let record = tsig::find(&msg)?.expect("signed");
+/// assert_eq!(record.key_name, key_name.as_name());
+/// assert_eq!(record.mac().len(), 32);
+/// record.check_time(1_700_000_100)?; // within the 300 s fudge
+/// assert!(record.check_time(1_700_001_000).is_err());
+/// # }
+/// # Ok::<(), dnsbox::Error>(())
+/// ```
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 #[non_exhaustive]
 pub struct TsigRecord<'a> {
@@ -45,7 +67,11 @@ impl<'a> TsigRecord<'a> {
     }
 
     /// Checks that `now` lies within Time Signed ± Fudge (RFC 8945
-    /// §5.2.3); fails with [`Error::BadTime`] otherwise.
+    /// §5.2.3).
+    ///
+    /// # Errors
+    ///
+    /// [`Error::BadTime`] if it does not.
     pub const fn check_time(&self, now: u64) -> Result<()> {
         if now.abs_diff(self.data.time_signed) > self.data.fudge as u64 {
             Err(Error::BadTime)
@@ -59,6 +85,11 @@ impl<'a> TsigRecord<'a> {
     /// message without its TSIG and with the original ID, then either all
     /// TSIG variables or, for the later messages of a stream
     /// (`timers_only`), just Time Signed and Fudge (§5.3.1).
+    ///
+    /// # Errors
+    ///
+    /// [`Error::UnexpectedEof`] if `msg` is not the message the record was
+    /// found in (too short for its header or the record offset).
     pub fn feed_mac_input(
         &self,
         msg: &[u8],
@@ -86,7 +117,14 @@ impl<'a> TsigRecord<'a> {
 /// [`Error::MisplacedSignature`] (RFC 8945 §5.1: the message is answered
 /// with FORMERR); a TSIG whose CLASS is not ANY or TTL not 0 (§4.2)
 /// yields [`Error::InvalidRdata`], and octets after the TSIG (which no MAC
-/// covers) yield [`Error::TrailingData`]. Walks every record once.
+/// covers) yield [`Error::TrailingData`]. Walks every record once. See the
+/// [`TsigRecord`] example.
+///
+/// # Errors
+///
+/// [`Error::MisplacedSignature`], [`Error::InvalidRdata`] and
+/// [`Error::TrailingData`] as above, and the parse error of a malformed
+/// message.
 pub fn find<'a>(msg: &Message<'a>) -> Result<Option<TsigRecord<'a>>> {
     let arcount = msg.header().arcount;
     let mut additional = 0u16;
@@ -120,7 +158,20 @@ pub fn find<'a>(msg: &Message<'a>) -> Result<Option<TsigRecord<'a>>> {
 /// Checks a received MAC size against the MAC function's output length
 /// (RFC 8945 §5.2.2.1): it must be at most `digest_len` (and
 /// [`MAX_MAC_LEN`]) and at least the larger of 10 octets and half of
-/// `digest_len`. Fails with [`Error::BadMacSize`] (FORMERR) otherwise.
+/// `digest_len`.
+///
+/// # Errors
+///
+/// [`Error::BadMacSize`] (FORMERR) if the size is outside those bounds.
+///
+/// ```
+/// use dnsbox::tsig::check_mac_size;
+///
+/// assert!(check_mac_size(32, 32).is_ok()); // full HMAC-SHA256
+/// assert!(check_mac_size(16, 32).is_ok()); // hmac-sha256-128
+/// assert!(check_mac_size(8, 32).is_err()); // below half the digest
+/// assert!(check_mac_size(10, 16).is_ok()); // HMAC-MD5: 10-octet floor
+/// ```
 pub const fn check_mac_size(mac_len: usize, digest_len: usize) -> Result<()> {
     let floor = if digest_len / 2 > 10 {
         digest_len / 2
@@ -151,7 +202,24 @@ fn verify_mac<K: TsigKey>(
     }
 }
 
-/// A request whose TSIG verified; see [`verify_request`].
+/// A request whose TSIG verified; see [`verify_request`] and the
+/// [module example](super), where its [`signer`](Self::signer) signs the
+/// response.
+///
+/// ```
+/// use dnsbox::tsig::{RequestStatus, TsigKey};
+/// use dnsbox::{Message, MessageBuilder, Result};
+///
+/// // Server: answer a verified request with a signed response.
+/// fn answer<K: TsigKey>(query: &Message<'_>, status: RequestStatus<'_, '_, K>, now: u64, out: &mut [u8]) -> Result<usize> {
+///     let mut r = MessageBuilder::response(out, query)?;
+///     // ... answers ...
+///     if let Some(verified) = status.verified() {
+///         verified.signer().sign(&mut r, now)?;
+///     }
+///     Ok(r.finish().len())
+/// }
+/// ```
 pub struct Verified<'a, 'k, K: TsigKey> {
     /// The key that signed it.
     pub key: &'k K,
@@ -195,6 +263,34 @@ impl<K: TsigKey> fmt::Debug for Verified<'_, '_, K> {
 
 /// A request that failed TSIG processing; see [`verify_request`]. It knows
 /// how the server must answer (RFC 8945 §5.2, §5.3.2).
+///
+/// ```
+/// # #[cfg(feature = "tsig")] {
+/// use dnsbox::rdata::TsigRcode;
+/// use dnsbox::tsig::{self, HmacKey, TsigAlgorithm, TsigSigner};
+/// use dnsbox::{Class, Error, Message, MessageBuilder, NameBuf, Rcode, Rtype};
+///
+/// let key_name: NameBuf = "k".parse()?;
+/// let key = HmacKey::new(&key_name, TsigAlgorithm::HmacSha256, b"secret");
+/// let zone: NameBuf = "example.com".parse()?;
+/// let mut buf = [0u8; 256];
+/// let mut b = MessageBuilder::query(&mut buf, 7, &zone, Rtype::SOA, Class::IN)?;
+/// TsigSigner::request(&key).sign(&mut b, 1_700_000_000)?;
+/// let query = Message::parse(b.finish())?;
+///
+/// // The server's clock is an hour ahead: BADTIME.
+/// let now = 1_700_003_600;
+/// let rejected = tsig::verify_request(&query, &key, now).rejected().expect("rejected");
+/// assert_eq!(rejected.error, Error::BadTime);
+/// assert_eq!((rejected.rcode(), rejected.tsig_error()), (Rcode::NOTAUTH, TsigRcode::BADTIME));
+///
+/// let mut rbuf = [0u8; 256];
+/// let mut r = MessageBuilder::response(&mut rbuf, &query)?;
+/// r.set_rcode(rejected.rcode());
+/// rejected.sign_response(&mut r, now)?; // signed, with the server time
+/// # }
+/// # Ok::<(), dnsbox::Error>(())
+/// ```
 pub struct Rejected<'a, 'k, K: TsigKey> {
     /// Why: [`Error::MisplacedSignature`], [`Error::TrailingData`],
     /// [`Error::BadMacSize`] or any parse error (FORMERR), or
@@ -229,6 +325,10 @@ impl<K: TsigKey> Rejected<'_, '_, K> {
     ///   request and the server time `now` in Other Data (§5.2.3);
     /// - BADTRUNC: signed with the request MAC at time `now` (§5.2.4);
     /// - FORMERR: no TSIG at all.
+    ///
+    /// # Errors
+    ///
+    /// As [`TsigSigner::sign`].
     pub fn sign_response<B: OutBuf>(&self, b: &mut MessageBuilder<B>, now: u64) -> Result<()> {
         let Some(record) = self.record else {
             return Ok(());
@@ -284,6 +384,18 @@ impl<K: TsigKey> fmt::Debug for Rejected<'_, '_, K> {
 }
 
 /// The outcome of [`verify_request`].
+///
+/// ```
+/// use dnsbox::tsig::{RequestStatus, TsigKey};
+/// use dnsbox::Rcode;
+///
+/// fn rcode_for<K: TsigKey>(status: &RequestStatus<'_, '_, K>) -> Rcode {
+///     match status {
+///         RequestStatus::Unsigned | RequestStatus::Verified(_) => Rcode::NOERROR,
+///         RequestStatus::Rejected(r) => r.rcode(),
+///     }
+/// }
+/// ```
 pub enum RequestStatus<'a, 'k, K: TsigKey> {
     /// The request carries no TSIG.
     Unsigned,
@@ -354,6 +466,7 @@ impl<K: TsigKey> fmt::Debug for RequestStatus<'_, '_, K> {
 /// Replay protection beyond the time window (rejecting a Time Signed
 /// older than the last one seen for the key, §5.2.3 "SHOULD") is left to
 /// the caller, which has the state: compare `verified.record.data.time_signed`.
+/// See the [module example](super) and [`Rejected`].
 pub fn verify_request<'a, 'k, S: KeyStore + ?Sized>(
     msg: &Message<'a>,
     keys: &'k S,
@@ -405,7 +518,22 @@ pub fn verify_request<'a, 'k, S: KeyStore + ?Sized>(
 /// the stream is complete.
 ///
 /// After an error the transaction must be abandoned: the verifier's chain
-/// state is no longer meaningful.
+/// state is no longer meaningful. See the [module example](super) and the
+/// [`TsigSigner`] stream example.
+///
+/// ```
+/// use dnsbox::tsig::{TsigKey, TsigVerifier};
+/// use dnsbox::{Message, Result};
+///
+/// // Client: check every message of a zone transfer stream.
+/// fn check_stream<K: TsigKey>(key: &K, request_mac: &[u8], messages: &[&[u8]], now: u64) -> Result<()> {
+///     let mut v = TsigVerifier::new(key, request_mac)?;
+///     for wire in messages {
+///         v.verify(&Message::parse(wire)?, now)?; // Ok(None): unsigned middle message
+///     }
+///     v.finish() // the last message must be signed
+/// }
+/// ```
 pub struct TsigVerifier<'k, K: TsigKey> {
     key: &'k K,
     prior: MacBuf,
@@ -417,6 +545,11 @@ pub struct TsigVerifier<'k, K: TsigKey> {
 impl<'k, K: TsigKey> TsigVerifier<'k, K> {
     /// A verifier for the response to a request signed with `key` whose MAC
     /// was `request_mac`.
+    ///
+    /// # Errors
+    ///
+    /// [`Error::BadMacSize`] if `request_mac` is longer than
+    /// [`MAX_MAC_LEN`](super::MAX_MAC_LEN) bytes.
     pub fn new(key: &'k K, request_mac: &[u8]) -> Result<Self> {
         Ok(TsigVerifier {
             key,
@@ -431,7 +564,9 @@ impl<'k, K: TsigKey> TsigVerifier<'k, K> {
     ///
     /// Returns `Ok(Some(record))` for a correctly signed message and
     /// `Ok(None)` for an unsigned message in the middle of a stream (at
-    /// most 99 in a row, never the first; RFC 8945 §5.3.1). Errors:
+    /// most 99 in a row, never the first; RFC 8945 §5.3.1).
+    ///
+    /// # Errors
     ///
     /// - [`Error::Unsigned`]: no TSIG where one is required;
     /// - [`Error::BadKey`]: signed with another key or algorithm;
@@ -483,7 +618,11 @@ impl<'k, K: TsigKey> TsigVerifier<'k, K> {
     }
 
     /// Ends the stream: checks that it ended with a signed message
-    /// (RFC 8945 §5.3.1); fails with [`Error::Unsigned`] otherwise.
+    /// (RFC 8945 §5.3.1).
+    ///
+    /// # Errors
+    ///
+    /// [`Error::Unsigned`] if it did not (or no message was verified).
     pub fn finish(self) -> Result<()> {
         if self.first || self.unsigned > 0 {
             Err(Error::Unsigned)

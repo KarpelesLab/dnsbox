@@ -70,6 +70,8 @@ pub struct RsaPublicKey<'a> {
 impl<'a> RsaPublicKey<'a> {
     /// Parses the public key field of an RSA DNSKEY.
     ///
+    /// # Errors
+    ///
     /// Fails with [`Error::InvalidKey`] if it is truncated, if either number
     /// is empty, or if either has a leading zero octet (RFC 3110 §2).
     pub fn from_dnskey(public_key: &'a [u8]) -> Result<Self> {
@@ -105,6 +107,8 @@ impl<'a> RsaPublicKey<'a> {
     }
 
     /// Writes the RFC 3110 encoding (the DNSKEY public key field).
+    ///
+    /// # Errors
     ///
     /// Fails with [`Error::InvalidKey`] if a number is empty, has a leading
     /// zero octet, or the exponent is longer than 65535 octets.

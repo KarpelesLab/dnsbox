@@ -15,6 +15,10 @@ use {
 /// Writes the data a DS digest is computed over: the DNSKEY owner name in
 /// canonical form followed by the DNSKEY RDATA (RFC 4034 §5.1.4).
 ///
+/// # Errors
+///
+/// [`Error::BufferTooSmall`] if `out` is full.
+///
 /// ```
 /// use dnsbox::dnssec::{Algorithm, ds_digest_input};
 /// use dnsbox::rdata::Dnskey;
@@ -73,6 +77,8 @@ pub struct DsDigest {
 impl DsDigest {
     /// Computes the DS digest of `key`, owned by `owner`, with
     /// `digest_type` (RFC 4034 §5.1.4).
+    ///
+    /// # Errors
     ///
     /// Fails with [`Error::UnsupportedAlgorithm`] for digest types other
     /// than SHA-1, SHA-256 and SHA-384.
@@ -134,6 +140,8 @@ impl DsDigest {
 
 /// Checks that `ds` authenticates `key`, owned by `owner`
 /// (RFC 4035 §5.2): key tag, algorithm and digest must match.
+///
+/// # Errors
 ///
 /// Fails with [`Error::UnsupportedAlgorithm`] for unsupported digest
 /// types, [`Error::KeyMismatch`] if the key tag or algorithm differ, and

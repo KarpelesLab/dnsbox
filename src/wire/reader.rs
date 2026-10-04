@@ -10,7 +10,29 @@ use crate::{Error, Result};
 /// anywhere *earlier* in the full message (RFC 1035 §4.1.4).
 ///
 /// All `read_*` methods either succeed and advance the cursor, or fail and
-/// leave it where it was.
+/// leave it where it was. They fail with [`Error::UnexpectedEof`] when the
+/// window holds too few bytes.
+///
+/// # Examples
+///
+/// ```
+/// use dnsbox::{Error, WireReader};
+///
+/// let data = [0x00, 0x2a, 0xde, 0xad, 0xbe, 0xef, 3, b'a', b'b', b'c'];
+/// let mut r = WireReader::new(&data);
+/// assert_eq!(r.read_u16()?, 42);
+/// assert_eq!(r.read_u32()?, 0xdead_beef);
+/// assert_eq!(r.read_char_string()?.as_bytes(), b"abc");
+/// assert!(r.is_empty());
+///
+/// // A failed read leaves the cursor alone.
+/// let mut r = WireReader::new(&data[..3]);
+/// assert_eq!(r.read_u32(), Err(Error::UnexpectedEof));
+/// assert_eq!(r.position(), 0);
+/// assert_eq!(r.read_u16()?, 42);
+/// assert_eq!(r.finish(), Err(Error::TrailingData)); // one byte unread
+/// # Ok::<(), Error>(())
+/// ```
 #[derive(Clone, Copy, Debug)]
 pub struct WireReader<'a> {
     msg: &'a [u8],
@@ -33,7 +55,20 @@ impl<'a> WireReader<'a> {
     /// Creates a reader over `msg[start..end]` that can still follow
     /// compression pointers into the rest of `msg`.
     ///
-    /// Fails with [`Error::UnexpectedEof`] if the range is not within `msg`.
+    /// # Errors
+    ///
+    /// [`Error::UnexpectedEof`] if the range is not within `msg`.
+    ///
+    /// ```
+    /// use dnsbox::WireReader;
+    ///
+    /// // "a." at offset 0, then "b" + a pointer to it in a 4-byte window.
+    /// let msg = b"\x01a\x00\x01b\xc0\x00";
+    /// let mut r = WireReader::with_range(msg, 3, 7)?;
+    /// assert_eq!(r.read_name()?.to_string(), "b.a.");
+    /// assert!(r.is_empty());
+    /// # Ok::<(), dnsbox::Error>(())
+    /// ```
     #[inline]
     pub const fn with_range(msg: &'a [u8], start: usize, end: usize) -> Result<Self> {
         if start > end || end > msg.len() {
@@ -81,10 +116,14 @@ impl<'a> WireReader<'a> {
         self.pos >= self.end
     }
 
-    /// Fails with [`Error::TrailingData`] unless the window is exhausted.
+    /// Checks that the window is exhausted.
     ///
     /// Record-data parsers are expected to consume their whole RDATA; the
     /// RDATA dispatcher calls this after every typed parse.
+    ///
+    /// # Errors
+    ///
+    /// [`Error::TrailingData`] if unread bytes remain.
     #[inline]
     pub const fn finish(&self) -> Result<()> {
         if self.pos == self.end {
@@ -102,6 +141,10 @@ impl<'a> WireReader<'a> {
     }
 
     /// Returns the next byte without consuming it.
+    ///
+    /// # Errors
+    ///
+    /// [`Error::UnexpectedEof`] if the window is exhausted.
     #[inline]
     pub fn peek_u8(&self) -> Result<u8> {
         if self.pos < self.end {
@@ -111,7 +154,12 @@ impl<'a> WireReader<'a> {
         }
     }
 
-    /// Consumes and returns the next `n` bytes.
+    /// Consumes and returns the next `n` bytes (a slice of the message, no
+    /// copy).
+    ///
+    /// # Errors
+    ///
+    /// [`Error::UnexpectedEof`] if fewer than `n` bytes remain.
     #[inline]
     pub fn read_bytes(&mut self, n: usize) -> Result<&'a [u8]> {
         if n > self.remaining() {
@@ -134,12 +182,20 @@ impl<'a> WireReader<'a> {
     }
 
     /// Skips `n` bytes.
+    ///
+    /// # Errors
+    ///
+    /// [`Error::UnexpectedEof`] if fewer than `n` bytes remain.
     #[inline]
     pub fn skip(&mut self, n: usize) -> Result<()> {
         self.read_bytes(n).map(|_| ())
     }
 
     /// Consumes `N` bytes into an array.
+    ///
+    /// # Errors
+    ///
+    /// [`Error::UnexpectedEof`] if fewer than `N` bytes remain.
     #[inline]
     pub fn read_array<const N: usize>(&mut self) -> Result<[u8; N]> {
         let bytes = self.read_bytes(N)?;
@@ -149,6 +205,10 @@ impl<'a> WireReader<'a> {
     }
 
     /// Reads one byte.
+    ///
+    /// # Errors
+    ///
+    /// [`Error::UnexpectedEof`] if the window is exhausted.
     #[inline]
     pub fn read_u8(&mut self) -> Result<u8> {
         let b = self.peek_u8()?;
@@ -157,12 +217,20 @@ impl<'a> WireReader<'a> {
     }
 
     /// Reads a big-endian (network order) `u16`.
+    ///
+    /// # Errors
+    ///
+    /// [`Error::UnexpectedEof`] if fewer than 2 bytes remain.
     #[inline]
     pub fn read_u16(&mut self) -> Result<u16> {
         self.read_array().map(u16::from_be_bytes)
     }
 
     /// Reads a big-endian `u32`.
+    ///
+    /// # Errors
+    ///
+    /// [`Error::UnexpectedEof`] if fewer than 4 bytes remain.
     #[inline]
     pub fn read_u32(&mut self) -> Result<u32> {
         self.read_array().map(u32::from_be_bytes)
@@ -170,6 +238,10 @@ impl<'a> WireReader<'a> {
 
     /// Reads a big-endian 48-bit unsigned integer (e.g. TSIG Time Signed,
     /// RFC 8945 §4.2).
+    ///
+    /// # Errors
+    ///
+    /// [`Error::UnexpectedEof`] if fewer than 6 bytes remain.
     #[inline]
     pub fn read_u48(&mut self) -> Result<u64> {
         let [a, b, c, d, e, f] = self.read_array()?;
@@ -177,6 +249,10 @@ impl<'a> WireReader<'a> {
     }
 
     /// Reads a big-endian `u64`.
+    ///
+    /// # Errors
+    ///
+    /// [`Error::UnexpectedEof`] if fewer than 8 bytes remain.
     #[inline]
     pub fn read_u64(&mut self) -> Result<u64> {
         self.read_array().map(u64::from_be_bytes)
@@ -184,6 +260,10 @@ impl<'a> WireReader<'a> {
 
     /// Reads a `<character-string>`: one length octet followed by that many
     /// bytes (RFC 1035 §3.3).
+    ///
+    /// # Errors
+    ///
+    /// [`Error::UnexpectedEof`] if the window ends before the string does.
     #[inline]
     pub fn read_char_string(&mut self) -> Result<CharStr<'a>> {
         let save = self.pos;
@@ -200,6 +280,10 @@ impl<'a> WireReader<'a> {
     /// Splits off the next `n` bytes as a separate reader (sharing the same
     /// message, so names in it can still be decompressed) and advances past
     /// them. Use it for length-prefixed sub-structures.
+    ///
+    /// # Errors
+    ///
+    /// [`Error::UnexpectedEof`] if fewer than `n` bytes remain.
     #[inline]
     pub fn sub_reader(&mut self, n: usize) -> Result<WireReader<'a>> {
         if n > self.remaining() {
@@ -222,6 +306,15 @@ impl<'a> WireReader<'a> {
     /// of the types listed in RFC 3597 §4 (RP, AFSDB, RT, SIG, PX, NXT,
     /// NAPTR, SRV). Everything else should use
     /// [`read_name_uncompressed`](Self::read_name_uncompressed).
+    ///
+    /// # Errors
+    ///
+    /// [`Error::UnexpectedEof`] if the name runs past the window,
+    /// [`Error::LabelTooLong`] / [`Error::NameTooLong`] for oversized
+    /// labels or names, [`Error::BadLabelType`] for reserved label types,
+    /// [`Error::BadPointer`] for a pointer that does not point strictly
+    /// backwards, [`Error::TooManyPointers`] beyond
+    /// [`MAX_POINTERS`](crate::name::MAX_POINTERS).
     #[inline]
     pub fn read_name(&mut self) -> Result<Name<'a>> {
         let (name, next) = Name::parse_bounded(self.msg, self.pos, self.end, true)?;
@@ -229,8 +322,12 @@ impl<'a> WireReader<'a> {
         Ok(name)
     }
 
-    /// Reads a domain name that must not be compressed (RFC 3597 §4); a
-    /// compression pointer yields [`Error::UnexpectedPointer`].
+    /// Reads a domain name that must not be compressed (RFC 3597 §4).
+    ///
+    /// # Errors
+    ///
+    /// [`Error::UnexpectedPointer`] for a compression pointer, otherwise
+    /// as [`read_name`](Self::read_name).
     #[inline]
     pub fn read_name_uncompressed(&mut self) -> Result<Name<'a>> {
         let (name, next) = Name::parse_bounded(self.msg, self.pos, self.end, false)?;

@@ -13,6 +13,15 @@ open_enum! {
     ///
     /// Presentation format uses the mnemonic when there is one and the
     /// bare number otherwise (RFC 4398 §2.2).
+    ///
+    /// ```
+    /// use dnsbox::rdata::CertType;
+    ///
+    /// assert_eq!("pgp".parse::<CertType>()?, CertType::PGP);
+    /// assert_eq!(CertType::PKIX.get(), 1);
+    /// assert_eq!(CertType::new(9).to_string(), "9");
+    /// # Ok::<(), dnsbox::Error>(())
+    /// ```
     pub struct CertType(u16), generic "";
     /// X.509 as per PKIX (RFC 4398 §2.1).
     PKIX = 1 => "PKIX",
@@ -38,6 +47,18 @@ open_enum! {
 
 /// `CERT` record data: a certificate or certificate revocation list
 /// (RFC 4398 §2).
+///
+/// ```
+/// use dnsbox::rdata::{Cert, CertType, ParseRdataText};
+///
+/// // A certificate type and algorithm may be given as mnemonics.
+/// let mut buf = [0u8; 64];
+/// let cert = Cert::from_text("IPKIX 12345 RSASHA256 aHR0cHM6Ly9leGFtcGxlLmNvbS9jLmRlcg==", &mut buf)?;
+/// assert_eq!(cert.cert_type, CertType::IPKIX);
+/// assert_eq!(cert.certificate, b"https://example.com/c.der");
+/// assert_eq!(cert.to_string(), "IPKIX 12345 8 aHR0cHM6Ly9leGFtcGxlLmNvbS9jLmRlcg==");
+/// # Ok::<(), dnsbox::Error>(())
+/// ```
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub struct Cert<'a> {
     /// The certificate type (RFC 4398 §2.1).

@@ -14,6 +14,16 @@ use crate::wire::{Composer, WireReader};
 /// To add padding while building, use [`PaddingLen`] or let
 /// [`MessageBuilder::push_edns_padded`](crate::MessageBuilder::push_edns_padded)
 /// size it from a [`PaddingPolicy`](super::PaddingPolicy) (RFC 8467).
+///
+/// ```
+/// use dnsbox::edns::{Opt, Padding};
+///
+/// let opt = Opt::new(b"\x00\x0c\x00\x04\x00\x00\x00\x00")?;
+/// let padding: Padding<'_> = opt.get().expect("present")?;
+/// assert_eq!(padding.len(), 4);
+/// assert_eq!(padding.to_string(), "PADDING=4");
+/// # Ok::<(), dnsbox::Error>(())
+/// ```
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub struct Padding<'a> {
     /// The padding octets.

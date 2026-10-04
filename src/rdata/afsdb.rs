@@ -10,6 +10,17 @@ use crate::{Result, Rtype};
 
 /// `AFSDB` record data: an AFS cell database or DCE authenticated name
 /// server (RFC 1183 §1; deprecated for AFS by RFC 5864 in favour of SRV).
+///
+/// ```
+/// use dnsbox::rdata::{Afsdb, ParseRdataText};
+///
+/// // RFC 1183 §1: an AFS cell database server.
+/// let mut buf = [0u8; 32];
+/// let afsdb = Afsdb::from_text("1 jack.toaster.com.", &mut buf)?;
+/// assert_eq!(afsdb.subtype, 1);
+/// assert_eq!(afsdb.hostname.to_string(), "jack.toaster.com.");
+/// # Ok::<(), dnsbox::Error>(())
+/// ```
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub struct Afsdb<'a> {
     /// Subtype: 1 = AFS version 3 volume location server, 2 = DCE/NCA

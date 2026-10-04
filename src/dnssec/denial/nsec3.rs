@@ -12,6 +12,18 @@ use crate::rdata::Nsec3;
 use crate::{Result, Rtype};
 
 /// An authenticated NSEC3 record: its hashed owner name and data.
+///
+/// See [`Nsec3Proof`] for building one by hand;
+/// [`from_record`](Self::from_record) takes it from a message:
+///
+/// ```
+/// use dnsbox::dnssec::Nsec3Record;
+/// use dnsbox::Message;
+///
+/// fn nsec3_records<'a>(msg: &Message<'a>) -> impl Iterator<Item = Nsec3Record<'a>> + Clone {
+///     msg.authority().filter_map(Result::ok).filter_map(|rr| Nsec3Record::from_record(&rr))
+/// }
+/// ```
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct Nsec3Record<'a> {
     /// The hashed owner name: the base32hex hash label followed by the
@@ -56,6 +68,21 @@ impl<'a> From<&Nsec3Record<'a>> for Nsec3Record<'a> {
 /// [`PurecryptoNsec3Hasher`] (feature `dnssec-digest`) implements it with
 /// SHA-1 from `purecrypto`. Any function or closure with the signature of
 /// [`nsec3_hash`](crate::dnssec::nsec3_hash) is a hasher too.
+///
+/// ```
+/// use dnsbox::dnssec::{Nsec3Hash, Nsec3HashAlgorithm, Nsec3Hasher};
+/// use dnsbox::{Error, Name, NameBuf, Result};
+///
+/// // A hasher backed by some other SHA-1 implementation.
+/// fn my_hasher(name: Name<'_>, alg: Nsec3HashAlgorithm, iterations: u16, salt: &[u8]) -> Result<Nsec3Hash> {
+///     let _ = (name, alg, iterations, salt);
+///     Err(Error::UnsupportedAlgorithm) // call your SHA-1 here
+/// }
+/// let name: NameBuf = "example".parse()?;
+/// assert!(my_hasher.supports(Nsec3HashAlgorithm::SHA1));
+/// assert!(my_hasher.hash(name.as_name(), Nsec3HashAlgorithm::SHA1, 0, &[]).is_err());
+/// # Ok::<(), Error>(())
+/// ```
 pub trait Nsec3Hasher {
     /// Whether names can be hashed with `algorithm`. NSEC3 records of other
     /// algorithms are ignored (RFC 5155 §8.1). The default accepts SHA-1,
@@ -66,6 +93,11 @@ pub trait Nsec3Hasher {
 
     /// Hashes `name` with `algorithm`, `iterations` additional iterations
     /// and `salt` (RFC 5155 §5).
+    ///
+    /// # Errors
+    ///
+    /// [`Error::UnsupportedAlgorithm`](crate::Error::UnsupportedAlgorithm)
+    /// for an algorithm the hasher does not implement.
     fn hash(
         &self,
         name: Name<'_>,
@@ -93,6 +125,17 @@ where
 
 /// The `purecrypto` NSEC3 hasher: SHA-1 through
 /// [`nsec3_hash`](crate::dnssec::nsec3_hash).
+///
+/// ```
+/// use dnsbox::NameBuf;
+/// use dnsbox::dnssec::{Nsec3HashAlgorithm, Nsec3Hasher, PurecryptoNsec3Hasher};
+///
+/// // RFC 5155 Appendix A: H(a.example) = 35mthgpgcu1qg68fab165klnsnk3dpvl
+/// let name: NameBuf = "a.example".parse()?;
+/// let hash = PurecryptoNsec3Hasher.hash(name.as_name(), Nsec3HashAlgorithm::SHA1, 12, &[0xaa, 0xbb, 0xcc, 0xdd])?;
+/// assert_eq!(hash.to_string(), "35MTHGPGCU1QG68FAB165KLNSNK3DPVL");
+/// # Ok::<(), dnsbox::Error>(())
+/// ```
 #[cfg(feature = "dnssec-digest")]
 #[cfg_attr(docsrs, doc(cfg(feature = "dnssec-digest")))]
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Hash)]
@@ -122,6 +165,17 @@ impl Nsec3Hasher for PurecryptoNsec3Hasher {
 /// The records' signatures must still have been verified, so that the
 /// iteration count is authentic (RFC 9276 §3.2); resolvers should then
 /// add Extended DNS Error 27, "Unsupported NSEC3 Iterations Value".
+///
+/// ```
+/// use dnsbox::dnssec::{BogusReason, DenialStatus, InsecureReason, Nsec3Limits};
+///
+/// let limits = Nsec3Limits::DEFAULT; // insecure above 100, bogus above 500
+/// assert_eq!(limits.check(0), None);
+/// assert_eq!(limits.check(150), Some(DenialStatus::Insecure(InsecureReason::Iterations)));
+/// assert_eq!(limits.check(501), Some(DenialStatus::Bogus(BogusReason::Iterations)));
+/// // RFC 9276 §3.1: zones should use 0, so a strict validator can say so.
+/// assert!(Nsec3Limits::new(0, 0).check(1).is_some());
+/// ```
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub struct Nsec3Limits {
     /// Iteration counts above this make the response insecure.
@@ -423,8 +477,12 @@ where
     /// without SOA ([`BogusReason::ZoneCut`]).
     ///
     /// [`ClosestEncloser::opt_out`] tells whether the next closer name is
-    /// in an Opt-Out span. Fails with the status the other checks would
-    /// return for unusable records, iteration limits or a missing proof.
+    /// in an Opt-Out span.
+    ///
+    /// # Errors
+    ///
+    /// The status the other checks would return for unusable records,
+    /// iteration limits or a missing proof.
     pub fn closest_encloser<'q>(
         &self,
         qname: Name<'q>,

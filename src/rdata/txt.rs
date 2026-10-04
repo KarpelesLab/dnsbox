@@ -12,6 +12,17 @@ use crate::{Error, Result, Rtype};
 /// (RFC 1035 §3.3.14).
 ///
 /// To build a TXT record from separate strings, use [`TxtParts`].
+///
+/// ```
+/// use dnsbox::rdata::{ParseRdataText, Txt};
+///
+/// let mut buf = [0u8; 64];
+/// let txt = Txt::from_text(r#""v=spf1 mx -all" second"#, &mut buf)?;
+/// let strings: Vec<&[u8]> = txt.strings().map(|s| s.as_bytes()).collect();
+/// assert_eq!(strings, [&b"v=spf1 mx -all"[..], b"second"]);
+/// assert_eq!(txt.to_string(), r#""v=spf1 mx -all" "second""#);
+/// # Ok::<(), dnsbox::Error>(())
+/// ```
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub struct Txt<'a> {
     strings: CharStrs<'a>,
@@ -20,6 +31,11 @@ pub struct Txt<'a> {
 impl<'a> Txt<'a> {
     /// Wraps encoded character-strings (length octets included), which
     /// must hold at least one string.
+    ///
+    /// # Errors
+    ///
+    /// [`Error::InvalidRdata`] for an empty buffer,
+    /// [`Error::UnexpectedEof`] if the last string is cut short.
     pub fn from_wire(wire: &'a [u8]) -> Result<Self> {
         let strings = CharStrs::new(wire)?;
         if strings.is_empty() {

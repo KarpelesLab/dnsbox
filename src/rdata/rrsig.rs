@@ -94,6 +94,11 @@ macro_rules! rrsig_like {
             /// the signed data (RFC 4034 §3.1.8.1, RFC 2931 §3.1). Wrap `c`
             /// in [`Canonical`](crate::wire::Canonical) to lowercase the
             /// signer's name as the signature requires.
+            ///
+            /// # Errors
+            ///
+            /// [`Error::BufferTooSmall`](crate::Error::BufferTooSmall) if
+            /// `c` is full.
             pub fn compose_unsigned<C: Composer + ?Sized>(&self, c: &mut C) -> Result<()> {
                 c.put_u16(self.type_covered.get())?;
                 c.put_u8(self.algorithm.get())?;
@@ -172,6 +177,26 @@ rrsig_like! {
     ///
     /// The signer's name is never compressed (RFC 4034 §3.1.7). See
     /// [`crate::dnssec`] for signed-data construction and validation.
+    ///
+    /// ```
+    /// use dnsbox::rdata::{ParseRdataText, Rrsig};
+    /// use dnsbox::{Rtype, dnssec::Algorithm};
+    ///
+    /// // Times may be given as YYYYMMDDHHmmSS or seconds since 1970.
+    /// let mut buf = [0u8; 64];
+    /// let rrsig = Rrsig::from_text(
+    ///     "A ED25519 2 3600 20261101000000 20261001000000 3613 example. AQID",
+    ///     &mut buf,
+    /// )?;
+    /// assert_eq!((rrsig.type_covered, rrsig.algorithm), (Rtype::A, Algorithm::ED25519));
+    /// assert_eq!((rrsig.labels, rrsig.original_ttl, rrsig.key_tag), (2, 3600, 3613));
+    /// assert_eq!(rrsig.signer_name.to_string(), "example.");
+    /// assert_eq!(
+    ///     rrsig.to_string(),
+    ///     "A 15 2 3600 20261101000000 20261001000000 3613 example. AQID"
+    /// );
+    /// # Ok::<(), dnsbox::Error>(())
+    /// ```
     Rrsig, RRSIG, read_name_uncompressed
 }
 
@@ -179,6 +204,17 @@ rrsig_like! {
     /// `SIG` record data: the RFC 2535 signature, used today for SIG(0)
     /// transaction signatures (RFC 2931). Its signer's name may be
     /// compressed on receipt (RFC 3597 §4).
+    ///
+    /// ```
+    /// use dnsbox::rdata::{ParseRdataText, Sig};
+    /// use dnsbox::Rtype;
+    ///
+    /// // A SIG(0) record covers type 0 (RFC 2931 §3).
+    /// let mut buf = [0u8; 64];
+    /// let sig = Sig::from_text("TYPE0 15 0 0 20261001000500 20261001000000 4711 client.example. AQID", &mut buf)?;
+    /// assert_eq!(sig.type_covered, Rtype::new(0));
+    /// # Ok::<(), dnsbox::Error>(())
+    /// ```
     Sig, SIG, read_name
 }
 

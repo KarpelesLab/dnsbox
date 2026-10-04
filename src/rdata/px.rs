@@ -10,6 +10,17 @@ use crate::{Class, Result, Rtype};
 
 /// `PX` record data: X.400 / RFC 822 address mapping information
 /// (RFC 2163 §4). Class IN only.
+///
+/// ```
+/// use dnsbox::rdata::{Px, ParseRdataText};
+///
+/// // RFC 2163 §4.
+/// let mut buf = [0u8; 64];
+/// let px = Px::from_text("50 it. ADMD-garr.C-it.", &mut buf)?;
+/// assert_eq!(px.preference, 50);
+/// assert_eq!(px.mapx400.to_string(), "ADMD-garr.C-it.");
+/// # Ok::<(), dnsbox::Error>(())
+/// ```
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub struct Px<'a> {
     /// Preference; lower values are preferred.

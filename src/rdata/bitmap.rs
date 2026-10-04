@@ -27,6 +27,11 @@ pub struct TypeBitmap<'a>(&'a [u8]);
 
 impl<'a> TypeBitmap<'a> {
     /// Validates `wire` as a complete type bitmap.
+    ///
+    /// # Errors
+    ///
+    /// [`Error::InvalidRdata`] for windows out of order, a block length
+    /// outside 1–32, or a truncated block.
     pub fn new(wire: &'a [u8]) -> Result<Self> {
         let mut rest = wire;
         let mut last: Option<u8> = None;
@@ -45,6 +50,10 @@ impl<'a> TypeBitmap<'a> {
 
     /// Reads the rest of `rdata` as a type bitmap (it is always the last
     /// field of the RDATA).
+    ///
+    /// # Errors
+    ///
+    /// As [`new`](Self::new); the reader is not moved then.
     pub fn parse(rdata: &mut WireReader<'a>) -> Result<Self> {
         let bitmap = Self::new(rdata.peek_rest())?;
         rdata.read_rest();
@@ -94,6 +103,10 @@ impl<'a> TypeBitmap<'a> {
     }
 
     /// Writes the bitmap for `types` (in any order; duplicates ignored).
+    ///
+    /// # Errors
+    ///
+    /// [`Error::BufferTooSmall`] if `c` is full.
     pub fn compose<C: Composer + ?Sized>(types: &[Rtype], c: &mut C) -> Result<()> {
         let mut windows = [false; 256];
         for t in types {
@@ -151,6 +164,17 @@ impl fmt::Debug for TypeBitmap<'_> {
 }
 
 /// Iterator over the types in a [`TypeBitmap`].
+///
+/// ```
+/// use dnsbox::Rtype;
+/// use dnsbox::rdata::TypeBitmap;
+///
+/// // Window 0: A, NS; window 1: CAA (257).
+/// let bitmap = TypeBitmap::new(&[0, 1, 0x60, 1, 1, 0x40])?;
+/// let types: Vec<Rtype> = bitmap.iter().collect();
+/// assert_eq!(types, [Rtype::A, Rtype::NS, Rtype::CAA]);
+/// # Ok::<(), dnsbox::Error>(())
+/// ```
 #[derive(Clone, Debug)]
 #[must_use = "iterators are lazy and do nothing unless consumed"]
 pub struct TypeBitmapIter<'a> {

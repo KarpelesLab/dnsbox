@@ -15,6 +15,18 @@ use crate::{Error, Result, Rtype};
 /// The HIT and the public key are both non-empty (their length fields
 /// would otherwise be meaningless; BIND rejects them too). To build a HIP
 /// record from a list of names, use [`HipParts`].
+///
+/// ```
+/// use dnsbox::rdata::{Hip, IpseckeyAlgorithm, ParseRdataText};
+///
+/// let mut buf = [0u8; 64];
+/// let hip = Hip::from_text("2 200100107B1A74DF365639CC39F1D578 AQID rvs1.example. rvs2.example.", &mut buf)?;
+/// assert_eq!(hip.pk_algorithm, IpseckeyAlgorithm::RSA);
+/// assert_eq!(hip.hit.len(), 16);
+/// let servers: Vec<String> = hip.servers.iter().map(|n| n.to_string()).collect();
+/// assert_eq!(servers, ["rvs1.example.", "rvs2.example."]);
+/// # Ok::<(), dnsbox::Error>(())
+/// ```
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub struct Hip<'a> {
     /// The public-key algorithm (shares the IPSECKEY registry,
@@ -30,12 +42,27 @@ pub struct Hip<'a> {
 
 /// The rendezvous-server list of a [`Hip`] record: a validated run of
 /// uncompressed domain names filling the rest of the RDATA (RFC 8005 §5).
+///
+/// ```
+/// use dnsbox::rdata::HipServers;
+///
+/// let servers = HipServers::new(b"\x04rvs1\x07example\x00\x04rvs2\x07example\x00")?;
+/// assert_eq!(servers.iter().count(), 2);
+/// assert!(HipServers::new(b"")?.is_empty());
+/// assert!(HipServers::new(b"\x04rvs1\xc0\x00").is_err()); // no compression
+/// # Ok::<(), dnsbox::Error>(())
+/// ```
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Default)]
 pub struct HipServers<'a>(&'a [u8]);
 
 impl<'a> HipServers<'a> {
     /// Validates `wire` as a sequence of uncompressed names (possibly
     /// empty).
+    ///
+    /// # Errors
+    ///
+    /// [`Error::UnexpectedPointer`] for a compressed name, or a name
+    /// decoding error.
     pub fn new(wire: &'a [u8]) -> Result<Self> {
         let mut r = WireReader::new(wire);
         while !r.is_empty() {
@@ -83,6 +110,16 @@ impl<'a> IntoIterator for &HipServers<'a> {
 }
 
 /// Iterator over [`HipServers`].
+///
+/// ```
+/// use dnsbox::rdata::HipServers;
+///
+/// let servers = HipServers::new(b"\x03rvs\x07example\x00")?;
+/// for name in &servers {
+///     assert_eq!(name.to_string(), "rvs.example.");
+/// }
+/// # Ok::<(), dnsbox::Error>(())
+/// ```
 #[derive(Clone, Debug)]
 #[must_use = "iterators are lazy and do nothing unless consumed"]
 pub struct HipServerIter<'a>(WireReader<'a>);

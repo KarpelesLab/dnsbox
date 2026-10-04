@@ -40,8 +40,12 @@ impl<B: OutBuf> MessageBuilder<B> {
     /// other records can be appended with
     /// [`push_additional`](Self::push_additional).
     ///
-    /// Fails with [`Error::SectionOrder`](crate::Error::SectionOrder) if
-    /// anything was written already. On error the builder is unchanged.
+    /// # Errors
+    ///
+    /// [`Error::SectionOrder`](crate::Error::SectionOrder) if anything was
+    /// written already, otherwise as
+    /// [`push_question`](Self::push_question). On error the builder is
+    /// unchanged.
     pub fn start_query(
         &mut self,
         id: u16,
@@ -74,11 +78,14 @@ impl<B: OutBuf> MessageBuilder<B> {
     /// skeleton plus the EDNS bookkeeping (DO echo, BADVERS, reserved room
     /// for the OPT record).
     ///
-    /// Fails with [`Error::SectionOrder`](crate::Error::SectionOrder) if
-    /// anything was written already, or with the parse error if the
-    /// query's question section is malformed (answer such queries with a
-    /// header-only FORMERR built from [`response_flags`]). On error the
-    /// builder is unchanged.
+    /// # Errors
+    ///
+    /// [`Error::SectionOrder`](crate::Error::SectionOrder) if anything was
+    /// written already, the parse error if the query's question section
+    /// is malformed (answer such queries with a header-only FORMERR built
+    /// from [`response_flags`]), or
+    /// [`Error::BufferTooSmall`](crate::Error::BufferTooSmall) if the
+    /// questions do not fit. On error the builder is unchanged.
     pub fn start_response(&mut self, query: &Message<'_>) -> Result<()> {
         self.ensure_fresh()?;
         let saved = self.header;
@@ -112,6 +119,11 @@ impl<'b> MessageBuilder<WireWriter<'b>> {
     /// Starts a standard query in `buf`; see
     /// [`start_query`](Self::start_query).
     ///
+    /// # Errors
+    ///
+    /// [`Error::BufferTooSmall`](crate::Error::BufferTooSmall) if `buf`
+    /// cannot hold the query.
+    ///
     /// ```
     /// use dnsbox::{Class, Message, MessageBuilder, NameBuf, Rtype};
     /// use dnsbox::edns::OptHeader;
@@ -140,6 +152,12 @@ impl<'b> MessageBuilder<WireWriter<'b>> {
 
     /// Starts a response to `query` in `buf`; see
     /// [`start_response`](Self::start_response).
+    ///
+    /// # Errors
+    ///
+    /// As [`start_response`](Self::start_response), or
+    /// [`Error::BufferTooSmall`](crate::Error::BufferTooSmall) if `buf`
+    /// cannot hold the skeleton.
     ///
     /// ```
     /// use dnsbox::{Class, Message, MessageBuilder, NameBuf, Rcode, Rtype};
@@ -171,6 +189,20 @@ impl<'b> MessageBuilder<WireWriter<'b>> {
 impl MessageBuilder<alloc::vec::Vec<u8>> {
     /// Starts a standard query in a new `Vec`; see
     /// [`start_query`](Self::start_query).
+    ///
+    /// # Errors
+    ///
+    /// None in practice: a question always fits in the 65535-byte limit.
+    /// The `Result` mirrors [`query`](MessageBuilder::query).
+    ///
+    /// ```
+    /// use dnsbox::{Class, Message, MessageBuilder, NameBuf, Rtype};
+    ///
+    /// let name: NameBuf = "example.net".parse()?;
+    /// let query: Vec<u8> = MessageBuilder::query_vec(7, &name, Rtype::NS, Class::IN)?.finish();
+    /// assert_eq!(Message::parse_validated(&query)?.id(), 7);
+    /// # Ok::<(), dnsbox::Error>(())
+    /// ```
     pub fn query_vec(id: u16, name: impl ToName, qtype: Rtype, qclass: Class) -> Result<Self> {
         let mut b = Self::new_vec();
         b.start_query(id, name, qtype, qclass)?;
@@ -179,6 +211,10 @@ impl MessageBuilder<alloc::vec::Vec<u8>> {
 
     /// Starts a response to `query` in a new `Vec`; see
     /// [`start_response`](Self::start_response).
+    ///
+    /// # Errors
+    ///
+    /// The parse error if the query's question section is malformed.
     pub fn response_vec(query: &Message<'_>) -> Result<Self> {
         let mut b = Self::new_vec();
         b.start_response(query)?;

@@ -38,8 +38,28 @@ use crate::{Class, Error, Flags, Opcode, Result, Rtype};
 /// given as `(ttl, soa)`, the new SOA in the answer section as a hint
 /// (§3.11). The ID is left as set on the builder.
 ///
-/// Fails with [`Error::SectionOrder`] if the builder is not empty; on any
-/// error the builder is left unchanged.
+/// # Errors
+///
+/// [`Error::SectionOrder`] if the builder is not empty, or
+/// [`Error::BufferTooSmall`] if the query does not fit; on any error the
+/// builder is left unchanged.
+///
+/// ```
+/// use dnsbox::notify::{self, NotifyMessage};
+/// use dnsbox::rdata::{ParseRdataText, Soa};
+/// use dnsbox::{Class, Message, MessageBuilder, NameBuf};
+///
+/// let zone: NameBuf = "example.com".parse()?;
+/// let mut sbuf = [0u8; 128];
+/// let soa = Soa::from_text("ns1.example.com. hostmaster.example.com. 2024060101 7200 900 1209600 3600", &mut sbuf)?;
+/// let mut buf = [0u8; 512];
+/// let mut b = MessageBuilder::new(&mut buf)?;
+/// b.set_id(4321);
+/// notify::build_query(&mut b, &zone, Class::IN, Some((3600, &soa)))?;
+/// let n = NotifyMessage::new(Message::parse_validated(b.finish())?)?;
+/// assert_eq!(n.serial()?, Some(2024060101));
+/// # Ok::<(), dnsbox::Error>(())
+/// ```
 pub fn build_query<B: OutBuf>(
     b: &mut MessageBuilder<B>,
     zone: impl ToName,
@@ -69,6 +89,26 @@ pub fn build_query<B: OutBuf>(
 
 /// Writes the response to a NOTIFY query into an empty builder (RFC 1996
 /// §4.7): same ID, opcode NOTIFY, QR and AA set, the question echoed.
+/// See the [module example](self).
+///
+/// # Errors
+///
+/// [`Error::SectionOrder`] if the builder is not empty, or
+/// [`Error::BufferTooSmall`] if the response does not fit; on any error
+/// the builder is left unchanged.
+///
+/// ```
+/// use dnsbox::notify::{self, NotifyMessage};
+/// use dnsbox::{Message, MessageBuilder};
+///
+/// // Secondary side: acknowledge a NOTIFY received in `wire`.
+/// fn acknowledge<'b>(wire: &[u8], out: &'b mut [u8]) -> dnsbox::Result<&'b mut [u8]> {
+///     let notify = NotifyMessage::new(Message::parse(wire)?)?;
+///     let mut b = MessageBuilder::new(out)?;
+///     notify::build_response(&mut b, &notify)?;
+///     Ok(b.finish())
+/// }
+/// ```
 pub fn build_response<B: OutBuf>(
     b: &mut MessageBuilder<B>,
     query: &NotifyMessage<'_>,
@@ -95,6 +135,23 @@ pub fn build_response<B: OutBuf>(
 }
 
 /// A parsed NOTIFY message, query or response (RFC 1996 §3).
+///
+/// A secondary checks the zone and the SOA hint before deciding to
+/// transfer (see also the [module example](self)):
+///
+/// ```
+/// use dnsbox::notify::NotifyMessage;
+/// use dnsbox::{Message, Name};
+///
+/// fn should_refresh(wire: &[u8], our_zone: Name<'_>, our_serial: u32) -> dnsbox::Result<bool> {
+///     let n = NotifyMessage::new(Message::parse(wire)?)?;
+///     if n.is_response() || n.zone().name() != our_zone {
+///         return Ok(false);
+///     }
+///     // No hint, or a newer one: query the primary's SOA (RFC 1996 §3.11).
+///     Ok(n.serial()?.is_none_or(|s| dnsbox::xfr::serial_newer(s, our_serial)))
+/// }
+/// ```
 #[derive(Clone, Copy, Debug)]
 pub struct NotifyMessage<'a> {
     msg: Message<'a>,
@@ -103,9 +160,12 @@ pub struct NotifyMessage<'a> {
 
 impl<'a> NotifyMessage<'a> {
     /// Wraps a message, checking that its opcode is NOTIFY and that it has
-    /// exactly one question (RFC 1996 §3.7: QDCOUNT 1); fails with
-    /// [`Error::WrongType`] for another opcode and
-    /// [`Error::InvalidRdata`] for a bad question count.
+    /// exactly one question (RFC 1996 §3.7: QDCOUNT 1).
+    ///
+    /// # Errors
+    ///
+    /// [`Error::WrongType`] for another opcode, [`Error::InvalidRdata`] for
+    /// a bad question count, or the parse error of the question.
     pub fn new(msg: Message<'a>) -> Result<Self> {
         if msg.flags().opcode() != Opcode::NOTIFY {
             return Err(Error::WrongType);
@@ -142,6 +202,10 @@ impl<'a> NotifyMessage<'a> {
     /// The SOA hint from the answer section, if any (§3.7, §3.11): the
     /// first SOA record owned by the zone name. A secondary must still
     /// query the primary before acting on it (§3.11).
+    ///
+    /// # Errors
+    ///
+    /// The parse error of a malformed answer record or SOA.
     pub fn soa(&self) -> Result<Option<(Record<'a>, Soa<'a>)>> {
         for rr in self.msg.answers() {
             let rr = rr?;
@@ -153,6 +217,10 @@ impl<'a> NotifyMessage<'a> {
     }
 
     /// The serial of the SOA hint, if any.
+    ///
+    /// # Errors
+    ///
+    /// As [`soa`](Self::soa).
     pub fn serial(&self) -> Result<Option<u32>> {
         Ok(self.soa()?.map(|(_, soa)| soa.serial))
     }

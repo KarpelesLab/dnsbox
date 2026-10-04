@@ -11,6 +11,17 @@ use crate::{Result, Rtype};
 
 /// `RKEY` record data: a resource-record encryption key, with the
 /// DNSKEY layout (draft-reid-dnsext-rkey-00). Never standardised.
+///
+/// ```
+/// use dnsbox::dnssec::Algorithm;
+/// use dnsbox::rdata::{ParseRdataText, Rkey};
+///
+/// let mut buf = [0u8; 16];
+/// let rkey = Rkey::from_text("0 1 7 AQID", &mut buf)?;
+/// assert_eq!(rkey.algorithm, Algorithm::RSASHA1_NSEC3_SHA1);
+/// assert_eq!(rkey.public_key, [1, 2, 3]);
+/// # Ok::<(), dnsbox::Error>(())
+/// ```
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub struct Rkey<'a> {
     /// Flags (none defined; zero in practice).

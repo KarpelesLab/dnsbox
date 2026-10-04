@@ -10,6 +10,22 @@ use crate::wire::{Composer, WireReader};
 ///
 /// A query carries it empty ([`Nsid::REQUEST`]); the response carries an
 /// opaque, server-chosen identifier (often a host name in ASCII).
+///
+/// ```
+/// use dnsbox::WireWriter;
+/// use dnsbox::edns::{ComposeOption, Nsid, Opt};
+///
+/// assert!(Nsid::REQUEST.is_request());
+/// let mut buf = [0u8; 16];
+/// let mut w = WireWriter::new(&mut buf);
+/// Nsid::new(b"ns1").compose_tlv(&mut w)?;
+/// assert_eq!(w.as_bytes(), b"\x00\x03\x00\x03ns1");
+///
+/// let nsid: Nsid<'_> = Opt::new(w.as_bytes())?.get().expect("present")?;
+/// assert_eq!(nsid.as_str(), Some("ns1"));
+/// assert_eq!(nsid.to_string(), "NSID=6E7331");
+/// # Ok::<(), dnsbox::Error>(())
+/// ```
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub struct Nsid<'a> {
     /// The identifier; empty in requests.

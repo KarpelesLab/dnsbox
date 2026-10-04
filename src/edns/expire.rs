@@ -11,6 +11,16 @@ use crate::{Error, Result};
 ///
 /// Queries carry it empty; responses carry the expire timer in seconds.
 /// Any length other than 0 or 4 fails with [`Error::InvalidOption`].
+///
+/// ```
+/// use dnsbox::edns::{Expire, Opt};
+///
+/// assert_eq!(Expire::REQUEST.to_string(), "EXPIRE");
+/// let opt = Opt::new(b"\x00\x09\x00\x04\x00\x09\x3a\x80")?;
+/// let expire: Expire = opt.get().expect("present")?;
+/// assert_eq!(expire, Expire::new(604_800)); // one week
+/// # Ok::<(), dnsbox::Error>(())
+/// ```
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Default)]
 pub struct Expire {
     /// Seconds before the zone expires; `None` (an empty option) in

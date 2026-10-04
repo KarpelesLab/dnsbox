@@ -18,6 +18,34 @@ use crate::rdata::Dnskey;
 /// point for EdDSA per RFC 8080 §3), the signed data, and the signature in
 /// its RRSIG wire format (RFC 3110 §3, RFC 5702 §3, RFC 6605 §4,
 /// RFC 8080 §4).
+///
+/// # Examples
+///
+/// A backend that delegates to another one but no longer accepts the
+/// SHA-1-based algorithms (a local policy; RFC 8624 §3.1 already advises
+/// against signing with them):
+///
+/// ```
+/// use dnsbox::dnssec::{Algorithm, Verifier};
+/// use dnsbox::{Error, Result};
+///
+/// struct NoSha1<V>(V);
+///
+/// impl<V: Verifier> Verifier for NoSha1<V> {
+///     fn supports(&self, algorithm: Algorithm) -> bool {
+///         !matches!(algorithm, Algorithm::RSASHA1 | Algorithm::RSASHA1_NSEC3_SHA1)
+///             && self.0.supports(algorithm)
+///     }
+///     fn verify(&self, algorithm: Algorithm, key: &[u8], data: &[u8], sig: &[u8]) -> Result<()> {
+///         if !self.supports(algorithm) {
+///             return Err(Error::UnsupportedAlgorithm);
+///         }
+///         self.0.verify(algorithm, key, data, sig)
+///     }
+/// }
+/// # #[cfg(feature = "dnssec")]
+/// assert!(!NoSha1(dnsbox::dnssec::PurecryptoVerifier).supports(Algorithm::RSASHA1));
+/// ```
 pub trait Verifier {
     /// Whether signatures of `algorithm` can be verified. Data signed only
     /// with unsupported algorithms is treated as insecure, not bogus
@@ -25,6 +53,8 @@ pub trait Verifier {
     fn supports(&self, algorithm: Algorithm) -> bool;
 
     /// Verifies `signature` over `data` with `public_key`.
+    ///
+    /// # Errors
     ///
     /// Must fail with [`Error::UnsupportedAlgorithm`] for unsupported
     /// algorithms, [`Error::InvalidKey`] for malformed keys and
@@ -61,6 +91,23 @@ impl<V: Verifier + ?Sized> Verifier for &V {
 }
 
 /// Creates DNSSEC signatures with one private key.
+///
+/// [`SigningKey`](super::SigningKey) implements it with `purecrypto`;
+/// implement it to sign with a key held elsewhere (an HSM, a KMS, ...).
+///
+/// ```
+/// # #[cfg(feature = "dnssec")] {
+/// use dnsbox::dnssec::{Algorithm, Signer, SigningKey};
+/// use dnsbox::rdata::Dnskey;
+///
+/// let key = SigningKey::from_private_bytes(Algorithm::ED25519, &[3; 32])?;
+/// assert_eq!(key.algorithm(), Algorithm::ED25519);
+/// assert_eq!(key.signature_len(), 64);
+/// let dnskey = key.dnskey(Dnskey::ZONE);
+/// assert_eq!(dnskey.public_key, key.public_key());
+/// # }
+/// # Ok::<(), dnsbox::Error>(())
+/// ```
 pub trait Signer {
     /// The key's algorithm.
     fn algorithm(&self) -> Algorithm;
@@ -74,6 +121,8 @@ pub trait Signer {
 
     /// Signs `data`, writing the signature in its RRSIG wire format to the
     /// start of `out` and returning its length.
+    ///
+    /// # Errors
     ///
     /// Fails with [`Error::BufferTooSmall`](crate::Error::BufferTooSmall)
     /// if `out` is shorter than [`signature_len`](Self::signature_len).

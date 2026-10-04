@@ -114,6 +114,23 @@ const MAX_RDATA_LEN: usize = u16::MAX as usize;
 ///
 /// Equality and hashing compare the type and the bytes exactly (names
 /// inside RDATA case-sensitively).
+///
+/// ```
+/// use dnsbox::rdata::RData;
+/// use dnsbox::{Class, OwnedRData, Rtype};
+///
+/// let srv = OwnedRData::from_text(Rtype::SRV, Class::IN, "0 5 443 www.example.com.")?;
+/// assert_eq!(srv.rtype(), Rtype::SRV);
+/// assert_eq!(srv.len(), 6 + 17);
+/// match srv.parse(Class::IN)? {
+///     RData::Srv(view) => assert_eq!(view.port, 443),
+///     other => panic!("unexpected {other}"),
+/// }
+/// // Owned values can be stored and sent across threads.
+/// let records: Vec<OwnedRData> = vec![srv.clone(), srv];
+/// assert_eq!(records[0], records[1]);
+/// # Ok::<(), dnsbox::Error>(())
+/// ```
 #[derive(Clone, PartialEq, Eq, Hash)]
 pub struct OwnedRData {
     rtype: Rtype,
@@ -124,6 +141,8 @@ impl OwnedRData {
     /// Encodes any record data (a parsed view such as [`RData`] or
     /// [`Mx`](crate::rdata::Mx), or a compose-only helper such as
     /// [`TxtParts`](crate::rdata::TxtParts)), writing names uncompressed.
+    ///
+    /// # Errors
     ///
     /// Fails with the composer's error, or [`Error::BufferTooSmall`] if the
     /// RDATA exceeds 65535 octets (RFC 1035 §3.2.1).
@@ -156,6 +175,10 @@ impl OwnedRData {
     /// (their error is returned), unknown types and class-mismatched data
     /// are kept opaque (RFC 3597).
     ///
+    /// # Errors
+    ///
+    /// The typed format's parse error for malformed RDATA.
+    ///
     /// ```
     /// use dnsbox::{Class, Error, OwnedRData, Rtype};
     ///
@@ -176,6 +199,8 @@ impl OwnedRData {
     /// §5 generic form (`\\# <length> <hex>`), as it appears in a master
     /// file (RFC 1035 §5.1) for a record of `class` ([`RData::parse_text`]).
     /// Relative names are taken relative to the root.
+    ///
+    /// # Errors
     ///
     /// Fails with the parser's error, e.g. [`Error::NoTextFormat`] for a
     /// type without a presentation format of its own given in that format.
@@ -236,6 +261,11 @@ impl OwnedRData {
     /// Decodes the RDATA as [`RData::parse`] would for a record of `class`
     /// (class-specific formats such as A are only typed in class IN,
     /// RFC 3597 §4; empty data in class NONE/ANY is opaque, RFC 2136 §2.5).
+    ///
+    /// # Errors
+    ///
+    /// As [`RData::parse`]; data built through this type was valid for
+    /// the class it was built for.
     pub fn parse(&self, class: Class) -> Result<RData<'_>> {
         RData::parse(self.rtype, class, WireReader::new(&self.data))
     }
@@ -336,6 +366,10 @@ impl OwnedQuestion {
     }
 
     /// Appends the question to a builder (RFC 1035 §4.1.2).
+    ///
+    /// # Errors
+    ///
+    /// As [`MessageBuilder::push_question`].
     pub fn push_to<B: OutBuf>(&self, b: &mut MessageBuilder<B>) -> Result<()> {
         b.push_question(&self.name, self.qtype, self.qclass)
     }
@@ -403,6 +437,28 @@ impl OwnedRecord {
     /// Copies a record view. The RDATA is decoded (typed formats must be
     /// valid, as for [`Record::data`]) and stored with its names
     /// decompressed.
+    ///
+    /// # Errors
+    ///
+    /// The RDATA parse error, as for [`Record::data`].
+    ///
+    /// ```
+    /// use dnsbox::{Message, OwnedRecord};
+    /// # use dnsbox::{Class, MessageBuilder, NameBuf, rdata::Cname};
+    /// # let (alias, target): (NameBuf, NameBuf) = ("www.example".parse()?, "web.example".parse()?);
+    /// # let mut buf = [0u8; 128];
+    /// # let mut b = MessageBuilder::new(&mut buf)?;
+    /// # b.push_answer(&alias, Class::IN, 60, &Cname::new(target.as_name()))?;
+    /// # let wire = b.finish();
+    /// let msg = Message::parse(wire)?;
+    /// let owned: Vec<OwnedRecord> = msg
+    ///     .answers()
+    ///     .map(|rr| OwnedRecord::from_record(&rr?))
+    ///     .collect::<Result<_, _>>()?;
+    /// drop(msg); // the owned records do not borrow the message
+    /// assert_eq!(owned[0].to_string(), "www.example. 60 IN CNAME web.example.");
+    /// # Ok::<(), dnsbox::Error>(())
+    /// ```
     pub fn from_record(rr: &Record<'_>) -> Result<Self> {
         Ok(Self::new(
             rr.name(),
@@ -421,6 +477,10 @@ impl OwnedRecord {
 
     /// The typed RDATA, decoded exactly as [`Record::data`] would decode
     /// it for this record's class.
+    ///
+    /// # Errors
+    ///
+    /// As [`OwnedRData::parse`].
     #[inline]
     pub fn data(&self) -> Result<RData<'_>> {
         self.rdata.parse(self.class)
@@ -428,6 +488,10 @@ impl OwnedRecord {
 
     /// Appends the record to `section` of a builder, which recompresses the
     /// names it may compress.
+    ///
+    /// # Errors
+    ///
+    /// As [`MessageBuilder::push_record`].
     pub fn push_to<B: OutBuf>(&self, b: &mut MessageBuilder<B>, section: Section) -> Result<()> {
         b.push_record(section, &self.name, self.class, self.ttl, &self.rdata)
     }
@@ -504,9 +568,11 @@ impl FromStr for OwnedRecord {
     ///
     /// `$ORIGIN` and `$TTL` before the record apply to it.
     ///
-    /// Fails with the reader's error ([`Error::MissingTtl`],
-    /// [`Error::InvalidText`], ...), with [`Error::UnexpectedEof`] for
-    /// text holding no record, and with [`Error::InvalidText`] for more
+    /// # Errors
+    ///
+    /// The reader's error ([`Error::MissingTtl`],
+    /// [`Error::InvalidText`], ...), [`Error::UnexpectedEof`] for
+    /// text holding no record, and [`Error::InvalidText`] for more
     /// than one record (including a `$GENERATE` range of more than one)
     /// or an `$INCLUDE`.
     ///
@@ -600,6 +666,10 @@ impl OwnedMessage {
     /// the first error met while walking the message is returned. Trailing
     /// bytes after the last record are not checked (see
     /// [`from_wire`](Self::from_wire)).
+    ///
+    /// # Errors
+    ///
+    /// The first parse error met while walking the message.
     pub fn from_message(msg: &Message<'_>) -> Result<Self> {
         let h = msg.header();
         let mut m = OwnedMessage {
@@ -624,13 +694,21 @@ impl OwnedMessage {
     }
 
     /// Parses and [validates](Message::validate) wire bytes, then copies
-    /// them.
+    /// them. See the [module example](self).
+    ///
+    /// # Errors
+    ///
+    /// The first error [`Message::validate`] finds.
     pub fn from_wire(wire: &[u8]) -> Result<Self> {
         Self::from_message(&Message::parse_validated(wire)?)
     }
 
-    /// The header, with counts from the section lengths. Fails with
-    /// [`Error::CountOverflow`] if a section holds more than 65535 entries.
+    /// The header, with counts from the section lengths.
+    ///
+    /// # Errors
+    ///
+    /// [`Error::CountOverflow`] if a section holds more than 65535
+    /// entries.
     pub fn header(&self) -> Result<Header> {
         let count = |n: usize| u16::try_from(n).map_err(|_| Error::CountOverflow);
         Ok(Header {
@@ -703,6 +781,27 @@ impl OwnedMessage {
     /// no truncation, an entry that does not fit fails the call with
     /// [`Error::BufferTooSmall`]). Names are compressed if the builder
     /// compresses.
+    ///
+    /// # Errors
+    ///
+    /// The errors of [`MessageBuilder::push_question`] and
+    /// [`MessageBuilder::push_record`]: [`Error::BufferTooSmall`] for an
+    /// entry that does not fit, [`Error::SectionOrder`] if the builder
+    /// already held records. The entries written before the failing one
+    /// stay in the builder (use a [checkpoint](MessageBuilder::checkpoint)
+    /// to undo them).
+    ///
+    /// ```
+    /// use dnsbox::{Flags, MessageBuilder, OwnedMessage};
+    ///
+    /// let msg = OwnedMessage::new(7, Flags::default().with_qr(true));
+    /// // Into a stack buffer, with a TCP length prefix.
+    /// let mut buf = [0u8; 64];
+    /// let mut b = MessageBuilder::new_tcp(&mut buf)?;
+    /// msg.write_to(&mut b)?;
+    /// assert_eq!(b.finish().len(), 2 + 12);
+    /// # Ok::<(), dnsbox::Error>(())
+    /// ```
     pub fn write_to<B: OutBuf>(&self, b: &mut MessageBuilder<B>) -> Result<()> {
         b.set_id(self.id);
         b.set_flags(self.flags);
@@ -715,8 +814,11 @@ impl OwnedMessage {
         Ok(())
     }
 
-    /// Encodes the message with name compression into a new `Vec`. Fails
-    /// with [`Error::BufferTooSmall`] beyond 65535 octets or
+    /// Encodes the message with name compression into a new `Vec`.
+    ///
+    /// # Errors
+    ///
+    /// [`Error::BufferTooSmall`] beyond 65535 octets or
     /// [`Error::CountOverflow`] beyond 65535 entries in a section.
     pub fn to_vec(&self) -> Result<Vec<u8>> {
         let mut b = MessageBuilder::new_vec();
@@ -756,6 +858,10 @@ impl fmt::Display for OwnedMessage {
 impl Message<'_> {
     /// Copies the message into an [`OwnedMessage`]; see
     /// [`OwnedMessage::from_message`].
+    ///
+    /// # Errors
+    ///
+    /// As [`OwnedMessage::from_message`].
     #[inline]
     pub fn to_owned_message(&self) -> Result<OwnedMessage> {
         OwnedMessage::from_message(self)
@@ -774,6 +880,10 @@ impl Question<'_> {
 impl Record<'_> {
     /// Copies the record into an [`OwnedRecord`]; see
     /// [`OwnedRecord::from_record`].
+    ///
+    /// # Errors
+    ///
+    /// As [`OwnedRecord::from_record`].
     #[inline]
     pub fn to_owned_record(&self) -> Result<OwnedRecord> {
         OwnedRecord::from_record(self)
@@ -783,6 +893,10 @@ impl Record<'_> {
 impl RData<'_> {
     /// Copies the record data into an [`OwnedRData`] (uncompressed wire
     /// form); see [`OwnedRData::new`].
+    ///
+    /// # Errors
+    ///
+    /// As [`OwnedRData::new`].
     ///
     /// ```
     /// use dnsbox::{Class, Rtype, RData, WireReader};

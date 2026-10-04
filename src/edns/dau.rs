@@ -16,6 +16,15 @@ macro_rules! algorithm_list_option {
         /// (RFC 6975 §3), from the
         #[doc = concat!("IANA \"", $registry, "\" registry.")]
         /// It is only meaningful in queries.
+        ///
+        /// ```
+        #[doc = concat!("use dnsbox::edns::", stringify!($ty), ";")]
+        ///
+        #[doc = concat!("let opt = ", stringify!($ty), "::new(&[8, 13, 15]);")]
+        /// assert!(opt.contains(13) && !opt.contains(5));
+        /// assert_eq!(opt.iter().count(), 3);
+        #[doc = concat!("assert_eq!(opt.to_string(), \"", stringify!($code), "=8,13,15\");")]
+        /// ```
         #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
         pub struct $ty<'a> {
             /// The algorithm numbers, in the order sent.

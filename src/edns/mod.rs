@@ -179,6 +179,44 @@ impl OptionCode {
 ///
 /// Implementations are views: they borrow from the message (lifetime `'a`)
 /// and allocate nothing.
+///
+/// # Examples
+///
+/// A private option (code 65001, local use) carrying a 32-bit value:
+///
+/// ```
+/// use dnsbox::edns::{ComposeOption, Opt, OptionCode, ParseOption};
+/// use dnsbox::{Composer, Error, Result, WireReader, WireWriter};
+///
+/// struct Shard(u32);
+///
+/// impl ParseOption<'_> for Shard {
+///     const CODE: OptionCode = OptionCode::new(65001);
+///     fn parse_option(data: &mut WireReader<'_>) -> Result<Self> {
+///         if data.remaining() != 4 {
+///             return Err(Error::InvalidOption);
+///         }
+///         data.read_u32().map(Shard)
+///     }
+/// }
+///
+/// impl ComposeOption for Shard {
+///     fn code(&self) -> OptionCode {
+///         Self::CODE
+///     }
+///     fn compose_option<C: Composer + ?Sized>(&self, c: &mut C) -> Result<()> {
+///         c.put_u32(self.0)
+///     }
+/// }
+///
+/// let mut buf = [0u8; 16];
+/// let mut w = WireWriter::new(&mut buf);
+/// Shard(7).compose_tlv(&mut w)?;
+/// let opt = Opt::new(w.as_bytes())?;
+/// let shard: Shard = opt.get().expect("present")?;
+/// assert_eq!(shard.0, 7);
+/// # Ok::<(), Error>(())
+/// ```
 pub trait ParseOption<'a>: Sized {
     /// The option code this implementation handles.
     const CODE: OptionCode;
@@ -188,22 +226,50 @@ pub trait ParseOption<'a>: Sized {
     ///
     /// Implementations read their fields and return; the dispatcher
     /// ([`EdnsOption::parse`], [`RawOption::parse_as`]) rejects data that is
-    /// not fully consumed with [`Error::TrailingData`](crate::Error). Report
-    /// invalid lengths or field values as
-    /// [`Error::InvalidOption`](crate::Error::InvalidOption).
+    /// not fully consumed with [`Error::TrailingData`](crate::Error).
+    ///
+    /// # Errors
+    ///
+    /// Implementations report invalid lengths or field values as
+    /// [`Error::InvalidOption`](crate::Error::InvalidOption); truncation
+    /// is reported by the reader as
+    /// [`Error::UnexpectedEof`](crate::Error::UnexpectedEof).
     fn parse_option(data: &mut WireReader<'a>) -> Result<Self>;
 }
 
 /// Composing half of a typed EDNS option; what the OPT builders accept.
+///
+/// See [`ParseOption`] for an example of implementing both halves.
+///
+/// ```
+/// use dnsbox::WireWriter;
+/// use dnsbox::edns::{ComposeOption, TcpKeepalive};
+///
+/// let mut buf = [0u8; 8];
+/// let mut w = WireWriter::new(&mut buf);
+/// TcpKeepalive::new(300).compose_tlv(&mut w)?; // 30 seconds
+/// assert_eq!(w.as_bytes(), [0, 11, 0, 2, 0x01, 0x2c]);
+/// # Ok::<(), dnsbox::Error>(())
+/// ```
 pub trait ComposeOption {
     /// The option code.
     fn code(&self) -> OptionCode;
 
     /// Writes OPTION-DATA (without the code and length) to `c`.
+    ///
+    /// # Errors
+    ///
+    /// [`Error::BufferTooSmall`](crate::Error::BufferTooSmall) if `c` is
+    /// full, or an implementation-specific error for a value that cannot
+    /// be encoded.
     fn compose_option<C: Composer + ?Sized>(&self, c: &mut C) -> Result<()>;
 
     /// Writes the whole option: OPTION-CODE, OPTION-LENGTH and OPTION-DATA
     /// (RFC 6891 §6.1.2).
+    ///
+    /// # Errors
+    ///
+    /// As [`compose_option`](Self::compose_option).
     fn compose_tlv<C: Composer + ?Sized>(&self, c: &mut C) -> Result<()> {
         c.put_u16(self.code().get())?;
         c.put_u16_prefixed(|c| self.compose_option(c))
@@ -256,6 +322,22 @@ macro_rules! edns_registry {
         ///
         /// Option codes without a typed implementation are kept as
         /// [`EdnsOption::Unknown`], which round-trips the raw bytes.
+        ///
+        /// ```
+        /// use dnsbox::edns::{EdnsOption, Opt};
+        ///
+        /// // NSID "ns1", then a local-use option 65001.
+        /// let opt = Opt::new(b"\x00\x03\x00\x03ns1\xfd\xe9\x00\x01\x2a")?;
+        /// for option in opt.options() {
+        ///     match option? {
+        ///         EdnsOption::Nsid(nsid) => assert_eq!(nsid.as_str(), Some("ns1")),
+        ///         EdnsOption::Unknown(u) => assert_eq!(u.data(), [0x2a]),
+        ///         other => panic!("unexpected {other}"),
+        ///     }
+        /// }
+        /// assert_eq!(opt.to_string(), "NSID=6E7331 OPT65001=2A");
+        /// # Ok::<(), dnsbox::Error>(())
+        /// ```
         #[derive(Clone, Debug, PartialEq, Eq)]
         #[non_exhaustive]
         pub enum EdnsOption<'a> {
@@ -273,6 +355,24 @@ macro_rules! edns_registry {
             /// exactly the option value; it is fully consumed. Typed parse
             /// errors are returned, not downgraded to
             /// [`EdnsOption::Unknown`].
+            ///
+            /// # Errors
+            ///
+            /// The option type's parse error
+            /// ([`Error::InvalidOption`](crate::Error::InvalidOption),
+            /// [`Error::UnexpectedEof`](crate::Error::UnexpectedEof), ...)
+            /// or [`Error::TrailingData`](crate::Error::TrailingData) if
+            /// the value is longer than the option uses.
+            ///
+            /// ```
+            /// use dnsbox::WireReader;
+            /// use dnsbox::edns::{EdnsOption, OptionCode};
+            ///
+            /// let opt = EdnsOption::parse(OptionCode::EXPIRE, WireReader::new(&[0, 0, 0x0e, 0x10]))?;
+            /// assert!(matches!(opt, EdnsOption::Expire(e) if e.expire == Some(3600)));
+            /// assert!(EdnsOption::parse(OptionCode::EXPIRE, WireReader::new(&[1])).is_err());
+            /// # Ok::<(), dnsbox::Error>(())
+            /// ```
             pub fn parse(code: OptionCode, mut data: WireReader<'a>) -> Result<Self> {
                 let opt = match code {
                     $(

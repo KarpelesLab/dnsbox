@@ -14,6 +14,24 @@ use crate::{Error, Result};
 /// Most records one `$GENERATE` directive may produce (a hostile zone file
 /// must not turn one line into billions of records). 65536 covers a whole
 /// `/16` of reverse entries.
+///
+/// ```
+/// use dnsbox::zone::ZoneReader;
+///
+/// let text = "$ORIGIN 2.0.192.in-addr.arpa.\n$TTL 1h\n$GENERATE 1-3 $ PTR host-${0,2,d}.example.\n";
+/// let mut reader = ZoneReader::new(text);
+/// let mut buf = [0u8; 256];
+/// let mut lines = Vec::new();
+/// while let Some(rr) = reader.next_record(&mut buf)? {
+///     lines.push(rr.to_string());
+/// }
+/// assert_eq!(lines[2], "3.2.0.192.in-addr.arpa. 3600 IN PTR host-03.example.");
+///
+/// // A range above the limit is refused rather than expanded.
+/// let mut reader = ZoneReader::new("$GENERATE 0-100000 h$ A 192.0.2.1\n");
+/// assert!(reader.next_record(&mut buf).is_err());
+/// # Ok::<(), dnsbox::Error>(())
+/// ```
 pub const MAX_GENERATE: u32 = 65536;
 
 /// Longest text a template may expand to.

@@ -53,6 +53,11 @@ pub struct ZoneRecord<'b> {
 
 impl<'b> ZoneRecord<'b> {
     /// The typed record data (see [`RData::parse`]).
+    ///
+    /// # Errors
+    ///
+    /// None in practice: the reader already checked the RDATA with the
+    /// type's wire parser. The `Result` is that of [`RData::parse`].
     #[inline]
     pub fn data(&self) -> Result<RData<'b>> {
         RData::parse(self.rtype, self.class, WireReader::new(self.rdata))
@@ -97,6 +102,23 @@ pub(super) fn write_record(
 /// [`origin`](Self::origin); afterwards the including file continues with
 /// its own origin. [`Records`](super::Records) does this through an
 /// [`IncludeResolver`](super::IncludeResolver).
+///
+/// ```
+/// use dnsbox::zone::{Entry, ZoneReader};
+///
+/// let text = "$ORIGIN example.\n$INCLUDE \"hosts.db\" lab\nwww A 192.0.2.80\n";
+/// let mut reader = ZoneReader::new(text);
+/// let mut buf = [0u8; 512];
+/// match reader.next_entry(&mut buf)? {
+///     Some(Entry::Include(inc)) => {
+///         assert_eq!(inc.path.as_bytes(), b"hosts.db");
+///         assert_eq!(inc.origin.to_string(), "lab.example.");
+///         assert_eq!((inc.line, inc.column), (2, 1));
+///     }
+///     other => panic!("expected an $INCLUDE, got {other:?}"),
+/// }
+/// # Ok::<(), dnsbox::Error>(())
+/// ```
 #[derive(Clone, Debug, PartialEq, Eq)]
 #[non_exhaustive]
 pub struct Include<'a> {
@@ -116,6 +138,23 @@ pub struct Include<'a> {
 /// [`ZoneReader::next_entry`].
 ///
 /// More kinds of entries may be reported in future versions.
+///
+/// ```
+/// use dnsbox::zone::{Entry, ZoneReader};
+///
+/// let mut reader = ZoneReader::new("$INCLUDE common.db\n@ 60 IN TXT \"main\"\n");
+/// let mut buf = [0u8; 512];
+/// let mut seen = Vec::new();
+/// while let Some(entry) = reader.next_entry(&mut buf)? {
+///     match entry {
+///         Entry::Record(rr) => seen.push(rr.to_string()),
+///         Entry::Include(inc) => seen.push(format!("include {}", inc.path.as_str()?)),
+///         _ => {} // non-exhaustive
+///     }
+/// }
+/// assert_eq!(seen, ["include common.db", ". 60 IN TXT \"main\""]);
+/// # Ok::<(), dnsbox::Error>(())
+/// ```
 #[derive(Clone, Debug, PartialEq, Eq)]
 #[non_exhaustive]
 pub enum Entry<'a, 'b> {
@@ -133,6 +172,19 @@ pub enum Entry<'a, 'b> {
 ///
 /// It converts into the plain [`Error`] (dropping the position) with `?`,
 /// and reports that error as its [`source`](core::error::Error::source).
+///
+/// ```
+/// use dnsbox::Error;
+/// use dnsbox::zone::ZoneReader;
+///
+/// let mut reader = ZoneReader::new("a 60 IN A 192.0.2.1\nb 60 IN MX ten mail.\n");
+/// let mut buf = [0u8; 512];
+/// reader.next_record(&mut buf)?;
+/// let err = reader.next_record(&mut buf).unwrap_err();
+/// assert_eq!((err.error(), err.line(), err.column()), (Error::InvalidText, 2, 12));
+/// assert_eq!(err.to_string(), "line 2, column 12: malformed presentation-format text");
+/// # Ok::<(), dnsbox::Error>(())
+/// ```
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub struct ZoneError {
     error: Error,
@@ -350,6 +402,22 @@ impl<'a> ZoneReader<'a> {
     }
 
     /// Sets the initial origin, as if the text started with `$ORIGIN`.
+    ///
+    /// ```
+    /// use dnsbox::zone::ZoneReader;
+    /// use dnsbox::{Class, NameBuf};
+    ///
+    /// // A zone file without $ORIGIN or $TTL, as many servers store them.
+    /// let origin: NameBuf = "example.net".parse()?;
+    /// let mut reader = ZoneReader::new("www A 192.0.2.1\n")
+    ///     .with_origin(&origin)
+    ///     .with_default_ttl(300)
+    ///     .with_class(Class::IN);
+    /// let mut buf = [0u8; 64];
+    /// let rr = reader.next_record(&mut buf)?.unwrap();
+    /// assert_eq!(rr.to_string(), "www.example.net. 300 IN A 192.0.2.1");
+    /// # Ok::<(), dnsbox::Error>(())
+    /// ```
     #[inline]
     #[must_use]
     pub fn with_origin(mut self, origin: impl ToName) -> Self {
@@ -399,10 +467,15 @@ impl<'a> ZoneReader<'a> {
     /// RDATA), handling `$ORIGIN`, `$TTL` and `$GENERATE` on the way.
     /// Returns `Ok(None)` at the end of the text.
     ///
-    /// `$INCLUDE` fails with [`Error::BadInclude`]; use
-    /// [`next_entry`](Self::next_entry) or
-    /// [`records`](Self::records) with a resolver to follow it. RDATA
-    /// that does not fit in `buf` fails with [`Error::BufferTooSmall`].
+    /// # Errors
+    ///
+    /// A [`ZoneError`] with the position of the faulty entry: the RDATA
+    /// parse errors ([`Error::InvalidText`], [`Error::UnknownMnemonic`],
+    /// ...), [`Error::MissingTtl`], [`Error::BufferTooSmall`] for RDATA
+    /// that does not fit in `buf`, and [`Error::BadInclude`] for an
+    /// `$INCLUDE` (use [`next_entry`](Self::next_entry) or
+    /// [`records`](Self::records) with a resolver to follow it). The reader
+    /// then skips to the next entry.
     pub fn next_record<'b>(
         &mut self,
         buf: &'b mut [u8],
@@ -417,7 +490,12 @@ impl<'a> ZoneReader<'a> {
     /// Reads the next entry: a resource record (RDATA written to `buf`)
     /// or an `$INCLUDE` directive. Other directives are applied on the
     /// way; blank and comment-only lines are skipped. Returns `Ok(None)` at
-    /// the end of the text.
+    /// the end of the text. See the [`Entry`] example.
+    ///
+    /// # Errors
+    ///
+    /// As [`next_record`](Self::next_record), except that `$INCLUDE` is
+    /// returned as an [`Entry::Include`].
     pub fn next_entry<'b>(
         &mut self,
         buf: &'b mut [u8],
@@ -473,6 +551,21 @@ impl<'a> ZoneReader<'a> {
     /// see [`Records`](super::Records). Without a resolver
     /// ([`Records::with_includes`](super::Records::with_includes)),
     /// `$INCLUDE` is an error.
+    ///
+    /// ```
+    /// use dnsbox::zone::ZoneReader;
+    ///
+    /// let text = "$ORIGIN example.\n$TTL 60\n@ NS ns1\nns1 A 192.0.2.53\n";
+    /// // Owned records (and errors), one per entry.
+    /// let mut count = 0;
+    /// for rr in ZoneReader::new(text).records() {
+    ///     let rr = rr?;
+    ///     assert!(rr.name.as_name().is_subdomain_of(&"example".parse::<dnsbox::NameBuf>()?.as_name()));
+    ///     count += 1;
+    /// }
+    /// assert_eq!(count, 2);
+    /// # Ok::<(), dnsbox::Error>(())
+    /// ```
     #[cfg(feature = "alloc")]
     #[inline]
     pub fn records(self) -> super::Records<'a, super::NoIncludes> {

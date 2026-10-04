@@ -20,6 +20,18 @@ const MAX_BITMAP: usize = 16;
 /// announces an extended format that was never defined, so it is rejected,
 /// as is a trailing zero octet (the bitmap must be minimal, as BIND
 /// requires).
+///
+/// ```
+/// use dnsbox::rdata::{Nxt, ParseRdataText};
+/// use dnsbox::Rtype;
+///
+/// // RFC 2535 §5.2.
+/// let mut buf = [0u8; 32];
+/// let nxt = Nxt::from_text("medium.foo.tld. A MX SIG NXT", &mut buf)?;
+/// assert!(nxt.contains(Rtype::SIG));
+/// assert_eq!(nxt.types().count(), 4);
+/// # Ok::<(), dnsbox::Error>(())
+/// ```
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub struct Nxt<'a> {
     /// The next owner name in canonical order.
@@ -31,6 +43,11 @@ pub struct Nxt<'a> {
 impl<'a> Nxt<'a> {
     /// Encodes `types` (in any order, duplicates ignored; each 1–127) as a
     /// minimal NXT bitmap into `out`, returning the used prefix.
+    ///
+    /// # Errors
+    ///
+    /// [`Error::InvalidRdata`] for a type outside 1–127, which the NXT
+    /// bitmap cannot represent.
     ///
     /// ```
     /// use dnsbox::rdata::Nxt;
@@ -57,6 +74,10 @@ impl<'a> Nxt<'a> {
 
     /// Checks the bitmap: at most 16 octets, bit 0 clear, no trailing
     /// zero octet.
+    ///
+    /// # Errors
+    ///
+    /// [`Error::InvalidRdata`] if a check fails.
     pub fn validate(&self) -> Result<()> {
         let b = self.bitmap;
         if b.len() > MAX_BITMAP

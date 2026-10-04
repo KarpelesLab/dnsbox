@@ -115,6 +115,18 @@ impl InfoCode {
 /// EXTRA-TEXT is meant to be UTF-8 but is kept as raw bytes (it may also
 /// carry a trailing NUL, §2); [`extra_text_str`](Self::extra_text_str)
 /// gives it as text when valid. A message may carry several EDE options.
+///
+/// ```
+/// use dnsbox::edns::{ExtendedError, InfoCode, Opt};
+///
+/// // EDE 18 (Prohibited) with an explanation.
+/// let opt = Opt::new(b"\x00\x0f\x00\x09\x00\x12blocked")?;
+/// let ede: ExtendedError<'_> = opt.get().expect("present")?;
+/// assert_eq!(ede.info_code, InfoCode::PROHIBITED);
+/// assert_eq!(ede.extra_text_str(), Some("blocked"));
+/// assert_eq!(ede.to_string(), r#"EDE=18 (Prohibited) "blocked""#);
+/// # Ok::<(), dnsbox::Error>(())
+/// ```
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub struct ExtendedError<'a> {
     /// INFO-CODE.

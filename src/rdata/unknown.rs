@@ -12,6 +12,17 @@ use crate::{Result, Rtype};
 /// Unknown types never contain compressed names (RFC 3597 §4), so the bytes
 /// can be copied verbatim into another message. Displays in the generic
 /// `\# <len> <hex>` form (RFC 3597 §5).
+///
+/// ```
+/// use dnsbox::rdata::{RData, UnknownRdata};
+/// use dnsbox::{Class, Rtype, WireReader};
+///
+/// // A private-use type: kept opaque and shown in the generic form.
+/// let data = RData::parse(Rtype::new(65280), Class::IN, WireReader::new(&[1, 2]))?;
+/// assert_eq!(data, RData::Unknown(UnknownRdata::new(Rtype::new(65280), &[1, 2])));
+/// assert_eq!(data.to_string(), r"\# 2 0102");
+/// # Ok::<(), dnsbox::Error>(())
+/// ```
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub struct UnknownRdata<'a> {
     rtype: Rtype,

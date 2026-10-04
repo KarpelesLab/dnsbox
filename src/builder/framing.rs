@@ -13,6 +13,11 @@ impl<'b> MessageBuilder<WireWriter<'b>> {
     /// write (as RFC 7766 §8 recommends). [`as_bytes`](Self::as_bytes) and
     /// [`len`](Self::len) still refer to the message alone.
     ///
+    /// # Errors
+    ///
+    /// [`Error::BufferTooSmall`](crate::Error::BufferTooSmall) if `buf`
+    /// cannot hold the prefix and the 12-byte header.
+    ///
     /// ```
     /// use dnsbox::{Class, Message, MessageBuilder, NameBuf, Rtype, tcp};
     ///
@@ -37,6 +42,14 @@ impl<'b> MessageBuilder<WireWriter<'b>> {
 impl MessageBuilder<alloc::vec::Vec<u8>> {
     /// Starts a length-prefixed message for DNS over TCP in a new `Vec`;
     /// see [`new_tcp`](MessageBuilder::new_tcp).
+    ///
+    /// ```
+    /// use dnsbox::MessageBuilder;
+    ///
+    /// let frame = MessageBuilder::new_tcp_vec().finish();
+    /// assert_eq!(frame.len(), 2 + 12);
+    /// assert_eq!(frame[..2], [0, 12]);
+    /// ```
     #[must_use]
     pub fn new_tcp_vec() -> Self {
         let mut b = Self::new_vec();
@@ -53,6 +66,11 @@ impl<B: OutBuf> MessageBuilder<B> {
     /// length prefix that the builder keeps up to date; see
     /// [`new_tcp`](MessageBuilder::new_tcp). The message is limited to
     /// 65535 bytes, the most the prefix can describe.
+    ///
+    /// # Errors
+    ///
+    /// [`Error::BufferTooSmall`](crate::Error::BufferTooSmall) if the
+    /// buffer cannot hold the prefix and the 12-byte header.
     pub fn from_buf_tcp(mut buf: B) -> Result<Self> {
         buf.append(&[0, 0])?;
         let mut b = Self::from_buf(buf)?;

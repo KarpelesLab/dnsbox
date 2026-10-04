@@ -21,6 +21,19 @@
 macro_rules! single_name_rdata {
     ($(#[$doc:meta])* $ty:ident, $rt:ident, $field:ident, $enc:ident, $read:ident) => {
         $(#[$doc])*
+        ///
+        /// ```
+        #[doc = concat!("use dnsbox::rdata::{ParseRdataText, ", stringify!($ty), "};")]
+        /// use dnsbox::NameBuf;
+        ///
+        /// let mut buf = [0u8; 32];
+        #[doc = concat!("let rdata = ", stringify!($ty), "::from_text(\"host.example.\", &mut buf)?;")]
+        /// let host: NameBuf = "host.example".parse()?;
+        #[doc = concat!("assert_eq!(rdata.", stringify!($field), ", host.as_name());")]
+        #[doc = concat!("assert_eq!(rdata, ", stringify!($ty), "::new(host.as_name()));")]
+        /// assert_eq!(rdata.to_string(), "host.example.");
+        /// # Ok::<(), dnsbox::Error>(())
+        /// ```
         #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
         pub struct $ty<'a> {
             #[doc = concat!("The `", stringify!($field), "` domain name.")]

@@ -103,6 +103,25 @@ ds_like! {
     /// Use [`dnssec::ds_digest_input`](crate::dnssec::ds_digest_input) to
     /// build the digested data, or, with the `dnssec-digest` feature,
     /// [`dnssec::DsDigest`](crate::dnssec) to compute and check digests.
+    ///
+    /// ```
+    /// use dnsbox::dnssec::{Algorithm, DigestType};
+    /// use dnsbox::rdata::{Ds, ParseRdataText};
+    ///
+    /// // The digest may be split into several tokens.
+    /// let mut buf = [0u8; 64];
+    /// let ds = Ds::from_text(
+    ///     "3613 15 2 3aa5ab37efce57f737fc1627013fee07 bdf241bd10f3b1964ab55c78e79a304b",
+    ///     &mut buf,
+    /// )?;
+    /// assert_eq!((ds.key_tag, ds.algorithm, ds.digest_type), (3613, Algorithm::ED25519, DigestType::SHA256));
+    /// assert_eq!(ds.digest.len(), 32);
+    /// assert_eq!(
+    ///     ds.to_string(),
+    ///     "3613 15 2 3AA5AB37EFCE57F737FC1627013FEE07BDF241BD10F3B1964AB55C78E79A304B"
+    /// );
+    /// # Ok::<(), dnsbox::Error>(())
+    /// ```
     Ds, DS
 }
 
@@ -110,18 +129,46 @@ ds_like! {
     /// `CDS` record data: a child's DS published for the parent
     /// (RFC 7344 §3.1). [`Cds::DELETE`] is the RFC 8078 §4 "remove the DS
     /// RRset" form.
+    ///
+    /// ```
+    /// use dnsbox::rdata::{Cds, ParseRdataText};
+    ///
+    /// let mut buf = [0u8; 8];
+    /// let cds = Cds::from_text("0 0 0 00", &mut buf)?;
+    /// assert!(cds.is_delete());
+    /// assert_eq!(cds, Cds::DELETE);
+    /// # Ok::<(), dnsbox::Error>(())
+    /// ```
     Cds, CDS
 }
 
 ds_like! {
     /// `DLV` record data: a DNSSEC lookaside validation record (RFC 4431),
     /// in the DS format. Historic (RFC 8749).
+    ///
+    /// ```
+    /// use dnsbox::rdata::{Dlv, ParseRdataText};
+    ///
+    /// let mut buf = [0u8; 32];
+    /// let dlv = Dlv::from_text("12345 8 1 0123456789ABCDEF0123456789ABCDEF01234567", &mut buf)?;
+    /// assert_eq!(dlv.digest.len(), 20);
+    /// # Ok::<(), dnsbox::Error>(())
+    /// ```
     Dlv, DLV
 }
 
 ds_like! {
     /// `TA` record data: a DNSSEC trust authority (IANA, Weiler 2005), in
     /// the DS format.
+    ///
+    /// ```
+    /// use dnsbox::rdata::{ParseRdataText, Ta};
+    ///
+    /// let mut buf = [0u8; 64];
+    /// let ta = Ta::from_text("20326 8 2 E06D44B80B8F1D39A95C0B0D7C65D08458E880409BBC683457104237C7F8EC8D", &mut buf)?;
+    /// assert_eq!(ta.key_tag, 20326);
+    /// # Ok::<(), dnsbox::Error>(())
+    /// ```
     Ta, TA
 }
 

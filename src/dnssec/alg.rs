@@ -8,6 +8,18 @@ open_enum! {
     ///
     /// The presentation form of unregistered values is the bare number
     /// (RFC 4034 §2.2, §3.2, §5.3).
+    ///
+    /// ```
+    /// use dnsbox::dnssec::Algorithm;
+    ///
+    /// assert_eq!(Algorithm::ECDSAP256SHA256.get(), 13);
+    /// assert_eq!("ed25519".parse::<Algorithm>()?, Algorithm::ED25519);
+    /// assert_eq!("8".parse::<Algorithm>()?, Algorithm::RSASHA256);
+    /// assert!(Algorithm::RSASHA256.is_rsa());
+    /// assert_eq!(Algorithm::ED25519.signature_len(), Some(64));
+    /// assert_eq!(Algorithm::new(200).to_string(), "200");
+    /// # Ok::<(), dnsbox::Error>(())
+    /// ```
     pub struct Algorithm(u8), generic "";
     /// Delete DS / delete DNSKEY (RFC 4034 §A.1, RFC 8078 §4).
     DELETE = 0 => "DELETE",
@@ -89,6 +101,15 @@ open_enum! {
     /// A DS digest type (RFC 4034 §A.2, IANA "Delegation Signer (DS)
     /// Resource Record (RR) Type Digest Algorithms"), as found in DS, CDS,
     /// DLV and TA records.
+    ///
+    /// ```
+    /// use dnsbox::dnssec::DigestType;
+    ///
+    /// assert_eq!(DigestType::SHA256.to_string(), "SHA-256");
+    /// assert_eq!("sha384".parse::<DigestType>()?, DigestType::SHA384);
+    /// assert_eq!(DigestType::SHA1.digest_len(), Some(20));
+    /// # Ok::<(), dnsbox::Error>(())
+    /// ```
     pub struct DigestType(u8), generic "", aliases {
         "SHA1" => SHA1,
         "SHA256" => SHA256,
@@ -124,6 +145,15 @@ impl DigestType {
 open_enum! {
     /// An NSEC3 hash algorithm (RFC 5155 §11, IANA "DNSSEC NSEC3 Hash
     /// Algorithms").
+    ///
+    /// ```
+    /// use dnsbox::dnssec::Nsec3HashAlgorithm;
+    ///
+    /// assert_eq!(Nsec3HashAlgorithm::SHA1.get(), 1);
+    /// assert_eq!(Nsec3HashAlgorithm::SHA1.hash_len(), Some(20));
+    /// assert_eq!("SHA-1".parse::<Nsec3HashAlgorithm>()?, Nsec3HashAlgorithm::SHA1);
+    /// # Ok::<(), dnsbox::Error>(())
+    /// ```
     pub struct Nsec3HashAlgorithm(u8), generic "", aliases { "SHA1" => SHA1 };
     /// SHA-1 (RFC 5155 §5).
     SHA1 = 1 => "SHA-1",

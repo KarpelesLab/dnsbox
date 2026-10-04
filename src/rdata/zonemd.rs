@@ -14,6 +14,13 @@ use crate::{Error, Result, Rtype};
 open_enum! {
     /// A ZONEMD scheme (RFC 8976 §2.2.2, IANA "ZONEMD Schemes").
     /// Presented as a bare number.
+    ///
+    /// ```
+    /// use dnsbox::rdata::ZonemdScheme;
+    ///
+    /// assert_eq!(ZonemdScheme::SIMPLE.get(), 1);
+    /// assert_eq!(ZonemdScheme::new(240).to_string(), "240");
+    /// ```
     pub struct ZonemdScheme(u8), generic "";
     /// Simple ZONEMD collation (RFC 8976 §3.3.1).
     SIMPLE = 1 => "SIMPLE",
@@ -24,6 +31,14 @@ open_enum! {
 open_enum! {
     /// A ZONEMD hash algorithm (RFC 8976 §2.2.3, IANA "ZONEMD Hash
     /// Algorithms"). Presented as a bare number.
+    ///
+    /// ```
+    /// use dnsbox::rdata::ZonemdHashAlg;
+    ///
+    /// assert_eq!(ZonemdHashAlg::SHA384.digest_len(), Some(48));
+    /// assert_eq!(ZonemdHashAlg::SHA512.digest_len(), Some(64));
+    /// assert_eq!(ZonemdHashAlg::new(240).digest_len(), None);
+    /// ```
     pub struct ZonemdHashAlg(u8), generic "";
     /// SHA-384 (RFC 8976 §2.2.3).
     SHA384 = 1 => "SHA384",
@@ -52,6 +67,19 @@ impl ZonemdHashAlg {
 /// canonical order: see `dnssec::ZoneCollation` (feature `alloc`) and
 /// `dnssec::zonemd_digest` / `dnssec::verify_zonemd` (features `alloc`
 /// and `dnssec-digest`).
+///
+/// ```
+/// use dnsbox::rdata::{ParseRdataText, Zonemd, ZonemdHashAlg, ZonemdScheme};
+///
+/// let mut buf = [0u8; 64];
+/// let zonemd = Zonemd::from_text("2018031900 1 1 ( c68090d90a7aed716bc459f9340e3d7c1370d4d24b7e2fc3
+///     a1ddc0b9a87153b9a9713b3c9ae5cc27777f98b8e730044c )", &mut buf)?;
+/// assert_eq!(zonemd.serial, 2018031900);
+/// assert_eq!((zonemd.scheme, zonemd.hash_alg), (ZonemdScheme::SIMPLE, ZonemdHashAlg::SHA384));
+/// assert_eq!(zonemd.digest.len(), 48);
+/// zonemd.validate()?;
+/// # Ok::<(), dnsbox::Error>(())
+/// ```
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub struct Zonemd<'a> {
     /// The SOA serial of the zone the digest was computed over.
@@ -69,6 +97,12 @@ impl Zonemd<'_> {
     pub const MIN_DIGEST_LEN: usize = 12;
 
     /// Checks the digest length (RFC 8976 §2.2.4).
+    ///
+    /// # Errors
+    ///
+    /// [`Error::InvalidRdata`] if the digest does not have the length of
+    /// its hash algorithm, or, for an unknown algorithm, is shorter than
+    /// [`MIN_DIGEST_LEN`](Self::MIN_DIGEST_LEN).
     pub const fn validate(&self) -> Result<()> {
         let len = self.digest.len();
         let ok = match self.hash_alg.digest_len() {

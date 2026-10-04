@@ -10,6 +10,16 @@ use crate::{Result, Rtype};
 
 /// `SINK` record data: the "kitchen sink" for arbitrary typed data
 /// (draft-eastlake-kitchen-sink-02). Never standardised.
+///
+/// ```
+/// use dnsbox::rdata::{ParseRdataText, Sink};
+///
+/// let mut buf = [0u8; 16];
+/// let sink = Sink::from_text("1 2 3 AQID", &mut buf)?;
+/// assert_eq!((sink.meaning, sink.coding, sink.subcoding), (1, 2, 3));
+/// assert_eq!(sink.data, [1, 2, 3]);
+/// # Ok::<(), dnsbox::Error>(())
+/// ```
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub struct Sink<'a> {
     /// What the data means.

@@ -45,6 +45,14 @@ use crate::{Error, Flags, Header, Opcode, Rcode, Result};
 
 open_enum! {
     /// A DSO TLV type (RFC 8490 §10.3, IANA "DSO Type Codes").
+    ///
+    /// ```
+    /// use dnsbox::dso::DsoType;
+    ///
+    /// assert_eq!(DsoType::KEEPALIVE.get(), 1);
+    /// assert_eq!(DsoType::new(0xf900).to_string(), "DSOTYPE63744");
+    /// assert!(DsoType::new(0xf900).is_experimental());
+    /// ```
     pub struct DsoType(u16), generic "DSOTYPE";
     /// Keepalive (RFC 8490 §7.1).
     KEEPALIVE = 0x0001 => "KeepAlive",
@@ -73,6 +81,18 @@ impl DsoType {
 }
 
 /// One TLV of a DSO message (RFC 8490 §5.4.4).
+///
+/// ```
+/// use dnsbox::dso::{DsoMessage, DsoType, RetryDelay};
+///
+/// // A unidirectional Retry Delay message: "reconnect in 5 s".
+/// let wire = [0, 0, 0x30, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 4, 0, 0, 0x13, 0x88];
+/// let msg = DsoMessage::parse_validated(&wire)?;
+/// let tlv = msg.primary()?.expect("primary TLV");
+/// assert_eq!(tlv.dso_type, DsoType::RETRY_DELAY);
+/// assert_eq!(tlv.parse::<RetryDelay>()?.delay, 5000);
+/// # Ok::<(), dnsbox::Error>(())
+/// ```
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub struct DsoTlv<'a> {
     /// DSO-TYPE.
@@ -82,8 +102,12 @@ pub struct DsoTlv<'a> {
 }
 
 impl<'a> DsoTlv<'a> {
-    /// Decodes the data as a typed TLV, failing with [`Error::WrongType`]
-    /// if the type differs.
+    /// Decodes the data as a typed TLV.
+    ///
+    /// # Errors
+    ///
+    /// [`Error::WrongType`] if the type differs, otherwise the parse error
+    /// of `T` (typically [`Error::InvalidDso`]).
     pub fn parse<T: ParseDsoTlv<'a>>(&self) -> Result<T> {
         if self.dso_type != T::TYPE {
             return Err(Error::WrongType);
@@ -93,21 +117,80 @@ impl<'a> DsoTlv<'a> {
 }
 
 /// Parsing half of a typed DSO TLV.
+///
+/// # Examples
+///
+/// An experimental TLV carrying a 16-bit value, with both halves:
+///
+/// ```
+/// use dnsbox::dso::{ComposeDsoTlv, DsoBuilder, DsoMessage, DsoType, ParseDsoTlv};
+/// use dnsbox::{Composer, Error, Result, WireWriter};
+///
+/// struct Shard(u16);
+///
+/// impl ParseDsoTlv<'_> for Shard {
+///     const TYPE: DsoType = DsoType::new(0xf800);
+///     fn parse_data(data: &[u8]) -> Result<Self> {
+///         let bytes: [u8; 2] = data.try_into().map_err(|_| Error::InvalidDso)?;
+///         Ok(Shard(u16::from_be_bytes(bytes)))
+///     }
+/// }
+///
+/// impl ComposeDsoTlv for Shard {
+///     fn dso_type(&self) -> DsoType {
+///         Self::TYPE
+///     }
+///     fn compose_data<C: Composer + ?Sized>(&self, c: &mut C) -> Result<()> {
+///         c.put_u16(self.0)
+///     }
+/// }
+///
+/// let mut buf = [0u8; 32];
+/// let mut b = DsoBuilder::request(WireWriter::new(&mut buf), 7)?;
+/// b.push(&Shard(3))?;
+/// let msg = DsoMessage::parse_validated(b.finish()?)?;
+/// assert_eq!(msg.primary()?.unwrap().parse::<Shard>()?.0, 3);
+/// # Ok::<(), Error>(())
+/// ```
 pub trait ParseDsoTlv<'a>: Sized {
     /// The TLV type.
     const TYPE: DsoType;
 
-    /// Parses DSO-DATA; fails with [`Error::InvalidDso`] on a bad
-    /// length.
+    /// Parses DSO-DATA.
+    ///
+    /// # Errors
+    ///
+    /// Implementations fail with [`Error::InvalidDso`] on a bad length or
+    /// value.
     fn parse_data(data: &'a [u8]) -> Result<Self>;
 }
 
 /// Composing half of a typed DSO TLV; what [`DsoBuilder::push`] accepts.
+///
+/// See [`ParseDsoTlv`] for an example implementing both halves.
+///
+/// ```
+/// use dnsbox::dso::{ComposeDsoTlv, DsoType, RetryDelay};
+/// use dnsbox::WireWriter;
+///
+/// let tlv = RetryDelay { delay: 1000 };
+/// assert_eq!(tlv.dso_type(), DsoType::RETRY_DELAY);
+/// let mut buf = [0u8; 8];
+/// let mut w = WireWriter::new(&mut buf);
+/// tlv.compose_data(&mut w)?;
+/// assert_eq!(w.as_bytes(), 1000u32.to_be_bytes());
+/// # Ok::<(), dnsbox::Error>(())
+/// ```
 pub trait ComposeDsoTlv {
     /// The TLV type.
     fn dso_type(&self) -> DsoType;
 
     /// Writes DSO-DATA (without the type and length).
+    ///
+    /// # Errors
+    ///
+    /// [`Error::BufferTooSmall`] if `c` is full, or an
+    /// implementation-specific error for a value that cannot be encoded.
     fn compose_data<C: Composer + ?Sized>(&self, c: &mut C) -> Result<()>;
 }
 
@@ -129,6 +212,18 @@ fn exact<const N: usize>(data: &[u8]) -> Result<[u8; N]> {
 
 /// The Keepalive TLV (RFC 8490 §7.1): both values are in milliseconds;
 /// `0xFFFFFFFF` means "infinite".
+///
+/// See the [module example](self) for a request carrying it.
+///
+/// ```
+/// use dnsbox::dso::{Keepalive, ParseDsoTlv};
+///
+/// let ka = Keepalive::parse_data(&[0, 0, 0x3a, 0x98, 0xff, 0xff, 0xff, 0xff])?;
+/// assert_eq!(ka.inactivity_timeout, 15_000);
+/// assert_eq!(ka.keepalive_interval, Keepalive::INFINITE);
+/// assert!(Keepalive::parse_data(&[0; 7]).is_err());
+/// # Ok::<(), dnsbox::Error>(())
+/// ```
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub struct Keepalive {
     /// How long the connection may stay idle (no outstanding operations)
@@ -171,6 +266,18 @@ impl ComposeDsoTlv for Keepalive {
 /// client should wait before reconnecting (as a primary TLV in a
 /// unidirectional message) or retrying (as an additional TLV in an error
 /// response).
+///
+/// ```
+/// use dnsbox::dso::{DsoBuilder, RetryDelay};
+/// use dnsbox::WireWriter;
+///
+/// // A server asking the client to go away for a minute.
+/// let mut buf = [0u8; 32];
+/// let mut b = DsoBuilder::unidirectional(WireWriter::new(&mut buf))?;
+/// b.push(&RetryDelay { delay: 60_000 })?;
+/// assert_eq!(b.finish()?.len(), 12 + 4 + 4);
+/// # Ok::<(), dnsbox::Error>(())
+/// ```
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub struct RetryDelay {
     /// Delay in milliseconds.
@@ -199,7 +306,21 @@ impl ComposeDsoTlv for RetryDelay {
 
 /// The Encryption Padding TLV (RFC 8490 §7.3): padding of any length
 /// (contents should be zero and are ignored). It may only be the last
-/// additional TLV.
+/// additional TLV; [`DsoBuilder::pad_to`] writes it.
+///
+/// ```
+/// use dnsbox::dso::{DsoBuilder, DsoMessage, EncryptionPadding, Keepalive};
+/// use dnsbox::WireWriter;
+///
+/// let mut buf = [0u8; 64];
+/// let mut b = DsoBuilder::request(WireWriter::new(&mut buf), 9)?;
+/// b.push(&Keepalive { inactivity_timeout: 0, keepalive_interval: 10_000 })?;
+/// b.push(&EncryptionPadding { padding: &[0; 8] })?;
+/// let msg = DsoMessage::parse_validated(b.finish()?)?;
+/// let pad = msg.additional().next().unwrap()?;
+/// assert_eq!(pad.parse::<EncryptionPadding>()?.padding.len(), 8);
+/// # Ok::<(), dnsbox::Error>(())
+/// ```
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub struct EncryptionPadding<'a> {
     /// The padding bytes.
@@ -225,6 +346,21 @@ impl ComposeDsoTlv for EncryptionPadding<'_> {
 }
 
 /// A parsed DSO message: a view over the caller's buffer.
+///
+/// See the [module example](self); DSO messages arrive over TCP or TLS,
+/// framed like any other message ([`crate::tcp`]).
+///
+/// ```
+/// use dnsbox::dso::{DsoMessage, DsoType};
+///
+/// // A unidirectional Retry Delay message.
+/// let wire = [0, 0, 0x30, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 4, 0, 0, 0x13, 0x88];
+/// let msg = DsoMessage::parse_validated(&wire)?;
+/// assert!(msg.is_unidirectional() && !msg.is_response());
+/// assert_eq!(msg.tlvs().count(), 1);
+/// assert_eq!(msg.primary()?.map(|t| t.dso_type), Some(DsoType::RETRY_DELAY));
+/// # Ok::<(), dnsbox::Error>(())
+/// ```
 #[derive(Clone, Copy, Debug)]
 pub struct DsoMessage<'a> {
     buf: &'a [u8],
@@ -232,10 +368,15 @@ pub struct DsoMessage<'a> {
 }
 
 impl<'a> DsoMessage<'a> {
-    /// Parses the header: opcode must be DSO ([`Error::WrongType`]
-    /// otherwise) and all four counts zero ([`Error::InvalidDso`], RFC
-    /// 8490 §5.4). TLVs are decoded lazily; see
+    /// Parses the header. TLVs are decoded lazily; see
     /// [`validate`](Self::validate).
+    ///
+    /// # Errors
+    ///
+    /// [`Error::UnexpectedEof`] for a buffer shorter than the header,
+    /// [`Error::WrongType`] unless the opcode is DSO, and
+    /// [`Error::InvalidDso`] unless all four counts are zero (RFC 8490
+    /// §5.4).
     pub fn parse(buf: &'a [u8]) -> Result<Self> {
         let header = Header::parse(buf)?;
         if header.flags.opcode() != Opcode::DSO {
@@ -249,6 +390,10 @@ impl<'a> DsoMessage<'a> {
     }
 
     /// Parses and [validates](Self::validate) the message.
+    ///
+    /// # Errors
+    ///
+    /// As [`parse`](Self::parse) and [`validate`](Self::validate).
     pub fn parse_validated(buf: &'a [u8]) -> Result<Self> {
         let msg = Self::parse(buf)?;
         msg.validate()?;
@@ -313,6 +458,10 @@ impl<'a> DsoMessage<'a> {
     }
 
     /// The primary (or response primary) TLV: the first one, if any.
+    ///
+    /// # Errors
+    ///
+    /// [`Error::UnexpectedEof`] if the first TLV is truncated.
     pub fn primary(&self) -> Result<Option<DsoTlv<'a>>> {
         self.tlvs().next().transpose()
     }
@@ -334,7 +483,10 @@ impl<'a> DsoMessage<'a> {
     /// - Encryption Padding, if present, is not primary, appears once and
     ///   is the last TLV (§7.3).
     ///
-    /// Fails with [`Error::InvalidDso`] (or the framing error).
+    /// # Errors
+    ///
+    /// [`Error::InvalidDso`] if a check fails, or
+    /// [`Error::UnexpectedEof`] for a truncated TLV.
     pub fn validate(&self) -> Result<()> {
         let mut count = 0usize;
         let mut padded = false;
@@ -360,6 +512,20 @@ impl<'a> DsoMessage<'a> {
 
 /// Iterator over the TLVs of a DSO message. Yields an error once (a
 /// truncated TLV) and then stops.
+///
+/// ```
+/// use dnsbox::Error;
+/// use dnsbox::dso::DsoMessage;
+///
+/// // One complete TLV, then a truncated one.
+/// let wire = [0, 1, 0x30, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 2, 0, 4, 0];
+/// let msg = DsoMessage::parse(&wire)?;
+/// let mut tlvs = msg.tlvs();
+/// assert!(tlvs.next().unwrap().is_ok());
+/// assert_eq!(tlvs.next().unwrap().unwrap_err(), Error::UnexpectedEof);
+/// assert!(tlvs.next().is_none());
+/// # Ok::<(), Error>(())
+/// ```
 #[derive(Clone, Debug)]
 #[must_use = "iterators are lazy and do nothing unless consumed"]
 pub struct DsoTlvs<'a> {
@@ -402,6 +568,28 @@ impl core::iter::FusedIterator for DsoTlvs<'_> {}
 /// Encryption Padding TLV is written ([`pad_to`](Self::pad_to) or
 /// [`push`](Self::push)) nothing more may follow
 /// ([`Error::SectionOrder`]).
+///
+/// Constructors take the storage first ([`request`](Self::request),
+/// [`response`](Self::response), [`unidirectional`](Self::unidirectional));
+/// with `alloc`, a `Vec<u8>` works as well as a [`WireWriter`](crate::WireWriter).
+///
+/// ```
+/// use dnsbox::dso::{DsoBuilder, DsoMessage, Keepalive};
+/// use dnsbox::{Rcode, WireWriter};
+///
+/// # let mut qbuf = [0u8; 64];
+/// # let mut q = DsoBuilder::request(WireWriter::new(&mut qbuf), 42)?;
+/// # q.push(&Keepalive { inactivity_timeout: 15_000, keepalive_interval: 15_000 })?;
+/// # let request_wire = q.finish()?;
+/// let request = DsoMessage::parse_validated(request_wire)?;
+/// // Server: answer the Keepalive request with our own timers.
+/// let mut buf = [0u8; 64];
+/// let mut b = DsoBuilder::response(WireWriter::new(&mut buf), &request, Rcode::NOERROR)?;
+/// b.push(&Keepalive { inactivity_timeout: 30_000, keepalive_interval: 30_000 })?;
+/// let response = DsoMessage::parse_validated(b.finish()?)?;
+/// assert!(response.is_response() && response.id() == 42);
+/// # Ok::<(), dnsbox::Error>(())
+/// ```
 pub struct DsoBuilder<B: OutBuf> {
     buf: B,
     base: usize,
@@ -413,6 +601,10 @@ pub struct DsoBuilder<B: OutBuf> {
 impl<B: OutBuf> DsoBuilder<B> {
     /// Starts a message with the given header ID and flags (the opcode is
     /// forced to DSO) at the current end of `buf`.
+    ///
+    /// # Errors
+    ///
+    /// [`Error::BufferTooSmall`] if `buf` cannot hold the header.
     pub fn new(mut buf: B, id: u16, flags: Flags) -> Result<Self> {
         let base = buf.as_bytes().len();
         let limit = buf
@@ -438,6 +630,11 @@ impl<B: OutBuf> DsoBuilder<B> {
     }
 
     /// Starts a request with a (non-zero) message ID (§5.4).
+    ///
+    /// # Errors
+    ///
+    /// [`Error::InvalidDso`] for ID 0, [`Error::BufferTooSmall`] if `buf`
+    /// cannot hold the header.
     pub fn request(buf: B, id: u16) -> Result<Self> {
         if id == 0 {
             return Err(Error::InvalidDso);
@@ -446,12 +643,22 @@ impl<B: OutBuf> DsoBuilder<B> {
     }
 
     /// Starts a unidirectional message (ID 0, §5.4).
+    ///
+    /// # Errors
+    ///
+    /// [`Error::BufferTooSmall`] if `buf` cannot hold the header.
     pub fn unidirectional(buf: B) -> Result<Self> {
         Self::new(buf, 0, Flags::default())
     }
 
     /// Starts the response to `request` with `rcode` (§5.4: same ID, QR
     /// set).
+    ///
+    /// # Errors
+    ///
+    /// [`Error::InvalidDso`] if `request` is a response or unidirectional
+    /// (neither may be answered), [`Error::BufferTooSmall`] if `buf`
+    /// cannot hold the header.
     pub fn response(buf: B, request: &DsoMessage<'_>, rcode: Rcode) -> Result<Self> {
         if request.is_response() || request.is_unidirectional() {
             return Err(Error::InvalidDso);
@@ -492,6 +699,13 @@ impl<B: OutBuf> DsoBuilder<B> {
     }
 
     /// Appends a TLV.
+    ///
+    /// # Errors
+    ///
+    /// [`Error::SectionOrder`] after an Encryption Padding TLV,
+    /// [`Error::InvalidDso`] for Encryption Padding as the primary TLV,
+    /// [`Error::BufferTooSmall`] if the TLV does not fit, or the TLV's
+    /// compose error. Nothing is written on error.
     pub fn push<T: ComposeDsoTlv + ?Sized>(&mut self, tlv: &T) -> Result<()> {
         let dso_type = tlv.dso_type();
         if self.padded {
@@ -524,6 +738,11 @@ impl<B: OutBuf> DsoBuilder<B> {
     /// block-length strategy of RFC 8467 §4.1). The TLV itself takes 4
     /// bytes, so it is always written (possibly with empty data) and the
     /// message grows to the next multiple of `block` that fits it.
+    ///
+    /// # Errors
+    ///
+    /// [`Error::InvalidDso`] for a zero `block` or no primary TLV yet,
+    /// otherwise as [`push`](Self::push).
     pub fn pad_to(&mut self, block: usize) -> Result<()> {
         if block == 0 {
             return Err(Error::InvalidDso);
@@ -556,8 +775,12 @@ impl<B: OutBuf> DsoBuilder<B> {
         })
     }
 
-    /// Finishes the message. A request or unidirectional message must have
-    /// a primary TLV ([`Error::InvalidDso`] otherwise).
+    /// Finishes the message.
+    ///
+    /// # Errors
+    ///
+    /// [`Error::InvalidDso`] if a request or unidirectional message has no
+    /// primary TLV.
     pub fn finish(self) -> Result<B::Output> {
         let header = Header::parse(self.as_bytes())?;
         if self.tlvs == 0 && !header.flags.qr() {

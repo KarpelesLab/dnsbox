@@ -10,6 +10,15 @@ use crate::{Class, Result, Rtype};
 
 /// `KX` record data: a key exchanger for the owner name (RFC 2230 §3).
 /// Class IN only.
+///
+/// ```
+/// use dnsbox::rdata::{Kx, ParseRdataText};
+///
+/// let mut buf = [0u8; 32];
+/// let kx = Kx::from_text("10 kx1.foo.example.", &mut buf)?;
+/// assert_eq!((kx.preference, kx.exchanger.to_string()), (10, "kx1.foo.example.".into()));
+/// # Ok::<(), dnsbox::Error>(())
+/// ```
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub struct Kx<'a> {
     /// Preference; lower values are preferred.

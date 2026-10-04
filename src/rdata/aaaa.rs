@@ -9,6 +9,16 @@ use crate::zone::Scanner;
 use crate::{Class, Result, Rtype};
 
 /// `AAAA` record data: an IPv6 host address (RFC 3596 §2.2). Class IN only.
+///
+/// ```
+/// use dnsbox::rdata::{Aaaa, ParseRdataText};
+///
+/// let mut buf = [0u8; 16];
+/// let aaaa = Aaaa::from_text("2001:DB8:0:0::1", &mut buf)?;
+/// assert_eq!(aaaa, Aaaa::new("2001:db8::1".parse().unwrap()));
+/// assert_eq!(aaaa.to_string(), "2001:db8::1"); // RFC 5952 form
+/// # Ok::<(), dnsbox::Error>(())
+/// ```
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub struct Aaaa {
     /// The address.

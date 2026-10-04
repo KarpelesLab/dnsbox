@@ -10,6 +10,17 @@ use crate::{Result, Rtype};
 
 /// `ISDN` record data: an ISDN telephone number and optional
 /// subaddress (RFC 1183 §3.2).
+///
+/// ```
+/// use dnsbox::rdata::{Isdn, ParseRdataText};
+///
+/// // RFC 1183 §3.2.
+/// let mut buf = [0u8; 32];
+/// let isdn = Isdn::from_text("150862028003217 004", &mut buf)?;
+/// assert_eq!(isdn.address.as_bytes(), b"150862028003217");
+/// assert_eq!(isdn.subaddress.map(|s| s.as_bytes()), Some(&b"004"[..]));
+/// # Ok::<(), dnsbox::Error>(())
+/// ```
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub struct Isdn<'a> {
     /// The ISDN address (country code, area code, number).

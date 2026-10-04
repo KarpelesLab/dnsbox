@@ -10,6 +10,15 @@ use crate::{Result, Rtype};
 
 /// `TALINK` record data: a link in a trust-anchor history chain
 /// (draft-wijngaards-dnsop-trust-history-02). Never standardised.
+///
+/// ```
+/// use dnsbox::rdata::{ParseRdataText, Talink};
+///
+/// let mut buf = [0u8; 32];
+/// let link = Talink::from_text("prev.example. next.example.", &mut buf)?;
+/// assert_eq!(link.next.to_string(), "next.example.");
+/// # Ok::<(), dnsbox::Error>(())
+/// ```
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub struct Talink<'a> {
     /// The previous name in the chain (`.` at the start).

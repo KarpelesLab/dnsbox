@@ -6,6 +6,50 @@
 //! Callers that prefer to fail fast can call [`Message::validate`] (or
 //! [`Message::parse_validated`]) first, which walks the whole message once
 //! and reports the first error.
+//!
+//! [`Message`], [`Question`], [`Record`] and [`Section`] are re-exported
+//! at the crate root. A whole message displays in `dig`'s layout.
+//!
+//! # Examples
+//!
+//! ```
+//! use dnsbox::rdata::{Mx, RData};
+//! use dnsbox::{Class, Message, MessageBuilder, NameBuf, Rtype, Section};
+//!
+//! # let name: NameBuf = "example.com".parse()?;
+//! # let mx: NameBuf = "mx.example.com".parse()?;
+//! # let mut buf = [0u8; 512];
+//! # let mut b = MessageBuilder::new(&mut buf)?;
+//! # b.set_flags(dnsbox::Flags::default().with_qr(true));
+//! # b.push_question(&name, Rtype::MX, Class::IN)?;
+//! # b.push_answer(&name, Class::IN, 300, &Mx { preference: 10, exchange: mx.as_name() })?;
+//! # b.push_additional(&mx, Class::IN, 300, &dnsbox::rdata::A::new([192, 0, 2, 25].into()))?;
+//! # let wire: &[u8] = b.finish();
+//! // `wire` holds a response: example.com MX, with glue for the exchange.
+//! let msg = Message::parse(wire)?;
+//! assert!(msg.flags().qr());
+//! let q = msg.questions().next().expect("one question")?;
+//! assert_eq!(q.qtype(), Rtype::MX);
+//!
+//! // One pass over all three record sections.
+//! for item in msg.records() {
+//!     let (section, rr) = item?;
+//!     match rr.data()? {
+//!         RData::Mx(_) => assert_eq!(section, Section::Answer),
+//!         RData::A(a) => assert_eq!(a.addr.octets(), [192, 0, 2, 25]),
+//!         _ => {}
+//!     }
+//! }
+//!
+//! // Or a typed view of one record.
+//! let mx: Mx<'_> = msg.answers().next().expect("an answer")?.data_as()?;
+//! assert_eq!(mx.exchange.to_string(), "mx.example.com.");
+//!
+//! // `dig`-style text of the whole message.
+//! let text = msg.to_string();
+//! assert!(text.contains(";; ANSWER SECTION:\nexample.com.\t\t300\tIN\tMX\t10 mx.example.com.\n"));
+//! # Ok::<(), dnsbox::Error>(())
+//! ```
 
 use core::fmt;
 
@@ -18,6 +62,18 @@ use crate::{Class, Error, Flags, Header, Result, Rtype};
 ///
 /// In UPDATE messages (RFC 2136 §2) they are the Zone, Prerequisite, Update
 /// and Additional sections.
+///
+/// Sections compare in wire order.
+///
+/// ```
+/// use dnsbox::{Header, Section};
+///
+/// let header = Header { ancount: 2, arcount: 1, ..Header::default() };
+/// let counts: Vec<u16> = Section::ALL.iter().map(|s| s.count(&header)).collect();
+/// assert_eq!(counts, [0, 2, 0, 1]);
+/// assert!(Section::Answer < Section::Additional);
+/// assert_eq!(Section::Authority.to_string(), "AUTHORITY");
+/// ```
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub enum Section {
     /// Question section (QDCOUNT entries); Zone section in UPDATE.
@@ -93,6 +149,12 @@ pub struct Message<'a> {
 
 impl<'a> Message<'a> {
     /// Wraps `buf`, parsing only the header. Sections are decoded lazily.
+    ///
+    /// # Errors
+    ///
+    /// [`Error::UnexpectedEof`] if `buf` is shorter than the 12-byte
+    /// header. Everything after the header is checked later, by the
+    /// iterators or [`validate`](Self::validate).
     #[inline]
     pub const fn parse(buf: &'a [u8]) -> Result<Self> {
         match Header::parse(buf) {
@@ -102,6 +164,19 @@ impl<'a> Message<'a> {
     }
 
     /// Wraps `buf` and [validates](Self::validate) the whole message.
+    ///
+    /// # Errors
+    ///
+    /// The first error [`validate`](Self::validate) finds.
+    ///
+    /// ```
+    /// use dnsbox::{Error, Message};
+    ///
+    /// // An answer record whose owner name points forward: rejected.
+    /// let wire = b"\0\x01\x81\x80\0\0\0\x01\0\0\0\0\xc0\x0e\0\x01\0\x01\0\0\0\x3c\0\x04\xc0\0\x02\x01";
+    /// assert!(Message::parse(wire).is_ok()); // only the header is checked
+    /// assert_eq!(Message::parse_validated(wire).unwrap_err(), Error::BadPointer);
+    /// ```
     pub fn parse_validated(buf: &'a [u8]) -> Result<Self> {
         let msg = Self::parse(buf)?;
         msg.validate()?;
@@ -147,6 +222,21 @@ impl<'a> Message<'a> {
     }
 
     /// Iterates over the answer section.
+    ///
+    /// ```
+    /// use dnsbox::rdata::A;
+    /// use dnsbox::{Class, Message, MessageBuilder, NameBuf};
+    ///
+    /// let name: NameBuf = "example".parse()?;
+    /// let mut buf = [0u8; 128];
+    /// let mut b = MessageBuilder::new(&mut buf)?;
+    /// b.push_answer(&name, Class::IN, 60, &A::new([192, 0, 2, 1].into()))?;
+    /// b.push_answer(&name, Class::IN, 60, &A::new([192, 0, 2, 2].into()))?;
+    /// let msg = Message::parse(b.finish())?;
+    /// let addrs: Vec<A> = msg.answers().map(|rr| rr?.data_as()).collect::<Result<_, _>>()?;
+    /// assert_eq!(addrs.len(), 2);
+    /// # Ok::<(), dnsbox::Error>(())
+    /// ```
     #[inline]
     pub fn answers(&self) -> Records<'a> {
         self.section(Section::Answer)
@@ -184,7 +274,7 @@ impl<'a> Message<'a> {
     }
 
     /// Iterates over every resource record (answer, authority, additional)
-    /// with the section it belongs to, in wire order.
+    /// with the section it belongs to, in wire order. See [`AllRecords`].
     #[inline]
     pub fn records(&self) -> AllRecords<'a> {
         let h = &self.header;
@@ -199,6 +289,12 @@ impl<'a> Message<'a> {
     }
 
     /// The offset at which `section` starts, skipping the earlier ones.
+    ///
+    /// # Errors
+    ///
+    /// [`Error::UnexpectedEof`] if the earlier sections are cut short (the
+    /// header counts promise more entries than the message holds), or a
+    /// name decoding error for a malformed name in them.
     pub fn section_offset(&self, section: Section) -> Result<usize> {
         skip_to(self.buf, &self.header, section)
     }
@@ -207,6 +303,24 @@ impl<'a> Message<'a> {
     /// name (with pointer hardening), every section count, every RDATA
     /// with a typed implementation, and no trailing bytes after the last
     /// record.
+    ///
+    /// # Errors
+    ///
+    /// The first error found: [`Error::UnexpectedEof`] for a message that
+    /// holds fewer entries than its counts, a name decoding error
+    /// ([`Error::BadPointer`], [`Error::NameTooLong`], ...), an RDATA
+    /// error ([`Error::InvalidRdata`], ...), or [`Error::TrailingData`]
+    /// for bytes after the last record.
+    ///
+    /// ```
+    /// use dnsbox::{Error, Message};
+    ///
+    /// // A header claiming one answer, and nothing after it.
+    /// let wire = [0, 1, 0x81, 0x80, 0, 0, 0, 1, 0, 0, 0, 0];
+    /// let msg = Message::parse(&wire)?;
+    /// assert_eq!(msg.validate(), Err(Error::UnexpectedEof));
+    /// # Ok::<(), Error>(())
+    /// ```
     pub fn validate(&self) -> Result<()> {
         let mut end = Header::LEN;
         for q in self.questions() {
@@ -283,6 +397,19 @@ fn skip_to(msg: &[u8], header: &Header, section: Section) -> Result<usize> {
 }
 
 /// An entry of the question section (RFC 1035 §4.1.2).
+///
+/// ```
+/// use dnsbox::{Class, Message, MessageBuilder, NameBuf, Rtype};
+///
+/// let name: NameBuf = "example.org".parse()?;
+/// let mut buf = [0u8; 64];
+/// let query = MessageBuilder::query(&mut buf, 1, &name, Rtype::AAAA, Class::IN)?.finish();
+/// let q = Message::parse(query)?.questions().next().unwrap()?;
+/// assert_eq!((q.name(), q.qtype(), q.qclass()), (name.as_name(), Rtype::AAAA, Class::IN));
+/// assert_eq!(q.range(), 12..query.len());
+/// assert_eq!(q.to_string(), "example.org. IN AAAA");
+/// # Ok::<(), dnsbox::Error>(())
+/// ```
 #[derive(Clone, Copy, Debug)]
 pub struct Question<'a> {
     name: Name<'a>,
@@ -294,6 +421,11 @@ pub struct Question<'a> {
 
 impl<'a> Question<'a> {
     /// Parses a question at the reader's position.
+    ///
+    /// # Errors
+    ///
+    /// [`Error::UnexpectedEof`] if the entry is cut short, or a name
+    /// decoding error.
     pub fn parse(r: &mut WireReader<'a>) -> Result<Self> {
         let q = Self::parse_at(r.message(), r.position(), r.end())?;
         r.skip(q.end - q.start)?;
@@ -360,6 +492,31 @@ impl fmt::Display for Question<'_> {
 }
 
 /// A resource record (RFC 1035 §4.1.3), viewed in place.
+///
+/// The fixed fields are decoded when the record is located; the RDATA only
+/// on request, as the typed [`RData`] ([`data`](Self::data)) or one
+/// specific type ([`data_as`](Self::data_as)).
+///
+/// ```
+/// use dnsbox::rdata::{A, RData};
+/// use dnsbox::{Class, Message, MessageBuilder, NameBuf, Rtype};
+///
+/// let name: NameBuf = "www.example.com".parse()?;
+/// let mut buf = [0u8; 128];
+/// let mut b = MessageBuilder::new(&mut buf)?;
+/// b.push_answer(&name, Class::IN, 3600, &A::new([192, 0, 2, 7].into()))?;
+/// let wire = b.finish();
+///
+/// let rr = Message::parse(wire)?.answers().next().unwrap()?;
+/// assert_eq!(rr.name(), name.as_name());
+/// assert_eq!((rr.rtype(), rr.class(), rr.ttl()), (Rtype::A, Class::IN, 3600));
+/// assert_eq!(rr.rdata(), [192, 0, 2, 7]);
+/// assert!(matches!(rr.data()?, RData::A(a) if a.addr.octets() == [192, 0, 2, 7]));
+/// assert_eq!(rr.data_as::<A>()?.addr.to_string(), "192.0.2.7");
+/// assert_eq!(rr.to_string(), "www.example.com. 3600 IN A 192.0.2.7");
+/// assert_eq!(&wire[rr.rdata_range()], rr.rdata());
+/// # Ok::<(), dnsbox::Error>(())
+/// ```
 #[derive(Clone, Copy, Debug)]
 pub struct Record<'a> {
     /// The owner name; it also holds the whole message.
@@ -375,6 +532,12 @@ pub struct Record<'a> {
 impl<'a> Record<'a> {
     /// Parses a record at the reader's position. The reader must span the
     /// whole message (so RDATA names can be decompressed later).
+    ///
+    /// # Errors
+    ///
+    /// [`Error::UnexpectedEof`] if the fixed fields or the RDATA are cut
+    /// short, or an owner-name decoding error. The RDATA itself is not
+    /// checked.
     pub fn parse(r: &mut WireReader<'a>) -> Result<Self> {
         let msg = r.message();
         let start = r.position();
@@ -482,13 +645,23 @@ impl<'a> Record<'a> {
 
     /// Decodes the RDATA into the typed [`RData`] enum (unknown types are
     /// kept opaque).
+    ///
+    /// # Errors
+    ///
+    /// The type's parse error for malformed RDATA ([`Error::InvalidRdata`],
+    /// [`Error::UnexpectedEof`], [`Error::TrailingData`], a name decoding
+    /// error, ...).
     #[inline]
     pub fn data(&self) -> Result<RData<'a>> {
         RData::parse(self.rtype, self.class, self.rdata_reader())
     }
 
-    /// Decodes the RDATA as a specific type, failing with
-    /// [`Error::WrongType`] if the record is of another type.
+    /// Decodes the RDATA as a specific type.
+    ///
+    /// # Errors
+    ///
+    /// [`Error::WrongType`] if the record is of another type, otherwise as
+    /// [`data`](Self::data).
     pub fn data_as<T: ParseRdata<'a>>(&self) -> Result<T> {
         if self.rtype != T::RTYPE {
             return Err(Error::WrongType);
@@ -548,6 +721,18 @@ impl fmt::Display for Record<'_> {
 ///
 /// Yields exactly QDCOUNT items unless an error occurs, in which case the
 /// error is yielded once and iteration stops.
+///
+/// ```
+/// use dnsbox::{Error, Message};
+///
+/// // QDCOUNT is 2, but only one question follows.
+/// let wire = b"\0\x01\0\0\0\x02\0\0\0\0\0\0\x01a\0\0\x01\0\x01";
+/// let mut questions = Message::parse(wire)?.questions();
+/// assert!(questions.next().unwrap().is_ok());
+/// assert_eq!(questions.next().unwrap().unwrap_err(), Error::UnexpectedEof);
+/// assert!(questions.next().is_none());
+/// # Ok::<(), Error>(())
+/// ```
 #[derive(Clone, Debug)]
 #[must_use = "iterators are lazy and do nothing unless consumed"]
 pub struct Questions<'a> {
@@ -590,6 +775,24 @@ impl core::iter::FusedIterator for Questions<'_> {}
 ///
 /// Yields exactly the section's count of items unless an error occurs, in
 /// which case the error is yielded once and iteration stops.
+///
+/// ```
+/// use dnsbox::rdata::Txt;
+/// use dnsbox::{Class, Message, MessageBuilder, NameBuf, Section};
+///
+/// let name: NameBuf = "example".parse()?;
+/// let mut buf = [0u8; 128];
+/// let mut b = MessageBuilder::new(&mut buf)?;
+/// b.push_authority(&name, Class::IN, 60, &Txt::from_wire(b"\x01a")?)?;
+/// let msg = Message::parse(b.finish())?;
+///
+/// let records = msg.section(Section::Authority);
+/// assert_eq!(records.section(), Section::Authority);
+/// let ttls: Vec<u32> = records.map(|rr| rr.map(|rr| rr.ttl())).collect::<Result<_, _>>()?;
+/// assert_eq!(ttls, [60]);
+/// assert_eq!(msg.answers().count(), 0);
+/// # Ok::<(), dnsbox::Error>(())
+/// ```
 #[derive(Clone, Debug)]
 #[must_use = "iterators are lazy and do nothing unless consumed"]
 pub struct Records<'a> {
@@ -654,6 +857,27 @@ impl core::iter::FusedIterator for Records<'_> {}
 
 /// Iterator over all resource records with their section; see
 /// [`Message::records`].
+///
+/// The question section is skipped (errors in it are reported), then the
+/// answer, authority and additional records are yielded in wire order, in
+/// one pass.
+///
+/// ```
+/// use dnsbox::rdata::A;
+/// use dnsbox::{Class, Message, MessageBuilder, NameBuf, Section};
+///
+/// let name: NameBuf = "ns.example".parse()?;
+/// let a = A::new([192, 0, 2, 53].into());
+/// let mut buf = [0u8; 128];
+/// let mut b = MessageBuilder::new(&mut buf)?;
+/// b.push_answer(&name, Class::IN, 60, &a)?;
+/// b.push_additional(&name, Class::IN, 60, &a)?;
+/// let msg = Message::parse(b.finish())?;
+///
+/// let sections: Vec<Section> = msg.records().map(|r| r.map(|(s, _)| s)).collect::<Result<_, _>>()?;
+/// assert_eq!(sections, [Section::Answer, Section::Additional]);
+/// # Ok::<(), dnsbox::Error>(())
+/// ```
 #[derive(Clone, Debug)]
 #[must_use = "iterators are lazy and do nothing unless consumed"]
 pub struct AllRecords<'a> {

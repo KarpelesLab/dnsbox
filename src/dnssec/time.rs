@@ -40,6 +40,8 @@ pub const fn serial_cmp(a: u32, b: u32) -> Option<Ordering> {
 /// Checks that `now` lies within `[inception, expiration]` using serial
 /// arithmetic (RFC 4035 §5.3.1, RFC 4034 §3.1.5).
 ///
+/// # Errors
+///
 /// Fails with [`Error::SignatureNotYetValid`] if `now` is before the
 /// inception time and [`Error::SignatureExpired`] if it is after the
 /// expiration time (including undefined comparisons, and windows whose

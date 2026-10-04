@@ -14,6 +14,26 @@
 //! |                    ARCOUNT                    |
 //! +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
 //! ```
+//!
+//! [`Header`] is the decoded form; [`Flags`] the second word, with the
+//! [`Opcode`] and the 4-bit [`Rcode`]. Parsed messages expose the header
+//! through [`Message::header`](crate::Message::header), and
+//! [`MessageBuilder`](crate::MessageBuilder) keeps the counts up to date.
+//!
+//! ```
+//! use dnsbox::{Flags, Header, Opcode, Rcode};
+//!
+//! // `dig example.com`: ID 0x1234, RD, one question, one additional (OPT).
+//! let wire = [0x12, 0x34, 0x01, 0x20, 0, 1, 0, 0, 0, 0, 0, 1];
+//! let header = Header::parse(&wire)?;
+//! assert_eq!(header.id, 0x1234);
+//! assert!(header.flags.rd() && header.flags.ad() && !header.flags.qr());
+//! assert_eq!(header.flags.opcode(), Opcode::QUERY);
+//! assert_eq!(header.flags.rcode(), Rcode::NOERROR);
+//! assert_eq!(header.arcount, 1);
+//! assert_eq!(header.to_bytes(), wire);
+//! # Ok::<(), dnsbox::Error>(())
+//! ```
 
 use core::fmt;
 
@@ -27,6 +47,22 @@ use crate::{Error, Result};
 /// Its text form is the IANA mnemonic (`QUERY`, `UPDATE`) or `OPCODE<n>`
 /// for unassigned values; [`FromStr`](core::str::FromStr) parses both back.
 /// The default is [`QUERY`](Self::QUERY).
+///
+/// # Examples
+///
+/// ```
+/// use dnsbox::Opcode;
+///
+/// assert_eq!(Opcode::UPDATE.get(), 5);
+/// assert_eq!(Opcode::UPDATE.to_string(), "UPDATE");
+/// assert_eq!("notify".parse::<Opcode>()?, Opcode::NOTIFY);
+/// // Unassigned values round-trip through the generic form.
+/// assert_eq!(Opcode::new(9).to_string(), "OPCODE9");
+/// assert_eq!("OPCODE9".parse::<Opcode>()?, Opcode::new(9));
+/// // Only the low 4 bits exist on the wire.
+/// assert_eq!(Opcode::new(0x15), Opcode::UPDATE);
+/// # Ok::<(), dnsbox::Error>(())
+/// ```
 #[derive(Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord, Default)]
 pub struct Opcode(u8);
 
@@ -126,6 +162,22 @@ impl fmt::Display for Opcode {
 /// Its text form is the IANA mnemonic (`NOERROR`, `NXDOMAIN`) or
 /// `RCODE<n>` for unassigned values; [`FromStr`](core::str::FromStr)
 /// parses both back. The default is [`NOERROR`](Self::NOERROR).
+///
+/// # Examples
+///
+/// ```
+/// use dnsbox::Rcode;
+///
+/// assert_eq!(Rcode::NXDOMAIN.to_string(), "NXDOMAIN");
+/// assert_eq!("servfail".parse::<Rcode>()?, Rcode::SERVFAIL);
+///
+/// // BADCOOKIE (23) does not fit in the header's 4 bits: the high 8 bits
+/// // travel in the OPT record (RFC 6891 §6.1.3).
+/// let rcode = Rcode::BADCOOKIE;
+/// assert_eq!((rcode.header_bits(), rcode.extended_bits()), (7, 1));
+/// assert_eq!(Rcode::from_parts(7, 1), rcode);
+/// # Ok::<(), dnsbox::Error>(())
+/// ```
 #[derive(Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord, Default)]
 pub struct Rcode(u16);
 
@@ -265,6 +317,26 @@ impl fmt::Display for Rcode {
 }
 
 /// The second 16-bit word of the header: QR, opcode, flag bits and RCODE.
+///
+/// Every bit has a getter (`qr()`, `aa()`, `tc()`, `rd()`, `ra()`, `z()`,
+/// `ad()`, `cd()`) and a builder-style setter (`with_qr(bool)`, ...).
+///
+/// # Examples
+///
+/// ```
+/// use dnsbox::{Flags, Opcode, Rcode};
+///
+/// let flags = Flags::default()
+///     .with_qr(true)
+///     .with_rd(true)
+///     .with_ra(true)
+///     .with_rcode(Rcode::NXDOMAIN);
+/// assert_eq!(flags.bits(), 0x8183);
+/// assert!(flags.qr() && !flags.aa());
+/// assert_eq!(flags.opcode(), Opcode::QUERY);
+/// assert_eq!(flags.rcode(), Rcode::NXDOMAIN);
+/// assert_eq!(Flags::from_bits(0x8183), flags);
+/// ```
 #[derive(Clone, Copy, PartialEq, Eq, Hash, Default)]
 pub struct Flags(u16);
 
@@ -391,6 +463,24 @@ impl fmt::Debug for Flags {
 }
 
 /// The fixed DNS message header.
+///
+/// # Examples
+///
+/// ```
+/// use dnsbox::{Flags, Header};
+///
+/// let header = Header {
+///     id: 0xbeef,
+///     flags: Flags::default().with_rd(true),
+///     qdcount: 1,
+///     ..Header::default()
+/// };
+/// let mut wire = [0u8; 12];
+/// header.write(&mut wire)?;
+/// assert_eq!(wire, [0xbe, 0xef, 0x01, 0x00, 0, 1, 0, 0, 0, 0, 0, 0]);
+/// assert_eq!(Header::parse(&wire)?, header);
+/// # Ok::<(), dnsbox::Error>(())
+/// ```
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default)]
 pub struct Header {
     /// Transaction ID, echoed by the responder.
@@ -411,7 +501,12 @@ impl Header {
     /// Size of the header on the wire, in bytes.
     pub const LEN: usize = 12;
 
-    /// Parses a header from the first 12 bytes of `buf`.
+    /// Parses a header from the first 12 bytes of `buf`; anything after
+    /// them is ignored.
+    ///
+    /// # Errors
+    ///
+    /// [`Error::UnexpectedEof`] if `buf` is shorter than 12 bytes.
     pub const fn parse(buf: &[u8]) -> Result<Self> {
         let [a, b, c, d, e, f, g, h, i, j, k, l, ..] = *buf else {
             return Err(Error::UnexpectedEof);
@@ -439,6 +534,11 @@ impl Header {
     }
 
     /// Writes the header into the first 12 bytes of `out`.
+    ///
+    /// # Errors
+    ///
+    /// [`Error::BufferTooSmall`] if `out` is shorter than 12 bytes; nothing
+    /// is written then.
     pub fn write(&self, out: &mut [u8]) -> Result<()> {
         let dst = out.get_mut(..Self::LEN).ok_or(Error::BufferTooSmall)?;
         dst.copy_from_slice(&self.to_bytes());

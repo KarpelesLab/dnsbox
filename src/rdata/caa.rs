@@ -13,6 +13,17 @@ use crate::{Error, Result, Rtype};
 /// The tag must be non-empty and consist of ASCII letters and digits
 /// (RFC 8659 §4.1); RDATA with another tag is rejected with
 /// [`Error::InvalidRdata`], as is composing such data.
+///
+/// ```
+/// use dnsbox::rdata::{Caa, ParseRdataText};
+///
+/// let mut buf = [0u8; 64];
+/// let caa = Caa::from_text(r#"0 issue "letsencrypt.org""#, &mut buf)?;
+/// assert!(caa.tag_is("issue") && !caa.is_critical());
+/// assert_eq!(caa.value, b"letsencrypt.org");
+/// assert_eq!(caa, Caa::new(0, b"issue", b"letsencrypt.org")?);
+/// # Ok::<(), dnsbox::Error>(())
+/// ```
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub struct Caa<'a> {
     /// Flags octet; bit 0 (`0x80`) is the Issuer Critical Flag, the other
@@ -31,8 +42,12 @@ impl<'a> Caa<'a> {
     /// (RFC 8659 §4.1).
     pub const ISSUER_CRITICAL: u8 = 0x80;
 
-    /// Builds CAA data, checking the tag (RFC 8659 §4.1): 1 to 255 ASCII
-    /// letters and digits, else [`Error::InvalidRdata`].
+    /// Builds CAA data, checking the tag (RFC 8659 §4.1).
+    ///
+    /// # Errors
+    ///
+    /// [`Error::InvalidRdata`] unless the tag is 1 to 255 ASCII letters
+    /// and digits.
     pub const fn new(flags: u8, tag: &'a [u8], value: &'a [u8]) -> Result<Self> {
         if !valid_tag(tag) {
             return Err(Error::InvalidRdata);

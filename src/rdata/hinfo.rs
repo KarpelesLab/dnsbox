@@ -10,6 +10,17 @@ use crate::{Result, Rtype};
 
 /// `HINFO` record data: host information (RFC 1035 §3.3.2). Also used in
 /// minimal responses to ANY queries (RFC 8482 §4.2).
+///
+/// ```
+/// use dnsbox::rdata::{Hinfo, ParseRdataText};
+///
+/// // RFC 8482 §4.2: the synthesized answer to an ANY query.
+/// let mut buf = [0u8; 16];
+/// let hinfo = Hinfo::from_text(r#""RFC8482" """#, &mut buf)?;
+/// assert_eq!(hinfo.cpu.as_bytes(), b"RFC8482");
+/// assert!(hinfo.os.is_empty());
+/// # Ok::<(), dnsbox::Error>(())
+/// ```
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub struct Hinfo<'a> {
     /// CPU type.

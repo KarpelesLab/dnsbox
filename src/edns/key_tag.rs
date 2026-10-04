@@ -12,6 +12,17 @@ use crate::{Error, Result};
 /// The value is one or more 16-bit key tags; an empty or odd-length value
 /// fails with [`Error::InvalidOption`]. To build the option from a list of
 /// tags, use [`KeyTags`].
+///
+/// ```
+/// use dnsbox::edns::KeyTag;
+///
+/// // The root KSKs 20326 and 38696, as a validator signals them.
+/// let tags = KeyTag::from_wire(&[0x4f, 0x66, 0x97, 0x28])?;
+/// assert_eq!(tags.iter().collect::<Vec<_>>(), [20326, 38696]);
+/// assert!(tags.contains(38696));
+/// assert_eq!(tags.to_string(), "KEY-TAG=20326,38696");
+/// # Ok::<(), dnsbox::Error>(())
+/// ```
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub struct KeyTag<'a> {
     raw: &'a [u8],
@@ -19,6 +30,10 @@ pub struct KeyTag<'a> {
 
 impl<'a> KeyTag<'a> {
     /// Wraps encoded key tags (a non-empty, even number of bytes).
+    ///
+    /// # Errors
+    ///
+    /// [`Error::InvalidOption`] for an empty or odd-length value.
     pub const fn from_wire(raw: &'a [u8]) -> Result<Self> {
         if raw.is_empty() || !raw.len().is_multiple_of(2) {
             return Err(Error::InvalidOption);

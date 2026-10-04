@@ -11,6 +11,14 @@ use crate::{Error, Result};
 open_enum! {
     /// A ZONEVERSION TYPE value (RFC 9660 §6.2; IANA "ZONEVERSION TYPE
     /// Values" registry). Unregistered values display as bare numbers.
+    ///
+    /// ```
+    /// use dnsbox::edns::ZoneVersionType;
+    ///
+    /// assert_eq!(ZoneVersionType::SOA_SERIAL.to_string(), "SOA-SERIAL");
+    /// assert_eq!(ZoneVersionType::new(250).to_string(), "250");
+    /// assert!(ZoneVersionType::new(250).is_private_use());
+    /// ```
     pub struct ZoneVersionType(u8), generic "";
     /// The zone's SOA serial number (RFC 9660 §4).
     SOA_SERIAL = 0 => "SOA-SERIAL",
@@ -33,6 +41,20 @@ impl ZoneVersionType {
 /// LABELCOUNT, TYPE and VERSION; a one-byte value, or an SOA-SERIAL
 /// version that is not exactly 4 bytes (§4), fails with
 /// [`Error::InvalidOption`].
+///
+/// ```
+/// use dnsbox::edns::{Opt, ZoneVersion};
+///
+/// // Serial 2024010101 of a zone two labels up from the QNAME.
+/// let serial = 2_024_010_101u32.to_be_bytes();
+/// let zv = ZoneVersion::soa_serial(2, &serial);
+/// assert_eq!(zv.serial(), Some(2_024_010_101));
+/// assert_eq!(zv.to_string(), "ZONEVERSION=2,SOA-SERIAL,2024010101");
+///
+/// let opt = Opt::new(b"\x00\x13\x00\x00")?;
+/// assert_eq!(opt.get::<ZoneVersion>().expect("present")?, ZoneVersion::Request);
+/// # Ok::<(), dnsbox::Error>(())
+/// ```
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub enum ZoneVersion<'a> {
     /// The empty option sent in queries.

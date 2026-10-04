@@ -26,7 +26,16 @@ pub use nsec::{NsecProof, NsecRecord};
 pub use nsec3::PurecryptoNsec3Hasher;
 pub use nsec3::{Nsec3Hasher, Nsec3Limits, Nsec3Proof, Nsec3Record};
 
-/// What a denial-of-existence proof establishes.
+/// What a denial-of-existence proof establishes: the payload of
+/// [`DenialStatus::Secure`].
+///
+/// ```
+/// use dnsbox::dnssec::{Denial, DenialStatus};
+///
+/// let status = DenialStatus::Secure(Denial::NoData);
+/// assert_eq!(status.denial(), Some(Denial::NoData));
+/// assert_eq!(Denial::NameError.to_string(), "name does not exist");
+/// ```
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 #[non_exhaustive]
 pub enum Denial {
@@ -63,6 +72,14 @@ impl fmt::Display for Denial {
 }
 
 /// Why a proof leaves the response insecure rather than secure.
+///
+/// ```
+/// use dnsbox::dnssec::{DenialStatus, InsecureReason, Nsec3Limits};
+///
+/// // An NSEC3 iteration count above policy (RFC 9276 §3.2).
+/// let status = Nsec3Limits::new(0, 150).check(100);
+/// assert_eq!(status, Some(DenialStatus::Insecure(InsecureReason::Iterations)));
+/// ```
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 #[non_exhaustive]
 pub enum InsecureReason {
@@ -86,6 +103,20 @@ impl fmt::Display for InsecureReason {
 }
 
 /// Why a proof is bogus.
+///
+/// ```
+/// use dnsbox::dnssec::{BogusReason, DenialProof, DenialStatus, NsecProof, NsecRecord};
+/// use dnsbox::NameBuf;
+///
+/// // No NSEC record at all: nothing proves the name's absence.
+/// let zone: NameBuf = "example".parse()?;
+/// let none: [NsecRecord<'_>; 0] = [];
+/// let qname: NameBuf = "missing.example".parse()?;
+/// let status = NsecProof::new(zone.as_name(), &none).name_error(qname.as_name());
+/// assert_eq!(status, DenialStatus::Bogus(BogusReason::MissingProof));
+/// assert_eq!(status.to_string(), "bogus: denial-of-existence record missing");
+/// # Ok::<(), dnsbox::Error>(())
+/// ```
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 #[non_exhaustive]
 pub enum BogusReason {
@@ -152,7 +183,23 @@ impl fmt::Display for BogusReason {
     }
 }
 
-/// The outcome of checking a denial-of-existence proof.
+/// The outcome of checking a denial-of-existence proof, as returned by
+/// every [`DenialProof`] check (see the example there).
+///
+/// ```
+/// use dnsbox::dnssec::{BogusReason, Denial, DenialStatus, InsecureReason};
+///
+/// fn ad_bit(status: DenialStatus) -> Option<bool> {
+///     match status {
+///         DenialStatus::Secure(_) => Some(true),     // set AD
+///         DenialStatus::Insecure(_) => Some(false),  // answer, without AD
+///         _ => None,                                 // bogus: SERVFAIL
+///     }
+/// }
+/// assert_eq!(ad_bit(DenialStatus::Secure(Denial::NameError)), Some(true));
+/// assert_eq!(ad_bit(DenialStatus::Insecure(InsecureReason::OptOut)), Some(false));
+/// assert!(DenialStatus::Bogus(BogusReason::NameExists).is_bogus());
+/// ```
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 #[non_exhaustive]
 pub enum DenialStatus {
@@ -214,6 +261,24 @@ impl fmt::Display for DenialStatus {
 ///
 /// Both are views of the name the proof was made for. Returned by
 /// [`NsecProof::closest_encloser`] and [`Nsec3Proof::closest_encloser`].
+///
+/// ```
+/// use dnsbox::NameBuf;
+/// use dnsbox::dnssec::{NsecProof, NsecRecord};
+/// use dnsbox::rdata::{Nsec, ParseRdataText};
+///
+/// // RFC 4035 Appendix B.2: b.example. NSEC ns1.example. covers ml.example.
+/// let (zone, b): (NameBuf, NameBuf) = ("example".parse()?, "b.example".parse()?);
+/// let mut buf = [0u8; 64];
+/// let records = [NsecRecord::new(b.as_name(), Nsec::from_text("ns1.example. NS RRSIG NSEC", &mut buf)?)];
+/// let qname: NameBuf = "ml.example".parse()?;
+/// let ce = NsecProof::new(zone.as_name(), &records)
+///     .closest_encloser(qname.as_name())
+///     .expect("proven");
+/// assert_eq!((ce.encloser, ce.next_closer), (zone.as_name(), qname.as_name()));
+/// assert_eq!(ce.wildcard().map(|w| w.to_string()).as_deref(), Some("*.example."));
+/// # Ok::<(), dnsbox::Error>(())
+/// ```
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 #[non_exhaustive]
 pub struct ClosestEncloser<'q> {

@@ -25,6 +25,12 @@ use crate::{Result, Rtype};
 pub trait ComposeOptions {
     /// Writes every option, as `{OPTION-CODE, OPTION-LENGTH, OPTION-DATA}`
     /// triples (RFC 6891 §6.1.2).
+    ///
+    /// # Errors
+    ///
+    /// The first error of an option's
+    /// [`compose_option`](ComposeOption::compose_option) (typically
+    /// [`Error::BufferTooSmall`](crate::Error::BufferTooSmall)).
     fn compose_options<C: Composer + ?Sized>(&self, c: &mut C) -> Result<()>;
 }
 
@@ -93,6 +99,19 @@ tuple_options! {
 ///
 /// [`MessageBuilder::push_edns`](crate::MessageBuilder::push_edns) uses it;
 /// it is public for callers writing the OPT record themselves.
+///
+/// ```
+/// use dnsbox::edns::{Nsid, OptData, OptHeader};
+/// use dnsbox::{MessageBuilder, Name};
+///
+/// // What push_edns does, spelled out.
+/// let header = OptHeader::new(1232);
+/// let mut buf = [0u8; 64];
+/// let mut b = MessageBuilder::new(&mut buf)?;
+/// b.push_additional(Name::ROOT, header.class(), header.ttl(), &OptData(&Nsid::REQUEST))?;
+/// assert_eq!(b.len(), 12 + 11 + 4);
+/// # Ok::<(), dnsbox::Error>(())
+/// ```
 #[derive(Clone, Copy, Debug)]
 pub struct OptData<'o, O: ?Sized>(pub &'o O);
 

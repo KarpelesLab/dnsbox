@@ -14,6 +14,15 @@ open_enum! {
     /// Usages"; acronyms from RFC 7218 §2.1).
     ///
     /// The presentation format of TLSA and SMIMEA uses the bare number.
+    ///
+    /// ```
+    /// use dnsbox::rdata::TlsaCertUsage;
+    ///
+    /// assert_eq!(TlsaCertUsage::DANE_EE.get(), 3);
+    /// assert_eq!(TlsaCertUsage::DANE_EE.to_string(), "DANE-EE");
+    /// assert_eq!("pkix-ta".parse::<TlsaCertUsage>()?, TlsaCertUsage::PKIX_TA);
+    /// # Ok::<(), dnsbox::Error>(())
+    /// ```
     pub struct TlsaCertUsage(u8), generic "";
     /// CA constraint (RFC 6698 §2.1.1, RFC 7218).
     PKIX_TA = 0 => "PKIX-TA",
@@ -32,6 +41,14 @@ open_enum! {
     /// (RFC 6698 §2.1.2, IANA "TLSA Selectors"; acronyms from RFC 7218 §2.2).
     ///
     /// The presentation format of TLSA and SMIMEA uses the bare number.
+    ///
+    /// ```
+    /// use dnsbox::rdata::TlsaSelector;
+    ///
+    /// assert_eq!("SPKI".parse::<TlsaSelector>()?, TlsaSelector::SPKI);
+    /// assert_eq!(TlsaSelector::CERT.get(), 0);
+    /// # Ok::<(), dnsbox::Error>(())
+    /// ```
     pub struct TlsaSelector(u8), generic "";
     /// Full certificate (RFC 6698 §2.1.2, RFC 7218).
     CERT = 0 => "Cert",
@@ -47,6 +64,13 @@ open_enum! {
     /// RFC 7218 §2.3).
     ///
     /// The presentation format of TLSA and SMIMEA uses the bare number.
+    ///
+    /// ```
+    /// use dnsbox::rdata::TlsaMatchingType;
+    ///
+    /// assert_eq!(TlsaMatchingType::SHA2_512.to_string(), "SHA2-512");
+    /// assert_eq!(TlsaMatchingType::from(1), TlsaMatchingType::SHA2_256);
+    /// ```
     pub struct TlsaMatchingType(u8), generic "";
     /// Exact match on the selected content (RFC 6698 §2.1.3, RFC 7218).
     FULL = 0 => "Full",
@@ -168,12 +192,37 @@ macro_rules! dane_rdata {
 dane_rdata! {
     /// `TLSA` record data: a TLS certificate association for DANE
     /// (RFC 6698 §2.1).
+    ///
+    /// ```
+    /// use dnsbox::rdata::{ParseRdataText, Tlsa, TlsaCertUsage, TlsaMatchingType, TlsaSelector};
+    ///
+    /// // DANE-EE, SPKI, SHA2-256 (RFC 7671 §5.1): "3 1 1 <hash>".
+    /// let mut buf = [0u8; 64];
+    /// let tlsa = Tlsa::from_text(
+    ///     "3 1 1 d2abde240d7cd3ee6b4b28c54df034b97983a1d16e8a410e4561cb106618e971",
+    ///     &mut buf,
+    /// )?;
+    /// assert_eq!(tlsa.usage, TlsaCertUsage::DANE_EE);
+    /// assert_eq!(tlsa.selector, TlsaSelector::SPKI);
+    /// assert_eq!(tlsa.matching_type, TlsaMatchingType::SHA2_256);
+    /// assert_eq!(tlsa.data.len(), 32);
+    /// # Ok::<(), dnsbox::Error>(())
+    /// ```
     Tlsa, TLSA
 }
 
 dane_rdata! {
     /// `SMIMEA` record data: an S/MIME certificate association, in the
     /// TLSA format (RFC 8162 §2).
+    ///
+    /// ```
+    /// use dnsbox::rdata::{ParseRdataText, Smimea};
+    ///
+    /// let mut buf = [0u8; 64];
+    /// let smimea = Smimea::from_text("3 0 2 ( 0123456789abcdef )", &mut buf)?;
+    /// assert_eq!(smimea.to_string(), "3 0 2 0123456789ABCDEF");
+    /// # Ok::<(), dnsbox::Error>(())
+    /// ```
     Smimea, SMIMEA
 }
 

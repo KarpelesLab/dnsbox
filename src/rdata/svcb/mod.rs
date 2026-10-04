@@ -35,6 +35,17 @@ pub use value::SvcParamValue;
 
 /// Typed views of individual SvcParamValues (RFC 9460 §7–8 and the specs
 /// registering later keys), as carried by [`SvcParamValue`].
+///
+/// ```
+/// use dnsbox::rdata::svcparam::{Alpn, Ipv4Hint};
+///
+/// let alpn = Alpn::new(b"\x02h2\x02h3")?;
+/// assert_eq!(alpn.iter().collect::<Vec<_>>(), [&b"h2"[..], b"h3"]);
+/// assert_eq!(alpn.to_string(), r#""h2,h3""#);
+/// let hints = Ipv4Hint::new(&[192, 0, 2, 1, 192, 0, 2, 2])?;
+/// assert_eq!(hints.to_string(), "192.0.2.1,192.0.2.2");
+/// # Ok::<(), dnsbox::Error>(())
+/// ```
 pub mod svcparam {
     pub use super::value::{
         Alpn, DocPath, DohPath, Ech, Ipv4Hint, Ipv6Hint, Mandatory, Oots, TlsSupportedGroups,
@@ -115,7 +126,10 @@ macro_rules! svcb_type {
             /// values are character-string decoded (Appendix A), lists are
             /// comma-separated with `\,` / `\\` escaping (Appendix A.1),
             /// `ech` is base64, and parentheses and `;` comments are
-            /// accepted as in zone files. Fails with
+            /// accepted as in zone files.
+            ///
+            /// # Errors
+            ///
             /// [`Error::InvalidText`](crate::Error::InvalidText) on syntax
             /// errors, [`Error::UnexpectedEof`](crate::Error::UnexpectedEof)
             /// if the priority or target is missing,
@@ -204,6 +218,22 @@ svcb_type! {
     /// `HTTPS` record data: a service binding for the `https` and `http`
     /// schemes (RFC 9460 §9), with the same format as [`Svcb`]. Class IN
     /// only.
+    ///
+    /// ```
+    /// use dnsbox::rdata::Https;
+    /// use dnsbox::NameBuf;
+    ///
+    /// // AliasMode: example.com's HTTPS service is at cdn.example.net.
+    /// let cdn: NameBuf = "cdn.example.net".parse()?;
+    /// let alias = Https::alias(cdn.as_name());
+    /// assert!(alias.is_alias_mode());
+    /// assert_eq!(alias.to_string(), "0 cdn.example.net.");
+    ///
+    /// let mut buf = [0u8; 64];
+    /// let https = Https::from_text("1 . alpn=h2", &mut buf)?;
+    /// assert!(https.is_service_mode());
+    /// # Ok::<(), dnsbox::Error>(())
+    /// ```
     Https, HTTPS
 }
 

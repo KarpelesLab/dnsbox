@@ -97,7 +97,9 @@ impl Loc {
     /// "one digit × power of ten" values, see
     /// [`encode_precision`](Self::encode_precision)).
     ///
-    /// Fails with [`Error::InvalidRdata`] if the latitude exceeds ±90°, the
+    /// # Errors
+    ///
+    /// [`Error::InvalidRdata`] if the latitude exceeds ±90°, the
     /// longitude ±180°, or the altitude is below −100 000 m or above
     /// 42 849 672.95 m.
     pub const fn new(
@@ -200,6 +202,10 @@ impl Loc {
 
     /// Checks the field invariants enforced on parsing: valid precision
     /// octets, latitude within ±90° and longitude within ±180°.
+    ///
+    /// # Errors
+    ///
+    /// [`Error::InvalidRdata`] if a check fails.
     pub const fn validate(&self) -> Result<()> {
         if Self::decode_precision(self.size).is_none()
             || Self::decode_precision(self.horiz_pre).is_none()

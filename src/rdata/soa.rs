@@ -9,6 +9,18 @@ use crate::zone::Scanner;
 use crate::{Result, Rtype};
 
 /// `SOA` record data: start of a zone of authority (RFC 1035 §3.3.13).
+///
+/// ```
+/// use dnsbox::rdata::{ParseRdataText, Soa};
+///
+/// // TTL-style units are accepted for the timers (as BIND does).
+/// let mut buf = [0u8; 64];
+/// let soa = Soa::from_text("ns1.example. hostmaster.example. 2024010101 2h 15m 2w 1h", &mut buf)?;
+/// assert_eq!(soa.serial, 2_024_010_101);
+/// assert_eq!((soa.refresh, soa.retry, soa.expire, soa.minimum), (7200, 900, 1_209_600, 3600));
+/// assert_eq!(soa.rname.to_string(), "hostmaster.example.");
+/// # Ok::<(), dnsbox::Error>(())
+/// ```
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub struct Soa<'a> {
     /// The primary name server for the zone.

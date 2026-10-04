@@ -13,6 +13,22 @@ use crate::{Result, Rtype};
 ///
 /// To build one, encode the type list with [`TypeBitmap::compose`] into a
 /// buffer and wrap it with [`TypeBitmap::new`].
+///
+/// ```
+/// use dnsbox::rdata::{Nsec, ParseRdataText};
+/// use dnsbox::{NameBuf, Rtype};
+///
+/// // RFC 4034 §4.3: alfa.example.com's NSEC record.
+/// let mut buf = [0u8; 64];
+/// let nsec = Nsec::from_text("host.example.com. A MX RRSIG NSEC TYPE1234", &mut buf)?;
+/// assert!(nsec.types.contains(Rtype::MX) && !nsec.types.contains(Rtype::AAAA));
+///
+/// // It proves that nothing exists between its owner and next name.
+/// let owner: NameBuf = "alfa.example.com".parse()?;
+/// let missing: NameBuf = "b.example.com".parse()?;
+/// assert!(nsec.covers(&owner.as_name(), &missing.as_name()));
+/// # Ok::<(), dnsbox::Error>(())
+/// ```
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub struct Nsec<'a> {
     /// The next owner name in canonical order (RFC 4034 §4.1.1). Never

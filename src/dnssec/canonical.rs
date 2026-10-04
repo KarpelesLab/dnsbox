@@ -133,6 +133,8 @@ impl<'b, B: OutBuf> CanonicalRrset<'b, B> {
 
     /// Appends one record in canonical form.
     ///
+    /// # Errors
+    ///
     /// Fails with [`Error::RrsetMismatch`] if `rdata` is not of the
     /// RRset's type, and with the composer's error (e.g.
     /// [`Error::BufferTooSmall`]) if it cannot be written; in both cases
@@ -161,6 +163,8 @@ impl<'b, B: OutBuf> CanonicalRrset<'b, B> {
 
     /// Sorts the records into canonical order, removes duplicates, and
     /// returns the length of the finished RRset.
+    ///
+    /// # Errors
     ///
     /// Fails with [`Error::BufferTooSmall`] if the output has no room for
     /// the temporary sort space (see the type documentation); the RRset is
@@ -299,6 +303,21 @@ fn copy_within(bytes: &mut [u8], src: core::ops::Range<usize>, dest: usize) -> R
 }
 
 /// The canonical form of one RDATA (RFC 4034 §6.2).
+///
+/// # Errors
+///
+/// The error of `rdata`'s [`ComposeRdata::compose_rdata`].
+///
+/// ```
+/// use dnsbox::NameBuf;
+/// use dnsbox::dnssec::canonical_rdata;
+/// use dnsbox::rdata::Mx;
+///
+/// let exchange: NameBuf = "Mail.Example.".parse()?;
+/// let wire = canonical_rdata(&Mx { preference: 5, exchange: exchange.as_name() })?;
+/// assert_eq!(wire, b"\x00\x05\x04mail\x07example\x00");
+/// # Ok::<(), dnsbox::Error>(())
+/// ```
 #[cfg(feature = "alloc")]
 #[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
 pub fn canonical_rdata<D: ComposeRdata + ?Sized>(rdata: &D) -> Result<alloc::vec::Vec<u8>> {
@@ -309,6 +328,24 @@ pub fn canonical_rdata<D: ComposeRdata + ?Sized>(rdata: &D) -> Result<alloc::vec
 
 /// Sorts record data into canonical RRset order (RFC 4034 §6.3) and
 /// removes duplicates (records with the same canonical RDATA).
+///
+/// # Errors
+///
+/// The error of a record's [`ComposeRdata::compose_rdata`].
+///
+/// ```
+/// use dnsbox::dnssec::sort_rrset;
+/// use dnsbox::rdata::A;
+///
+/// let mut rrset = vec![
+///     A::new([192, 0, 2, 9].into()),
+///     A::new([192, 0, 2, 1].into()),
+///     A::new([192, 0, 2, 9].into()),
+/// ];
+/// sort_rrset(&mut rrset)?;
+/// assert_eq!(rrset, [A::new([192, 0, 2, 1].into()), A::new([192, 0, 2, 9].into())]);
+/// # Ok::<(), dnsbox::Error>(())
+/// ```
 #[cfg(feature = "alloc")]
 #[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
 pub fn sort_rrset<D: ComposeRdata>(rrset: &mut alloc::vec::Vec<D>) -> Result<()> {

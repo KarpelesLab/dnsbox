@@ -11,6 +11,16 @@ use crate::{Error, Result, Rtype};
 /// form (RFC 7929 §2.1, RFC 4880 §11.1).
 ///
 /// The key is not interpreted.
+///
+/// ```
+/// use dnsbox::rdata::{Openpgpkey, ParseRdataText};
+///
+/// let mut buf = [0u8; 16];
+/// let key = Openpgpkey::from_text("( mDME\n V/fn vBY= )", &mut buf)?;
+/// assert_eq!(key, Openpgpkey::new(&[0x98, 0x33, 0x04, 0x57, 0xf7, 0xe7, 0xbc, 0x16]));
+/// assert_eq!(key.to_string(), "mDMEV/fnvBY=");
+/// # Ok::<(), dnsbox::Error>(())
+/// ```
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub struct Openpgpkey<'a> {
     /// The binary OpenPGP key: the whole RDATA (RFC 7929 §2.1).

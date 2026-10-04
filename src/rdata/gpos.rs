@@ -13,6 +13,16 @@ use crate::{Result, Rtype};
 ///
 /// The strings are kept as received; RFC 1712 expects real numbers
 /// (longitude −180..180, latitude −90..90, altitude in metres).
+///
+/// ```
+/// use dnsbox::rdata::{Gpos, ParseRdataText};
+///
+/// let mut buf = [0u8; 32];
+/// let gpos = Gpos::from_text("-32.6882 116.8652 10.0", &mut buf)?;
+/// assert_eq!(gpos.latitude.as_bytes(), b"116.8652");
+/// assert_eq!(gpos.to_string(), r#""-32.6882" "116.8652" "10.0""#);
+/// # Ok::<(), dnsbox::Error>(())
+/// ```
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub struct Gpos<'a> {
     /// Longitude in decimal degrees, positive east.

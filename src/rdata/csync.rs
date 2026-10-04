@@ -11,6 +11,18 @@ use crate::{Result, Rtype};
 /// (RFC 7477 §2.1).
 ///
 /// To build one from a list of types, use [`CsyncParts`].
+///
+/// ```
+/// use dnsbox::rdata::{Csync, ParseRdataText};
+/// use dnsbox::Rtype;
+///
+/// // RFC 7477 §2.2: serial 66, immediate + soaminimum, sync A NS AAAA.
+/// let mut buf = [0u8; 32];
+/// let csync = Csync::from_text("66 3 A NS AAAA", &mut buf)?;
+/// assert!(csync.immediate() && csync.soa_minimum());
+/// assert!(csync.types.contains(Rtype::NS));
+/// # Ok::<(), dnsbox::Error>(())
+/// ```
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub struct Csync<'a> {
     /// The child zone's SOA serial the data was taken at (RFC 7477

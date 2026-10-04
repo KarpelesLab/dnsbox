@@ -14,6 +14,19 @@ use crate::{Result, Rtype};
 /// the types whose RDATA names receivers should decompress, so a compressed
 /// target is accepted when parsing. It is always written uncompressed, and
 /// lowercased in canonical form (RFC 4034 §6.2).
+///
+/// ```
+/// use dnsbox::rdata::{ParseRdataText, Srv};
+///
+/// let mut buf = [0u8; 64];
+/// let srv = Srv::from_text("10 60 5060 bigbox.example.com.", &mut buf)?;
+/// assert_eq!((srv.priority, srv.weight, srv.port), (10, 60, 5060));
+/// assert!(!srv.is_unavailable());
+/// // "." as target: the service is decidedly not available (RFC 2782).
+/// let mut buf = [0u8; 8];
+/// assert!(Srv::from_text("0 0 0 .", &mut buf)?.is_unavailable());
+/// # Ok::<(), dnsbox::Error>(())
+/// ```
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub struct Srv<'a> {
     /// Priority; lower values are tried first (RFC 2782 "Priority").

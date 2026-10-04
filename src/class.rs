@@ -1,5 +1,19 @@
 //! Resource record CLASSes and QCLASSes (RFC 1035 §3.2.4–3.2.5,
 //! RFC 6895 §3.2).
+//!
+//! [`Class`] is re-exported at the crate root. Almost every record is
+//! [`Class::IN`]; [`Class::CH`] carries server identification queries
+//! (`version.bind`), and [`Class::NONE`] / [`Class::ANY`] have special
+//! meanings in dynamic update (RFC 2136 §2.5).
+//!
+//! ```
+//! use dnsbox::Class;
+//!
+//! assert_eq!(Class::IN.get(), 1);
+//! assert_eq!(Class::from_mnemonic("chaos"), Some(Class::CH));
+//! assert_eq!(Class::from(254), Class::NONE);
+//! assert!(Class::new(0xff00).is_private_use());
+//! ```
 
 // The IANA "DNS CLASSes" registry
 // (https://www.iana.org/assignments/dns-parameters/dns-parameters-2.csv).

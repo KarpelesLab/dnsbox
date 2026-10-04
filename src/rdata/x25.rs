@@ -9,6 +9,17 @@ use crate::zone::Scanner;
 use crate::{Error, Result, Rtype};
 
 /// `X25` record data: an X.121 PSDN address (RFC 1183 §3.1).
+///
+/// ```
+/// use dnsbox::rdata::{ParseRdataText, X25};
+/// use dnsbox::CharStr;
+///
+/// let mut buf = [0u8; 16];
+/// let x25 = X25::from_text("311061700956", &mut buf)?;
+/// assert_eq!(x25, X25::new(CharStr::new(b"311061700956")?)?);
+/// assert!(X25::new(CharStr::new(b"12")?).is_err()); // too short
+/// # Ok::<(), dnsbox::Error>(())
+/// ```
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub struct X25<'a> {
     /// The PSDN address: at least four decimal digits (RFC 1183 §3.1).
@@ -16,8 +27,12 @@ pub struct X25<'a> {
 }
 
 impl<'a> X25<'a> {
-    /// Wraps a PSDN address, which must be at least four ASCII decimal
-    /// digits ([`Error::InvalidRdata`] otherwise).
+    /// Wraps a PSDN address.
+    ///
+    /// # Errors
+    ///
+    /// [`Error::InvalidRdata`] unless it is at least four ASCII decimal
+    /// digits.
     pub fn new(psdn_address: CharStr<'a>) -> Result<Self> {
         let x = X25 { psdn_address };
         x.validate()?;
@@ -26,6 +41,10 @@ impl<'a> X25<'a> {
 
     /// Checks that the address is at least four decimal digits
     /// (RFC 1183 §3.1).
+    ///
+    /// # Errors
+    ///
+    /// [`Error::InvalidRdata`] if it is not.
     pub fn validate(&self) -> Result<()> {
         let digits = self.psdn_address.as_bytes();
         if digits.len() < 4 || !digits.iter().all(u8::is_ascii_digit) {

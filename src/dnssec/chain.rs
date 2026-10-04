@@ -48,6 +48,65 @@ pub const MAX_CRYPTO_OPERATIONS: usize = 16;
 /// key) pair; a validator should still bound the RRSIGs, keys and calls it
 /// spends on one response.
 ///
+/// # Examples
+///
+/// A zone signed with a key-signing key (KSK) and a zone-signing key
+/// (ZSK), validated from the DS record its parent publishes:
+///
+/// ```
+/// # #[cfg(feature = "dnssec")] {
+/// use dnsbox::dnssec::{Algorithm, DigestType, PurecryptoVerifier, Rrset, Signer, SigningKey};
+/// use dnsbox::dnssec::{TrustedKeys, ZoneKey, sign_rrset};
+/// use dnsbox::rdata::{A, Dnskey};
+/// use dnsbox::{Class, NameBuf, Rtype};
+///
+/// let zone: NameBuf = "example.".parse()?;
+/// let ksk = SigningKey::from_private_bytes(Algorithm::ED25519, &[1; 32])?;
+/// let zsk = SigningKey::from_private_bytes(Algorithm::ED25519, &[2; 32])?;
+/// let dnskeys = [ksk.dnskey(Dnskey::ZONE | Dnskey::SEP), zsk.dnskey(Dnskey::ZONE)];
+/// let (inception, expiration, now) = (1_000, 2_000, 1_500);
+/// let mut scratch = Vec::new();
+///
+/// // Signer side: the KSK signs the DNSKEY RRset, the ZSK the data; the
+/// // parent publishes the KSK's DS.
+/// let ksk_key = ZoneKey::new(zone.as_name(), dnskeys[0]);
+/// let template = ksk_key.rrsig_template(zone.as_name(), Rtype::DNSKEY, 3600, inception, expiration);
+/// let mut ksk_sig = [0u8; 64];
+/// let dnskey_rrset = Rrset::new(zone.as_name(), Class::IN, &dnskeys);
+/// let n = sign_rrset(&ksk, &template, dnskey_rrset, &mut scratch, &mut ksk_sig)?;
+/// let dnskey_rrsig = template.with_signature(&ksk_sig[..n]);
+///
+/// let www: NameBuf = "www.example.".parse()?;
+/// let addrs = [A::new([192, 0, 2, 1].into())];
+/// let zsk_key = ZoneKey::new(zone.as_name(), dnskeys[1]);
+/// let template = zsk_key.rrsig_template(www.as_name(), Rtype::A, 3600, inception, expiration);
+/// let mut zsk_sig = [0u8; 64];
+/// let n = sign_rrset(&zsk, &template, Rrset::new(www.as_name(), Class::IN, &addrs), &mut scratch, &mut zsk_sig)?;
+/// let a_rrsig = template.with_signature(&zsk_sig[..n]);
+/// let ds = ksk_key.ds(DigestType::SHA256)?;
+///
+/// // Validator side: DS -> DNSKEY RRset -> A RRset.
+/// let keys = TrustedKeys::from_ds(
+///     &PurecryptoVerifier,
+///     Rrset::new(zone.as_name(), Class::IN, dnskeys),
+///     [ds.to_ds()],
+///     [dnskey_rrsig],
+///     now,
+///     &mut scratch,
+/// )?;
+/// let verified = keys.verify_rrset(
+///     &PurecryptoVerifier,
+///     Rrset::new(www.as_name(), Class::IN, &addrs),
+///     [a_rrsig],
+///     now,
+///     &mut scratch,
+/// )?;
+/// assert_eq!(verified.key_tag, dnskeys[1].key_tag());
+/// assert!(!verified.is_wildcard_expansion());
+/// # }
+/// # Ok::<(), dnsbox::Error>(())
+/// ```
+///
 /// [`Denial::UnsignedDelegation`]: super::Denial::UnsignedDelegation
 #[derive(Clone, Copy, Debug)]
 pub struct TrustedKeys<'a, K> {
@@ -57,6 +116,19 @@ pub struct TrustedKeys<'a, K> {
 }
 
 /// What a successful RRset verification established.
+///
+/// Returned by [`TrustedKeys::verify_rrset`] (see the example there) and
+/// inside an [`Answer`]. Cap the TTLs of the RRset to `original_ttl` and
+/// the cache lifetime to `expiration` (RFC 4035 §5.3.3):
+///
+/// ```
+/// use dnsbox::dnssec::Verified;
+///
+/// fn cache_ttl(verified: &Verified, rrset_ttl: u32, now: u32) -> u32 {
+///     let until_expiry = verified.expiration.wrapping_sub(now);
+///     rrset_ttl.min(verified.original_ttl).min(until_expiry)
+/// }
+/// ```
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 #[non_exhaustive]
 pub struct Verified {
@@ -89,7 +161,20 @@ impl Verified {
     }
 }
 
-/// The result of [`TrustedKeys::verify_answer`].
+/// The result of [`TrustedKeys::verify_answer`] (see the example there).
+///
+/// ```
+/// use dnsbox::dnssec::{Answer, DenialStatus};
+///
+/// fn describe(answer: &Answer) -> &'static str {
+///     match answer {
+///         Answer::Exact(_) => "secure",
+///         Answer::Wildcard { proof: DenialStatus::Secure(_), .. } => "secure wildcard expansion",
+///         Answer::Wildcard { proof, .. } if proof.is_insecure() => "insecure (opt-out)",
+///         _ => "bogus",
+///     }
+/// }
+/// ```
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 #[non_exhaustive]
 pub enum Answer {
@@ -215,6 +300,13 @@ where
     ///
     /// `now` is the current time in seconds since 1970 (modulo 2^32); the
     /// signed data is built at the end of `scratch` and removed again.
+    ///
+    /// # Errors
+    ///
+    /// As described above: [`Error::UnsupportedAlgorithm`] (insecure),
+    /// or [`Error::Unsigned`], [`Error::KeyMismatch`],
+    /// [`Error::BadSignature`], [`Error::SignatureExpired`], ... (bogus).
+    /// See the [type-level example](TrustedKeys#examples).
     #[cfg(feature = "dnssec-digest")]
     #[cfg_attr(docsrs, doc(cfg(feature = "dnssec-digest")))]
     pub fn from_ds<'d, 's, V, B, D, S>(
@@ -280,6 +372,8 @@ where
     /// key of the set with the algorithm and public key of an anchor must
     /// have signed the set.
     ///
+    /// # Errors
+    ///
     /// Fails with [`Error::KeyMismatch`] if no anchor is in the set, and
     /// otherwise as [`from_ds`](Self::from_ds).
     pub fn from_anchors<'t, 's, V, B, T, S>(
@@ -322,6 +416,8 @@ where
     /// types, signers, or without a matching key are disregarded
     /// (RFC 6840 §5.12); one valid signature suffices (RFC 6840 §5.11).
     ///
+    /// # Errors
+    ///
     /// Fails with [`Error::RrsetMismatch`] for an empty RRset or one
     /// outside the zone or of another class (RFC 4035 §5.3.1),
     /// [`Error::Unsigned`] if no RRSIG is by the zone,
@@ -360,6 +456,11 @@ where
     /// if it was synthesized from a wildcard, checks with `proof` (the
     /// authenticated NSEC or NSEC3 records of the response) that no closer
     /// match exists (RFC 4035 §5.3.4, RFC 5155 §8.8).
+    ///
+    /// # Errors
+    ///
+    /// As [`verify_rrset`](Self::verify_rrset). A failed wildcard proof
+    /// is not an error: it is reported in [`Answer::Wildcard`].
     ///
     /// ```
     /// # #[cfg(feature = "dnssec")] {

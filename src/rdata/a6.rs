@@ -16,6 +16,18 @@ use crate::{Class, Error, Result, Rtype};
 /// `suffix` holds the full 128-bit address with the first `prefix_len`
 /// bits zero; only the `16 - prefix_len / 8` low octets are transmitted,
 /// and the pad bits in the first transmitted octet must be zero.
+///
+/// ```
+/// use dnsbox::rdata::{A6, ParseRdataText};
+///
+/// // RFC 2874 §3.1.1: 64 prefix bits come from subnet-1.ip6.a.net.
+/// let mut buf = [0u8; 64];
+/// let a6 = A6::from_text("64 ::2:3:4:5 subnet-1.ip6.a.net.", &mut buf)?;
+/// assert_eq!(a6.prefix_len, 64);
+/// assert_eq!(a6.prefix.map(|n| n.to_string()).as_deref(), Some("subnet-1.ip6.a.net."));
+/// a6.validate()?;
+/// # Ok::<(), dnsbox::Error>(())
+/// ```
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub struct A6<'a> {
     /// Number of leading address bits taken from the prefix name (0–128).
@@ -30,6 +42,10 @@ impl A6<'_> {
     /// Checks `prefix_len <= 128`, that the first `prefix_len` bits of
     /// `suffix` are zero, and that `prefix` is present iff
     /// `prefix_len > 0` (RFC 2874 §3.1).
+    ///
+    /// # Errors
+    ///
+    /// [`Error::InvalidRdata`] if a check fails.
     pub fn validate(&self) -> Result<()> {
         if self.prefix_len > 128 || (self.prefix_len > 0) != self.prefix.is_some() {
             return Err(Error::InvalidRdata);

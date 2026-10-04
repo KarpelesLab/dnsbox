@@ -51,6 +51,37 @@ pub fn record_len(
 /// section, with an uncompressed owner name; nothing may be added to the
 /// message afterwards. Signing either succeeds or leaves both the message
 /// and the signer unchanged.
+///
+/// # Examples
+///
+/// A zone transfer response stream, signed every message (see the
+/// [module example](super) for a request and its response):
+///
+/// ```
+/// # #[cfg(feature = "tsig")] {
+/// use dnsbox::tsig::{HmacKey, TsigAlgorithm, TsigSigner, TsigVerifier};
+/// use dnsbox::{Message, MessageBuilder, NameBuf};
+///
+/// let key_name: NameBuf = "xfr-key".parse()?;
+/// let key = HmacKey::new(&key_name, TsigAlgorithm::HmacSha256, b"0123456789abcdef");
+/// let request_mac = [0x5a; 32]; // from the client's signed AXFR request
+/// let now = 1_700_000_000;
+///
+/// let mut signer = TsigSigner::response(&key, &request_mac)?;
+/// let mut verifier = TsigVerifier::new(&key, &request_mac)?;
+/// for _ in 0..3 {
+///     let mut buf = [0u8; 512];
+///     let mut b = MessageBuilder::new(&mut buf)?;
+///     b.set_flags(dnsbox::Flags::default().with_qr(true));
+///     // ... the records of this part of the zone ...
+///     signer.sign(&mut b, now)?;
+///     let wire = b.finish();
+///     assert!(verifier.verify(&Message::parse(wire)?, now)?.is_some());
+/// }
+/// verifier.finish()?;
+/// # }
+/// # Ok::<(), dnsbox::Error>(())
+/// ```
 pub struct TsigSigner<'k, K: TsigKey> {
     key: &'k K,
     /// The request MAC (responses) or the previous MAC (streams).
@@ -78,7 +109,11 @@ impl<'k, K: TsigKey> TsigSigner<'k, K> {
 
     /// A signer for the response(s) to a request whose MAC was
     /// `request_mac` (as received: truncated MACs stay truncated, RFC 8945
-    /// §5.2.2.1). Fails with [`Error::BadMacSize`] beyond
+    /// §5.2.2.1).
+    ///
+    /// # Errors
+    ///
+    /// [`Error::BadMacSize`] if `request_mac` is longer than
     /// [`MAX_MAC_LEN`] bytes.
     pub fn response(key: &'k K, request_mac: &[u8]) -> Result<Self> {
         Ok(TsigSigner {
@@ -109,6 +144,13 @@ impl<'k, K: TsigKey> TsigSigner<'k, K> {
 
     /// Signs the message in `b` at time `now` (seconds since the epoch) and
     /// appends the TSIG record. Returns the MAC.
+    ///
+    /// # Errors
+    ///
+    /// [`Error::BufferTooSmall`] if the TSIG record does not fit,
+    /// [`Error::BadMacSize`] if the key's MAC length is not allowed,
+    /// [`Error::InvalidRdata`] for a time beyond 48 bits. Nothing changes
+    /// on error.
     pub fn sign<B: OutBuf>(&mut self, b: &mut MessageBuilder<B>, now: u64) -> Result<MacBuf> {
         self.sign_with(b, now, TsigRcode::NOERROR, &[])
     }
@@ -116,6 +158,11 @@ impl<'k, K: TsigKey> TsigSigner<'k, K> {
     /// Like [`sign`](Self::sign), with an explicit TSIG error and other
     /// data (e.g. BADTIME responses carry the server time, RFC 8945 §5.2.3)
     /// and `time_signed` instead of the current time.
+    ///
+    /// # Errors
+    ///
+    /// As [`sign`](Self::sign); [`Error::InvalidRdata`] for other data
+    /// over 65535 bytes.
     pub fn sign_with<B: OutBuf>(
         &mut self,
         b: &mut MessageBuilder<B>,
@@ -154,6 +201,31 @@ impl<'k, K: TsigKey> TsigSigner<'k, K> {
     /// Signs a message already written to `buf`, starting at offset `start`
     /// (anything before it, such as a TCP length prefix, is left alone),
     /// appending the TSIG record and incrementing ARCOUNT in place.
+    ///
+    /// # Errors
+    ///
+    /// [`Error::UnexpectedEof`] if `start` is not within `buf` or the
+    /// message is shorter than its header, otherwise as
+    /// [`sign`](Self::sign).
+    ///
+    /// ```
+    /// # #[cfg(all(feature = "tsig", feature = "alloc"))] {
+    /// use dnsbox::tsig::{self, HmacKey, TsigAlgorithm, TsigSigner};
+    /// use dnsbox::{Class, Message, MessageBuilder, NameBuf, Rtype};
+    ///
+    /// let key_name: NameBuf = "k".parse()?;
+    /// let key = HmacKey::new(&key_name, TsigAlgorithm::HmacSha256, b"secret");
+    /// let zone: NameBuf = "example.com".parse()?;
+    /// // A message built elsewhere, with its TCP length prefix.
+    /// let mut b = MessageBuilder::new_tcp_vec();
+    /// b.start_query(1, &zone, Rtype::SOA, Class::IN)?;
+    /// let mut frame = b.finish();
+    /// TsigSigner::request(&key).sign_buf(&mut frame, 2, 1_700_000_000)?;
+    /// let msg = Message::parse(&frame[2..])?;
+    /// assert!(tsig::find(&msg)?.is_some());
+    /// # }
+    /// # Ok::<(), dnsbox::Error>(())
+    /// ```
     pub fn sign_buf<B: OutBuf>(&mut self, buf: &mut B, start: usize, now: u64) -> Result<MacBuf> {
         let rr_len = self.check(now, &[])?;
         let len = buf.as_bytes().len();
@@ -192,8 +264,12 @@ impl<'k, K: TsigKey> TsigSigner<'k, K> {
     }
 
     /// Leaves a message of a response stream unsigned, folding it into the
-    /// next MAC (RFC 8945 §5.3.1). Fails with [`Error::Unsigned`] before
-    /// the first signed message or after 99 unsigned messages in a row.
+    /// next MAC (RFC 8945 §5.3.1).
+    ///
+    /// # Errors
+    ///
+    /// [`Error::Unsigned`] before the first signed message or after 99
+    /// unsigned messages in a row.
     pub fn skip(&mut self, msg: &[u8]) -> Result<()> {
         if self.first || self.unsigned >= MAX_UNSIGNED {
             return Err(Error::Unsigned);

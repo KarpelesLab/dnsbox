@@ -22,6 +22,11 @@ macro_rules! txt_like_rdata {
         impl<'a> $ty<'a> {
             /// Wraps encoded character-strings (length octets included),
             /// which must hold at least one string.
+            ///
+            /// # Errors
+            ///
+            /// [`Error::InvalidRdata`] for an empty buffer,
+            /// [`Error::UnexpectedEof`] if the last string is cut short.
             pub fn from_wire(wire: &'a [u8]) -> Result<Self> {
                 let strings = CharStrs::new(wire)?;
                 if strings.is_empty() {
@@ -85,30 +90,77 @@ txt_like_rdata! {
     /// `SPF` record data: a Sender Policy Framework policy in TXT format
     /// (RFC 4408 §3.1.1). Deprecated: RFC 7208 §3.1 says to publish SPF
     /// policies as TXT only.
+    ///
+    /// ```
+    /// use dnsbox::rdata::{ParseRdataText, Spf};
+    ///
+    /// let mut buf = [0u8; 32];
+    /// let spf = Spf::from_text(r#""v=spf1 -all""#, &mut buf)?;
+    /// assert_eq!(spf.strings().next().map(|s| s.as_bytes()), Some(&b"v=spf1 -all"[..]));
+    /// # Ok::<(), dnsbox::Error>(())
+    /// ```
     Spf, SPF
 }
 
 txt_like_rdata! {
     /// `NINFO` record data: zone status information, TXT format
     /// (IANA template, draft-reid-dnsext-zs).
+    ///
+    /// ```
+    /// use dnsbox::rdata::Ninfo;
+    ///
+    /// let ninfo = Ninfo::from_wire(b"\x02ok")?;
+    /// assert_eq!(ninfo.to_string(), r#""ok""#);
+    /// # Ok::<(), dnsbox::Error>(())
+    /// ```
     Ninfo, NINFO
 }
 
 txt_like_rdata! {
     /// `AVC` record data: application visibility and control, TXT format
     /// (IANA template "AVC/avc-completed-template").
+    ///
+    /// ```
+    /// use dnsbox::rdata::{Avc, ParseRdataText};
+    ///
+    /// let mut buf = [0u8; 32];
+    /// let avc = Avc::from_text(r#""app-name:WOLFGANG|app-class:OAM""#, &mut buf)?;
+    /// assert_eq!(avc.strings().count(), 1);
+    /// # Ok::<(), dnsbox::Error>(())
+    /// ```
     Avc, AVC
 }
 
 txt_like_rdata! {
     /// `RESINFO` record data: resolver information as key=value strings,
     /// TXT format (RFC 9606 §3).
+    ///
+    /// ```
+    /// use dnsbox::rdata::{ParseRdataText, Resinfo};
+    ///
+    /// // RFC 9606 §3.
+    /// let mut buf = [0u8; 128];
+    /// let info = Resinfo::from_text("qnamemin exterr=15,16,17 infourl=https://resolver.example.com/guide", &mut buf)?;
+    /// let keys: Vec<&[u8]> = info.strings().map(|s| s.as_bytes()).collect();
+    /// assert_eq!(keys[0], b"qnamemin");
+    /// assert_eq!(keys.len(), 3);
+    /// # Ok::<(), dnsbox::Error>(())
+    /// ```
     Resinfo, RESINFO
 }
 
 txt_like_rdata! {
     /// `WALLET` record data: a public wallet address, TXT format (IANA
     /// template "WALLET/wallet-completed-template").
+    ///
+    /// ```
+    /// use dnsbox::rdata::{ParseRdataText, Wallet};
+    ///
+    /// let mut buf = [0u8; 64];
+    /// let wallet = Wallet::from_text("BTC bc1qexampleaddress", &mut buf)?;
+    /// assert_eq!(wallet.to_string(), r#""BTC" "bc1qexampleaddress""#);
+    /// # Ok::<(), dnsbox::Error>(())
+    /// ```
     Wallet, WALLET
 }
 

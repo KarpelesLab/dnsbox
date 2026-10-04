@@ -19,6 +19,13 @@ open_enum! {
     /// An IPSECKEY public-key algorithm type (RFC 4025 §2.4, IANA
     /// "IPSECKEY Resource Record Parameters"), also used for the HIP
     /// PK algorithm field (RFC 8005 §5).
+    ///
+    /// ```
+    /// use dnsbox::rdata::IpseckeyAlgorithm;
+    ///
+    /// assert_eq!(IpseckeyAlgorithm::RSA.get(), 2);
+    /// assert_eq!(IpseckeyAlgorithm::EDDSA.to_string(), "EDDSA");
+    /// ```
     pub struct IpseckeyAlgorithm(u8), generic "";
     /// No public key is present (RFC 4025).
     NONE = 0 => "NONE",
@@ -37,6 +44,18 @@ open_enum! {
 /// defined layout and are rejected with [`Error::InvalidRdata`]; the enum
 /// is `#[non_exhaustive]` so that gateway types IANA registers later can be
 /// added.
+///
+/// ```
+/// use dnsbox::NameBuf;
+/// use dnsbox::rdata::IpseckeyGateway;
+///
+/// let name: NameBuf = "gw.example.com".parse()?;
+/// let gateway = IpseckeyGateway::Name(name.as_name());
+/// assert_eq!(gateway.gateway_type(), 3);
+/// assert_eq!(gateway.to_string(), "gw.example.com.");
+/// assert_eq!(IpseckeyGateway::None.to_string(), ".");
+/// # Ok::<(), dnsbox::Error>(())
+/// ```
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 #[non_exhaustive]
 pub enum IpseckeyGateway<'a> {
@@ -75,6 +94,18 @@ impl fmt::Display for IpseckeyGateway<'_> {
 }
 
 /// `IPSECKEY` record data: IPsec keying material (RFC 4025 §2).
+///
+/// ```
+/// use dnsbox::rdata::{IpseckeyAlgorithm, IpseckeyGateway, Ipseckey, ParseRdataText};
+///
+/// let mut buf = [0u8; 64];
+/// let key = Ipseckey::from_text("10 1 2 192.0.2.38 AQNRU3mG", &mut buf)?;
+/// assert_eq!(key.algorithm, IpseckeyAlgorithm::RSA);
+/// assert_eq!(key.gateway, IpseckeyGateway::Ipv4([192, 0, 2, 38].into()));
+/// assert_eq!(key.gateway.gateway_type(), 1);
+/// assert_eq!(key.to_string(), "10 1 2 192.0.2.38 AQNRU3mG");
+/// # Ok::<(), dnsbox::Error>(())
+/// ```
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub struct Ipseckey<'a> {
     /// Precedence among the owner's IPSECKEY records; lower is preferred.

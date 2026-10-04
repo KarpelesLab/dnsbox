@@ -20,6 +20,17 @@ pub const DEFAULT_MAX_INCLUDES: usize = 256;
 
 /// An owned resource record read from a master file: a [`ZoneRecord`]
 /// with its RDATA in a `Vec`.
+///
+/// ```
+/// use dnsbox::rdata::RData;
+///
+/// let zone = dnsbox::zone::parse("$ORIGIN example.\n$TTL 1h\nmail MX 10 mx1\n")?;
+/// let rr = &zone[0];
+/// assert_eq!((rr.name.to_string(), rr.ttl, rr.line), ("mail.example.".into(), 3600, 3));
+/// assert!(matches!(rr.data()?, RData::Mx(mx) if mx.preference == 10));
+/// assert_eq!(rr.as_record().to_string(), "mail.example. 3600 IN MX 10 mx1.example.");
+/// # Ok::<(), dnsbox::Error>(())
+/// ```
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 #[non_exhaustive]
 pub struct ZoneRecordBuf {
@@ -39,6 +50,12 @@ pub struct ZoneRecordBuf {
 
 impl ZoneRecordBuf {
     /// The typed record data (see [`RData::parse`]).
+    ///
+    /// # Errors
+    ///
+    /// None in practice for records read by a [`ZoneReader`] (their RDATA
+    /// was checked); the `Result` is that of [`RData::parse`], which also
+    /// checks RDATA set by hand.
     #[inline]
     pub fn data(&self) -> Result<RData<'_>> {
         RData::parse(self.rtype, self.class, WireReader::new(&self.rdata))
@@ -92,10 +109,37 @@ impl fmt::Display for ZoneRecordBuf {
 /// Implemented by [`NoIncludes`] (the default: every `$INCLUDE` fails),
 /// [`FsIncludes`](super::FsIncludes) with `std`, and closures
 /// `FnMut(&str) -> Result<String>`. Return [`Error::BadInclude`] for a
-/// file that cannot be loaded.
+/// file that cannot be loaded. See the [`Records`] example for a closure.
+///
+/// ```
+/// use dnsbox::zone::IncludeResolver;
+/// use dnsbox::Error;
+/// use std::collections::HashMap;
+///
+/// /// Included files served from memory.
+/// struct InMemory(HashMap<&'static str, &'static str>);
+///
+/// impl IncludeResolver for InMemory {
+///     fn load(&mut self, path: &str) -> dnsbox::Result<String> {
+///         self.0.get(path).map(|text| text.to_string()).ok_or(Error::BadInclude)
+///     }
+/// }
+/// let files = InMemory(HashMap::from([("ns.db", "@ NS ns1\n")]));
+/// let zone = dnsbox::zone::ZoneReader::new("$ORIGIN example.\n$TTL 60\n$INCLUDE ns.db\n")
+///     .records()
+///     .with_includes(files)
+///     .collect::<Result<Vec<_>, _>>()?;
+/// assert_eq!(zone[0].to_string(), "example. 60 IN NS ns1.example.");
+/// # Ok::<(), dnsbox::Error>(())
+/// ```
 pub trait IncludeResolver {
     /// Returns the text of the file named `path` (escapes already
     /// decoded).
+    ///
+    /// # Errors
+    ///
+    /// [`Error::BadInclude`] (or another error) if the file cannot be
+    /// loaded; it is reported at the `$INCLUDE` directive.
     fn load(&mut self, path: &str) -> Result<String>;
 }
 
@@ -107,7 +151,14 @@ impl<F: FnMut(&str) -> Result<String>> IncludeResolver for F {
 }
 
 /// An [`IncludeResolver`] that refuses every `$INCLUDE`
-/// ([`Error::BadInclude`]).
+/// ([`Error::BadInclude`]): the default of [`Records`].
+///
+/// ```
+/// use dnsbox::Error;
+///
+/// let err = dnsbox::zone::parse("$INCLUDE other.db\n").unwrap_err();
+/// assert_eq!((err.error(), err.line()), (Error::BadInclude, 1));
+/// ```
 #[derive(Clone, Copy, Debug, Default)]
 pub struct NoIncludes;
 
@@ -124,6 +175,18 @@ impl IncludeResolver for NoIncludes {
 ///
 /// It opens whatever path the zone file names, absolute paths and `..`
 /// included: only use it for trusted zone files.
+///
+/// ```no_run
+/// use dnsbox::zone::{FsIncludes, ZoneReader};
+///
+/// let text = std::fs::read_to_string("/etc/bind/db.example")?;
+/// let records = ZoneReader::new(&text)
+///     .records()
+///     .with_includes(FsIncludes::new("/etc/bind"))
+///     .collect::<Result<Vec<_>, _>>()?;
+/// println!("{} records", records.len());
+/// # Ok::<(), Box<dyn std::error::Error>>(())
+/// ```
 #[cfg(feature = "std")]
 #[derive(Clone, Debug)]
 pub struct FsIncludes {
@@ -378,6 +441,11 @@ impl<R: IncludeResolver> core::iter::FusedIterator for Records<'_, R> {}
 /// Every record is collected, and `$GENERATE` lets a short text yield many
 /// records: for untrusted text, iterate [`ZoneReader::records`] and stop
 /// at a limit of your own instead (see the [module docs](super)).
+///
+/// # Errors
+///
+/// The first [`ZoneError`] (see [`ZoneReader::next_record`]); an
+/// `$INCLUDE` fails with [`Error::BadInclude`].
 ///
 /// ```
 /// let zone = dnsbox::zone::parse(

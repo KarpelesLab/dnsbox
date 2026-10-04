@@ -17,6 +17,18 @@ use crate::{Result, Rtype};
 /// decompress, so a compressed replacement is accepted when parsing. It is
 /// always written uncompressed, and lowercased in canonical form
 /// (RFC 4034 §6.2).
+///
+/// ```
+/// use dnsbox::rdata::{Naptr, ParseRdataText};
+///
+/// // RFC 3403 §6.2: a SIP service for example.com.
+/// let mut buf = [0u8; 64];
+/// let naptr = Naptr::from_text(r#"100 10 "S" "SIP+D2U" "" _sip._udp.example.com."#, &mut buf)?;
+/// assert_eq!((naptr.order, naptr.preference), (100, 10));
+/// assert_eq!(naptr.services.as_bytes(), b"SIP+D2U");
+/// assert_eq!(naptr.replacement.to_string(), "_sip._udp.example.com.");
+/// # Ok::<(), dnsbox::Error>(())
+/// ```
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub struct Naptr<'a> {
     /// Order in which records must be processed; lower first

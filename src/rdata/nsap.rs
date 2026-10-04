@@ -9,6 +9,16 @@ use crate::{Class, Error, Result, Rtype};
 
 /// `NSAP` record data: an OSI network service access point address
 /// (RFC 1706 §5). Class IN only; deprecated in practice.
+///
+/// ```
+/// use dnsbox::rdata::{Nsap, ParseRdataText};
+///
+/// let mut buf = [0u8; 32];
+/// let nsap = Nsap::from_text("0x47.0005.80.005a00.0000.0001.e133.ffffff000161.00", &mut buf)?;
+/// assert_eq!(nsap.address.len(), 20);
+/// assert_eq!(nsap.to_string(), "0x47000580005a0000000001e133ffffff00016100");
+/// # Ok::<(), dnsbox::Error>(())
+/// ```
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub struct Nsap<'a> {
     /// The binary NSAP address (at least one octet).

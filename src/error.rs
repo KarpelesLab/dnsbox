@@ -22,6 +22,29 @@ use core::fmt;
 /// The enum is `#[non_exhaustive]`: new variants are added as new parts of
 /// the protocol are implemented. Match on the variants you care about and
 /// keep a wildcard arm.
+///
+/// # Examples
+///
+/// Hostile or truncated input is rejected with an error, never a panic:
+///
+/// ```
+/// use dnsbox::{Error, Message};
+///
+/// // A header claiming one question, but the message ends after it.
+/// let wire = [0x12, 0x34, 0x01, 0x00, 0, 1, 0, 0, 0, 0, 0, 0];
+/// let msg = Message::parse(&wire)?; // only the header is checked here
+/// let err = msg.questions().next().unwrap().unwrap_err();
+/// assert_eq!(err, Error::UnexpectedEof);
+/// assert_eq!(err.to_string(), "unexpected end of input");
+///
+/// // The enum is non-exhaustive: keep a wildcard arm.
+/// let retry_over_tcp = match err {
+///     Error::UnexpectedEof | Error::BufferTooSmall => true,
+///     _ => false,
+/// };
+/// assert!(retry_over_tcp);
+/// # Ok::<(), Error>(())
+/// ```
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 #[non_exhaustive]
 pub enum Error {
@@ -156,6 +179,19 @@ pub enum Error {
 }
 
 /// Shorthand for `core::result::Result<T, dnsbox::Error>`.
+///
+/// # Examples
+///
+/// ```
+/// use dnsbox::{NameBuf, Result};
+///
+/// fn parent_of(name: &str) -> Result<NameBuf> {
+///     let name: NameBuf = name.parse()?;
+///     Ok(name.as_name().parent().unwrap_or(name.as_name()).to_buf())
+/// }
+/// assert_eq!(parent_of("www.example.com")?.to_string(), "example.com.");
+/// # Ok::<(), dnsbox::Error>(())
+/// ```
 pub type Result<T> = core::result::Result<T, Error>;
 
 impl fmt::Display for Error {

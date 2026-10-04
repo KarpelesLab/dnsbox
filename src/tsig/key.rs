@@ -11,7 +11,23 @@ pub const MAX_MAC_LEN: usize = 64;
 /// A running MAC computation (one per signed or verified message).
 ///
 /// Implementations wrap a real MAC from a crypto library; dnsbox only
-/// feeds bytes in the order RFC 8945 §4.3 prescribes.
+/// feeds bytes in the order RFC 8945 §4.3 prescribes. See [`TsigKey`] for
+/// an implementation, and [`HmacState`](super::HmacState) (feature `tsig`)
+/// for the `purecrypto` one.
+///
+/// ```
+/// use dnsbox::tsig::{MAX_MAC_LEN, TsigMac};
+///
+/// // dnsbox drives a MAC like this: feed, then finalize or verify.
+/// fn mac_of<M: TsigMac>(mut mac: M, parts: &[&[u8]]) -> ([u8; MAX_MAC_LEN], usize) {
+///     for part in parts {
+///         mac.update(part);
+///     }
+///     let mut out = [0u8; MAX_MAC_LEN];
+///     let len = mac.finalize(&mut out);
+///     (out, len)
+/// }
+/// ```
 pub trait TsigMac {
     /// Feeds message bytes.
     fn update(&mut self, data: &[u8]);
@@ -28,6 +44,49 @@ pub trait TsigMac {
 }
 
 /// A TSIG key: its name, its algorithm, and a factory for keyed MACs.
+///
+/// [`HmacKey`](super::HmacKey) (feature `tsig`) implements it with
+/// `purecrypto`. Other backends implement both traits:
+///
+/// ```
+/// use dnsbox::tsig::{MAX_MAC_LEN, TsigKey, TsigMac};
+/// use dnsbox::{Name, NameBuf};
+///
+/// /// A (deliberately insecure) toy MAC: XOR of all bytes, as a sketch of
+/// /// the shape. Wrap a real HMAC from your crypto library instead.
+/// struct XorMac(u8);
+///
+/// impl TsigMac for XorMac {
+///     fn update(&mut self, data: &[u8]) {
+///         self.0 = data.iter().fold(self.0, |a, b| a ^ b);
+///     }
+///     fn finalize(self, out: &mut [u8; MAX_MAC_LEN]) -> usize {
+///         out[..16].fill(self.0);
+///         16
+///     }
+///     fn verify(self, expected: &[u8]) -> bool {
+///         expected.iter().all(|&b| b == self.0) // use a constant-time compare
+///     }
+/// }
+///
+/// struct XorKey(NameBuf);
+///
+/// impl TsigKey for XorKey {
+///     type Mac = XorMac;
+///     fn name(&self) -> Name<'_> {
+///         self.0.as_name()
+///     }
+///     fn algorithm(&self) -> Name<'_> {
+///         Name::from_wire(b"\x07xor-mac\x00").unwrap()
+///     }
+///     fn digest_len(&self) -> usize {
+///         16
+///     }
+///     fn new_mac(&self) -> XorMac {
+///         XorMac(0)
+///     }
+/// }
+/// ```
 pub trait TsigKey {
     /// The MAC computation this key produces.
     type Mac: TsigMac;
@@ -88,6 +147,23 @@ impl<K: TsigKey + ?Sized> TsigKey for &K {
 ///
 /// Implemented by every [`TsigKey`] (a single key) and by slices and arrays
 /// of keys.
+///
+/// ```
+/// # #[cfg(feature = "tsig")] {
+/// use dnsbox::NameBuf;
+/// use dnsbox::tsig::{HmacKey, KeyStore, TsigAlgorithm, TsigKey};
+///
+/// let (a, b): (NameBuf, NameBuf) = ("xfr-key".parse()?, "update-key".parse()?);
+/// let keys = [
+///     HmacKey::new(&a, TsigAlgorithm::HmacSha256, b"secret one"),
+///     HmacKey::new(&b, TsigAlgorithm::HmacSha512, b"secret two"),
+/// ];
+/// let found = keys.find_key(b.as_name(), TsigAlgorithm::HmacSha512.name()).expect("known key");
+/// assert_eq!(found.name(), b.as_name());
+/// assert!(keys.find_key(b.as_name(), TsigAlgorithm::HmacSha256.name()).is_none());
+/// # }
+/// # Ok::<(), dnsbox::Error>(())
+/// ```
 pub trait KeyStore {
     /// The key type.
     type Key: TsigKey;
@@ -128,6 +204,23 @@ impl<K: TsigKey, const N: usize> KeyStore for [K; N] {
 /// A MAC value of up to [`MAX_MAC_LEN`] bytes, stored inline (no
 /// allocation). Returned by signing, and used as the "prior MAC" of
 /// responses and stream messages (RFC 8945 §4.3.1, §5.3.1).
+///
+/// ```
+/// # #[cfg(feature = "tsig")] {
+/// use dnsbox::tsig::{HmacKey, MacBuf, TsigAlgorithm, TsigSigner};
+/// use dnsbox::{Class, MessageBuilder, NameBuf, Rtype};
+///
+/// let key_name: NameBuf = "k".parse()?;
+/// let key = HmacKey::new(&key_name, TsigAlgorithm::HmacSha384, b"secret");
+/// let zone: NameBuf = "example.com".parse()?;
+/// let mut buf = [0u8; 256];
+/// let mut b = MessageBuilder::query(&mut buf, 1, &zone, Rtype::SOA, Class::IN)?;
+/// let mac: MacBuf = TsigSigner::request(&key).sign(&mut b, 1_700_000_000)?;
+/// assert_eq!(mac.len(), 48);
+/// // Keep it to verify the response: `TsigVerifier::new(&key, mac.as_slice())`.
+/// # }
+/// # Ok::<(), dnsbox::Error>(())
+/// ```
 #[derive(Clone, Copy, PartialEq, Eq, Hash)]
 pub struct MacBuf {
     buf: [u8; MAX_MAC_LEN],
@@ -135,8 +228,20 @@ pub struct MacBuf {
 }
 
 impl MacBuf {
-    /// Copies a MAC; fails with [`Error::BadMacSize`] beyond
-    /// [`MAX_MAC_LEN`] bytes.
+    /// Copies a MAC.
+    ///
+    /// # Errors
+    ///
+    /// [`Error::BadMacSize`] beyond [`MAX_MAC_LEN`] bytes.
+    ///
+    /// ```
+    /// use dnsbox::tsig::MacBuf;
+    ///
+    /// let mac = MacBuf::new(&[0xab; 32])?;
+    /// assert_eq!(mac.len(), 32);
+    /// assert!(MacBuf::new(&[0; 65]).is_err());
+    /// # Ok::<(), dnsbox::Error>(())
+    /// ```
     pub fn new(mac: &[u8]) -> Result<Self> {
         let mut buf = [0u8; MAX_MAC_LEN];
         buf.get_mut(..mac.len())

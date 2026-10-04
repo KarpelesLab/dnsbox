@@ -11,6 +11,18 @@ use crate::{Class, Error, Result, Rtype};
 /// `WKS` record data: well-known services offered by a host
 /// (RFC 1035 §3.4.2). Class IN only. Deprecated in practice (RFC 1123
 /// §2.2).
+///
+/// ```
+/// use dnsbox::rdata::{ParseRdataText, Wks};
+///
+/// // Protocols and services by name or number.
+/// let mut buf = [0u8; 16];
+/// let wks = Wks::from_text("10.0.0.1 tcp ( smtp 37 )", &mut buf)?;
+/// assert_eq!(wks.protocol, 6);
+/// assert_eq!(wks.ports().collect::<Vec<_>>(), [25, 37]);
+/// assert_eq!(wks.to_string(), "10.0.0.1 6 25 37");
+/// # Ok::<(), dnsbox::Error>(())
+/// ```
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub struct Wks<'a> {
     /// The host address.

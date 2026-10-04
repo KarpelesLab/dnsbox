@@ -10,6 +10,15 @@ use crate::{Result, Rtype};
 
 /// `MINFO` record data: mailbox or mail list information — experimental
 /// (RFC 1035 §3.3.7).
+///
+/// ```
+/// use dnsbox::rdata::{Minfo, ParseRdataText};
+///
+/// let mut buf = [0u8; 64];
+/// let minfo = Minfo::from_text("admins.example. errors.example.", &mut buf)?;
+/// assert_eq!(minfo.emailbx.to_string(), "errors.example.");
+/// # Ok::<(), dnsbox::Error>(())
+/// ```
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub struct Minfo<'a> {
     /// Mailbox responsible for the mailing list.

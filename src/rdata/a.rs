@@ -9,6 +9,17 @@ use crate::zone::Scanner;
 use crate::{Class, Result, Rtype};
 
 /// `A` record data: an IPv4 host address (RFC 1035 §3.4.1). Class IN only.
+///
+/// ```
+/// use dnsbox::rdata::{A, ParseRdataText};
+///
+/// let a = A::new([192, 0, 2, 1].into());
+/// assert_eq!(a.to_string(), "192.0.2.1");
+/// let mut buf = [0u8; 4];
+/// assert_eq!(A::from_text("192.0.2.1", &mut buf)?, a);
+/// assert_eq!(buf, [192, 0, 2, 1]);
+/// # Ok::<(), dnsbox::Error>(())
+/// ```
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub struct A {
     /// The address.

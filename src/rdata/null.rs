@@ -11,6 +11,17 @@ use crate::{Result, Rtype};
 ///
 /// NULL has no presentation format; it displays in the generic RFC 3597
 /// form.
+///
+/// ```
+/// use dnsbox::rdata::{Null, ParseRdataText};
+///
+/// // NULL has only the generic text form (RFC 3597 §5).
+/// let mut buf = [0u8; 8];
+/// let null = Null::from_text(r"\# 3 ABCDEF", &mut buf)?;
+/// assert_eq!(null.data, [0xab, 0xcd, 0xef]);
+/// assert_eq!(null.to_string(), r"\# 3 ABCDEF");
+/// # Ok::<(), dnsbox::Error>(())
+/// ```
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub struct Null<'a> {
     /// The payload.

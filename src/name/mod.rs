@@ -32,6 +32,34 @@
 //! Names are always absolute: `example.com` and `example.com.` denote the
 //! same name.
 //!
+//! # Examples
+//!
+//! ```
+//! use dnsbox::{Name, NameBuf};
+//!
+//! let www: NameBuf = "www.Example.com".parse()?;
+//! let zone: NameBuf = "example.COM.".parse()?;
+//! let name = www.as_name();
+//! assert_eq!(name.label_count(), 3);
+//! assert!(name.is_subdomain_of(&zone.as_name()));
+//! assert_eq!(name.parent(), Some(zone.as_name())); // case-insensitive
+//! assert!(!name.parent().unwrap().eq_exact(&zone.as_name()));
+//!
+//! // Canonical DNSSEC order (RFC 4034 §6.1): by labels from the right.
+//! let mut names: Vec<NameBuf> = ["z.example", "example", "a.example", "*.z.example"]
+//!     .iter()
+//!     .map(|s| s.parse())
+//!     .collect::<Result<_, _>>()?;
+//! names.sort();
+//! let sorted: Vec<String> = names.iter().map(|n| n.to_string()).collect();
+//! assert_eq!(sorted, ["example.", "a.example.", "z.example.", "*.z.example."]);
+//!
+//! // A view over uncompressed wire bytes.
+//! let root = Name::from_wire(&[0])?;
+//! assert!(root.is_root());
+//! # Ok::<(), dnsbox::Error>(())
+//! ```
+//!
 //! [`WireReader::read_name`]: crate::WireReader::read_name
 
 mod buf;
@@ -67,6 +95,20 @@ pub const MAX_POINTERS: usize = 128;
 /// label is never yielded by [`Name::labels`]).
 ///
 /// Displays in presentation format with escapes (RFC 1035 §5.1).
+///
+/// # Examples
+///
+/// ```
+/// use dnsbox::NameBuf;
+///
+/// let name: NameBuf = r"*.a\.b.example".parse()?;
+/// let labels: Vec<_> = name.as_name().labels().collect();
+/// assert!(labels[0].is_wildcard());
+/// assert_eq!(labels[1].as_bytes(), b"a.b");
+/// assert_eq!(labels[1].to_string(), r"a\.b");
+/// assert_eq!(labels.len(), 3);
+/// # Ok::<(), dnsbox::Error>(())
+/// ```
 #[derive(Clone, Copy, PartialEq, Eq, Hash)]
 pub struct Label<'a>(&'a [u8]);
 
@@ -120,6 +162,29 @@ impl fmt::Debug for Label<'_> {
 /// [`Name::from_wire`] (uncompressed bytes) or from [`NameBuf::as_name`].
 /// All structural validation happens at construction, so the accessors are
 /// infallible.
+///
+/// # Examples
+///
+/// Names read from a message follow compression pointers lazily:
+///
+/// ```
+/// use dnsbox::{Name, WireReader};
+///
+/// // "example.com" at offset 0, then "www" + a pointer to offset 0.
+/// let msg = b"\x07example\x03com\x00\x03www\xc0\x00";
+/// let mut r = WireReader::new(msg);
+/// let zone = r.read_name()?;
+/// let www = r.read_name()?;
+/// assert_eq!(www.to_string(), "www.example.com.");
+/// assert_eq!(www.wire_len(), 17);
+/// assert_eq!(www.as_contiguous(), None); // stored in two pieces
+/// assert_eq!(www.parent(), Some(zone));
+///
+/// let mut flat = [0u8; 255];
+/// let len = www.flatten(&mut flat);
+/// assert_eq!(Name::from_wire(&flat[..len])?, www);
+/// # Ok::<(), dnsbox::Error>(())
+/// ```
 #[derive(Clone, Copy)]
 pub struct Name<'a> {
     /// The buffer the name lives in (a whole message, or just the name).
@@ -174,9 +239,23 @@ impl<'a> Name<'a> {
 
     /// Wraps an uncompressed wire-format name that fills `wire` exactly.
     ///
-    /// Fails if `wire` contains a compression pointer
-    /// ([`Error::UnexpectedPointer`]), is malformed, or has bytes after the
-    /// root label ([`Error::TrailingData`]).
+    /// # Errors
+    ///
+    /// [`Error::UnexpectedPointer`] if `wire` contains a compression
+    /// pointer, [`Error::TrailingData`] if bytes follow the root label, and
+    /// the name decoding errors ([`Error::UnexpectedEof`],
+    /// [`Error::LabelTooLong`], [`Error::NameTooLong`],
+    /// [`Error::BadLabelType`]) if it is malformed.
+    ///
+    /// ```
+    /// use dnsbox::{Error, Name};
+    ///
+    /// let name = Name::from_wire(b"\x03www\x07example\x00")?;
+    /// assert_eq!(name.to_string(), "www.example.");
+    /// assert_eq!(Name::from_wire(b"\x03www\x00\x00"), Err(Error::TrailingData));
+    /// assert_eq!(Name::from_wire(b"\x03www"), Err(Error::UnexpectedEof));
+    /// # Ok::<(), Error>(())
+    /// ```
     pub fn from_wire(wire: &'a [u8]) -> Result<Self> {
         let (name, end) = Self::parse_bounded(wire, 0, wire.len(), false)?;
         if end != wire.len() {
@@ -303,6 +382,17 @@ impl<'a> Name<'a> {
 
     /// The name with its `n` leftmost labels removed, or `None` if it has
     /// fewer than `n` labels.
+    ///
+    /// ```
+    /// use dnsbox::NameBuf;
+    ///
+    /// let name: NameBuf = "a.b.example.com".parse()?;
+    /// let n = name.as_name();
+    /// assert_eq!(n.strip_labels(2).unwrap().to_string(), "example.com.");
+    /// assert!(n.strip_labels(4).unwrap().is_root());
+    /// assert!(n.strip_labels(5).is_none());
+    /// # Ok::<(), dnsbox::Error>(())
+    /// ```
     #[must_use]
     pub fn strip_labels(&self, n: usize) -> Option<Name<'a>> {
         let mut name = *self;
@@ -314,6 +404,19 @@ impl<'a> Name<'a> {
 
     /// Whether `self` is `other` or a descendant of it (RFC 1034 §3.1),
     /// comparing case-insensitively. Every name is a subdomain of the root.
+    ///
+    /// ```
+    /// use dnsbox::{Name, NameBuf};
+    ///
+    /// let zone: NameBuf = "Example.COM".parse()?;
+    /// let host: NameBuf = "mail.example.com".parse()?;
+    /// let other: NameBuf = "badexample.com".parse()?;
+    /// assert!(host.as_name().is_subdomain_of(&zone.as_name()));
+    /// assert!(zone.as_name().is_subdomain_of(&zone.as_name()));
+    /// assert!(!other.as_name().is_subdomain_of(&zone.as_name())); // label-wise
+    /// assert!(host.as_name().is_subdomain_of(&Name::ROOT));
+    /// # Ok::<(), dnsbox::Error>(())
+    /// ```
     #[must_use]
     pub fn is_subdomain_of(&self, other: &Name<'_>) -> bool {
         match self.label_count().checked_sub(other.label_count()) {
@@ -355,6 +458,16 @@ impl<'a> Name<'a> {
     }
 
     /// Exact (case-sensitive) comparison of the label octets.
+    ///
+    /// ```
+    /// use dnsbox::NameBuf;
+    ///
+    /// // DNS 0x20: a resolver checks that the response kept its mixed case.
+    /// let (sent, echoed): (NameBuf, NameBuf) = ("ExAmPlE.cOm".parse()?, "example.com".parse()?);
+    /// assert!(sent.as_name() == echoed.as_name());
+    /// assert!(!sent.as_name().eq_exact(&echoed.as_name()));
+    /// # Ok::<(), dnsbox::Error>(())
+    /// ```
     #[must_use]
     pub fn eq_exact(&self, other: &Name<'_>) -> bool {
         if self.len != other.len || self.labels != other.labels {
@@ -371,6 +484,18 @@ impl<'a> Name<'a> {
     /// Compares two names in DNSSEC canonical order (RFC 4034 §6.1): label
     /// by label from the rightmost, each label as a lowercased octet string
     /// where a shorter prefix sorts first. Equivalent to [`Ord::cmp`].
+    ///
+    /// ```
+    /// use core::cmp::Ordering;
+    /// use dnsbox::NameBuf;
+    ///
+    /// // Labels compare from the right: after `example`, `z` sorts after `b`.
+    /// let (x, y): (NameBuf, NameBuf) = ("z.example".parse()?, "a.b.example".parse()?);
+    /// assert_eq!(x.as_name().cmp_canonical(&y.as_name()), Ordering::Greater);
+    /// let (p, q): (NameBuf, NameBuf) = ("example".parse()?, "\\001.example".parse()?);
+    /// assert_eq!(p.as_name().cmp_canonical(&q.as_name()), Ordering::Less);
+    /// # Ok::<(), dnsbox::Error>(())
+    /// ```
     #[must_use]
     pub fn cmp_canonical(&self, other: &Name<'_>) -> Ordering {
         let mut a = [0u8; MAX_NAME_LEN];
@@ -492,6 +617,17 @@ impl Default for Name<'_> {
 }
 
 /// Iterator over the labels of a [`Name`], left to right, root excluded.
+///
+/// ```
+/// use dnsbox::NameBuf;
+///
+/// let name: NameBuf = "www.example.com".parse()?;
+/// let labels = name.as_name().labels();
+/// assert_eq!(labels.len(), 3);
+/// let text: Vec<String> = labels.map(|l| l.to_string()).collect();
+/// assert_eq!(text, ["www", "example", "com"]);
+/// # Ok::<(), dnsbox::Error>(())
+/// ```
 #[derive(Clone, Debug)]
 #[must_use = "iterators are lazy and do nothing unless consumed"]
 pub struct Labels<'a> {
@@ -540,6 +676,21 @@ impl core::iter::FusedIterator for Labels<'_> {}
 
 /// Anything that can be viewed as a [`Name`]: `Name` itself, [`NameBuf`],
 /// and references to either. Builder methods accept `impl ToName`.
+///
+/// # Examples
+///
+/// ```
+/// use dnsbox::{Name, NameBuf, ToName};
+///
+/// fn depth(name: impl ToName) -> usize {
+///     name.to_name().label_count()
+/// }
+/// let owned: NameBuf = "a.b.c".parse()?;
+/// assert_eq!(depth(&owned), 3);
+/// assert_eq!(depth(owned.as_name()), 3);
+/// assert_eq!(depth(Name::ROOT), 0);
+/// # Ok::<(), dnsbox::Error>(())
+/// ```
 pub trait ToName {
     /// Borrows `self` as a name view.
     fn to_name(&self) -> Name<'_>;

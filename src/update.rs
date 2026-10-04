@@ -61,6 +61,35 @@ pub const ADDITIONAL: Section = Section::Additional;
 /// additional data (section order); each method is atomic like the
 /// builder's pushes. Use [`builder`](Self::builder) for the ID, TSIG or
 /// SIG(0) signing, and checkpoints.
+///
+/// Every prerequisite and update method fails with
+/// [`Error::InvalidUpdate`] for a meta-type or QTYPE where an RRset type
+/// is required (RFC 2136 §3.4.1.3), and otherwise like
+/// [`MessageBuilder::push_record`] ([`Error::SectionOrder`] when called
+/// out of section order, [`Error::BufferTooSmall`], ...).
+///
+/// ```
+/// use dnsbox::rdata::{A, Aaaa};
+/// use dnsbox::update::UpdateBuilder;
+/// use dnsbox::{Class, Error, MessageBuilder, NameBuf, Rtype};
+///
+/// // Replace host's addresses, but only if it already has an A RRset.
+/// let zone: NameBuf = "example.com".parse()?;
+/// let host: NameBuf = "host.example.com".parse()?;
+/// let mut buf = [0u8; 512];
+/// let mut u = UpdateBuilder::new(MessageBuilder::new(&mut buf)?, &zone, Class::IN)?;
+/// u.builder().set_id(0x2136);
+/// u.require_rrset_exists(&host, Rtype::A)?;
+/// u.delete_rrset(&host, Rtype::A)?;
+/// u.delete_rrset(&host, Rtype::AAAA)?;
+/// u.add(&host, 300, &A::new([192, 0, 2, 10].into()))?;
+/// u.add(&host, 300, &Aaaa::new("2001:db8::10".parse().unwrap()))?;
+/// // Prerequisites come first: the section order is enforced.
+/// assert_eq!(u.require_name_in_use(&host), Err(Error::SectionOrder));
+/// let wire = u.finish();
+/// assert_eq!(dnsbox::Message::parse_validated(wire)?.header().nscount, 4);
+/// # Ok::<(), Error>(())
+/// ```
 #[derive(Debug)]
 pub struct UpdateBuilder<B: OutBuf> {
     inner: MessageBuilder<B>,
@@ -80,8 +109,12 @@ const fn is_rrset_type(rtype: Rtype) -> bool {
 
 impl<B: OutBuf> UpdateBuilder<B> {
     /// Starts an UPDATE for `zone` in `class` (§2.3): sets the opcode and
-    /// writes the zone section (`zone SOA class`). `builder` must not hold
-    /// any question or record yet ([`Error::SectionOrder`]).
+    /// writes the zone section (`zone SOA class`).
+    ///
+    /// # Errors
+    ///
+    /// [`Error::SectionOrder`] if `builder` already holds a question or
+    /// record, [`Error::BufferTooSmall`] if the zone section does not fit.
     pub fn new(mut builder: MessageBuilder<B>, zone: impl ToName, class: Class) -> Result<Self> {
         if !builder.is_empty() {
             return Err(Error::SectionOrder);
@@ -129,6 +162,10 @@ impl<B: OutBuf> UpdateBuilder<B> {
 
     /// Prerequisite: an RRset of `rtype` exists at `name`, whatever its
     /// value (§2.4.1: CLASS ANY, TTL 0, empty RDATA).
+    ///
+    /// # Errors
+    ///
+    /// See the [type documentation](UpdateBuilder).
     pub fn require_rrset_exists(&mut self, name: impl ToName, rtype: Rtype) -> Result<()> {
         Self::rrset_type(rtype)?;
         self.inner
@@ -139,6 +176,10 @@ impl<B: OutBuf> UpdateBuilder<B> {
     /// class, TTL 0). A value-dependent prerequisite on a whole RRset is
     /// one such record per RR of the set; the server compares the full
     /// set.
+    ///
+    /// # Errors
+    ///
+    /// See the [type documentation](UpdateBuilder).
     pub fn require_rr<D: ComposeRdata + ?Sized>(
         &mut self,
         name: impl ToName,
@@ -151,6 +192,10 @@ impl<B: OutBuf> UpdateBuilder<B> {
 
     /// Prerequisite: no RRset of `rtype` exists at `name` (§2.4.3: CLASS
     /// NONE, TTL 0, empty RDATA).
+    ///
+    /// # Errors
+    ///
+    /// See the [type documentation](UpdateBuilder).
     pub fn require_rrset_absent(&mut self, name: impl ToName, rtype: Rtype) -> Result<()> {
         Self::rrset_type(rtype)?;
         self.inner
@@ -159,18 +204,30 @@ impl<B: OutBuf> UpdateBuilder<B> {
 
     /// Prerequisite: `name` owns at least one RR (§2.4.4: CLASS ANY, TYPE
     /// ANY).
+    ///
+    /// # Errors
+    ///
+    /// See the [type documentation](UpdateBuilder).
     pub fn require_name_in_use(&mut self, name: impl ToName) -> Result<()> {
         self.inner
             .push_record(PREREQUISITE, name, Class::ANY, 0, &empty(Rtype::ANY))
     }
 
     /// Prerequisite: `name` owns no RR (§2.4.5: CLASS NONE, TYPE ANY).
+    ///
+    /// # Errors
+    ///
+    /// See the [type documentation](UpdateBuilder).
     pub fn require_name_absent(&mut self, name: impl ToName) -> Result<()> {
         self.inner
             .push_record(PREREQUISITE, name, Class::NONE, 0, &empty(Rtype::ANY))
     }
 
     /// Update: add an RR to an RRset (§2.5.1: zone class).
+    ///
+    /// # Errors
+    ///
+    /// See the [type documentation](UpdateBuilder).
     pub fn add<D: ComposeRdata + ?Sized>(
         &mut self,
         name: impl ToName,
@@ -183,6 +240,10 @@ impl<B: OutBuf> UpdateBuilder<B> {
 
     /// Update: delete the RRset of `rtype` at `name` (§2.5.2: CLASS ANY,
     /// TTL 0, empty RDATA).
+    ///
+    /// # Errors
+    ///
+    /// See the [type documentation](UpdateBuilder).
     pub fn delete_rrset(&mut self, name: impl ToName, rtype: Rtype) -> Result<()> {
         Self::rrset_type(rtype)?;
         self.inner
@@ -190,12 +251,20 @@ impl<B: OutBuf> UpdateBuilder<B> {
     }
 
     /// Update: delete every RRset at `name` (§2.5.3: CLASS ANY, TYPE ANY).
+    ///
+    /// # Errors
+    ///
+    /// See the [type documentation](UpdateBuilder).
     pub fn delete_name(&mut self, name: impl ToName) -> Result<()> {
         self.inner
             .push_record(UPDATE, name, Class::ANY, 0, &empty(Rtype::ANY))
     }
 
     /// Update: delete one RR from an RRset (§2.5.4: CLASS NONE, TTL 0).
+    ///
+    /// # Errors
+    ///
+    /// See the [type documentation](UpdateBuilder).
     pub fn delete_rr<D: ComposeRdata + ?Sized>(
         &mut self,
         name: impl ToName,
@@ -206,6 +275,10 @@ impl<B: OutBuf> UpdateBuilder<B> {
     }
 
     /// Additional data (§2.6), e.g. glue for added NS records.
+    ///
+    /// # Errors
+    ///
+    /// As [`MessageBuilder::push_additional`].
     pub fn push_additional<D: ComposeRdata + ?Sized>(
         &mut self,
         name: impl ToName,
@@ -218,6 +291,25 @@ impl<B: OutBuf> UpdateBuilder<B> {
 }
 
 /// A prerequisite of an UPDATE (RFC 2136 §2.4, classified per §3.2).
+///
+/// A server checks each one against the zone (see the [module
+/// example](self) for building and parsing):
+///
+/// ```
+/// use dnsbox::update::Prerequisite;
+/// use dnsbox::{Name, Rcode, Rtype};
+///
+/// // `exists(name, rtype)` stands in for a lookup in the zone.
+/// fn check(p: &Prerequisite<'_>, exists: impl Fn(Name<'_>, Rtype) -> bool) -> Rcode {
+///     match p {
+///         Prerequisite::RrsetExists { name, rtype } if !exists(*name, *rtype) => Rcode::NXRRSET,
+///         Prerequisite::RrsetAbsent { name, rtype } if exists(*name, *rtype) => Rcode::YXRRSET,
+///         Prerequisite::NameInUse(name) if !exists(*name, Rtype::ANY) => Rcode::NXDOMAIN,
+///         Prerequisite::NameAbsent(name) if exists(*name, Rtype::ANY) => Rcode::YXDOMAIN,
+///         _ => Rcode::NOERROR, // value-dependent RrExists: compare whole RRsets
+///     }
+/// }
+/// ```
 #[derive(Clone, Copy, Debug)]
 pub enum Prerequisite<'a> {
     /// An RRset of this type exists, value-independent (§2.4.1).
@@ -256,8 +348,12 @@ impl<'a> Prerequisite<'a> {
         }
     }
 
-    /// Classifies a prerequisite RR (§3.2), failing with
-    /// [`Error::InvalidUpdate`] (FORMERR) on an invalid combination.
+    /// Classifies a prerequisite RR (§3.2).
+    ///
+    /// # Errors
+    ///
+    /// [`Error::InvalidUpdate`] (FORMERR) on an invalid combination of
+    /// class, type, TTL and RDATA.
     pub fn classify(rr: Record<'a>, zone_class: Class) -> Result<Self> {
         if rr.ttl() != 0 {
             return Err(Error::InvalidUpdate);
@@ -295,6 +391,22 @@ impl<'a> Prerequisite<'a> {
 }
 
 /// An update operation (RFC 2136 §2.5, classified per §3.4.1.3).
+///
+/// ```
+/// use dnsbox::update::{UpdateBuilder, UpdateMessage, UpdateOp};
+/// use dnsbox::{Class, Message, MessageBuilder, NameBuf};
+///
+/// let zone: NameBuf = "example.com".parse()?;
+/// let old: NameBuf = "old.example.com".parse()?;
+/// let mut buf = [0u8; 256];
+/// let mut u = UpdateBuilder::new(MessageBuilder::new(&mut buf)?, &zone, Class::IN)?;
+/// u.delete_name(&old)?;
+/// let update = UpdateMessage::new(Message::parse(u.finish())?)?;
+/// let op = update.updates().next().unwrap()?;
+/// assert!(matches!(op, UpdateOp::DeleteName(n) if n == old.as_name()));
+/// assert_eq!(op.name(), old.as_name());
+/// # Ok::<(), dnsbox::Error>(())
+/// ```
 #[derive(Clone, Copy, Debug)]
 pub enum UpdateOp<'a> {
     /// Add this RR (§2.5.1).
@@ -323,8 +435,12 @@ impl<'a> UpdateOp<'a> {
         }
     }
 
-    /// Classifies an update RR (§3.4.1.3 prescan), failing with
-    /// [`Error::InvalidUpdate`] (FORMERR) on an invalid combination.
+    /// Classifies an update RR (§3.4.1.3 prescan).
+    ///
+    /// # Errors
+    ///
+    /// [`Error::InvalidUpdate`] (FORMERR) on an invalid combination of
+    /// class, type, TTL and RDATA.
     pub fn classify(rr: Record<'a>, zone_class: Class) -> Result<Self> {
         let (class, rtype) = (rr.class(), rr.rtype());
         Ok(if class == Class::ANY {
@@ -355,6 +471,42 @@ impl<'a> UpdateOp<'a> {
 }
 
 /// A parsed UPDATE message (RFC 2136 §2): a view over a [`Message`].
+///
+/// See the [module example](self). A server typically checks, in order
+/// (RFC 2136 §3): the zone, [`validate`](Self::validate) (FORMERR),
+/// [`in_zone`](Self::in_zone) for every name (NOTZONE), then the
+/// prerequisites and updates.
+///
+/// ```
+/// use dnsbox::update::{UpdateBuilder, UpdateMessage};
+/// use dnsbox::{Class, Message, MessageBuilder, NameBuf, Rcode};
+///
+/// # let zone: NameBuf = "example.com".parse()?;
+/// # let host: NameBuf = "www.example.com".parse()?;
+/// # let mut buf = [0u8; 256];
+/// # let mut u = UpdateBuilder::new(MessageBuilder::new(&mut buf)?, &zone, Class::IN)?;
+/// # u.delete_name(&host)?;
+/// # let wire = u.finish();
+/// fn precheck(update: &UpdateMessage<'_>, our_zone: &NameBuf) -> Rcode {
+///     if update.zone_name() != our_zone.as_name() {
+///         return Rcode::NOTAUTH;
+///     }
+///     if update.validate().is_err() {
+///         return Rcode::FORMERR;
+///     }
+///     let names = update.prerequisites().filter_map(Result::ok).map(|p| p.name())
+///         .chain(update.updates().filter_map(Result::ok).map(|op| op.name()));
+///     for name in names {
+///         if !update.in_zone(&name) {
+///             return Rcode::NOTZONE;
+///         }
+///     }
+///     Rcode::NOERROR
+/// }
+/// let update = UpdateMessage::new(Message::parse(wire)?)?;
+/// assert_eq!(precheck(&update, &zone), Rcode::NOERROR);
+/// # Ok::<(), dnsbox::Error>(())
+/// ```
 #[derive(Clone, Copy, Debug)]
 pub struct UpdateMessage<'a> {
     msg: Message<'a>,
@@ -363,8 +515,12 @@ pub struct UpdateMessage<'a> {
 
 impl<'a> UpdateMessage<'a> {
     /// Wraps a message, checking that it is an UPDATE (opcode 5) with
-    /// exactly one zone entry of type SOA (§3.1.1); fails with
-    /// [`Error::InvalidUpdate`] otherwise.
+    /// exactly one zone entry of type SOA (§3.1.1).
+    ///
+    /// # Errors
+    ///
+    /// [`Error::InvalidUpdate`] if it is not, or the parse error of the
+    /// zone entry.
     pub fn new(msg: Message<'a>) -> Result<Self> {
         if msg.flags().opcode() != Opcode::UPDATE || msg.header().qdcount != 1 {
             return Err(Error::InvalidUpdate);
@@ -437,6 +593,11 @@ impl<'a> UpdateMessage<'a> {
 
     /// Checks every prerequisite and update once (FORMERR conditions only;
     /// zone membership is left to [`in_zone`](Self::in_zone)).
+    ///
+    /// # Errors
+    ///
+    /// [`Error::InvalidUpdate`] for the first invalid prerequisite or
+    /// update, or the parse error of a malformed record.
     pub fn validate(&self) -> Result<()> {
         for p in self.prerequisites() {
             p?;
@@ -449,7 +610,22 @@ impl<'a> UpdateMessage<'a> {
 }
 
 /// Iterator over the prerequisites of an UPDATE; see
-/// [`UpdateMessage::prerequisites`]. Stops after the first error.
+/// [`UpdateMessage::prerequisites`]. Stops after the first error. See the
+/// [module example](self).
+///
+/// ```
+/// use dnsbox::update::{Prerequisite, UpdateBuilder, UpdateMessage};
+/// use dnsbox::{Class, Message, MessageBuilder, NameBuf, Rtype};
+///
+/// let zone: NameBuf = "example.com".parse()?;
+/// let mut buf = [0u8; 256];
+/// let mut u = UpdateBuilder::new(MessageBuilder::new(&mut buf)?, &zone, Class::IN)?;
+/// u.require_rrset_absent(&zone, Rtype::CAA)?;
+/// let update = UpdateMessage::new(Message::parse(u.finish())?)?;
+/// let prereqs: Vec<Prerequisite<'_>> = update.prerequisites().collect::<Result<_, _>>()?;
+/// assert!(matches!(prereqs[0], Prerequisite::RrsetAbsent { rtype: Rtype::CAA, .. }));
+/// # Ok::<(), dnsbox::Error>(())
+/// ```
 #[derive(Clone, Debug)]
 #[must_use = "iterators are lazy and do nothing unless consumed"]
 pub struct Prerequisites<'a> {
@@ -477,7 +653,24 @@ impl<'a> Iterator for Prerequisites<'a> {
 impl core::iter::FusedIterator for Prerequisites<'_> {}
 
 /// Iterator over the update operations of an UPDATE; see
-/// [`UpdateMessage::updates`]. Stops after the first error.
+/// [`UpdateMessage::updates`]. Stops after the first error. See the
+/// [`UpdateOp`] example.
+///
+/// ```
+/// use dnsbox::rdata::A;
+/// use dnsbox::update::{UpdateBuilder, UpdateMessage};
+/// use dnsbox::{Class, Message, MessageBuilder, NameBuf};
+///
+/// let zone: NameBuf = "example.com".parse()?;
+/// let host: NameBuf = "a.example.com".parse()?;
+/// let mut buf = [0u8; 256];
+/// let mut u = UpdateBuilder::new(MessageBuilder::new(&mut buf)?, &zone, Class::IN)?;
+/// u.add(&host, 60, &A::new([192, 0, 2, 1].into()))?;
+/// u.add(&host, 60, &A::new([192, 0, 2, 2].into()))?;
+/// let update = UpdateMessage::new(Message::parse(u.finish())?)?;
+/// assert_eq!(update.updates().count(), 2);
+/// # Ok::<(), dnsbox::Error>(())
+/// ```
 #[derive(Clone, Debug)]
 #[must_use = "iterators are lazy and do nothing unless consumed"]
 pub struct Updates<'a> {

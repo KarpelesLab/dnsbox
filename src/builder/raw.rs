@@ -16,12 +16,17 @@ impl<B: OutBuf> MessageBuilder<B> {
     /// RFC 1035 RDATA are compressed against this message, and RDATA of
     /// types without a typed implementation is copied verbatim
     /// (RFC 3597 §4). Compression pointers inside `raw` are allowed and
-    /// resolve against `raw` itself. `raw` must hold whole records only
-    /// ([`Error::UnexpectedEof`](crate::Error::UnexpectedEof) otherwise).
+    /// resolve against `raw` itself. `raw` must hold whole records only.
     ///
     /// The call is atomic: on any error nothing is added. To use it with
     /// the truncation policy, wrap it in
     /// [`push_rrset_with`](Self::push_rrset_with).
+    ///
+    /// # Errors
+    ///
+    /// [`Error::UnexpectedEof`](crate::Error::UnexpectedEof) if `raw` ends
+    /// inside a record, the parse error of a malformed record, or any
+    /// error of [`push_record`](Self::push_record).
     ///
     /// ```
     /// use dnsbox::{Message, MessageBuilder, NameBuf, Rtype, Class, Section};

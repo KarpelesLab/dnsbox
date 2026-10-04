@@ -55,6 +55,22 @@ fn min_rsa_bits(algorithm: Algorithm) -> usize {
 /// RSA keys are accepted with moduli of 512 to 4096 bits (1024 to 4096
 /// for RSASHA512) and exponents of at most 256 bits; ECDSA points must be
 /// on the curve.
+///
+/// ```
+/// use dnsbox::Error;
+/// use dnsbox::dnssec::{Algorithm, PurecryptoVerifier, Signer, SigningKey, Verifier};
+///
+/// let key = SigningKey::from_private_bytes(Algorithm::ECDSAP256SHA256, &[0x42; 32])?;
+/// let mut sig = [0u8; 64];
+/// let len = key.sign(b"signed data", &mut sig)?;
+///
+/// let v = PurecryptoVerifier;
+/// assert!(v.supports(Algorithm::ECDSAP384SHA384) && !v.supports(Algorithm::RSAMD5));
+/// v.verify(Algorithm::ECDSAP256SHA256, key.public_key(), b"signed data", &sig[..len])?;
+/// let tampered = v.verify(Algorithm::ECDSAP256SHA256, key.public_key(), b"other data", &sig[..len]);
+/// assert_eq!(tampered, Err(Error::BadSignature));
+/// # Ok::<(), Error>(())
+/// ```
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Hash)]
 pub struct PurecryptoVerifier;
 
@@ -176,6 +192,21 @@ fn p384_public(public_key: &[u8]) -> Result<BoxedEcdsaPublicKey> {
 }
 
 /// A private key usable by [`SigningKey`] (`purecrypto` types).
+///
+/// Build one from a `purecrypto` key (for example one loaded from a
+/// key file) and pass it to [`SigningKey::new`]; `Debug` never shows the
+/// secret.
+///
+/// ```
+/// use dnsbox::dnssec::{Algorithm, PrivateKey, SigningKey};
+///
+/// let key = SigningKey::from_private_bytes(Algorithm::ED25519, &[9; 32])?;
+/// assert!(matches!(key.private_key(), PrivateKey::Ed25519(_)));
+/// // Rewrapping the same key for another algorithm is refused.
+/// let again = SigningKey::new(Algorithm::ED448, key.private_key().clone());
+/// assert!(again.is_err());
+/// # Ok::<(), dnsbox::Error>(())
+/// ```
 #[derive(Clone)]
 #[non_exhaustive]
 pub enum PrivateKey {
@@ -240,6 +271,8 @@ pub struct SigningKey {
 impl SigningKey {
     /// Wraps a `purecrypto` private key for `algorithm`.
     ///
+    /// # Errors
+    ///
     /// Fails with [`Error::UnsupportedAlgorithm`] if the key type does not
     /// match the algorithm (or the algorithm is not supported), and with
     /// [`Error::InvalidKey`] for an RSA modulus outside 512–4096 bits
@@ -300,6 +333,8 @@ impl SigningKey {
     /// 57 for Ed448, RFC 8080 §6) — the `PrivateKey:` field of BIND's
     /// private key format.
     ///
+    /// # Errors
+    ///
     /// Fails with [`Error::InvalidKey`] for a wrong length or an
     /// out-of-range scalar, and [`Error::UnsupportedAlgorithm`] for other
     /// algorithms (use [`SigningKey::from_rsa_components`] for RSA).
@@ -341,9 +376,13 @@ impl SigningKey {
     /// key format (RFC 5702 §6).
     ///
     /// The components are trusted to form a valid key; inconsistent ones
-    /// produce signatures that do not verify. Fails with
+    /// produce signatures that do not verify.
+    ///
+    /// # Errors
+    ///
     /// [`Error::InvalidKey`] for an even or out-of-range modulus, an
-    /// unusable exponent, or only one prime.
+    /// unusable exponent, or only one prime;
+    /// [`Error::UnsupportedAlgorithm`] for a non-RSA algorithm.
     pub fn from_rsa_components(
         algorithm: Algorithm,
         n: &[u8],
@@ -379,6 +418,23 @@ impl SigningKey {
     /// modulus and exponent 65537). `rng` must be a cryptographically
     /// secure generator, e.g. `purecrypto::rng::OsRng` with the `std`
     /// feature.
+    ///
+    /// # Errors
+    ///
+    /// [`Error::UnsupportedAlgorithm`] for algorithms the backend cannot
+    /// sign with (RSA/MD5, DSA, GOST, ...).
+    ///
+    /// ```
+    /// use dnsbox::dnssec::purecrypto::rng::{CryptoRng, RngCore};
+    /// use dnsbox::dnssec::{Algorithm, Signer, SigningKey};
+    /// use dnsbox::rdata::Dnskey;
+    ///
+    /// fn new_zone_key<R: RngCore + CryptoRng>(rng: &mut R) -> dnsbox::Result<SigningKey> {
+    ///     let key = SigningKey::generate(Algorithm::ECDSAP256SHA256, rng)?;
+    ///     println!("{}", key.dnskey(Dnskey::ZONE | Dnskey::SEP));
+    ///     Ok(key)
+    /// }
+    /// ```
     pub fn generate<R: RngCore + CryptoRng>(algorithm: Algorithm, rng: &mut R) -> Result<Self> {
         let key = match algorithm {
             a if a.is_rsa() => return Self::generate_rsa(algorithm, DEFAULT_RSA_BITS, rng),
@@ -395,6 +451,11 @@ impl SigningKey {
 
     /// Generates a new RSA key with a `bits`-bit modulus (an even number
     /// from 1024 to 4096) and exponent 65537.
+    ///
+    /// # Errors
+    ///
+    /// [`Error::UnsupportedAlgorithm`] for a non-RSA algorithm (or
+    /// RSA/MD5), [`Error::InvalidKey`] for an unsupported size.
     pub fn generate_rsa<R: RngCore + CryptoRng>(
         algorithm: Algorithm,
         bits: usize,

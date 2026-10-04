@@ -17,6 +17,20 @@ const MAX_HASH_LEN: usize = 39;
 ///
 /// `Display` writes unpadded base32hex (RFC 4648 §7), uppercase, as in
 /// the NSEC3 next-hashed-owner field (RFC 5155 §3.3).
+///
+/// ```
+/// use dnsbox::NameBuf;
+/// use dnsbox::dnssec::Nsec3Hash;
+///
+/// let owner: NameBuf = "0p9mhaveqvm6t7vbl5lop2u3t2rp3tom.example".parse()?;
+/// let hash = Nsec3Hash::from_owner(owner.as_name())?;
+/// assert_eq!(hash.as_bytes().len(), 20);
+/// assert_eq!(hash.to_string(), "0P9MHAVEQVM6T7VBL5LOP2U3T2RP3TOM");
+/// let zone: NameBuf = "example".parse()?;
+/// assert_eq!(hash.owner_name(zone.as_name())?, owner);
+/// assert_eq!(Nsec3Hash::new(hash.as_bytes())?, hash);
+/// # Ok::<(), dnsbox::Error>(())
+/// ```
 #[derive(Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub struct Nsec3Hash {
     len: u8,
@@ -25,6 +39,10 @@ pub struct Nsec3Hash {
 
 impl Nsec3Hash {
     /// Wraps raw hash octets (at most 39, as fits a 63-character label).
+    ///
+    /// # Errors
+    ///
+    /// [`Error::InvalidRdata`] for an empty hash or one over 39 octets.
     pub fn new(hash: &[u8]) -> Result<Self> {
         let mut bytes = [0u8; MAX_HASH_LEN];
         let dst = bytes.get_mut(..hash.len()).ok_or(Error::InvalidRdata)?;
@@ -40,6 +58,8 @@ impl Nsec3Hash {
 
     /// Decodes the hash from the first label of an NSEC3 owner name
     /// (base32hex, case-insensitive, RFC 5155 §3).
+    ///
+    /// # Errors
     ///
     /// Fails with [`Error::InvalidText`] if the label is not valid unpadded
     /// base32hex, and with [`Error::InvalidRdata`] for the root name.
@@ -65,6 +85,10 @@ impl Nsec3Hash {
 
     /// The hashed owner name: the lowercase base32hex label followed by
     /// `zone` (RFC 5155 §3).
+    ///
+    /// # Errors
+    ///
+    /// [`Error::NameTooLong`] if the result exceeds 255 octets.
     pub fn owner_name(&self, zone: Name<'_>) -> Result<NameBuf> {
         let mut label = [0u8; 63];
         let mut w = SliceWriter {
@@ -140,6 +164,8 @@ impl fmt::Write for SliceWriter<'_> {
 /// The work is `iterations + 1` hash computations; validators should
 /// refuse to hash for records with iteration counts above their policy
 /// limit (RFC 9276 §3.2 recommends treating large counts as insecure).
+///
+/// # Errors
 ///
 /// Fails with [`Error::UnsupportedAlgorithm`] for hash algorithms other
 /// than SHA-1.

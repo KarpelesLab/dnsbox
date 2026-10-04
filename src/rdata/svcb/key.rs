@@ -7,6 +7,16 @@ open_enum! {
     /// Presentation format is the registered lowercase name, or
     /// `key<number>` for any key (RFC 9460 §2.1), which is also how
     /// unregistered keys are displayed.
+    ///
+    /// ```
+    /// use dnsbox::rdata::SvcParamKey;
+    ///
+    /// assert_eq!("alpn".parse::<SvcParamKey>()?, SvcParamKey::ALPN);
+    /// assert_eq!("key3".parse::<SvcParamKey>()?, SvcParamKey::PORT);
+    /// assert_eq!(SvcParamKey::new(65300).to_string(), "key65300");
+    /// assert!(SvcParamKey::new(65300).is_private_use());
+    /// # Ok::<(), dnsbox::Error>(())
+    /// ```
     pub struct SvcParamKey(u16), generic "key";
     /// Keys that clients must understand to use the record (RFC 9460 §8).
     MANDATORY = 0 => "mandatory",

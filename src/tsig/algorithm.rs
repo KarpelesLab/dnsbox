@@ -14,6 +14,19 @@ use crate::name::Name;
 ///
 /// The `-128`/`-192`/`-256` variants are the truncated forms of RFC 4868 /
 /// RFC 8945 §6: the same HMAC, with the MAC truncated to that many bits.
+///
+/// ```
+/// use dnsbox::tsig::TsigAlgorithm;
+///
+/// let alg: TsigAlgorithm = "HMAC-SHA256.".parse()?;
+/// assert_eq!(alg, TsigAlgorithm::HmacSha256);
+/// assert_eq!((alg.digest_len(), alg.mac_len()), (32, 32));
+/// assert_eq!(TsigAlgorithm::HmacSha256_128.mac_len(), 16);
+/// assert_eq!(alg.to_string(), "hmac-sha256.");
+/// assert_eq!(alg.as_wire(), b"\x0bhmac-sha256\x00");
+/// assert_eq!(TsigAlgorithm::from_name(alg.name()), Some(alg));
+/// # Ok::<(), dnsbox::Error>(())
+/// ```
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 #[non_exhaustive]
 pub enum TsigAlgorithm {

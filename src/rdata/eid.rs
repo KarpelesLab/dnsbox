@@ -70,12 +70,30 @@ macro_rules! hex_rdata {
 hex_rdata! {
     /// `EID` record data: a Nimrod endpoint identifier
     /// (draft-ietf-nimrod-dns-02). Class IN only.
+    ///
+    /// ```
+    /// use dnsbox::rdata::{Eid, ParseRdataText};
+    ///
+    /// let mut buf = [0u8; 8];
+    /// let eid = Eid::from_text("( 1289ab\n cd )", &mut buf)?;
+    /// assert_eq!(eid.data, [0x12, 0x89, 0xab, 0xcd]);
+    /// assert_eq!(eid.to_string(), "1289ABCD");
+    /// # Ok::<(), dnsbox::Error>(())
+    /// ```
     Eid, EID
 }
 
 hex_rdata! {
     /// `NIMLOC` record data: a Nimrod locator
     /// (draft-ietf-nimrod-dns-02). Class IN only.
+    ///
+    /// ```
+    /// use dnsbox::rdata::{Nimloc, ParseRdataText};
+    ///
+    /// let mut buf = [0u8; 8];
+    /// assert_eq!(Nimloc::from_text("12 89 AB", &mut buf)?.to_string(), "1289AB");
+    /// # Ok::<(), dnsbox::Error>(())
+    /// ```
     Nimloc, NIMLOC
 }
 

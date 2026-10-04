@@ -11,6 +11,19 @@ use crate::name::Name;
 use crate::rdata::Nsec;
 
 /// An authenticated NSEC record: its owner name and data.
+///
+/// ```
+/// use dnsbox::dnssec::NsecRecord;
+/// use dnsbox::rdata::{Nsec, ParseRdataText};
+/// use dnsbox::NameBuf;
+///
+/// let owner: NameBuf = "alfa.example.com".parse()?;
+/// let mut buf = [0u8; 64];
+/// let record = NsecRecord::new(owner.as_name(), Nsec::from_text("host.example.com. A MX RRSIG NSEC", &mut buf)?);
+/// let name: NameBuf = "b.example.com".parse()?;
+/// assert!(record.nsec.covers(&record.owner, &name.as_name()));
+/// # Ok::<(), dnsbox::Error>(())
+/// ```
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct NsecRecord<'a> {
     /// The owner name (an existing name of the zone).
@@ -90,6 +103,20 @@ impl<'a> From<&NsecRecord<'a>> for NsecRecord<'a> {
 /// and a parent-side record denies nothing at its owner but DS.
 ///
 /// Every check is a constant number of passes over the records.
+///
+/// Records usually come straight from a response's authority section,
+/// after their RRSIGs were verified:
+///
+/// ```
+/// use dnsbox::dnssec::{DenialProof, NsecProof, NsecRecord};
+/// use dnsbox::{Message, Name, Rtype};
+///
+/// fn nodata_is_proven(msg: &Message<'_>, zone: Name<'_>, qname: Name<'_>, qtype: Rtype) -> bool {
+///     // A cloneable iterator: the proof walks the records several times.
+///     let records = msg.authority().filter_map(Result::ok).filter_map(|rr| NsecRecord::from_record(&rr));
+///     NsecProof::new(zone, records).no_data(qname, qtype).is_secure()
+/// }
+/// ```
 #[derive(Clone, Copy, Debug)]
 pub struct NsecProof<'a, I> {
     zone: Name<'a>,
@@ -170,7 +197,9 @@ where
     /// ancestor `qname` shares with the covering record's owner or next
     /// name (both of which exist).
     ///
-    /// Fails with the status the other checks would return:
+    /// # Errors
+    ///
+    /// The status the other checks would return:
     /// [`BogusReason::OutOfZone`], [`BogusReason::NameExists`],
     /// [`BogusReason::ZoneCut`] or [`BogusReason::MissingProof`].
     pub fn closest_encloser<'q>(

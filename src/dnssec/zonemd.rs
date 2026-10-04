@@ -21,6 +21,20 @@ use crate::{Class, Result, Rtype};
 /// One record of a zone, as fed to [`ZoneCollation`]: owner name, class,
 /// TTL and record data (any [`ComposeRdata`], e.g. typed data, `RData`, or
 /// [`RecordRdata`] around a message record).
+///
+/// ```
+/// use dnsbox::dnssec::ZonemdRecord;
+/// use dnsbox::rdata::RData;
+///
+/// // From records read from a zone file.
+/// let zone = dnsbox::zone::parse("example. 3600 IN NS ns1.example.\n")?;
+/// let records: Vec<ZonemdRecord<'_, RData<'_>>> = zone
+///     .iter()
+///     .map(|rr| Ok(ZonemdRecord::new(rr.name.as_name(), rr.class, rr.ttl, rr.data()?)))
+///     .collect::<dnsbox::Result<_>>()?;
+/// assert_eq!(records[0].ttl, 3600);
+/// # Ok::<(), dnsbox::Error>(())
+/// ```
 #[derive(Clone, Copy, Debug)]
 pub struct ZonemdRecord<'a, D> {
     /// The owner name.
@@ -79,6 +93,40 @@ struct Entry {
 /// index); hashing it needs the `dnssec-digest` feature, or any digest
 /// over [`rrs`](Self::rrs).
 ///
+/// ```
+/// # #[cfg(feature = "dnssec-digest")] {
+/// use dnsbox::dnssec::{ZoneCollation, ZonemdRecord};
+/// use dnsbox::rdata::ZonemdHashAlg;
+/// use dnsbox::NameBuf;
+///
+/// // RFC 8976 Appendix A.1.
+/// let zone = dnsbox::zone::parse("\
+/// $ORIGIN example.
+/// @    86400 IN SOA ns1 admin 2018031900 1800 900 604800 86400
+///      86400 IN NS ns1
+///      86400 IN NS ns2
+///      86400 IN ZONEMD 2018031900 1 1 (
+///          c68090d90a7aed716bc459f9340e3d7c1370d4d24b7e2fc3
+///          a1ddc0b9a87153b9a9713b3c9ae5cc27777f98b8e730044c )
+/// ns1  3600  IN A 203.0.113.63
+/// ns2  3600  IN AAAA 2001:db8::63
+/// ")?;
+/// let records = zone
+///     .iter()
+///     .map(|rr| Ok(ZonemdRecord::new(rr.name.as_name(), rr.class, rr.ttl, rr.data()?)))
+///     .collect::<dnsbox::Result<Vec<_>>>()?;
+/// let apex: NameBuf = "example".parse()?;
+/// let collation = ZoneCollation::new(apex.as_name(), records)?;
+/// assert_eq!(collation.len(), 5); // the apex ZONEMD is set aside
+/// assert_eq!(collation.soa_serial(), Some(2018031900));
+/// let verified = collation.verify().expect("digest matches");
+/// assert_eq!(verified.serial, 2018031900);
+/// let digest = collation.digest(ZonemdHashAlg::SHA384)?;
+/// assert_eq!(digest.to_zonemd(2018031900).to_string(), zone[3].data()?.to_string());
+/// # }
+/// # Ok::<(), dnsbox::Error>(())
+/// ```
+///
 /// [`verify`]: Self::verify
 #[derive(Clone, Debug)]
 pub struct ZoneCollation {
@@ -92,6 +140,8 @@ pub struct ZoneCollation {
 
 impl ZoneCollation {
     /// Collates `records` for the zone at `apex`.
+    ///
+    /// # Errors
     ///
     /// Fails with the error of composing a record's data (e.g.
     /// [`Error::InvalidRdata`](crate::Error::InvalidRdata)) or
@@ -358,7 +408,24 @@ fn label_at(wire: &[u8], off: u8) -> &[u8] {
 /// Why ZONEMD verification did not succeed (RFC 8976 §4).
 ///
 /// With several ZONEMD RRs, the failure of the one that got furthest
-/// through the RFC 8976 §4 checks is reported.
+/// through the RFC 8976 §4 checks is reported. It converts into [`Error`]
+/// with `?`.
+///
+/// ```
+/// use dnsbox::dnssec::{ZonemdFailure, verify_zonemd, ZonemdRecord};
+/// use dnsbox::NameBuf;
+///
+/// let zone = dnsbox::zone::parse("example. 60 IN SOA ns1.example. admin.example. 1 2 3 4 5\n")?;
+/// let records = zone
+///     .iter()
+///     .map(|rr| Ok(ZonemdRecord::new(rr.name.as_name(), rr.class, rr.ttl, rr.data()?)))
+///     .collect::<dnsbox::Result<Vec<_>>>()?;
+/// let apex: NameBuf = "example".parse()?;
+/// let failure = verify_zonemd(apex.as_name(), records).unwrap_err();
+/// assert_eq!(failure, ZonemdFailure::NoZonemd);
+/// assert_eq!(failure.to_string(), "no apex ZONEMD");
+/// # Ok::<(), dnsbox::Error>(())
+/// ```
 #[cfg(feature = "dnssec-digest")]
 #[cfg_attr(docsrs, doc(cfg(feature = "dnssec-digest")))]
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
@@ -460,7 +527,18 @@ impl From<ZonemdFailure> for Error {
     }
 }
 
-/// A successful ZONEMD verification: the ZONEMD RR that matched.
+/// A successful ZONEMD verification: the ZONEMD RR that matched (see the
+/// [`ZoneCollation`] example).
+///
+/// ```
+/// use dnsbox::dnssec::ZonemdVerified;
+/// use dnsbox::rdata::ZonemdHashAlg;
+///
+/// fn log(v: &ZonemdVerified) -> String {
+///     let alg = if v.hash_alg == ZonemdHashAlg::SHA512 { "SHA-512" } else { "SHA-384" };
+///     format!("zone serial {} verified with {alg}", v.serial)
+/// }
+/// ```
 #[cfg(feature = "dnssec-digest")]
 #[cfg_attr(docsrs, doc(cfg(feature = "dnssec-digest")))]
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
@@ -489,7 +567,29 @@ fn zonemd_fields(rdata: &[u8]) -> Option<Zonemd<'_>> {
     })
 }
 
-/// A computed ZONEMD digest (RFC 8976 §3.3.1.2).
+/// A computed ZONEMD digest (RFC 8976 §3.3.1.2), from
+/// [`ZoneCollation::digest`] or [`zonemd_digest`] (see the example
+/// there); [`to_zonemd`](Self::to_zonemd) turns it into the record to
+/// publish at the apex.
+///
+/// ```
+/// use dnsbox::dnssec::{ZonemdRecord, zonemd_digest};
+/// use dnsbox::rdata::ZonemdHashAlg;
+/// use dnsbox::NameBuf;
+///
+/// // A zone signer computing the ZONEMD record to publish.
+/// let zone = dnsbox::zone::parse("$ORIGIN example.\n$TTL 3600\n@ SOA ns1 admin 7 1 1 1 1\n@ NS ns1\nns1 A 192.0.2.53\n")?;
+/// let records = zone
+///     .iter()
+///     .map(|rr| Ok(ZonemdRecord::new(rr.name.as_name(), rr.class, rr.ttl, rr.data()?)))
+///     .collect::<dnsbox::Result<Vec<_>>>()?;
+/// let apex: NameBuf = "example".parse()?;
+/// let digest = zonemd_digest(apex.as_name(), records, ZonemdHashAlg::SHA512)?;
+/// assert_eq!((digest.hash_alg(), digest.as_bytes().len()), (ZonemdHashAlg::SHA512, 64));
+/// let zonemd = digest.to_zonemd(7);
+/// assert!(zonemd.to_string().starts_with("7 1 2 "));
+/// # Ok::<(), dnsbox::Error>(())
+/// ```
 #[cfg(feature = "dnssec-digest")]
 #[cfg_attr(docsrs, doc(cfg(feature = "dnssec-digest")))]
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
@@ -535,6 +635,8 @@ impl ZoneCollation {
     /// The SIMPLE digest of the zone with `hash_alg` (RFC 8976 §3.3.1.2),
     /// computed by `purecrypto`.
     ///
+    /// # Errors
+    ///
     /// Fails with [`Error::UnsupportedAlgorithm`] for hash algorithms other
     /// than SHA-384 and SHA-512.
     pub fn digest(&self, hash_alg: ZonemdHashAlg) -> Result<ZonemdDigest> {
@@ -573,6 +675,11 @@ impl ZoneCollation {
     ///
     /// The DNSSEC steps (1–3: the ZONEMD and SOA RRsets must be validated
     /// when the zone is signed) are the caller's.
+    ///
+    /// # Errors
+    ///
+    /// The [`ZonemdFailure`] of the ZONEMD RR that got furthest through
+    /// the checks.
     pub fn verify(&self) -> core::result::Result<ZonemdVerified, ZonemdFailure> {
         let serial = self.soa_serial().ok_or(ZonemdFailure::NoSoa)?;
         let mut failure = ZonemdFailure::NoZonemd;
@@ -652,8 +759,11 @@ impl ZoneCollation {
 
 /// Computes the SIMPLE ZONEMD digest of the zone at `apex` with
 /// `hash_alg` (RFC 8976 §3): collates `records` with [`ZoneCollation`]
-/// and hashes them. Fails as [`ZoneCollation::new`] and
-/// [`ZoneCollation::digest`].
+/// and hashes them.
+///
+/// # Errors
+///
+/// As [`ZoneCollation::new`] and [`ZoneCollation::digest`].
 ///
 /// ```
 /// use dnsbox::dnssec::{ZonemdRecord, zonemd_digest};
@@ -693,6 +803,12 @@ where
 /// Verifies the zone at `apex` against its apex ZONEMD RRs (RFC 8976 §4):
 /// collates `records` with [`ZoneCollation`] and runs
 /// [`ZoneCollation::verify`].
+///
+/// # Errors
+///
+/// [`ZonemdFailure::Malformed`] if the records cannot be collated,
+/// otherwise as [`ZoneCollation::verify`]. See the [`ZonemdFailure`]
+/// example.
 #[cfg(feature = "dnssec-digest")]
 #[cfg_attr(docsrs, doc(cfg(feature = "dnssec-digest")))]
 pub fn verify_zonemd<'r, I, D>(

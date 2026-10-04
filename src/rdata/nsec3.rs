@@ -55,6 +55,19 @@ fn u8_prefixed_text<B: OutBuf + ?Sized>(
 
 /// `NSEC3` record data: hashed authenticated denial of existence
 /// (RFC 5155 §3).
+///
+/// ```
+/// use dnsbox::rdata::{Nsec3, ParseRdataText};
+/// use dnsbox::Rtype;
+///
+/// let mut buf = [0u8; 64];
+/// let nsec3 = Nsec3::from_text("1 1 12 AABBCCDD 2T7B4G4VSA5SMI47K61MV5BV1A22BOJR A RRSIG", &mut buf)?;
+/// assert!(nsec3.is_opt_out());
+/// assert_eq!((nsec3.iterations, nsec3.salt), (12, &[0xaa, 0xbb, 0xcc, 0xdd][..]));
+/// assert_eq!(nsec3.next_hashed_owner.len(), 20);
+/// assert!(nsec3.types.contains(Rtype::A));
+/// # Ok::<(), dnsbox::Error>(())
+/// ```
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub struct Nsec3<'a> {
     /// The hash algorithm (RFC 5155 §3.1.1).
@@ -186,6 +199,19 @@ impl fmt::Display for Nsec3<'_> {
 
 /// `NSEC3PARAM` record data: the NSEC3 parameters of a zone, for
 /// authoritative servers (RFC 5155 §4).
+///
+/// ```
+/// use dnsbox::rdata::{Nsec3param, ParseRdataText};
+/// use dnsbox::dnssec::Nsec3HashAlgorithm;
+///
+/// // RFC 9276 §3.1: no extra iterations, no salt.
+/// let mut buf = [0u8; 8];
+/// let param = Nsec3param::from_text("1 0 0 -", &mut buf)?;
+/// assert_eq!(param.hash_algorithm, Nsec3HashAlgorithm::SHA1);
+/// assert!(param.salt.is_empty());
+/// assert_eq!(param.to_string(), "1 0 0 -");
+/// # Ok::<(), dnsbox::Error>(())
+/// ```
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub struct Nsec3param<'a> {
     /// The hash algorithm (RFC 5155 §4.1.1).

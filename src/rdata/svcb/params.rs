@@ -15,6 +15,17 @@ use crate::{Error, Result};
 ///
 /// `Display` gives the presentation form: `key=value`, or just `key` when
 /// the value is empty (RFC 9460 §2.1).
+///
+/// ```
+/// use dnsbox::rdata::{SvcParam, SvcParamKey, SvcParamValue};
+///
+/// let param = SvcParam::new(SvcParamKey::PORT, &[0x20, 0xfb])?;
+/// assert_eq!(param.value(), SvcParamValue::Port(8443));
+/// assert_eq!(param.to_string(), "port=8443");
+/// // A value of the wrong size for its key is rejected.
+/// assert!(SvcParam::new(SvcParamKey::PORT, &[1]).is_err());
+/// # Ok::<(), dnsbox::Error>(())
+/// ```
 #[derive(Clone, Copy, PartialEq, Eq, Hash)]
 pub struct SvcParam<'a> {
     key: SvcParamKey,
@@ -23,8 +34,11 @@ pub struct SvcParam<'a> {
 
 impl<'a> SvcParam<'a> {
     /// Pairs `key` with a wire-format `value`, checking that the value
-    /// has the format the key requires ([`Error::InvalidRdata`]
-    /// otherwise).
+    /// has the format the key requires.
+    ///
+    /// # Errors
+    ///
+    /// [`Error::InvalidRdata`] if it does not.
     pub fn new(key: SvcParamKey, value: &'a [u8]) -> Result<Self> {
         SvcParamValue::parse(key, value)?;
         Ok(SvcParam { key, value })
@@ -85,6 +99,22 @@ impl fmt::Debug for SvcParam<'_> {
 /// Iterating yields [`SvcParam`]s in key order; there are also typed
 /// accessors for the registered keys. Lookups walk the list (it is sorted,
 /// so they stop early) and allocate nothing.
+///
+/// ```
+/// use dnsbox::rdata::{SvcParamKey, SvcParams};
+///
+/// // port=53, then ipv4hint=192.0.2.53 (keys in increasing order).
+/// let params = SvcParams::new(b"\x00\x03\x00\x02\x00\x35\x00\x04\x00\x04\xc0\x00\x02\x35")?;
+/// assert_eq!(params.len(), 2);
+/// assert_eq!(params.port(), Some(53));
+/// assert_eq!(params.ipv4_hints().collect::<Vec<_>>(), [core::net::Ipv4Addr::new(192, 0, 2, 53)]);
+/// assert!(!params.contains(SvcParamKey::ALPN));
+/// assert_eq!(params.to_string(), "port=53 ipv4hint=192.0.2.53");
+///
+/// // Out of order: malformed.
+/// assert!(SvcParams::new(b"\x00\x04\x00\x04\xc0\x00\x02\x35\x00\x03\x00\x02\x00\x35").is_err());
+/// # Ok::<(), dnsbox::Error>(())
+/// ```
 #[derive(Clone, Copy, PartialEq, Eq, Hash, Default)]
 pub struct SvcParams<'a>(&'a [u8]);
 
@@ -95,11 +125,15 @@ impl<'a> SvcParams<'a> {
     /// Validates wire-format SvcParams (the part of the RDATA after the
     /// TargetName).
     ///
-    /// Fails with [`Error::UnexpectedEof`] if the data ends inside a
-    /// SvcParam and with [`Error::InvalidRdata`] if the keys are not
+    /// The work is linear in the length of `wire`.
+    ///
+    /// # Errors
+    ///
+    /// [`Error::UnexpectedEof`] if the data ends inside a
+    /// SvcParam and [`Error::InvalidRdata`] if the keys are not
     /// strictly increasing, the reserved key 65535 is used (RFC 9460
     /// §14.3.2), a value is malformed, or the parameters are not
-    /// self-consistent. The work is linear in the length of `wire`.
+    /// self-consistent.
     pub fn new(wire: &'a [u8]) -> Result<Self> {
         let mut prev: Option<u16> = None;
         let mut iter = RawIter(wire);
@@ -365,6 +399,16 @@ impl<'a> RawIter<'a> {
 }
 
 /// Iterator over [`SvcParams`], in key order.
+///
+/// ```
+/// use dnsbox::rdata::{SvcParamKey, Svcb};
+///
+/// let mut buf = [0u8; 64];
+/// let svcb = Svcb::from_text("1 . port=443 alpn=h2 no-default-alpn", &mut buf)?;
+/// let keys: Vec<SvcParamKey> = svcb.params.iter().map(|p| p.key()).collect();
+/// assert_eq!(keys, [SvcParamKey::ALPN, SvcParamKey::NO_DEFAULT_ALPN, SvcParamKey::PORT]);
+/// # Ok::<(), dnsbox::Error>(())
+/// ```
 #[derive(Clone, Debug)]
 #[must_use = "iterators are lazy and do nothing unless consumed"]
 pub struct SvcParamIter<'a>(RawIter<'a>);

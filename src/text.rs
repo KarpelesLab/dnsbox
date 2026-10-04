@@ -4,6 +4,22 @@
 //!
 //! Record-data `Display` impls should use these rather than rolling their
 //! own, so every type escapes and encodes identically.
+//!
+//! ```
+//! use dnsbox::text::{Base32Hex, Base64, Hex, fmt_generic_rdata, fmt_quoted};
+//!
+//! assert_eq!(Hex(&[0xde, 0xad]).to_string(), "DEAD");
+//! assert_eq!(Base64(b"dnsbox").to_string(), "ZG5zYm94");
+//! assert_eq!(Base32Hex(&[0xff, 0x00]).to_string(), "VS00");
+//!
+//! let mut s = String::new();
+//! fmt_quoted(&mut s, b"say \"hi\"\n")?;
+//! assert_eq!(s, r#""say \"hi\"\010""#);
+//! s.clear();
+//! fmt_generic_rdata(&mut s, &[192, 0, 2, 1])?;
+//! assert_eq!(s, r"\# 4 C0000201");
+//! # Ok::<(), core::fmt::Error>(())
+//! ```
 
 use core::fmt;
 
@@ -50,12 +66,34 @@ fn fmt_escaped<W: fmt::Write + ?Sized>(
 /// Writes a label in presentation format: `.`, `\`, `"`, `(`, `)`, `;`,
 /// `@` and `$` are backslash-escaped; space and non-printable bytes become
 /// `\DDD` (RFC 1035 §5.1, RFC 4343 §2.1).
+///
+/// # Errors
+///
+/// The error of `w`, if writing to it fails.
+///
+/// ```
+/// let mut s = String::new();
+/// dnsbox::text::fmt_label(&mut s, b"a.b c")?;
+/// assert_eq!(s, r"a\.b\032c");
+/// # Ok::<(), core::fmt::Error>(())
+/// ```
 pub fn fmt_label<W: fmt::Write + ?Sized>(w: &mut W, label: &[u8]) -> fmt::Result {
     fmt_escaped(w, label, label_special, false)
 }
 
 /// Writes a `<character-string>` in quoted presentation format: `"` and `\`
 /// are backslash-escaped; non-printable bytes become `\DDD` (RFC 1035 §5.1).
+///
+/// # Errors
+///
+/// The error of `w`, if writing to it fails.
+///
+/// ```
+/// let mut s = String::new();
+/// dnsbox::text::fmt_quoted(&mut s, b"a \\ b")?;
+/// assert_eq!(s, r#""a \\ b""#);
+/// # Ok::<(), core::fmt::Error>(())
+/// ```
 pub fn fmt_quoted<W: fmt::Write + ?Sized>(w: &mut W, data: &[u8]) -> fmt::Result {
     w.write_char('"')?;
     fmt_escaped(w, data, |b| matches!(b, b'"' | b'\\'), true)?;
@@ -64,6 +102,17 @@ pub fn fmt_quoted<W: fmt::Write + ?Sized>(w: &mut W, data: &[u8]) -> fmt::Result
 
 /// Writes RDATA in the generic RFC 3597 §5 form: `\# <length> <hex>`
 /// (just `\# 0` when empty).
+///
+/// # Errors
+///
+/// The error of `w`, if writing to it fails.
+///
+/// ```
+/// let mut s = String::new();
+/// dnsbox::text::fmt_generic_rdata(&mut s, &[])?;
+/// assert_eq!(s, r"\# 0");
+/// # Ok::<(), core::fmt::Error>(())
+/// ```
 pub fn fmt_generic_rdata<W: fmt::Write + ?Sized>(w: &mut W, rdata: &[u8]) -> fmt::Result {
     write!(w, "\\# {}", rdata.len())?;
     if !rdata.is_empty() {
@@ -73,6 +122,10 @@ pub fn fmt_generic_rdata<W: fmt::Write + ?Sized>(w: &mut W, rdata: &[u8]) -> fmt
 }
 
 /// `Display` adapter: uppercase hexadecimal, no separators.
+///
+/// ```
+/// assert_eq!(dnsbox::text::Hex(&[0x0a, 0xbc]).to_string(), "0ABC");
+/// ```
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct Hex<'a>(pub &'a [u8]);
 
@@ -87,6 +140,11 @@ impl fmt::Display for Hex<'_> {
 
 /// `Display` adapter: standard base64 with padding (RFC 4648 §4), as used by
 /// DNSKEY, RRSIG, CERT, OPENPGPKEY, DHCID, ...
+///
+/// ```
+/// assert_eq!(dnsbox::text::Base64(b"key").to_string(), "a2V5");
+/// assert_eq!(dnsbox::text::Base64(b"k").to_string(), "aw==");
+/// ```
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct Base64<'a>(pub &'a [u8]);
 
@@ -113,6 +171,12 @@ impl fmt::Display for Base64<'_> {
 
 /// `Display` adapter: base32 with the "extended hex" alphabet, uppercase,
 /// unpadded (RFC 4648 §7), as used by NSEC3 (RFC 5155 §3.3).
+///
+/// ```
+/// // An NSEC3 next hashed owner name is 20 bytes: 32 characters.
+/// let hash = [0u8; 20];
+/// assert_eq!(dnsbox::text::Base32Hex(&hash).to_string(), "0".repeat(32));
+/// ```
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct Base32Hex<'a>(pub &'a [u8]);
 

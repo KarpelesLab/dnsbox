@@ -103,11 +103,30 @@ macro_rules! eui_rdata {
 eui_rdata! {
     /// `EUI48` record data: an IEEE EUI-48 address, e.g. a MAC address
     /// (RFC 7043 §3).
+    ///
+    /// ```
+    /// use dnsbox::rdata::{Eui48, ParseRdataText};
+    ///
+    /// let mut buf = [0u8; 6];
+    /// let eui = Eui48::from_text("00-00-5e-00-53-2a", &mut buf)?;
+    /// assert_eq!(eui, Eui48::new([0x00, 0x00, 0x5e, 0x00, 0x53, 0x2a]));
+    /// assert_eq!(eui.to_string(), "00-00-5e-00-53-2a");
+    /// # Ok::<(), dnsbox::Error>(())
+    /// ```
     Eui48, EUI48, 6
 }
 
 eui_rdata! {
     /// `EUI64` record data: an IEEE EUI-64 address (RFC 7043 §4).
+    ///
+    /// ```
+    /// use dnsbox::rdata::{Eui64, ParseRdataText};
+    ///
+    /// let mut buf = [0u8; 8];
+    /// let eui = Eui64::from_text("00-00-5e-ef-10-00-00-2a", &mut buf)?;
+    /// assert_eq!(eui.address[3], 0xef);
+    /// # Ok::<(), dnsbox::Error>(())
+    /// ```
     Eui64, EUI64, 8
 }
 

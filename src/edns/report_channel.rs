@@ -11,6 +11,23 @@ use crate::wire::{Composer, NameEncoding, WireReader};
 /// reports for this zone (RFC 9567 §5).
 ///
 /// The name is in uncompressed wire format and must fill the option.
+///
+/// ```
+/// use dnsbox::NameBuf;
+/// use dnsbox::edns::{ComposeOption, ReportChannel};
+/// use dnsbox::WireWriter;
+///
+/// let agent: NameBuf = "a01.agent-domain.example".parse()?;
+/// let mut buf = [0u8; 64];
+/// let mut w = WireWriter::new(&mut buf);
+/// ReportChannel::new(agent.as_name()).compose_tlv(&mut w)?;
+/// assert_eq!(&w.as_bytes()[..4], [0, 18, 0, 26]);
+/// assert_eq!(
+///     ReportChannel::new(agent.as_name()).to_string(),
+///     "REPORT-CHANNEL=a01.agent-domain.example."
+/// );
+/// # Ok::<(), dnsbox::Error>(())
+/// ```
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub struct ReportChannel<'a> {
     /// AGENT DOMAIN.

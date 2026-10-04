@@ -85,6 +85,16 @@ macro_rules! pref_u64_rdata {
 
 pref_u64_rdata! {
     /// `NID` record data: an ILNP node identifier (RFC 6742 §2.1).
+    ///
+    /// ```
+    /// use dnsbox::rdata::{Nid, ParseRdataText};
+    ///
+    /// let mut buf = [0u8; 10];
+    /// let nid = Nid::from_text("20 14:4FFF:FF20:EE64", &mut buf)?;
+    /// assert_eq!((nid.preference, nid.node_id), (20, 0x0014_4fff_ff20_ee64));
+    /// assert_eq!(nid.to_string(), "20 0014:4fff:ff20:ee64");
+    /// # Ok::<(), dnsbox::Error>(())
+    /// ```
     Nid, NID,
     /// The 64-bit node identifier.
     node_id
@@ -92,12 +102,30 @@ pref_u64_rdata! {
 
 pref_u64_rdata! {
     /// `L64` record data: a 64-bit ILNPv6 locator (RFC 6742 §2.3).
+    ///
+    /// ```
+    /// use dnsbox::rdata::{L64, ParseRdataText};
+    ///
+    /// let mut buf = [0u8; 10];
+    /// let l64 = L64::from_text("10 2001:0DB8:1140:1000", &mut buf)?;
+    /// assert_eq!(l64.locator, 0x2001_0db8_1140_1000);
+    /// # Ok::<(), dnsbox::Error>(())
+    /// ```
     L64, L64,
     /// The 64-bit locator.
     locator
 }
 
 /// `L32` record data: a 32-bit ILNPv4 locator (RFC 6742 §2.2).
+///
+/// ```
+/// use dnsbox::rdata::{L32, ParseRdataText};
+///
+/// let mut buf = [0u8; 6];
+/// let l32 = L32::from_text("10 10.1.2.0", &mut buf)?;
+/// assert_eq!(l32.locator, core::net::Ipv4Addr::new(10, 1, 2, 0));
+/// # Ok::<(), dnsbox::Error>(())
+/// ```
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub struct L32 {
     /// Preference; lower values are preferred.
@@ -149,6 +177,15 @@ impl fmt::Display for L32 {
 
 /// `LP` record data: a pointer to the name holding L32/L64 records
 /// (RFC 6742 §2.4).
+///
+/// ```
+/// use dnsbox::rdata::{Lp, ParseRdataText};
+///
+/// let mut buf = [0u8; 32];
+/// let lp = Lp::from_text("10 l64-subnet1.example.com.", &mut buf)?;
+/// assert_eq!(lp.fqdn.to_string(), "l64-subnet1.example.com.");
+/// # Ok::<(), dnsbox::Error>(())
+/// ```
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub struct Lp<'a> {
     /// Preference; lower values are preferred.

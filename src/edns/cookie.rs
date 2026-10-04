@@ -44,9 +44,22 @@ impl<'a> Cookie<'a> {
         Cookie { client, server: &[] }
     }
 
-    /// A client cookie and a server cookie. `server` must be empty (no
-    /// server cookie) or 8 to 32 bytes long, otherwise
-    /// [`Error::InvalidOption`].
+    /// A client cookie and a server cookie, as a client echoes them once
+    /// it has learned the server cookie (RFC 7873 §5.3).
+    ///
+    /// # Errors
+    ///
+    /// [`Error::InvalidOption`] unless `server` is empty (no server
+    /// cookie) or 8 to 32 bytes long.
+    ///
+    /// ```
+    /// use dnsbox::edns::Cookie;
+    ///
+    /// let c = Cookie::new([1; 8], &[2; 16])?;
+    /// assert_eq!(c.server(), Some(&[2u8; 16][..]));
+    /// assert!(Cookie::new([1; 8], &[2; 4]).is_err());
+    /// # Ok::<(), dnsbox::Error>(())
+    /// ```
     pub const fn new(client: [u8; 8], server: &'a [u8]) -> Result<Self> {
         let len = server.len();
         if len != 0 && (len < Self::MIN_SERVER_LEN || len > Self::MAX_SERVER_LEN) {
@@ -132,6 +145,22 @@ impl fmt::Display for Cookie<'_> {
 /// dependency. Computing and checking the hash needs SipHash-2-4, which
 /// dnsbox takes from `purecrypto` behind the `cookie-siphash` feature
 /// ([`generate`](Self::generate), [`verify`](Self::verify)).
+///
+/// ```
+/// use dnsbox::edns::{Cookie, ServerCookie};
+///
+/// // A server cookie received from a server implementing RFC 9018.
+/// let sc = ServerCookie::from_bytes(&[1, 0, 0, 0, 0x5c, 0xf7, 0x9f, 0x11,
+///                                     0x1f, 0x81, 0x30, 0xc3, 0xee, 0xe2, 0x94, 0x80])?;
+/// assert_eq!((sc.version, sc.timestamp), (1, 1559731985));
+/// assert!(sc.is_fresh(1559731985 + 60));
+/// assert!(!sc.is_fresh(1559731985 + 7200));
+/// assert!(sc.needs_refresh(1559731985 + 1801));
+/// let bytes = sc.to_bytes();
+/// let c = Cookie::new([0x24, 0x64, 0xc4, 0xab, 0xcf, 0x10, 0xc9, 0x57], &bytes)?;
+/// assert_eq!(c.server_cookie_v1(), Some(sc));
+/// # Ok::<(), dnsbox::Error>(())
+/// ```
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub struct ServerCookie {
     /// Construction method; 1 for RFC 9018 (§4.1).
@@ -159,8 +188,11 @@ impl ServerCookie {
     /// (RFC 9018 §4.3).
     pub const REFRESH_AGE: u32 = 1800;
 
-    /// Decodes a 16-byte server cookie (any version). Other lengths fail
-    /// with [`Error::InvalidOption`].
+    /// Decodes a 16-byte server cookie (any version).
+    ///
+    /// # Errors
+    ///
+    /// [`Error::InvalidOption`] for any other length.
     pub fn from_bytes(bytes: &[u8]) -> Result<Self> {
         let b: &[u8; 16] = bytes.try_into().map_err(|_| Error::InvalidOption)?;
         let [v, r0, r1, r2, t0, t1, t2, t3, h @ ..] = *b;
@@ -302,6 +334,19 @@ impl fmt::Display for ServerCookie {
 
 /// The SipHash-2-4 input of an RFC 9018 server cookie; see
 /// [`ServerCookie::hash_input`].
+///
+/// ```
+/// use dnsbox::edns::ServerCookie;
+///
+/// let sc = ServerCookie { version: 1, reserved: [0; 3], timestamp: 1_559_731_985, hash: [0; 8] };
+/// let client = [0x24, 0x64, 0xc4, 0xab, 0xcf, 0x10, 0xc9, 0x57];
+/// let v4 = sc.hash_input(&client, "198.51.100.100".parse().unwrap());
+/// assert_eq!(v4.as_bytes().len(), 20);
+/// let v6 = sc.hash_input(&client, "2001:db8::1".parse().unwrap());
+/// assert_eq!(v6.as_bytes().len(), 32);
+/// // Feed it to SipHash-2-4 keyed with the server secret.
+/// assert_eq!(&v4.as_bytes()[..8], client);
+/// ```
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub struct HashInput {
     buf: [u8; 32],

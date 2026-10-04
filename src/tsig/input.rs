@@ -7,6 +7,30 @@ use crate::rdata::{Tsig, TsigRcode};
 use crate::{Class, Error, Header, Result};
 
 /// The TSIG variables covered by the MAC (RFC 8945 §4.3.3).
+///
+/// ```
+/// use dnsbox::rdata::TsigRcode;
+/// use dnsbox::tsig::{TsigAlgorithm, TsigVariables};
+/// use dnsbox::NameBuf;
+///
+/// let key: NameBuf = "Key.Example".parse()?;
+/// let vars = TsigVariables {
+///     key_name: key.as_name(),
+///     algorithm: TsigAlgorithm::HmacSha256.name(),
+///     time_signed: 1_700_000_000,
+///     fudge: 300,
+///     error: TsigRcode::NOERROR,
+///     other: &[],
+/// };
+/// let mut input = Vec::new();
+/// vars.feed(&mut |bytes| input.extend_from_slice(bytes));
+/// // The key name in canonical (lowercase) form comes first.
+/// assert!(input.starts_with(b"\x03key\x07example\x00\x00\xff\x00\x00\x00\x00"));
+/// let mut timers = Vec::new();
+/// vars.feed_timers(&mut |bytes| timers.extend_from_slice(bytes));
+/// assert_eq!(timers.len(), 6 + 2);
+/// # Ok::<(), dnsbox::Error>(())
+/// ```
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct TsigVariables<'a> {
     /// The key name (TSIG owner name).
@@ -89,8 +113,10 @@ pub fn feed_prior_mac(mac: &[u8], f: &mut impl FnMut(&[u8])) {
 /// TSIG had not been added. In both cases the header's ID is replaced by
 /// `original_id` (RFC 8945 §4.3.1: forwarded messages may have a new ID).
 ///
-/// Fails with [`Error::UnexpectedEof`] if the message is shorter than its
-/// header or `tsig_start` is out of range.
+/// # Errors
+///
+/// [`Error::UnexpectedEof`] if the message is shorter than its header or
+/// `tsig_start` is out of range.
 pub fn feed_message(
     msg: &[u8],
     tsig_start: Option<usize>,

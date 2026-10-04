@@ -19,6 +19,23 @@ use crate::{Error, Result, Rtype};
 /// The header fields of the OPT record (UDP payload size, extended RCODE,
 /// version, flags) live in its CLASS and TTL; see
 /// [`Edns`](super::Edns) / [`OptHeader`](super::OptHeader).
+///
+/// # Examples
+///
+/// ```
+/// use dnsbox::edns::{Cookie, EdnsOption, Nsid, Opt, OptionCode};
+///
+/// // A COOKIE (client part only) and an empty NSID request.
+/// let rdata = b"\x00\x0a\x00\x08\x01\x02\x03\x04\x05\x06\x07\x08\x00\x03\x00\x00";
+/// let opt = Opt::new(rdata)?;
+/// assert_eq!(opt.raw_options().count(), 2);
+/// assert!(opt.find(OptionCode::NSID).is_some());
+/// let cookie: Cookie<'_> = opt.get().expect("cookie present")?;
+/// assert_eq!(cookie.client(), [1, 2, 3, 4, 5, 6, 7, 8]);
+/// assert!(opt.get::<Nsid>().expect("NSID present")?.is_request());
+/// opt.validate()?;
+/// # Ok::<(), dnsbox::Error>(())
+/// ```
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Default)]
 pub struct Opt<'a> {
     data: &'a [u8],
@@ -29,7 +46,10 @@ impl<'a> Opt<'a> {
     pub const EMPTY: Opt<'static> = Opt { data: &[] };
 
     /// Wraps encoded options, checking that every option is complete.
-    /// A truncated option yields [`Error::UnexpectedEof`].
+    ///
+    /// # Errors
+    ///
+    /// [`Error::UnexpectedEof`] if an option is truncated.
     pub fn new(data: &'a [u8]) -> Result<Self> {
         let mut r = WireReader::new(data);
         while !r.is_empty() {
@@ -86,6 +106,10 @@ impl<'a> Opt<'a> {
     }
 
     /// Checks that every option with a typed implementation decodes.
+    ///
+    /// # Errors
+    ///
+    /// The parse error of the first option that does not decode.
     pub fn validate(&self) -> Result<()> {
         self.options().try_for_each(|o| o.map(|_| ()))
     }
@@ -135,6 +159,17 @@ impl fmt::Display for Opt<'_> {
 }
 
 /// One option of an [`Opt`], undecoded.
+///
+/// ```
+/// use dnsbox::edns::{Expire, Opt, OptionCode};
+///
+/// let opt = Opt::new(b"\x00\x09\x00\x04\x00\x00\x0e\x10")?;
+/// let raw = opt.raw_options().next().unwrap();
+/// assert_eq!((raw.code, raw.data), (OptionCode::EXPIRE, &[0, 0, 0x0e, 0x10][..]));
+/// assert_eq!(raw.parse_as::<Expire>()?.expire, Some(3600));
+/// assert_eq!(raw.to_string(), "EXPIRE=3600");
+/// # Ok::<(), dnsbox::Error>(())
+/// ```
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub struct RawOption<'a> {
     /// OPTION-CODE.
@@ -145,13 +180,21 @@ pub struct RawOption<'a> {
 
 impl<'a> RawOption<'a> {
     /// Decodes the option into an [`EdnsOption`].
+    ///
+    /// # Errors
+    ///
+    /// As [`EdnsOption::parse`].
     #[inline]
     pub fn parse(&self) -> Result<EdnsOption<'a>> {
         EdnsOption::parse(self.code, WireReader::new(self.data))
     }
 
-    /// Decodes the option as `T`, failing with [`Error::WrongType`] if it
-    /// has another code.
+    /// Decodes the option as `T`.
+    ///
+    /// # Errors
+    ///
+    /// [`Error::WrongType`] if the option has another code, otherwise the
+    /// parse error of `T` or [`Error::TrailingData`].
     pub fn parse_as<T: ParseOption<'a>>(&self) -> Result<T> {
         if self.code != T::CODE {
             return Err(Error::WrongType);
@@ -186,6 +229,17 @@ impl fmt::Display for RawOption<'_> {
 }
 
 /// Iterator over the options of an [`Opt`]; see [`Opt::raw_options`].
+///
+/// Infallible: the framing was checked when the [`Opt`] was built.
+///
+/// ```
+/// use dnsbox::edns::{Opt, OptionCode};
+///
+/// let opt = Opt::new(b"\x00\x03\x00\x00\x00\x0c\x00\x02\x00\x00")?;
+/// let codes: Vec<OptionCode> = opt.raw_options().map(|o| o.code).collect();
+/// assert_eq!(codes, [OptionCode::NSID, OptionCode::PADDING]);
+/// # Ok::<(), dnsbox::Error>(())
+/// ```
 #[derive(Clone, Debug)]
 #[must_use = "iterators are lazy and do nothing unless consumed"]
 pub struct RawOptions<'a> {
@@ -214,6 +268,21 @@ impl<'a> Iterator for RawOptions<'a> {
 impl core::iter::FusedIterator for RawOptions<'_> {}
 
 /// Iterator over the decoded options of an [`Opt`]; see [`Opt::options`].
+///
+/// A malformed option value yields an error for that option, and
+/// iteration continues.
+///
+/// ```
+/// use dnsbox::Error;
+/// use dnsbox::edns::Opt;
+///
+/// // A 3-byte EXPIRE (invalid: must be 0 or 4 bytes), then an NSID.
+/// let opt = Opt::new(b"\x00\x09\x00\x03abc\x00\x03\x00\x00")?;
+/// let mut it = opt.options();
+/// assert_eq!(it.next().unwrap().unwrap_err(), Error::InvalidOption);
+/// assert_eq!(it.next().unwrap()?.to_string(), "NSID");
+/// # Ok::<(), Error>(())
+/// ```
 #[derive(Clone, Debug)]
 #[must_use = "iterators are lazy and do nothing unless consumed"]
 pub struct Options<'a> {

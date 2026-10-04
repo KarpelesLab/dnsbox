@@ -30,6 +30,17 @@ const OPTION_HEADER: usize = 4;
 /// §4.2.2–4.2.3, draw the length (or block length) yourself and use
 /// [`Fixed`](Self::Fixed) or [`BlockLength`](Self::BlockLength). The size
 /// is that of the DNS message alone, without the TCP length prefix (§3).
+///
+/// ```
+/// use dnsbox::edns::PaddingPolicy;
+///
+/// // A 100-byte query (with an empty Padding option) padded to 128 bytes.
+/// assert_eq!(PaddingPolicy::QUERY.padding_len(100, 1232), 28);
+/// assert_eq!(PaddingPolicy::BlockLength(128).padding_len(128, 1232), 0);
+/// // Never past the size limit.
+/// assert_eq!(PaddingPolicy::RESPONSE.padding_len(500, 512), 12);
+/// assert_eq!(PaddingPolicy::Fixed(16).padding_len(100, 1232), 16);
+/// ```
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 #[non_exhaustive]
 pub enum PaddingPolicy {
@@ -136,6 +147,11 @@ impl<B: OutBuf> MessageBuilder<B> {
     /// the OPT record before the signature. Like every push, this is
     /// atomic.
     ///
+    /// # Errors
+    ///
+    /// As [`push_additional`](Self::push_additional): typically
+    /// [`Error::BufferTooSmall`] or [`Error::SectionOrder`].
+    ///
     /// ```
     /// use dnsbox::{Class, Flags, Message, MessageBuilder, NameBuf, Rcode, Rtype};
     /// use dnsbox::edns::{ExtendedError, InfoCode, OptHeader};
@@ -165,6 +181,12 @@ impl<B: OutBuf> MessageBuilder<B> {
     /// The Padding option is written after `options`, as the last option
     /// (RFC 8467 §3). Push this last (only a TSIG or SIG(0) signature
     /// should follow): anything added afterwards changes the padded size.
+    ///
+    /// # Errors
+    ///
+    /// As [`push_edns`](Self::push_edns); with
+    /// [`PaddingPolicy::Fixed`], [`Error::BufferTooSmall`] if the padding
+    /// does not fit.
     ///
     /// ```
     /// use dnsbox::{Class, MessageBuilder, NameBuf, Rtype};
@@ -216,9 +238,11 @@ impl<B: OutBuf> MessageBuilder<B> {
     /// query's [effective payload size](OptHeader::effective_udp_payload_size)
     /// (RFC 6891 §6.2.5).
     ///
-    /// Fails with the parse error if the query's OPT record is malformed
-    /// or duplicated ([`Error::DuplicateOpt`], [`Error::OptNotRoot`]: answer
-    /// FORMERR, RFC 6891 §6.1.1), and like
+    /// # Errors
+    ///
+    /// The parse error if the query's OPT record is malformed or
+    /// duplicated ([`Error::DuplicateOpt`], [`Error::OptNotRoot`]: answer
+    /// FORMERR, RFC 6891 §6.1.1), and as
     /// [`start_response`](Self::start_response) otherwise. On error the
     /// builder is unchanged.
     ///
@@ -267,11 +291,14 @@ impl<B: OutBuf> MessageBuilder<B> {
     /// [`start_response_edns`](Self::start_response_edns) and appends the
     /// OPT record with [`push_edns`](Self::push_edns).
     ///
-    /// The reserve only guarantees room for an OPT record without options;
-    /// if `options` do not fit, this fails with
-    /// [`Error::BufferTooSmall`], the reserve is restored, and the caller
-    /// can retry with fewer options (e.g. `&()`). Push it before any TSIG
-    /// or SIG(0) record.
+    /// The reserve only guarantees room for an OPT record without options.
+    /// Push it before any TSIG or SIG(0) record.
+    ///
+    /// # Errors
+    ///
+    /// [`Error::BufferTooSmall`] if `options` do not fit: the reserve is
+    /// then restored, and the caller can retry with fewer options (e.g.
+    /// `&()`). Otherwise as [`push_edns`](Self::push_edns).
     pub fn push_reserved_edns<O: ComposeOptions + ?Sized>(
         &mut self,
         header: OptHeader,

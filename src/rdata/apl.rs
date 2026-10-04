@@ -28,6 +28,19 @@ use crate::{Class, Error, Result, Rtype};
 pub struct Apl<'a>(&'a [u8]);
 
 /// One APL item: an address prefix, possibly negated (RFC 3123 §4).
+///
+/// ```
+/// use dnsbox::WireWriter;
+/// use dnsbox::rdata::AplItem;
+///
+/// let item = AplItem { family: AplItem::IPV4, prefix: 24, negation: true, afdpart: &[192, 0, 2, 0] };
+/// assert_eq!(item.to_string(), "!1:192.0.2.0/24");
+/// let mut buf = [0u8; 16];
+/// let mut w = WireWriter::new(&mut buf);
+/// item.compose(&mut w)?; // the trailing zero octet is trimmed
+/// assert_eq!(w.as_bytes(), [0, 1, 24, 0x83, 192, 0, 2]);
+/// # Ok::<(), dnsbox::Error>(())
+/// ```
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub struct AplItem<'a> {
     /// Address family (IANA "Address Family Numbers": 1 = IPv4,
@@ -91,7 +104,11 @@ impl AplItem<'_> {
     }
 
     /// Writes the item, trimming trailing zero octets from `afdpart`.
-    /// Fails with [`Error::InvalidRdata`] if it exceeds the family limits.
+    ///
+    /// # Errors
+    ///
+    /// [`Error::InvalidRdata`] if it exceeds the family limits,
+    /// [`Error::BufferTooSmall`] if `c` is full.
     pub fn compose<C: Composer + ?Sized>(&self, c: &mut C) -> Result<()> {
         let afd = self.trimmed();
         self.validate_trimmed(afd)?;
@@ -129,6 +146,12 @@ impl<'a> Apl<'a> {
     /// Validates `wire` as a sequence of APL items: complete items, family
     /// limits respected, no trailing zero address octets (RFC 3123 §4). An
     /// empty list is valid.
+    ///
+    /// # Errors
+    ///
+    /// [`Error::UnexpectedEof`] for an incomplete item,
+    /// [`Error::InvalidRdata`] for one that breaks the family limits or
+    /// ends in a zero octet.
     pub fn from_wire(wire: &'a [u8]) -> Result<Self> {
         let mut rest = wire;
         while !rest.is_empty() {
@@ -201,6 +224,15 @@ fn split_item(wire: &[u8]) -> Result<(AplItem<'_>, &[u8])> {
 }
 
 /// Iterator over the items of an [`Apl`].
+///
+/// ```
+/// use dnsbox::rdata::Apl;
+///
+/// let apl = Apl::from_wire(b"\x00\x01\x04\x01\xe0\x00\x02\x08\x01\xff")?;
+/// let prefixes: Vec<String> = apl.items().map(|i| i.to_string()).collect();
+/// assert_eq!(prefixes, ["1:224.0.0.0/4", "2:ff00::/8"]);
+/// # Ok::<(), dnsbox::Error>(())
+/// ```
 #[derive(Clone, Debug)]
 #[must_use = "iterators are lazy and do nothing unless consumed"]
 pub struct AplIter<'a>(&'a [u8]);

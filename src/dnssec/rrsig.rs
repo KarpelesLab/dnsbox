@@ -15,6 +15,30 @@ use crate::{Class, Error, Result, Rtype};
 ///
 /// The records must all be of the type the RRSIG covers; their order does
 /// not matter and duplicates are ignored (RFC 4034 §6.3).
+///
+/// ```
+/// use dnsbox::dnssec::{RecordRdata, Rrset};
+/// use dnsbox::rdata::Aaaa;
+/// use dnsbox::{Class, Message, NameBuf, Rtype};
+///
+/// // From typed data...
+/// let owner: NameBuf = "www.example".parse()?;
+/// let addrs = [Aaaa::new("2001:db8::1".parse().unwrap()), Aaaa::new("2001:db8::2".parse().unwrap())];
+/// let rrset = Rrset::new(owner.as_name(), Class::IN, &addrs);
+/// assert_eq!(rrset.owner, owner.as_name());
+///
+/// // ...or from a message section, without copying.
+/// fn answer_rrset<'a>(msg: &Message<'a>, owner: dnsbox::Name<'a>, rtype: Rtype)
+///     -> Rrset<'a, impl Iterator<Item = RecordRdata<'a>> + Clone>
+/// {
+///     let records = msg.answers()
+///         .filter_map(Result::ok)
+///         .filter(move |rr| rr.rtype() == rtype && rr.name() == owner)
+///         .map(RecordRdata);
+///     Rrset::new(owner, Class::IN, records)
+/// }
+/// # Ok::<(), dnsbox::Error>(())
+/// ```
 #[derive(Clone, Copy, Debug)]
 pub struct Rrset<'a, I> {
     /// The owner name, as found in the message (possibly the result of
@@ -44,7 +68,28 @@ where
 
 /// Adapts a message [`Record`] so its data can be fed to [`Rrset`]
 /// without allocating: composing parses the record data
-/// ([`Record::data`]) and re-encodes it.
+/// ([`Record::data`]) and re-encodes it (see the [`Rrset`] example).
+///
+/// ```
+/// use dnsbox::dnssec::RecordRdata;
+/// use dnsbox::rdata::Ns;
+/// use dnsbox::wire::Canonical;
+/// use dnsbox::{Class, ComposeRdata, Message, MessageBuilder, NameBuf, WireWriter};
+///
+/// let zone: NameBuf = "example".parse()?;
+/// let ns: NameBuf = "NS1.Example".parse()?;
+/// let mut buf = [0u8; 128];
+/// let mut b = MessageBuilder::new(&mut buf)?;
+/// b.push_answer(&zone, Class::IN, 60, &Ns::new(ns.as_name()))?;
+/// let msg = Message::parse(b.finish())?;
+/// let rr = msg.answers().next().unwrap()?;
+/// // The compressed, mixed-case name comes out in canonical form.
+/// let mut out = [0u8; 32];
+/// let mut w = WireWriter::new(&mut out);
+/// RecordRdata(rr).compose_rdata(&mut Canonical::new(&mut w))?;
+/// assert_eq!(w.as_bytes(), b"\x03ns1\x07example\x00");
+/// # Ok::<(), dnsbox::Error>(())
+/// ```
 #[derive(Clone, Copy, Debug)]
 pub struct RecordRdata<'a>(pub Record<'a>);
 
@@ -102,6 +147,8 @@ impl<'a> ZoneKey<'a> {
     /// signer's name is the key's owner, the algorithm and key tag match,
     /// the protocol is 3 and the Zone Key flag is set.
     ///
+    /// # Errors
+    ///
     /// Fails with [`Error::KeyMismatch`].
     pub fn check_rrsig(&self, rrsig: &Rrsig<'_>) -> Result<()> {
         let k = &self.dnskey;
@@ -145,6 +192,23 @@ impl<'a> ZoneKey<'a> {
     }
 
     /// The DS digest of this key (RFC 4034 §5.1.4).
+    ///
+    /// # Errors
+    ///
+    /// As [`DsDigest::compute`](super::DsDigest::compute).
+    ///
+    /// ```
+    /// use dnsbox::dnssec::{Algorithm, DigestType, ZoneKey};
+    /// use dnsbox::rdata::Dnskey;
+    /// use dnsbox::NameBuf;
+    ///
+    /// let apex: NameBuf = "example.".parse()?;
+    /// let key = ZoneKey::new(apex.as_name(), Dnskey::new(257, 3, Algorithm::ED25519, &[1; 32]));
+    /// let ds = key.ds(DigestType::SHA256)?;
+    /// // The DS record to hand to the parent zone.
+    /// assert!(ds.to_ds().to_string().starts_with(&format!("{} 15 2 ", key.key_tag())));
+    /// # Ok::<(), dnsbox::Error>(())
+    /// ```
     #[cfg(feature = "dnssec-digest")]
     #[cfg_attr(docsrs, doc(cfg(feature = "dnssec-digest")))]
     pub fn ds(&self, digest_type: super::DigestType) -> Result<super::DsDigest> {
@@ -156,6 +220,8 @@ impl<'a> ZoneKey<'a> {
 /// the RRSIG's labels field is smaller than its label count (the RRset was
 /// synthesized from a wildcard), `*.` followed by the rightmost `labels`
 /// labels (RFC 4035 §5.3.2, RFC 4034 §3.1.3).
+///
+/// # Errors
 ///
 /// Fails with [`Error::RrsetMismatch`] if the labels field exceeds the
 /// owner's label count.
@@ -199,6 +265,27 @@ pub fn rrsig_owner(rrsig: &Rrsig<'_>, owner: Name<'_>) -> Result<NameBuf> {
 ///
 /// The RRSIG's class and owner must equal the RRset's and its type
 /// covered must be the RRset type; the caller selects records that way.
+///
+/// # Errors
+///
+/// [`Error::RrsetMismatch`], [`Error::SignatureExpired`] or
+/// [`Error::SignatureNotYetValid`] as described.
+///
+/// ```
+/// use dnsbox::dnssec::{Algorithm, ZoneKey, check_rrsig};
+/// use dnsbox::rdata::Dnskey;
+/// use dnsbox::{Error, NameBuf, Rtype};
+///
+/// let apex: NameBuf = "example.".parse()?;
+/// let www: NameBuf = "www.example.".parse()?;
+/// let key = ZoneKey::new(apex.as_name(), Dnskey::new(256, 3, Algorithm::ED25519, &[1; 32]));
+/// let rrsig = key.rrsig_template(www.as_name(), Rtype::A, 3600, 1_000, 2_000);
+/// check_rrsig(&rrsig, www.as_name(), 1_500)?;
+/// assert_eq!(check_rrsig(&rrsig, www.as_name(), 2_001), Err(Error::SignatureExpired));
+/// let other: NameBuf = "www.example.net.".parse()?;
+/// assert_eq!(check_rrsig(&rrsig, other.as_name(), 1_500), Err(Error::RrsetMismatch));
+/// # Ok::<(), Error>(())
+/// ```
 pub fn check_rrsig(rrsig: &Rrsig<'_>, owner: Name<'_>, now: u32) -> Result<()> {
     check_coverage(rrsig, owner)?;
     check_validity(rrsig.inception, rrsig.expiration, now)
@@ -227,6 +314,8 @@ fn check_coverage(rrsig: &Rrsig<'_>, owner: Name<'_>) -> Result<()> {
 ///
 /// While sorting the RRset, `out` temporarily needs room for a second copy
 /// of it (see [`CanonicalRrset`]).
+///
+/// # Errors
 ///
 /// Fails with [`Error::RrsetMismatch`] if a record is not of the type
 /// covered, if the RRset is empty, or if the labels field exceeds the
@@ -300,6 +389,13 @@ where
 /// the caller must also check the proof that no closer match exists
 /// (RFC 4035 §5.3.4).
 ///
+/// # Errors
+///
+/// The errors of [`check_rrsig`], [`ZoneKey::check_rrsig`] and
+/// [`signed_data`], [`Error::BufferTooSmall`] if `scratch` is full, and
+/// the verifier's error ([`Error::BadSignature`],
+/// [`Error::UnsupportedAlgorithm`], [`Error::InvalidKey`]).
+///
 /// ```
 /// # #[cfg(feature = "dnssec")] {
 /// use dnsbox::dnssec::{Algorithm, PurecryptoVerifier, Rrset, Signer, SigningKey, ZoneKey, sign_rrset, verify_rrsig};
@@ -358,6 +454,8 @@ where
 /// [`ZoneKey::rrsig_template`]; its signature field is ignored), writing
 /// the signature to `out` and returning its length. The signed data is
 /// built at the end of `scratch` and removed again afterwards.
+///
+/// # Errors
 ///
 /// Fails with [`Error::KeyMismatch`] if the template's algorithm is not
 /// the signer's, and with [`Error::RrsetMismatch`] if the template does

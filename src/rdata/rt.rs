@@ -10,6 +10,16 @@ use crate::{Result, Rtype};
 
 /// `RT` record data: a route-through intermediate host
 /// (RFC 1183 §3.3).
+///
+/// ```
+/// use dnsbox::rdata::{ParseRdataText, Rt};
+///
+/// // RFC 1183 §3.3.
+/// let mut buf = [0u8; 32];
+/// let rt = Rt::from_text("2 Relay.Prime.COM.", &mut buf)?;
+/// assert_eq!((rt.preference, rt.intermediate.to_string()), (2, "Relay.Prime.COM.".into()));
+/// # Ok::<(), dnsbox::Error>(())
+/// ```
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub struct Rt<'a> {
     /// Preference; lower values are preferred.

@@ -11,6 +11,26 @@ use crate::{Error, Result};
 ///
 /// [`Compressible`]: NameEncoding::Compressible
 /// [`Lowercase`]: NameEncoding::Lowercase
+///
+/// # Examples
+///
+/// A record type for a name-only RDATA defined after RFC 1035 writes it
+/// as [`Plain`](NameEncoding::Plain):
+///
+/// ```
+/// use dnsbox::{ComposeRdata, Composer, Name, NameEncoding, Result, Rtype};
+///
+/// struct Target<'a>(Name<'a>);
+///
+/// impl ComposeRdata for Target<'_> {
+///     fn rtype(&self) -> Rtype {
+///         Rtype::new(65280) // private use
+///     }
+///     fn compose_rdata<C: Composer + ?Sized>(&self, c: &mut C) -> Result<()> {
+///         c.put_name(self.0, NameEncoding::Plain) // never compressed
+///     }
+/// }
+/// ```
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub enum NameEncoding {
     /// The name may be compressed. Only for owner/question names and the
@@ -33,6 +53,30 @@ pub enum NameEncoding {
 /// Implemented by [`WireWriter`] (a cursor over a caller-supplied
 /// `&mut [u8]`) and, with the `alloc` feature, by `Vec<u8>`. Every `OutBuf`
 /// is also a [`Composer`] that writes names uncompressed.
+///
+/// # Examples
+///
+/// Code generic over `OutBuf` works on the stack and on the heap alike:
+///
+/// ```
+/// use dnsbox::{OutBuf, Result, WireWriter};
+///
+/// fn put_magic<B: OutBuf + ?Sized>(out: &mut B) -> Result<()> {
+///     out.append(b"DNS")
+/// }
+///
+/// let mut buf = [0u8; 4];
+/// let mut w = WireWriter::new(&mut buf);
+/// put_magic(&mut w)?;
+/// assert!(put_magic(&mut w).is_err()); // only one byte left
+/// assert_eq!(w.as_bytes(), b"DNS");
+/// # #[cfg(feature = "alloc")] {
+/// let mut v = Vec::new();
+/// put_magic(&mut v)?;
+/// assert_eq!(v, b"DNS");
+/// # }
+/// # Ok::<(), dnsbox::Error>(())
+/// ```
 pub trait OutBuf {
     /// What [`into_output`](Self::into_output) returns.
     type Output;
@@ -46,8 +90,12 @@ pub trait OutBuf {
     /// The largest total length the buffer can reach.
     fn capacity_limit(&self) -> usize;
 
-    /// Appends `data`, or fails with [`Error::BufferTooSmall`] without
-    /// writing anything.
+    /// Appends `data`.
+    ///
+    /// # Errors
+    ///
+    /// [`Error::BufferTooSmall`] if `data` does not fit; nothing is written
+    /// then.
     fn append(&mut self, data: &[u8]) -> Result<()>;
 
     /// Shortens the written data to `len` bytes (no-op if already shorter).
@@ -60,6 +108,24 @@ pub trait OutBuf {
 }
 
 /// A write cursor over a caller-supplied `&mut [u8]`.
+///
+/// Writes go through the [`OutBuf`] and [`Composer`] traits; a write that
+/// does not fit fails with [`Error::BufferTooSmall`] and writes nothing.
+///
+/// # Examples
+///
+/// ```
+/// use dnsbox::{Composer, Error, WireWriter};
+///
+/// let mut buf = [0u8; 6];
+/// let mut w = WireWriter::new(&mut buf);
+/// w.put_u16(0xabcd)?;
+/// w.put_u32(7)?;
+/// assert_eq!(w.put_u8(1), Err(Error::BufferTooSmall));
+/// assert_eq!(w.remaining(), 0);
+/// assert_eq!(w.into_written(), [0xab, 0xcd, 0, 0, 0, 7]);
+/// # Ok::<(), Error>(())
+/// ```
 #[derive(Debug)]
 pub struct WireWriter<'b> {
     buf: &'b mut [u8],
@@ -67,7 +133,8 @@ pub struct WireWriter<'b> {
 }
 
 impl<'b> WireWriter<'b> {
-    /// Creates a writer that fills `buf` from the start.
+    /// Creates a writer that fills `buf` from the start (its current
+    /// contents are overwritten as data is written).
     #[inline]
     pub const fn new(buf: &'b mut [u8]) -> Self {
         WireWriter { buf, len: 0 }
@@ -206,41 +273,94 @@ impl OutBuf for alloc::vec::Vec<u8> {
 /// Positions ([`pos`](Self::pos), [`patch`](Self::patch)) are offsets from
 /// the start of the sink — for the message builder, from the start of the
 /// DNS message.
+///
+/// Writes that do not fit fail with [`Error::BufferTooSmall`]. A single
+/// [`put_bytes`](Self::put_bytes) (and the fixed-size `put_u*` helpers
+/// built on it) either completes or writes nothing; callers that write
+/// several fields roll back themselves (the message builder does, for
+/// every record).
+///
+/// # Examples
+///
+/// ```
+/// use dnsbox::{Composer, NameBuf, NameEncoding, WireWriter};
+///
+/// let name: NameBuf = "ns1.example".parse()?;
+/// let mut buf = [0u8; 64];
+/// let mut w = WireWriter::new(&mut buf);
+/// // An EDNS-option-like TLV: code, then a length-prefixed value.
+/// w.put_u16(65001)?;
+/// w.put_u16_prefixed(|w| {
+///     w.put_char_string(b"hi")?;
+///     w.put_name(name.as_name(), NameEncoding::Plain)
+/// })?;
+/// assert_eq!(w.as_bytes(), b"\xfd\xe9\x00\x10\x02hi\x03ns1\x07example\x00");
+/// # Ok::<(), dnsbox::Error>(())
+/// ```
 pub trait Composer {
     /// The current write position.
     fn pos(&self) -> usize;
 
-    /// Appends raw bytes, or fails with [`Error::BufferTooSmall`] without
-    /// writing anything.
+    /// Appends raw bytes.
+    ///
+    /// # Errors
+    ///
+    /// [`Error::BufferTooSmall`] if they do not fit; nothing is written
+    /// then.
     fn put_bytes(&mut self, data: &[u8]) -> Result<()>;
 
     /// Overwrites already-written bytes starting at `pos` (e.g. to fill in a
     /// length placeholder).
+    ///
+    /// # Errors
+    ///
+    /// [`Error::BufferTooSmall`] if `pos..pos + data.len()` is not within
+    /// the bytes written so far.
     fn patch(&mut self, pos: usize, data: &[u8]) -> Result<()>;
 
     /// Writes a domain name. `encoding` says whether the name may be
     /// compressed and how it behaves in canonical form; the sink decides.
+    ///
+    /// # Errors
+    ///
+    /// [`Error::BufferTooSmall`] if the name does not fit.
     fn put_name(&mut self, name: Name<'_>, encoding: NameEncoding) -> Result<()>;
 
     /// Appends one byte.
+    ///
+    /// # Errors
+    ///
+    /// [`Error::BufferTooSmall`] if it does not fit.
     #[inline]
     fn put_u8(&mut self, v: u8) -> Result<()> {
         self.put_bytes(&[v])
     }
 
     /// Appends a big-endian `u16`.
+    ///
+    /// # Errors
+    ///
+    /// [`Error::BufferTooSmall`] if it does not fit.
     #[inline]
     fn put_u16(&mut self, v: u16) -> Result<()> {
         self.put_bytes(&v.to_be_bytes())
     }
 
     /// Appends a big-endian `u32`.
+    ///
+    /// # Errors
+    ///
+    /// [`Error::BufferTooSmall`] if it does not fit.
     #[inline]
     fn put_u32(&mut self, v: u32) -> Result<()> {
         self.put_bytes(&v.to_be_bytes())
     }
 
     /// Appends the low 48 bits of `v`, big-endian (RFC 8945 §4.2).
+    ///
+    /// # Errors
+    ///
+    /// [`Error::BufferTooSmall`] if it does not fit.
     #[inline]
     fn put_u48(&mut self, v: u64) -> Result<()> {
         let b = v.to_be_bytes();
@@ -248,13 +368,23 @@ pub trait Composer {
     }
 
     /// Appends a big-endian `u64`.
+    ///
+    /// # Errors
+    ///
+    /// [`Error::BufferTooSmall`] if it does not fit.
     #[inline]
     fn put_u64(&mut self, v: u64) -> Result<()> {
         self.put_bytes(&v.to_be_bytes())
     }
 
     /// Appends a `<character-string>` (RFC 1035 §3.3): a length octet and
-    /// the bytes. Fails with [`Error::CharStringTooLong`] beyond 255 bytes.
+    /// the bytes.
+    ///
+    /// # Errors
+    ///
+    /// [`Error::CharStringTooLong`] beyond 255 bytes,
+    /// [`Error::BufferTooSmall`] if it does not fit. The length octet may
+    /// have been written when the bytes do not fit.
     #[inline]
     fn put_char_string(&mut self, data: &[u8]) -> Result<()> {
         let len = u8::try_from(data.len()).map_err(|_| Error::CharStringTooLong)?;
@@ -265,6 +395,12 @@ pub trait Composer {
     /// Writes a 16-bit length placeholder, runs `f`, then patches the
     /// placeholder with the number of bytes `f` wrote. Use for
     /// length-prefixed sub-structures (EDNS options, SvcParams, ...).
+    ///
+    /// # Errors
+    ///
+    /// The error of `f`, or [`Error::BufferTooSmall`] if the placeholder
+    /// does not fit or `f` wrote more than 65535 bytes. What `f` wrote
+    /// before failing is not removed.
     fn put_u16_prefixed(&mut self, f: impl FnOnce(&mut Self) -> Result<()>) -> Result<()> {
         let at = self.pos();
         self.put_u16(0)?;

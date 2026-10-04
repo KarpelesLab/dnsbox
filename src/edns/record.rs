@@ -11,6 +11,15 @@ use crate::{Class, Error, Flags, Rcode, Result, Rtype};
 /// (RFC 6891 §6.1.4; IANA "EDNS Header Flags" registry).
 ///
 /// Unassigned bits ("Z") are preserved as they are.
+///
+/// ```
+/// use dnsbox::edns::EdnsFlags;
+///
+/// let flags = EdnsFlags::default().with_dnssec_ok(true).with_bit(0x0001, true);
+/// assert_eq!(flags.bits(), 0x8001);
+/// assert!(flags.dnssec_ok() && !flags.compact_ok());
+/// assert_eq!(flags.to_string(), "do 0x0001");
+/// ```
 #[derive(Clone, Copy, PartialEq, Eq, Hash, Default)]
 pub struct EdnsFlags(u16);
 
@@ -110,6 +119,19 @@ impl fmt::Display for EdnsFlags {
 /// Used both to read ([`Edns::header`]) and to build
 /// ([`MessageBuilder::push_edns`](crate::MessageBuilder::push_edns)) OPT
 /// records.
+///
+/// ```
+/// use dnsbox::edns::OptHeader;
+/// use dnsbox::{Class, Flags, Rcode};
+///
+/// let header = OptHeader::new(1232).with_dnssec_ok(true).with_rcode(Rcode::BADVERS);
+/// assert_eq!(header.class(), Class::new(1232));
+/// assert_eq!(header.ttl(), 0x0100_8000); // extended RCODE 1, version 0, DO
+/// assert_eq!(OptHeader::from_fields(header.class(), header.ttl()), header);
+/// // BADVERS is 16: all of it is in the extended RCODE.
+/// assert_eq!(header.rcode(Flags::default()), Rcode::BADVERS);
+/// assert_eq!(header.to_string(), "version: 0, flags: do; udp: 1232");
+/// ```
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub struct OptHeader {
     /// Largest UDP payload the sender can reassemble (RFC 6891 §6.2.3);
@@ -266,6 +288,21 @@ impl fmt::Display for OptHeader {
 
 /// The OPT record of a message, decoded: header fields plus options
 /// (RFC 6891 §6.1). Returned by [`Message::edns`](crate::Message::edns).
+///
+/// ```
+/// use dnsbox::{Message, MessageBuilder};
+/// use dnsbox::edns::{Nsid, OptHeader};
+///
+/// let mut buf = [0u8; 512];
+/// let mut b = MessageBuilder::new(&mut buf)?;
+/// b.push_edns(OptHeader::new(1400), &Nsid::new(b"anycast-7"))?;
+/// let msg = Message::parse(b.finish())?;
+/// let edns = msg.edns()?.expect("OPT present");
+/// assert_eq!(edns.header(), OptHeader::new(1400));
+/// assert_eq!(edns.get::<Nsid>().expect("NSID")?.as_str(), Some("anycast-7"));
+/// assert!(edns.record().name().is_root());
+/// # Ok::<(), dnsbox::Error>(())
+/// ```
 #[derive(Clone, Copy, Debug)]
 pub struct Edns<'a> {
     header: OptHeader,
@@ -274,9 +311,13 @@ pub struct Edns<'a> {
 }
 
 impl<'a> Edns<'a> {
-    /// Decodes an OPT record. Fails with [`Error::WrongType`] for another
-    /// type, [`Error::OptNotRoot`] if the owner name is not the root
-    /// (RFC 6891 §6.1.2), or the framing error of a truncated option.
+    /// Decodes an OPT record.
+    ///
+    /// # Errors
+    ///
+    /// [`Error::WrongType`] for another type, [`Error::OptNotRoot`] if the
+    /// owner name is not the root (RFC 6891 §6.1.2), or
+    /// [`Error::UnexpectedEof`] for a truncated option.
     pub fn from_record(record: &Record<'a>) -> Result<Self> {
         if record.rtype() != Rtype::OPT {
             return Err(Error::WrongType);

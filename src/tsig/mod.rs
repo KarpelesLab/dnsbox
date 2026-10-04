@@ -103,6 +103,14 @@ use crate::{Error, Rcode};
 /// | [`Error::BadTime`] | NOTAUTH | BADTIME |
 /// | [`Error::BadTrunc`] | NOTAUTH | BADTRUNC |
 /// | anything else ([`Error::MisplacedSignature`], [`Error::BadMacSize`], parse errors) | FORMERR | NOERROR |
+///
+/// ```
+/// use dnsbox::tsig::{TsigRcode, response_codes};
+/// use dnsbox::{Error, Rcode};
+///
+/// assert_eq!(response_codes(Error::BadTime), (Rcode::NOTAUTH, TsigRcode::BADTIME));
+/// assert_eq!(response_codes(Error::UnexpectedEof), (Rcode::FORMERR, TsigRcode::NOERROR));
+/// ```
 #[must_use]
 pub const fn response_codes(error: Error) -> (Rcode, TsigRcode) {
     match error {

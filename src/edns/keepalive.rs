@@ -12,6 +12,17 @@ use crate::{Error, Result};
 /// Clients send it empty; servers send a timeout in units of 100
 /// milliseconds. Any length other than 0 or 2 fails with
 /// [`Error::InvalidOption`] (RFC 7828 §3.1).
+///
+/// ```
+/// use dnsbox::edns::{Opt, TcpKeepalive};
+///
+/// let opt = Opt::new(b"\x00\x0b\x00\x02\x01\x2c")?;
+/// let keepalive: TcpKeepalive = opt.get().expect("present")?;
+/// assert_eq!(keepalive.timeout_millis(), Some(30_000));
+/// assert_eq!(keepalive.to_string(), "TCP-KEEPALIVE=300");
+/// assert_eq!(TcpKeepalive::REQUEST.timeout_millis(), None);
+/// # Ok::<(), dnsbox::Error>(())
+/// ```
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Default)]
 pub struct TcpKeepalive {
     /// The idle timeout in units of 100 ms; `None` (an empty option) in

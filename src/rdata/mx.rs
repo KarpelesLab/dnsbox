@@ -9,6 +9,21 @@ use crate::zone::Scanner;
 use crate::{Result, Rtype};
 
 /// `MX` record data: a mail exchange (RFC 1035 §3.3.9).
+///
+/// ```
+/// use dnsbox::rdata::Mx;
+/// use dnsbox::{Class, Message, MessageBuilder, NameBuf, Rtype};
+///
+/// let zone: NameBuf = "example.com".parse()?;
+/// let mail: NameBuf = "mail.example.com".parse()?;
+/// let mut buf = [0u8; 128];
+/// let mut b = MessageBuilder::new(&mut buf)?;
+/// b.push_answer(&zone, Class::IN, 3600, &Mx { preference: 10, exchange: mail.as_name() })?;
+/// let msg = Message::parse(b.finish())?;
+/// let mx: Mx<'_> = msg.answers().next().unwrap()?.data_as()?;
+/// assert_eq!(mx.to_string(), "10 mail.example.com.");
+/// # Ok::<(), dnsbox::Error>(())
+/// ```
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub struct Mx<'a> {
     /// Preference; lower values are preferred.

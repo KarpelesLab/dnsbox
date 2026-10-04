@@ -13,6 +13,14 @@ open_enum! {
     /// RR Types for public key algorithms").
     ///
     /// The presentation format of SSHFP uses the bare number.
+    ///
+    /// ```
+    /// use dnsbox::rdata::SshfpAlgorithm;
+    ///
+    /// assert_eq!(SshfpAlgorithm::ED25519.get(), 4);
+    /// assert_eq!("ed25519".parse::<SshfpAlgorithm>()?, SshfpAlgorithm::ED25519);
+    /// # Ok::<(), dnsbox::Error>(())
+    /// ```
     pub struct SshfpAlgorithm(u8), generic "";
     /// RSA (RFC 4255).
     RSA = 1 => "RSA",
@@ -31,6 +39,13 @@ open_enum! {
     /// for fingerprint types").
     ///
     /// The presentation format of SSHFP uses the bare number.
+    ///
+    /// ```
+    /// use dnsbox::rdata::SshfpFpType;
+    ///
+    /// assert_eq!(SshfpFpType::SHA256.to_string(), "SHA-256");
+    /// assert_eq!(SshfpFpType::new(2), SshfpFpType::SHA256);
+    /// ```
     pub struct SshfpFpType(u8), generic "";
     /// SHA-1 (RFC 4255).
     SHA1 = 1 => "SHA-1",
@@ -39,6 +54,16 @@ open_enum! {
 }
 
 /// `SSHFP` record data: an SSH host key fingerprint (RFC 4255 §3.1).
+///
+/// ```
+/// use dnsbox::rdata::{ParseRdataText, Sshfp, SshfpAlgorithm, SshfpFpType};
+///
+/// let mut buf = [0u8; 32];
+/// let fp = Sshfp::from_text("2 1 123456789abcdef67890123456789abcdef67890", &mut buf)?;
+/// assert_eq!((fp.algorithm, fp.fp_type), (SshfpAlgorithm::DSA, SshfpFpType::SHA1));
+/// assert_eq!(fp.to_string(), "2 1 123456789ABCDEF67890123456789ABCDEF67890");
+/// # Ok::<(), dnsbox::Error>(())
+/// ```
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub struct Sshfp<'a> {
     /// Algorithm of the public key (RFC 4255 §3.1.1).

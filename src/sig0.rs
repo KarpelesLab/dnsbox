@@ -29,6 +29,40 @@
 //! Validity times are 32-bit seconds since the epoch compared with RFC
 //! 1982 serial arithmetic, as in RFC 4034 §3.1.5. RFC 2931 §3.1 suggests a
 //! validity window of a few minutes around the signing time.
+//!
+//! # Examples
+//!
+//! A dynamic update signed with SIG(0), as `nsupdate -k` sends it:
+//!
+//! ```
+//! # #[cfg(feature = "dnssec")] {
+//! use dnsbox::dnssec::{Algorithm, PurecryptoVerifier, SigningKey};
+//! use dnsbox::rdata::A;
+//! use dnsbox::sig0::{self, DnssecSig0Signer, DnssecSig0Verifier, Validity};
+//! use dnsbox::update::UpdateBuilder;
+//! use dnsbox::{Class, Message, MessageBuilder, NameBuf};
+//!
+//! let zone: NameBuf = "example.com".parse()?;
+//! let host: NameBuf = "laptop.example.com".parse()?;
+//! let key = SigningKey::from_private_bytes(Algorithm::ECDSAP256SHA256, &[0x11; 32])?;
+//! let signer = DnssecSig0Signer::new(&key, host.as_name(), 512);
+//! let now = 1_800_000_000;
+//!
+//! let mut buf = [0u8; 512];
+//! let mut u = UpdateBuilder::new(MessageBuilder::new(&mut buf)?, &zone, Class::IN)?;
+//! u.add(&host, 300, &A::new([192, 0, 2, 44].into()))?;
+//! let mut b = u.into_builder();
+//! sig0::sign(&mut b, &signer, Validity::around(now, 300), None)?;
+//! let update = Message::parse(b.finish())?;
+//!
+//! // The server looks up the KEY record named by the signature.
+//! let record = sig0::find(&update)?.expect("signed");
+//! assert_eq!(record.data.signer_name, host.as_name());
+//! let verifier = DnssecSig0Verifier::new(PurecryptoVerifier, host.as_name(), signer.key());
+//! sig0::verify(&update, &verifier, now + 60, None)?;
+//! # }
+//! # Ok::<(), dnsbox::Error>(())
+//! ```
 
 use crate::builder::MessageBuilder;
 use crate::dnssec::Algorithm;
@@ -45,6 +79,43 @@ pub const MAX_SIGNATURE_LEN: usize = 1024;
 const SIG_FIXED_LEN: usize = 18;
 
 /// Produces SIG(0) signatures (RFC 2931 §3).
+///
+/// [`DnssecSig0Signer`] implements it over any DNSSEC
+/// [`Signer`](crate::dnssec::Signer). Implement it directly for keys held
+/// elsewhere (an HSM, a signing service), hashing the parts of the signed
+/// data in order:
+///
+/// ```
+/// use dnsbox::dnssec::Algorithm;
+/// use dnsbox::sig0::Sig0Signer;
+/// use dnsbox::{Name, Result};
+///
+/// struct RemoteKey<'n> {
+///     name: Name<'n>,
+///     key_tag: u16,
+/// }
+///
+/// impl Sig0Signer for RemoteKey<'_> {
+///     fn algorithm(&self) -> Algorithm {
+///         Algorithm::ED25519
+///     }
+///     fn key_tag(&self) -> u16 {
+///         self.key_tag
+///     }
+///     fn signer_name(&self) -> Name<'_> {
+///         self.name
+///     }
+///     fn signature_len(&self) -> usize {
+///         64
+///     }
+///     fn sign(&self, data: &[&[u8]], out: &mut [u8]) -> Result<usize> {
+///         let message: Vec<u8> = data.concat(); // Ed25519 signs the whole message
+///         let _ = message; // ...send it to the signing service...
+///         out[..64].fill(0);
+///         Ok(64)
+///     }
+/// }
+/// ```
 pub trait Sig0Signer {
     /// DNSSEC algorithm (RFC 4034 Appendix A.1, e.g.
     /// [`Algorithm::ED25519`]).
@@ -63,19 +134,75 @@ pub trait Sig0Signer {
     /// Signs the concatenation of `data` and writes the signature, in its
     /// DNS wire encoding (e.g. `r || s` for ECDSA, RFC 6605 §4), to the
     /// start of `out`, returning its length.
+    ///
+    /// # Errors
+    ///
+    /// [`Error::BufferTooSmall`] if `out` is too short, or the backend's
+    /// error.
     fn sign(&self, data: &[&[u8]], out: &mut [u8]) -> Result<usize>;
 }
 
 /// Checks SIG(0) signatures (RFC 2931 §3).
+///
+/// [`DnssecSig0Verifier`] implements it for one KEY record over any DNSSEC
+/// [`Verifier`](crate::dnssec::Verifier); a server with many clients looks
+/// the key up by name:
+///
+/// ```
+/// use dnsbox::rdata::Sig;
+/// use dnsbox::sig0::Sig0Verifier;
+/// use dnsbox::{Error, Result};
+///
+/// struct KeyDirectory;
+///
+/// impl Sig0Verifier for KeyDirectory {
+///     fn verify(&self, sig: &Sig<'_>, data: &[&[u8]]) -> Result<()> {
+///         // Look up the KEY record of `sig.signer_name` (with matching
+///         // algorithm and key tag), then check `sig.signature` over the
+///         // concatenated `data` with it.
+///         let _ = (sig, data);
+///         Err(Error::BadKey) // unknown key
+///     }
+/// }
+/// ```
 pub trait Sig0Verifier {
     /// Verifies `sig.signature` over the concatenation of `data`, with the
     /// key identified by `sig.signer_name`, `sig.algorithm` and `sig.key_tag`.
-    /// Returns [`Error::BadKey`] if the key is unknown and
+    ///
+    /// # Errors
+    ///
+    /// [`Error::BadKey`] if the key is unknown and
     /// [`Error::BadSignature`] if the signature does not verify.
     fn verify(&self, sig: &Sig<'_>, data: &[&[u8]]) -> Result<()>;
 }
 
 /// The data a SIG(0) signs (RFC 2931 §3.1), held without allocation.
+///
+/// [`sign`] and [`verify`] build it; it is public for backends that need
+/// it elsewhere.
+///
+/// ```
+/// use dnsbox::dnssec::Algorithm;
+/// use dnsbox::rdata::Sig;
+/// use dnsbox::sig0::SignedData;
+/// use dnsbox::{Class, MessageBuilder, NameBuf, Rtype};
+///
+/// let signer: NameBuf = "client.example".parse()?;
+/// let sig = Sig {
+///     type_covered: Rtype::new(0), algorithm: Algorithm::ED25519, labels: 0, original_ttl: 0,
+///     expiration: 1_800_000_300, inception: 1_799_999_700, key_tag: 4711,
+///     signer_name: signer.as_name(), signature: &[],
+/// };
+/// let mut buf = [0u8; 128];
+/// let query = MessageBuilder::query(&mut buf, 1, &signer, Rtype::A, Class::IN)?.finish();
+/// let data = SignedData::new(&sig, query, None, None)?;
+/// let [fields, request, header, rest] = data.parts();
+/// assert_eq!(fields.len(), 18 + signer.wire_len());
+/// assert!(request.is_empty()); // only responses cover the request
+/// assert_eq!((header.len(), rest.len()), (12, query.len() - 12));
+/// assert_eq!(data.len(), fields.len() + query.len());
+/// # Ok::<(), dnsbox::Error>(())
+/// ```
 #[derive(Clone, Copy, Debug)]
 pub struct SignedData<'a> {
     fields: [u8; SIG_FIXED_LEN + MAX_NAME_LEN],
@@ -94,6 +221,11 @@ impl<'a> SignedData<'a> {
     /// ARCOUNT is decremented), or `None` when signing a message that does
     /// not have it yet. `request` is the full request message (SIG(0)
     /// included) when `msg` is a response to it.
+    ///
+    /// # Errors
+    ///
+    /// [`Error::UnexpectedEof`] if `msg` is shorter than its header,
+    /// `sig_start` is out of range, or ARCOUNT is 0 with a `sig_start`.
     pub fn new(
         sig: &Sig<'_>,
         msg: &'a [u8],
@@ -147,6 +279,14 @@ impl<'a> SignedData<'a> {
 }
 
 /// Validity window of a SIG(0) being generated.
+///
+/// ```
+/// use dnsbox::sig0::Validity;
+///
+/// let v = Validity::around(1_800_000_000, 300);
+/// assert_eq!((v.inception, v.expiration), (1_799_999_700, 1_800_000_300));
+/// assert!(v.contains(1_800_000_299) && !v.contains(1_800_000_301));
+/// ```
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub struct Validity {
     /// Signature inception (seconds since the epoch, mod 2³²).
@@ -178,8 +318,32 @@ impl Validity {
 /// last record of the additional section (RFC 2931 §3). For a response,
 /// pass the full `request` it answers (including the request's SIG(0)).
 ///
-/// Nothing may be added to the message afterwards. On error the message is
-/// left unchanged.
+/// Nothing may be added to the message afterwards. See the [module
+/// example](self).
+///
+/// # Errors
+///
+/// [`Error::BufferTooSmall`] if the SIG record does not fit (or the
+/// signer's signature length exceeds [`MAX_SIGNATURE_LEN`]),
+/// [`Error::CountOverflow`] for a full additional section, or the
+/// signer's error. On error the message is left unchanged.
+///
+/// ```
+/// # #[cfg(feature = "dnssec")] {
+/// use dnsbox::dnssec::{Algorithm, SigningKey};
+/// use dnsbox::sig0::{self, DnssecSig0Signer, Validity};
+/// use dnsbox::{Class, MessageBuilder, NameBuf, Rtype};
+///
+/// let key = SigningKey::from_private_bytes(Algorithm::ED25519, &[5; 32])?;
+/// let name: NameBuf = "client.example".parse()?;
+/// let signer = DnssecSig0Signer::new(&key, name.as_name(), 512);
+/// let mut buf = [0u8; 512];
+/// let mut b = MessageBuilder::query(&mut buf, 1, &name, Rtype::TXT, Class::IN)?;
+/// sig0::sign(&mut b, &signer, Validity::around(1_800_000_000, 300), None)?;
+/// assert_eq!(b.header().arcount, 1); // the SIG(0) record
+/// # }
+/// # Ok::<(), dnsbox::Error>(())
+/// ```
 pub fn sign<B: OutBuf, S: Sig0Signer + ?Sized>(
     b: &mut MessageBuilder<B>,
     signer: &S,
@@ -219,7 +383,18 @@ pub fn sign<B: OutBuf, S: Sig0Signer + ?Sized>(
     b.push_additional(Name::ROOT, Class::ANY, 0, &sig)
 }
 
-/// A SIG(0) record found in a message by [`find`].
+/// A SIG(0) record found in a message by [`find`] (see the [module
+/// example](self)).
+///
+/// ```
+/// use dnsbox::sig0::Sig0Record;
+/// use dnsbox::Message;
+///
+/// fn signer_of<'a>(msg: &Message<'a>) -> dnsbox::Result<Option<String>> {
+///     let record: Option<Sig0Record<'a>> = dnsbox::sig0::find(msg)?;
+///     Ok(record.map(|r| format!("{} (key {})", r.data.signer_name, r.data.key_tag)))
+/// }
+/// ```
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 #[non_exhaustive]
 pub struct Sig0Record<'a> {
@@ -238,6 +413,22 @@ pub struct Sig0Record<'a> {
 /// [`Error::InvalidRdata`], and octets after it (which the signature does
 /// not cover) yield [`Error::TrailingData`]. SIG records covering a real
 /// type (legacy DNSSEC, RFC 2535) are ignored.
+///
+/// # Errors
+///
+/// [`Error::MisplacedSignature`], [`Error::InvalidRdata`] and
+/// [`Error::TrailingData`] as above, and the parse error of a malformed
+/// message.
+///
+/// ```
+/// use dnsbox::{Class, Message, MessageBuilder, NameBuf, Rtype};
+///
+/// let name: NameBuf = "example".parse()?;
+/// let mut buf = [0u8; 64];
+/// let query = Message::parse(MessageBuilder::query(&mut buf, 1, &name, Rtype::A, Class::IN)?.finish())?;
+/// assert!(dnsbox::sig0::find(&query)?.is_none()); // not signed
+/// # Ok::<(), dnsbox::Error>(())
+/// ```
 pub fn find<'a>(msg: &Message<'a>) -> Result<Option<Sig0Record<'a>>> {
     let arcount = msg.header().arcount;
     let mut additional = 0u16;
@@ -280,7 +471,29 @@ pub fn find<'a>(msg: &Message<'a>) -> Result<Option<Sig0Record<'a>>> {
 /// ([`Error::Unsigned`] otherwise) and well placed, `now` must lie in its
 /// validity window ([`Error::BadTime`]), and `verifier` must accept the
 /// signature over the signed data. For a response, pass the full
-/// `request` it answers.
+/// `request` it answers. See the [module example](self).
+///
+/// # Errors
+///
+/// [`Error::Unsigned`], [`Error::BadTime`], the errors of [`find`], and
+/// the verifier's error ([`Error::BadKey`], [`Error::BadSignature`], ...).
+///
+/// ```
+/// use dnsbox::sig0::Sig0Verifier;
+/// use dnsbox::{Error, Message, Result};
+///
+/// // Server side: accept an update only if a known key signed it.
+/// fn authorize<V: Sig0Verifier>(update: &Message<'_>, keys: &V, now: u32) -> Result<()> {
+///     match dnsbox::sig0::verify(update, keys, now, None) {
+///         Ok(record) => {
+///             println!("update signed by {}", record.data.signer_name);
+///             Ok(())
+///         }
+///         Err(Error::Unsigned) => Err(Error::BadKey), // unsigned updates are refused
+///         Err(e) => Err(e),
+///     }
+/// }
+/// ```
 pub fn verify<'a, V: Sig0Verifier + ?Sized>(
     msg: &Message<'a>,
     verifier: &V,
@@ -399,6 +612,23 @@ impl<S: crate::dnssec::Signer> Sig0Signer for DnssecSig0Signer<'_, S> {
 /// ([`Error::BadSignature`], [`Error::InvalidKey`],
 /// [`Error::UnsupportedAlgorithm`]). See [`DnssecSig0Signer`] for an
 /// example.
+///
+/// ```
+/// # #[cfg(feature = "dnssec")] {
+/// use dnsbox::dnssec::PurecryptoVerifier;
+/// use dnsbox::rdata::{Key, ParseRdataText};
+/// use dnsbox::sig0::DnssecSig0Verifier;
+/// use dnsbox::NameBuf;
+///
+/// // The client's KEY record, as published in the zone.
+/// let name: NameBuf = "client.example".parse()?;
+/// let mut buf = [0u8; 64];
+/// let key = Key::from_text("512 3 15 l02Woi0iS8Aa25FQkUd9RMzZHJpBoRQwAQEX1SxZJA4=", &mut buf)?;
+/// let verifier = DnssecSig0Verifier::new(PurecryptoVerifier, name.as_name(), key);
+/// # let _ = verifier;
+/// # }
+/// # Ok::<(), dnsbox::Error>(())
+/// ```
 #[cfg(feature = "alloc")]
 #[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
 #[derive(Clone, Copy, Debug)]

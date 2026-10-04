@@ -32,6 +32,24 @@ use crate::{Class, Error, Header, Result, Rtype};
 /// What the RRset-level pushes ([`MessageBuilder::push_rrset`],
 /// [`MessageBuilder::copy_section`], ...) do when an RRset does not fit
 /// within the size limit.
+///
+/// ```
+/// use dnsbox::rdata::A;
+/// use dnsbox::{Class, Error, MessageBuilder, NameBuf, Section};
+/// use dnsbox::builder::Truncation;
+///
+/// let name: NameBuf = "example".parse()?;
+/// let addrs = [A::new([192, 0, 2, 1].into()); 10];
+/// let mut buf = [0u8; 100];
+/// let mut b = MessageBuilder::new(&mut buf)?;
+/// assert_eq!(b.truncation(), Truncation::Error);
+/// let res = b.push_rrset(Section::Answer, &name, Class::IN, 60, &addrs);
+/// assert_eq!(res, Err(Error::BufferTooSmall));
+/// b.set_truncation(Truncation::SetTc);
+/// assert!(b.push_rrset(Section::Answer, &name, Class::IN, 60, &addrs)?.is_truncated());
+/// assert!(b.header().flags.tc());
+/// # Ok::<(), Error>(())
+/// ```
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Default)]
 #[non_exhaustive]
 pub enum Truncation {
@@ -46,6 +64,26 @@ pub enum Truncation {
 }
 
 /// The result of an RRset-level push.
+///
+/// Additional-section data is optional (RFC 2181 §9): when it does not
+/// fit it is [`Dropped`](Outcome::Dropped) without setting TC.
+///
+/// ```
+/// use dnsbox::rdata::A;
+/// use dnsbox::{Class, MessageBuilder, NameBuf, Section};
+/// use dnsbox::builder::{Outcome, Truncation};
+///
+/// let name: NameBuf = "example".parse()?;
+/// let glue = [A::new([192, 0, 2, 1].into()); 8];
+/// let mut buf = [0u8; 100];
+/// let mut b = MessageBuilder::new(&mut buf)?;
+/// b.set_truncation(Truncation::SetTc);
+/// let out = b.push_rrset(Section::Additional, &name, Class::IN, 60, &glue)?;
+/// assert_eq!(out, Outcome::Dropped);
+/// assert!(!out.is_added() && !out.is_truncated());
+/// assert!(!b.header().flags.tc());
+/// # Ok::<(), dnsbox::Error>(())
+/// ```
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 #[must_use]
 pub enum Outcome {
@@ -150,6 +188,24 @@ impl<B: OutBuf> MessageBuilder<B> {
     /// and makes later RRset-level pushes no-ops returning
     /// [`Outcome::Truncated`]. Record-level pushes keep working (for OPT,
     /// TSIG, ...). Not undone by [`rollback`](Self::rollback).
+    ///
+    /// ```
+    /// use dnsbox::rdata::A;
+    /// use dnsbox::{Class, MessageBuilder, NameBuf, Section};
+    /// use dnsbox::builder::{Outcome, Truncation};
+    ///
+    /// let name: NameBuf = "ns.example".parse()?;
+    /// let glue = [A::new([192, 0, 2, 1].into()); 8];
+    /// let mut buf = [0u8; 100];
+    /// let mut b = MessageBuilder::new(&mut buf)?;
+    /// b.set_truncation(Truncation::SetTc);
+    /// // In-domain glue is required (RFC 9471): truncate if it is dropped.
+    /// if b.push_rrset(Section::Additional, &name, Class::IN, 60, &glue)? == Outcome::Dropped {
+    ///     b.truncate();
+    /// }
+    /// assert!(b.is_truncated() && b.header().flags.tc());
+    /// # Ok::<(), dnsbox::Error>(())
+    /// ```
     pub fn truncate(&mut self) {
         self.truncated = true;
         self.header.flags = self.header.flags.with_tc(true);
@@ -178,6 +234,13 @@ impl<B: OutBuf> MessageBuilder<B> {
     /// removes everything `f` wrote and is returned. If the message is
     /// already truncated, `f` is not called and [`Outcome::Truncated`] is
     /// returned. `section` must not be [`Section::Question`].
+    ///
+    /// # Errors
+    ///
+    /// [`Error::SectionOrder`] for [`Section::Question`],
+    /// [`Error::BufferTooSmall`] if the unit does not fit under
+    /// [`Truncation::Error`], or any other error `f` returns. Everything
+    /// `f` wrote is removed on error.
     ///
     /// ```
     /// use dnsbox::{Class, MessageBuilder, NameBuf, Rtype, Section};
@@ -231,6 +294,11 @@ impl<B: OutBuf> MessageBuilder<B> {
     /// of it is kept and the [`Truncation`] policy applies (see
     /// [`push_rrset_with`](Self::push_rrset_with)).
     ///
+    /// # Errors
+    ///
+    /// As [`push_rrset_with`](Self::push_rrset_with), with the errors of
+    /// [`push_record`](Self::push_record) for each record.
+    ///
     /// ```
     /// use dnsbox::{Class, Message, MessageBuilder, NameBuf, Rtype, Section};
     /// use dnsbox::builder::Outcome;
@@ -278,8 +346,30 @@ impl<B: OutBuf> MessageBuilder<B> {
     /// policy. For [`Section::Question`] the questions are copied, and a
     /// question that does not fit is always an error.
     ///
-    /// On an error (malformed source message, or a unit that does not fit
-    /// under [`Truncation::Error`]), everything this call wrote is removed.
+    /// # Errors
+    ///
+    /// The parse error of a malformed source message, the errors of
+    /// [`push_record`](Self::push_record) (including
+    /// [`Error::BufferTooSmall`] for a unit that does not fit under
+    /// [`Truncation::Error`], or a question that does not fit). On error,
+    /// everything this call wrote is removed.
+    ///
+    /// ```
+    /// use dnsbox::{Message, MessageBuilder, Section};
+    /// use dnsbox::builder::Outcome;
+    /// # use dnsbox::{Class, NameBuf, Rtype, rdata::A};
+    /// # let name: NameBuf = "example.com".parse()?;
+    /// # let mut sbuf = [0u8; 512];
+    /// # let mut s = MessageBuilder::query(&mut sbuf, 1, &name, Rtype::A, Class::IN)?;
+    /// # s.push_answer(&name, Class::IN, 60, &A::new([192, 0, 2, 1].into()))?;
+    /// # let upstream = s.finish();
+    /// let upstream = Message::parse_validated(upstream)?;
+    /// let mut buf = [0u8; 512];
+    /// let mut b = MessageBuilder::response(&mut buf, &upstream)?;
+    /// assert_eq!(b.copy_section(&upstream, Section::Answer)?, Outcome::Added);
+    /// assert_eq!(b.header().ancount, 1);
+    /// # Ok::<(), dnsbox::Error>(())
+    /// ```
     pub fn copy_section(&mut self, msg: &Message<'_>, section: Section) -> Result<Outcome> {
         let mut opt = None;
         self.copy_section_inner(msg, section, &mut opt, 0)
@@ -376,8 +466,11 @@ impl<B: OutBuf> MessageBuilder<B> {
     /// signatures over the message (TSIG, SIG(0)) cover the original bytes
     /// and must be recomputed by the caller if needed.
     ///
-    /// Fails with [`Error::SectionOrder`] if anything was written to the
-    /// builder already. On error the builder is left as it was.
+    /// # Errors
+    ///
+    /// [`Error::SectionOrder`] if anything was written to the builder
+    /// already, otherwise as [`copy_section`](Self::copy_section). On
+    /// error the builder is left as it was.
     ///
     /// ```
     /// use dnsbox::{Message, MessageBuilder};

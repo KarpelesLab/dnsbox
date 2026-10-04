@@ -19,6 +19,19 @@ use crate::{Error, Result, Rtype};
 /// quoted string's surrounding quotes are not included. Decode with
 /// [`unescape`](Self::unescape) (character-strings) or let the
 /// [`Scanner`] methods interpret the token.
+///
+/// ```
+/// use dnsbox::zone::Scanner;
+///
+/// let mut s = Scanner::new(r#"42 "a\032b" TCP"#);
+/// assert_eq!(s.token()?.u16()?, 42);
+/// let quoted = s.token()?;
+/// assert!(quoted.is_quoted());
+/// assert_eq!(quoted.as_bytes(), br"a\032b");
+/// assert_eq!(quoted.unescape().collect::<Result<Vec<u8>, _>>()?, b"a b");
+/// assert!(s.token()?.is("tcp"));
+/// # Ok::<(), dnsbox::Error>(())
+/// ```
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct Token<'a> {
     raw: &'a [u8],
@@ -42,7 +55,11 @@ impl<'a> Token<'a> {
         self.quoted
     }
 
-    /// The token as UTF-8 text, or [`Error::InvalidText`].
+    /// The token as UTF-8 text.
+    ///
+    /// # Errors
+    ///
+    /// [`Error::InvalidText`] if it is not valid UTF-8.
     #[inline]
     pub fn as_str(&self) -> Result<&'a str> {
         core::str::from_utf8(self.raw).map_err(|_| Error::InvalidText)
@@ -75,18 +92,33 @@ impl<'a> Token<'a> {
     }
 
     /// The token as an 8-bit unsigned decimal number.
+    ///
+    /// # Errors
+    ///
+    /// [`Error::InvalidText`] for a quoted token, anything but decimal
+    /// digits, or a value above 255.
     #[inline]
     pub fn u8(&self) -> Result<u8> {
         self.number(u8::MAX.into()).map(|v| v as u8)
     }
 
     /// The token as a 16-bit unsigned decimal number.
+    ///
+    /// # Errors
+    ///
+    /// [`Error::InvalidText`] for a quoted token, anything but decimal
+    /// digits, or a value above 65535.
     #[inline]
     pub fn u16(&self) -> Result<u16> {
         self.number(u16::MAX.into()).map(|v| v as u16)
     }
 
     /// The token as a 32-bit unsigned decimal number.
+    ///
+    /// # Errors
+    ///
+    /// [`Error::InvalidText`] for a quoted token, anything but decimal
+    /// digits, or a value above 2³² − 1.
     #[inline]
     pub fn u32(&self) -> Result<u32> {
         self.number(u32::MAX.into()).map(|v| v as u32)
@@ -96,6 +128,15 @@ impl<'a> Token<'a> {
 /// Iterator over the decoded octets of a [`Token`] (RFC 1035 §5.1
 /// escapes); yields [`Error::InvalidText`] once for a malformed escape
 /// (`\DDD` above 255, fewer than three digits, or a trailing backslash).
+///
+/// ```
+/// use dnsbox::zone::Unescape;
+///
+/// let bytes: Vec<u8> = Unescape::new(br"\(x\)\255").collect::<Result<_, _>>()?;
+/// assert_eq!(bytes, b"(x)\xff");
+/// assert!(Unescape::new(br"\256").any(|b| b.is_err()));
+/// # Ok::<(), dnsbox::Error>(())
+/// ```
 #[derive(Clone, Debug)]
 #[must_use = "iterators are lazy and do nothing unless consumed"]
 pub struct Unescape<'a>(&'a [u8]);
@@ -272,6 +313,8 @@ impl<'a> Scanner<'a> {
 
     /// The next token of the entry, or `None` at its end.
     ///
+    /// # Errors
+    ///
     /// Fails with [`Error::InvalidText`] on a lexical error: an unbalanced
     /// parenthesis, an unterminated quoted string, or a trailing backslash.
     pub fn next_token(&mut self) -> Result<Option<Token<'a>>> {
@@ -306,8 +349,10 @@ impl<'a> Scanner<'a> {
 
     /// The next token without consuming it.
     ///
-    /// A lexical error is reported as by
-    /// [`next_token`](Self::next_token), and ends the entry.
+    /// # Errors
+    ///
+    /// A lexical error, as reported by [`next_token`](Self::next_token);
+    /// it ends the entry.
     #[inline]
     pub fn peek(&mut self) -> Result<Option<Token<'a>>> {
         let mut ahead = self.clone();
@@ -319,12 +364,21 @@ impl<'a> Scanner<'a> {
     }
 
     /// Whether all tokens of the entry have been read.
+    ///
+    /// # Errors
+    ///
+    /// As [`peek`](Self::peek).
     #[inline]
     pub fn is_at_end(&mut self) -> Result<bool> {
         self.peek().map(|t| t.is_none())
     }
 
-    /// The next token; [`Error::UnexpectedEof`] if there is none.
+    /// The next token.
+    ///
+    /// # Errors
+    ///
+    /// [`Error::UnexpectedEof`] if there is none, or a lexical error
+    /// ([`Error::InvalidText`]).
     #[inline]
     pub fn token(&mut self) -> Result<Token<'a>> {
         self.next_token()?.ok_or(Error::UnexpectedEof)
@@ -332,6 +386,11 @@ impl<'a> Scanner<'a> {
 
     /// The next token, which must not be quoted (numbers, names,
     /// mnemonics, encoded binary data).
+    ///
+    /// # Errors
+    ///
+    /// As [`token`](Self::token), and [`Error::InvalidText`] for a quoted
+    /// token.
     #[inline]
     pub fn word(&mut self) -> Result<Token<'a>> {
         let t = self.token()?;
@@ -341,7 +400,11 @@ impl<'a> Scanner<'a> {
         Ok(t)
     }
 
-    /// Checks that no tokens are left ([`Error::InvalidText`] otherwise).
+    /// Checks that no tokens are left.
+    ///
+    /// # Errors
+    ///
+    /// [`Error::InvalidText`] if one is (or for a lexical error).
     #[inline]
     pub fn finish(&mut self) -> Result<()> {
         match self.next_token()? {
@@ -351,18 +414,30 @@ impl<'a> Scanner<'a> {
     }
 
     /// An 8-bit unsigned decimal number.
+    ///
+    /// # Errors
+    ///
+    /// As [`word`](Self::word) and [`Token::u8`].
     #[inline]
     pub fn u8(&mut self) -> Result<u8> {
         self.word()?.u8()
     }
 
     /// A 16-bit unsigned decimal number.
+    ///
+    /// # Errors
+    ///
+    /// As [`word`](Self::word) and [`Token::u16`].
     #[inline]
     pub fn u16(&mut self) -> Result<u16> {
         self.word()?.u16()
     }
 
     /// A 32-bit unsigned decimal number.
+    ///
+    /// # Errors
+    ///
+    /// As [`word`](Self::word) and [`Token::u32`].
     #[inline]
     pub fn u32(&mut self) -> Result<u32> {
         self.word()?.u32()
@@ -371,6 +446,10 @@ impl<'a> Scanner<'a> {
     /// A time value in seconds, as a plain number or with BIND-style unit
     /// suffixes (`1h30m`, `2w`; see [`parse_ttl`]): TTLs and the SOA
     /// timers.
+    ///
+    /// # Errors
+    ///
+    /// As [`word`](Self::word) and [`parse_ttl`].
     #[inline]
     pub fn ttl(&mut self) -> Result<u32> {
         parse_ttl(self.word()?.raw)
@@ -379,6 +458,11 @@ impl<'a> Scanner<'a> {
     /// A DNSSEC timestamp (RFC 4034 §3.2): `YYYYMMDDHHmmSS` in UTC or a
     /// decimal number of seconds since the epoch; see
     /// [`Timestamp`](crate::dnssec::Timestamp).
+    ///
+    /// # Errors
+    ///
+    /// As [`word`](Self::word), and [`Error::InvalidText`] for a malformed
+    /// time.
     #[inline]
     pub fn timestamp(&mut self) -> Result<u32> {
         Ok(self.word()?.as_str()?.parse::<Timestamp>()?.get())
@@ -386,12 +470,32 @@ impl<'a> Scanner<'a> {
 
     /// A value parsed with its [`FromStr`] implementation, e.g. a record
     /// type or class mnemonic (`MX`, `TYPE65534`), a DNSSEC algorithm, ...
+    ///
+    /// # Errors
+    ///
+    /// As [`word`](Self::word), and the error of `T`'s `FromStr` (e.g.
+    /// [`Error::UnknownMnemonic`]).
+    ///
+    /// ```
+    /// use dnsbox::zone::Scanner;
+    /// use dnsbox::{Class, Rtype};
+    ///
+    /// let mut s = Scanner::new("IN TYPE65534");
+    /// assert_eq!(s.parse::<Class>()?, Class::IN);
+    /// assert_eq!(s.parse::<Rtype>()?, Rtype::new(65534));
+    /// # Ok::<(), dnsbox::Error>(())
+    /// ```
     #[inline]
     pub fn parse<T: FromStr<Err = Error>>(&mut self) -> Result<T> {
         self.word()?.as_str()?.parse()
     }
 
     /// An IPv4 address in dotted-decimal form (RFC 1035 §3.4.1).
+    ///
+    /// # Errors
+    ///
+    /// As [`word`](Self::word), and [`Error::InvalidText`] for a malformed
+    /// address.
     #[inline]
     pub fn ipv4(&mut self) -> Result<Ipv4Addr> {
         self.word()?
@@ -401,6 +505,11 @@ impl<'a> Scanner<'a> {
     }
 
     /// An IPv6 address in RFC 4291 §2.2 text form.
+    ///
+    /// # Errors
+    ///
+    /// As [`word`](Self::word), and [`Error::InvalidText`] for a malformed
+    /// address.
     #[inline]
     pub fn ipv6(&mut self) -> Result<Ipv6Addr> {
         self.word()?
@@ -411,6 +520,24 @@ impl<'a> Scanner<'a> {
 
     /// A domain name: absolute if it ends with an unescaped dot, otherwise
     /// relative to the origin; `@` is the origin (RFC 1035 §5.1).
+    ///
+    /// # Errors
+    ///
+    /// As [`word`](Self::word), and the name errors of
+    /// [`NameBuf::from_text`] ([`Error::EmptyLabel`],
+    /// [`Error::NameTooLong`], ...).
+    ///
+    /// ```
+    /// use dnsbox::zone::Scanner;
+    /// use dnsbox::NameBuf;
+    ///
+    /// let origin: NameBuf = "example.com".parse()?;
+    /// let mut s = Scanner::new("www @ ns1.example.net.").with_origin(origin.as_name());
+    /// assert_eq!(s.name()?.to_string(), "www.example.com.");
+    /// assert_eq!(s.name()?, origin);
+    /// assert_eq!(s.name()?.to_string(), "ns1.example.net.");
+    /// # Ok::<(), dnsbox::Error>(())
+    /// ```
     #[inline]
     pub fn name(&mut self) -> Result<NameBuf> {
         let t = self.word()?;
@@ -419,6 +546,10 @@ impl<'a> Scanner<'a> {
 
     /// Reads a domain name ([`name`](Self::name)) and writes it with
     /// `encoding` (the [`NameEncoding`] the record type's RFC mandates).
+    ///
+    /// # Errors
+    ///
+    /// As [`name`](Self::name), and the composer's error.
     #[inline]
     pub fn name_into<C: Composer + ?Sized>(
         &mut self,
@@ -430,8 +561,13 @@ impl<'a> Scanner<'a> {
     }
 
     /// Reads one `<character-string>` (quoted or not, RFC 1035 §5.1) and
-    /// writes it with its length octet; [`Error::CharStringTooLong`] if it
-    /// decodes to more than 255 octets.
+    /// writes it with its length octet.
+    ///
+    /// # Errors
+    ///
+    /// As [`token`](Self::token), [`Error::InvalidText`] for a bad escape,
+    /// [`Error::CharStringTooLong`] if it decodes to more than 255 octets,
+    /// and the composer's error.
     #[inline]
     pub fn char_string_into<C: Composer + ?Sized>(&mut self, out: &mut C) -> Result<()> {
         let t = self.token()?;
@@ -440,6 +576,10 @@ impl<'a> Scanner<'a> {
 
     /// Reads all remaining tokens as `<character-string>`s (at least one),
     /// writing each with its length octet (TXT, SPF, ...).
+    ///
+    /// # Errors
+    ///
+    /// As [`char_string_into`](Self::char_string_into).
     pub fn char_strings_into<C: Composer + ?Sized>(&mut self, out: &mut C) -> Result<()> {
         put_char_string(self.token()?, out)?;
         while let Some(t) = self.next_token()? {
@@ -450,6 +590,11 @@ impl<'a> Scanner<'a> {
 
     /// Reads one token of hexadecimal digits (either case) and writes the
     /// octets; returns how many.
+    ///
+    /// # Errors
+    ///
+    /// As [`word`](Self::word), [`Error::InvalidText`] for a non-hex digit
+    /// or an odd number of digits, and the composer's error.
     pub fn hex_into<C: Composer + ?Sized>(&mut self, out: &mut C) -> Result<usize> {
         let t = self.word()?;
         let mut d = HexDecoder::default();
@@ -460,6 +605,21 @@ impl<'a> Scanner<'a> {
     /// Reads all remaining tokens as one hexadecimal string (zone files
     /// split long digests across tokens and lines) and writes the octets;
     /// returns how many (0 if no tokens are left).
+    ///
+    /// # Errors
+    ///
+    /// As [`hex_into`](Self::hex_into).
+    ///
+    /// ```
+    /// use dnsbox::WireWriter;
+    /// use dnsbox::zone::Scanner;
+    ///
+    /// let mut buf = [0u8; 8];
+    /// let mut out = WireWriter::new(&mut buf);
+    /// let n = Scanner::new("( 0011 2233\n 44 )").hex_rest_into(&mut out)?;
+    /// assert_eq!((n, out.as_bytes()), (5, &[0x00, 0x11, 0x22, 0x33, 0x44][..]));
+    /// # Ok::<(), dnsbox::Error>(())
+    /// ```
     pub fn hex_rest_into<C: Composer + ?Sized>(&mut self, out: &mut C) -> Result<usize> {
         let mut d = HexDecoder::default();
         while let Some(t) = self.next_token()? {
@@ -473,6 +633,11 @@ impl<'a> Scanner<'a> {
 
     /// Reads one token of base64 (RFC 4648 §4, padded) and writes the
     /// octets; returns how many.
+    ///
+    /// # Errors
+    ///
+    /// As [`word`](Self::word), [`Error::InvalidText`] for malformed
+    /// base64, and the composer's error.
     pub fn base64_into<C: Composer + ?Sized>(&mut self, out: &mut C) -> Result<usize> {
         let t = self.word()?;
         let mut d = base64::Decoder::default();
@@ -484,6 +649,10 @@ impl<'a> Scanner<'a> {
     /// Reads all remaining tokens as one base64 string (RFC 4648 §4; keys
     /// and signatures are usually split across tokens and lines) and
     /// writes the octets; returns how many (0 if no tokens are left).
+    ///
+    /// # Errors
+    ///
+    /// As [`base64_into`](Self::base64_into).
     pub fn base64_rest_into<C: Composer + ?Sized>(&mut self, out: &mut C) -> Result<usize> {
         let mut d = base64::Decoder::default();
         let mut n = 0;
@@ -500,6 +669,11 @@ impl<'a> Scanner<'a> {
     /// Reads one token of unpadded base32hex (RFC 4648 §7, either case;
     /// NSEC3 hashed owner names, RFC 5155 §3.3) of at most 255 decoded
     /// octets and writes them; returns how many.
+    ///
+    /// # Errors
+    ///
+    /// As [`word`](Self::word), [`Error::InvalidText`] for malformed
+    /// base32hex, and the composer's error.
     pub fn base32hex_into<C: Composer + ?Sized>(&mut self, out: &mut C) -> Result<usize> {
         let t = self.word()?;
         let mut buf = [0u8; 255];
@@ -512,6 +686,23 @@ impl<'a> Scanner<'a> {
     /// `TYPE1234`, in any order, duplicates allowed) and writes the
     /// window-block type bitmap of NSEC, NSEC3 and CSYNC
     /// (RFC 4034 §4.1.2). No tokens give an empty bitmap.
+    ///
+    /// # Errors
+    ///
+    /// [`Error::InvalidText`] for a quoted token or a lexical error,
+    /// [`Error::UnknownMnemonic`] for an unknown type, and the composer's
+    /// error.
+    ///
+    /// ```
+    /// use dnsbox::WireWriter;
+    /// use dnsbox::zone::Scanner;
+    ///
+    /// let mut buf = [0u8; 16];
+    /// let mut out = WireWriter::new(&mut buf);
+    /// Scanner::new("NS SOA RRSIG").type_bitmap_into(&mut out)?;
+    /// assert_eq!(out.as_bytes(), [0, 6, 0x22, 0, 0, 0, 0, 0x02]);
+    /// # Ok::<(), dnsbox::Error>(())
+    /// ```
     pub fn type_bitmap_into<C: Composer + ?Sized>(&mut self, out: &mut C) -> Result<()> {
         // One bit per type: 8 KiB, so the work is linear in the tokens.
         let mut bits = [[0u8; 32]; 256];
@@ -585,6 +776,10 @@ fn parse_decimal(digits: &[u8]) -> Option<u64> {
 ///
 /// RFC 2181 §8 restricts TTLs to 0–2147483647; larger values are
 /// accepted here and left to the caller (they read as 0).
+///
+/// # Errors
+///
+/// [`Error::InvalidText`] for malformed text or a total beyond 32 bits.
 ///
 /// ```
 /// use dnsbox::zone::parse_ttl;

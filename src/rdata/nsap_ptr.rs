@@ -10,6 +10,15 @@ use crate::{Class, Result, Rtype};
 
 /// `NSAP-PTR` record data: the domain name for an NSAP address, the
 /// NSAP counterpart of PTR (RFC 1706 §6). Class IN only; deprecated.
+///
+/// ```
+/// use dnsbox::rdata::{NsapPtr, ParseRdataText};
+///
+/// let mut buf = [0u8; 32];
+/// let ptr = NsapPtr::from_text("host.school.de.", &mut buf)?;
+/// assert_eq!(ptr.ptrdname.to_string(), "host.school.de.");
+/// # Ok::<(), dnsbox::Error>(())
+/// ```
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub struct NsapPtr<'a> {
     /// The owner of the NSAP address.

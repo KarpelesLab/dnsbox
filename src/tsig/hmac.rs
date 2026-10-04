@@ -56,9 +56,12 @@ impl<'s> HmacKey<'s> {
     }
 
     /// Sets the generated MAC length (truncation, RFC 8945 §5.2.2.1); it
-    /// is also the shortest MAC accepted (BADTRUNC policy, §5.2.4). Fails
-    /// with [`Error::BadMacSize`](crate::Error::BadMacSize) outside the range
-    /// the RFC allows.
+    /// is also the shortest MAC accepted (BADTRUNC policy, §5.2.4).
+    ///
+    /// # Errors
+    ///
+    /// [`Error::BadMacSize`](crate::Error::BadMacSize) outside the range
+    /// the RFC allows ([`check_mac_size`](super::check_mac_size)).
     pub fn with_mac_len(mut self, len: usize) -> Result<Self> {
         check_mac_size(len, self.algorithm.digest_len())?;
         self.mac_len = len;
@@ -85,6 +88,24 @@ impl fmt::Debug for HmacKey<'_> {
 }
 
 /// A running HMAC computation for an [`HmacKey`].
+///
+/// ```
+/// use dnsbox::NameBuf;
+/// use dnsbox::tsig::{HmacKey, TsigAlgorithm, TsigKey, TsigMac};
+///
+/// let name: NameBuf = "k".parse()?;
+/// let key = HmacKey::new(&name, TsigAlgorithm::HmacSha256, b"secret");
+/// let mut mac = key.new_mac();
+/// mac.update(b"some data");
+/// let mut out = [0u8; 64];
+/// let len = mac.finalize(&mut out);
+/// assert_eq!(len, 32);
+///
+/// let mut check = key.new_mac();
+/// check.update(b"some data");
+/// assert!(check.verify(&out[..16])); // a truncated MAC verifies too
+/// # Ok::<(), dnsbox::Error>(())
+/// ```
 #[derive(Clone)]
 pub struct HmacState(State);
 

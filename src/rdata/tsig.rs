@@ -19,6 +19,15 @@ open_enum! {
     ///
     /// Unlike the header [`Rcode`], value 16 is presented as `BADSIG` (its
     /// meaning in TSIG); `BADVERS` is accepted as an alias.
+    ///
+    /// ```
+    /// use dnsbox::rdata::TsigRcode;
+    ///
+    /// assert_eq!(TsigRcode::BADTIME.get(), 18);
+    /// assert_eq!(TsigRcode::BADSIG.to_string(), "BADSIG");
+    /// assert_eq!("badvers".parse::<TsigRcode>()?, TsigRcode::BADSIG);
+    /// # Ok::<(), dnsbox::Error>(())
+    /// ```
     pub struct TsigRcode(u16), generic "RCODE", aliases { "BADVERS" => BADSIG };
     /// No error (RFC 1035).
     NOERROR = 0 => "NOERROR",
@@ -89,6 +98,21 @@ pub const MAX_TIME_SIGNED: u64 = (1 << 48) - 1;
 /// ```text
 /// Algorithm Name | Time Signed (48) | Fudge | MAC Size | MAC |
 /// Original ID | Error | Other Len | Other Data
+/// ```
+///
+/// TSIG RDATA has no zone-file form, but its `dig` layout parses back:
+///
+/// ```
+/// use dnsbox::rdata::{ParseRdataText, Tsig, TsigRcode};
+///
+/// let mut buf = [0u8; 64];
+/// let tsig = Tsig::from_text("hmac-sha256. 1700000000 300 0 4321 BADTIME 6 AABlU/EA", &mut buf)?;
+/// assert_eq!(tsig.algorithm.to_string(), "hmac-sha256.");
+/// assert_eq!((tsig.time_signed, tsig.fudge), (1_700_000_000, 300));
+/// assert!(tsig.mac.is_empty());
+/// assert_eq!(tsig.error, TsigRcode::BADTIME);
+/// assert_eq!(tsig.other.len(), 6);
+/// # Ok::<(), dnsbox::Error>(())
 /// ```
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub struct Tsig<'a> {

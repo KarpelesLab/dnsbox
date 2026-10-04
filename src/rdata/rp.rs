@@ -10,6 +10,17 @@ use crate::{Result, Rtype};
 
 /// `RP` record data: the responsible person for a domain
 /// (RFC 1183 §2.2).
+///
+/// ```
+/// use dnsbox::rdata::{ParseRdataText, Rp};
+///
+/// // RFC 1183 §2.2.
+/// let mut buf = [0u8; 64];
+/// let rp = Rp::from_text("louie.trantor.umd.edu. LAM1.people.umd.edu.", &mut buf)?;
+/// assert_eq!(rp.mbox.to_string(), "louie.trantor.umd.edu.");
+/// assert_eq!(rp.txt.to_string(), "LAM1.people.umd.edu.");
+/// # Ok::<(), dnsbox::Error>(())
+/// ```
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub struct Rp<'a> {
     /// The mailbox of the responsible person, encoded as a domain name

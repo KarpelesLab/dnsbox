@@ -11,6 +11,18 @@ use crate::wire::{Composer, NameEncoding, WireReader};
 /// the complete DNSSEC chain (RFC 7901 §4).
 ///
 /// The name is uncompressed (§4) and must fill the option exactly.
+///
+/// ```
+/// use dnsbox::NameBuf;
+/// use dnsbox::edns::{Chain, Opt};
+///
+/// // A resolver that already holds a validated chain down to "com.".
+/// let opt = Opt::new(b"\x00\x0d\x00\x05\x03com\x00")?;
+/// let chain: Chain<'_> = opt.get().expect("present")?;
+/// assert_eq!(chain.closest_trust_point, "com".parse::<NameBuf>()?);
+/// assert_eq!(chain.to_string(), "CHAIN=com.");
+/// # Ok::<(), dnsbox::Error>(())
+/// ```
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub struct Chain<'a> {
     /// The closest trust point: the lowest name for which the resolver

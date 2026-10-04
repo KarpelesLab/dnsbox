@@ -51,11 +51,22 @@ impl NameBuf {
     }
 
     /// Copies an uncompressed wire-format name that fills `wire` exactly.
+    ///
+    /// # Errors
+    ///
+    /// As [`Name::from_wire`]: a compression pointer, trailing bytes or a
+    /// malformed name.
     pub fn from_wire(wire: &[u8]) -> Result<Self> {
         Name::from_wire(wire).map(Self::from_name)
     }
 
     /// Builds a name from its labels, left to right (root excluded).
+    ///
+    /// # Errors
+    ///
+    /// [`Error::EmptyLabel`] for an empty label, [`Error::LabelTooLong`]
+    /// for one over 63 octets, [`Error::NameTooLong`] if the name exceeds
+    /// 255 octets.
     ///
     /// ```
     /// use dnsbox::NameBuf;
@@ -140,6 +151,22 @@ impl NameBuf {
     }
 
     /// Adds `label` in front of the name (e.g. `*` to form a wildcard).
+    ///
+    /// # Errors
+    ///
+    /// [`Error::EmptyLabel`], [`Error::LabelTooLong`] or
+    /// [`Error::NameTooLong`] as for [`from_labels`](Self::from_labels);
+    /// the name is unchanged then.
+    ///
+    /// ```
+    /// use dnsbox::NameBuf;
+    ///
+    /// let mut name: NameBuf = "example.com".parse()?;
+    /// name.prepend_label(b"*")?;
+    /// assert!(name.as_name().is_wildcard());
+    /// assert_eq!(name.to_string(), "*.example.com.");
+    /// # Ok::<(), dnsbox::Error>(())
+    /// ```
     pub fn prepend_label(&mut self, label: &[u8]) -> Result<()> {
         if label.is_empty() {
             return Err(Error::EmptyLabel);
@@ -161,6 +188,22 @@ impl NameBuf {
     }
 
     /// Parses presentation format (RFC 1035 §5.1). See [`FromStr`].
+    ///
+    /// # Errors
+    ///
+    /// [`Error::InvalidText`] for empty text or a bad `\DDD` escape,
+    /// [`Error::EmptyLabel`] for `a..b` or a leading dot,
+    /// [`Error::LabelTooLong`] and [`Error::NameTooLong`] for oversized
+    /// labels and names.
+    ///
+    /// ```
+    /// use dnsbox::{Error, NameBuf};
+    ///
+    /// let name = NameBuf::from_text(br"my\032host.example.")?;
+    /// assert_eq!(name.as_name().first_label().unwrap().as_bytes(), b"my host");
+    /// assert_eq!(NameBuf::from_text(b"a..b"), Err(Error::EmptyLabel));
+    /// # Ok::<(), Error>(())
+    /// ```
     pub fn from_text(text: &[u8]) -> Result<Self> {
         if text == b"." {
             return Ok(NameBuf::root());

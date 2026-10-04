@@ -153,6 +153,17 @@ dnskey_like! {
     /// `CDNSKEY` record data: a child's DNSKEY published for the parent
     /// (RFC 7344 §3.2). [`Cdnskey::DELETE`] is the RFC 8078 §4 "remove the
     /// DS RRset" form.
+    ///
+    /// ```
+    /// use dnsbox::rdata::{Cdnskey, ParseRdataText};
+    ///
+    /// // The algorithm and protocol may be mnemonics.
+    /// let mut buf = [0u8; 8];
+    /// let delete = Cdnskey::from_text("0 DNSSEC DELETE AA==", &mut buf)?;
+    /// assert!(delete.is_delete());
+    /// assert_eq!(delete.to_string(), "0 3 0 AA==");
+    /// # Ok::<(), dnsbox::Error>(())
+    /// ```
     Cdnskey, CDNSKEY
 }
 
@@ -160,6 +171,18 @@ dnskey_like! {
     /// `KEY` record data: a public key for SIG(0) and other non-zone uses
     /// (RFC 2535 §3.1, restricted by RFC 3445; RFC 2931). The flags are
     /// the RFC 2535 §3.1.2 key flags.
+    ///
+    /// ```
+    /// use dnsbox::dnssec::Algorithm;
+    /// use dnsbox::rdata::{Key, ParseRdataText};
+    ///
+    /// // A SIG(0) host key (flags 512: a host key, RFC 2535 §3.1.2).
+    /// let mut buf = [0u8; 48];
+    /// let key = Key::from_text("512 3 15 l02Woi0iS8Aa25FQkUd9RMzZHJpBoRQwAQEX1SxZJA4=", &mut buf)?;
+    /// assert_eq!((key.flags, key.algorithm), (512, Algorithm::ED25519));
+    /// assert_eq!(key.public_key.len(), 32);
+    /// # Ok::<(), dnsbox::Error>(())
+    /// ```
     Key, KEY
 }
 

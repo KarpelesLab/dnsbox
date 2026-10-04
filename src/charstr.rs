@@ -1,5 +1,23 @@
 //! `<character-string>`s (RFC 1035 §3.3): a length octet followed by up to
 //! 255 bytes of arbitrary data.
+//!
+//! [`CharStr`] is one string (re-exported at the crate root), [`CharStrs`]
+//! a run of them filling a field (TXT and SPF RDATA, ...). Both borrow the
+//! message; their `Display` is the quoted presentation format.
+//!
+//! ```
+//! use dnsbox::WireReader;
+//! use dnsbox::charstr::CharStrs;
+//!
+//! let rdata = b"\x05hello\x00\x07a \"b\" c";
+//! let strings = CharStrs::new(rdata)?;
+//! assert_eq!(strings.iter().count(), 3);
+//! assert_eq!(strings.to_string(), r#""hello" "" "a \"b\" c""#);
+//!
+//! let mut r = WireReader::new(rdata);
+//! assert_eq!(r.read_char_string()?.as_bytes(), b"hello");
+//! # Ok::<(), dnsbox::Error>(())
+//! ```
 
 use core::fmt;
 
@@ -12,6 +30,24 @@ use crate::{Error, Result};
 /// Its [`Display`](fmt::Display) form is the quoted presentation format of
 /// RFC 1035 §5.1: `"` and `\` are backslash-escaped, bytes outside printable
 /// ASCII are written as `\DDD`.
+///
+/// # Examples
+///
+/// ```
+/// use dnsbox::{CharStr, Error, WireWriter};
+///
+/// let s = CharStr::new(b"v=spf1 -all\x7f")?;
+/// assert_eq!(s.len(), 12);
+/// assert_eq!(s.to_string(), r#""v=spf1 -all\127""#);
+///
+/// let mut buf = [0u8; 16];
+/// let mut w = WireWriter::new(&mut buf);
+/// s.compose(&mut w)?;
+/// assert_eq!(w.as_bytes(), b"\x0cv=spf1 -all\x7f");
+///
+/// assert_eq!(CharStr::new(&[b'x'; 256]), Err(Error::CharStringTooLong));
+/// # Ok::<(), Error>(())
+/// ```
 #[derive(Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord, Default)]
 pub struct CharStr<'a>(&'a [u8]);
 
@@ -19,8 +55,11 @@ impl<'a> CharStr<'a> {
     /// Maximum payload length.
     pub const MAX_LEN: usize = 255;
 
-    /// Wraps `bytes`, failing with [`Error::CharStringTooLong`] if longer
-    /// than 255 bytes.
+    /// Wraps `bytes` (the payload, without a length octet).
+    ///
+    /// # Errors
+    ///
+    /// [`Error::CharStringTooLong`] if `bytes` is longer than 255 bytes.
     #[inline]
     pub const fn new(bytes: &'a [u8]) -> Result<Self> {
         if bytes.len() > Self::MAX_LEN {
@@ -58,6 +97,11 @@ impl<'a> CharStr<'a> {
     }
 
     /// Writes the length octet and payload.
+    ///
+    /// # Errors
+    ///
+    /// [`Error::BufferTooSmall`] if `c` has no room for them; nothing is
+    /// written then.
     #[inline]
     pub fn compose<C: Composer + ?Sized>(&self, c: &mut C) -> Result<()> {
         c.put_char_string(self.0)
@@ -78,12 +122,33 @@ impl fmt::Debug for CharStr<'_> {
 
 /// A validated run of consecutive `<character-string>`s filling a buffer
 /// exactly (the RDATA of TXT, SPF, ...).
+///
+/// # Examples
+///
+/// ```
+/// use dnsbox::Error;
+/// use dnsbox::charstr::CharStrs;
+///
+/// let strings = CharStrs::new(b"\x02ab\x01c")?;
+/// let parts: Vec<&[u8]> = strings.iter().map(|s| s.as_bytes()).collect();
+/// assert_eq!(parts, [&b"ab"[..], b"c"]);
+/// for s in &strings {
+///     assert!(!s.is_empty());
+/// }
+/// // A length octet promising more than is there.
+/// assert_eq!(CharStrs::new(b"\x05ab").unwrap_err(), Error::UnexpectedEof);
+/// # Ok::<(), Error>(())
+/// ```
 #[derive(Clone, Copy, PartialEq, Eq, Hash, Default)]
 pub struct CharStrs<'a>(&'a [u8]);
 
 impl<'a> CharStrs<'a> {
     /// Validates that `wire` is a sequence of complete length-prefixed
     /// strings. An empty buffer is a valid empty sequence.
+    ///
+    /// # Errors
+    ///
+    /// [`Error::UnexpectedEof`] if the last string is cut short.
     pub fn new(wire: &'a [u8]) -> Result<Self> {
         let mut rest = wire;
         while let [len, tail @ ..] = rest {
@@ -149,7 +214,17 @@ impl fmt::Debug for CharStrs<'_> {
     }
 }
 
-/// Iterator over a [`CharStrs`].
+/// Iterator over a [`CharStrs`], from [`CharStrs::iter`].
+///
+/// ```
+/// use dnsbox::charstr::CharStrs;
+///
+/// let mut it = CharStrs::new(b"\x01a\x00")?.iter();
+/// assert_eq!(it.next().map(|s| s.as_bytes()), Some(&b"a"[..]));
+/// assert_eq!(it.next().map(|s| s.len()), Some(0));
+/// assert!(it.next().is_none());
+/// # Ok::<(), dnsbox::Error>(())
+/// ```
 #[derive(Clone, Debug)]
 #[must_use = "iterators are lazy and do nothing unless consumed"]
 pub struct CharStrIter<'a>(&'a [u8]);

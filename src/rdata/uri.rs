@@ -13,6 +13,17 @@ use crate::{Error, Result, Rtype};
 /// The target is the rest of the RDATA (not a `<character-string>`, so it
 /// may exceed 255 bytes) and must not be empty: an empty string is not a
 /// URI (RFC 3986 §3); such RDATA is rejected with [`Error::InvalidRdata`].
+///
+/// ```
+/// use dnsbox::rdata::{ParseRdataText, Uri};
+///
+/// // RFC 7553 §4.5.
+/// let mut buf = [0u8; 64];
+/// let uri = Uri::from_text(r#"10 1 "ftp://ftp1.example.com/public""#, &mut buf)?;
+/// assert_eq!(uri.target, b"ftp://ftp1.example.com/public");
+/// assert_eq!(uri, Uri::new(10, 1, b"ftp://ftp1.example.com/public")?);
+/// # Ok::<(), dnsbox::Error>(())
+/// ```
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub struct Uri<'a> {
     /// Priority; lower values are tried first (RFC 7553 §4.2).
@@ -24,8 +35,11 @@ pub struct Uri<'a> {
 }
 
 impl<'a> Uri<'a> {
-    /// Builds URI data, rejecting an empty target with
-    /// [`Error::InvalidRdata`] (RFC 7553 §4.4).
+    /// Builds URI data.
+    ///
+    /// # Errors
+    ///
+    /// [`Error::InvalidRdata`] for an empty target (RFC 7553 §4.4).
     #[inline]
     pub const fn new(priority: u16, weight: u16, target: &'a [u8]) -> Result<Self> {
         if target.is_empty() {

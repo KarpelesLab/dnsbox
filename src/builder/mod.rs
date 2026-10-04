@@ -34,6 +34,40 @@
 //!   prefix (RFC 1035 §4.2.2) in front of the message; see also
 //!   [`crate::tcp`].
 //!
+//!
+//! # Examples
+//!
+//! A response with an answer RRset, a referral-style authority record and
+//! glue, written into a stack buffer:
+//!
+//! ```
+//! use dnsbox::rdata::{A, Ns};
+//! use dnsbox::{Class, Message, MessageBuilder, NameBuf, Rcode, Rtype, Section};
+//!
+//! let zone: NameBuf = "example.com".parse()?;
+//! let ns1: NameBuf = "ns1.example.com".parse()?;
+//! let mut qbuf = [0u8; 512];
+//! let query = MessageBuilder::query(&mut qbuf, 0x4242, &zone, Rtype::A, Class::IN)?.finish();
+//! let query = Message::parse(query)?;
+//!
+//! let mut buf = [0u8; 512];
+//! let mut b = MessageBuilder::response(&mut buf, &query)?;
+//! b.set_flags(b.header().flags.with_aa(true));
+//! let addrs = [A::new([192, 0, 2, 1].into()), A::new([192, 0, 2, 2].into())];
+//! let _ = b.push_rrset(Section::Answer, &zone, Class::IN, 300, &addrs)?;
+//! b.push_authority(&zone, Class::IN, 86400, &Ns { nsdname: ns1.as_name() })?;
+//! b.push_additional(&ns1, Class::IN, 86400, &A::new([192, 0, 2, 53].into()))?;
+//! let wire = b.finish();
+//!
+//! let msg = Message::parse_validated(wire)?;
+//! assert_eq!(msg.id(), 0x4242);
+//! assert!(msg.flags().aa() && msg.flags().rd());
+//! assert_eq!(msg.flags().rcode(), Rcode::NOERROR);
+//! let h = msg.header();
+//! assert_eq!((h.qdcount, h.ancount, h.nscount, h.arcount), (1, 2, 1, 1));
+//! # Ok::<(), dnsbox::Error>(())
+//! ```
+//!
 //! [`checkpoint`]: MessageBuilder::checkpoint
 //! [`rollback`]: MessageBuilder::rollback
 //! [`push_rrset`]: MessageBuilder::push_rrset
@@ -69,6 +103,23 @@ pub const MAX_MESSAGE_LEN: usize = 65535;
 const DEFAULT_VEC_CAPACITY: usize = 512;
 
 /// A saved builder state; see [`MessageBuilder::checkpoint`].
+///
+/// ```
+/// use dnsbox::rdata::A;
+/// use dnsbox::{Class, MessageBuilder, NameBuf};
+///
+/// let name: NameBuf = "example".parse()?;
+/// let mut buf = [0u8; 512];
+/// let mut b = MessageBuilder::new(&mut buf)?;
+/// let cp = b.checkpoint();
+/// b.push_answer(&name, Class::IN, 60, &A::new([192, 0, 2, 1].into()))?;
+/// b.push_answer(&name, Class::IN, 60, &A::new([192, 0, 2, 2].into()))?;
+/// // Changed our mind: drop both records as one unit.
+/// b.rollback(cp);
+/// assert_eq!(b.header().ancount, 0);
+/// assert!(b.is_empty());
+/// # Ok::<(), dnsbox::Error>(())
+/// ```
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct Checkpoint {
     len: usize,
@@ -123,7 +174,11 @@ pub struct MessageBuilder<B: OutBuf> {
 }
 
 impl<'b> MessageBuilder<WireWriter<'b>> {
-    /// Starts a message at the beginning of `buf`. Fails with
+    /// Starts a message at the beginning of `buf`, writing a zeroed
+    /// header.
+    ///
+    /// # Errors
+    ///
     /// [`Error::BufferTooSmall`] if `buf` cannot hold the 12-byte header.
     #[inline]
     pub fn new(buf: &'b mut [u8]) -> Result<Self> {
@@ -139,6 +194,17 @@ impl MessageBuilder<alloc::vec::Vec<u8>> {
     /// The `Vec` starts with room for 512 bytes (the classic UDP limit,
     /// RFC 1035 §4.2.1), so typical messages are written with a single
     /// allocation.
+    ///
+    /// ```
+    /// use dnsbox::{Class, MessageBuilder, NameBuf, Rtype};
+    ///
+    /// let name: NameBuf = "example.com".parse()?;
+    /// let mut b = MessageBuilder::new_vec();
+    /// b.push_question(&name, Rtype::TXT, Class::IN)?;
+    /// let wire: Vec<u8> = b.finish();
+    /// assert_eq!(wire.len(), 29);
+    /// # Ok::<(), dnsbox::Error>(())
+    /// ```
     #[inline]
     #[must_use]
     pub fn new_vec() -> Self {
@@ -173,6 +239,25 @@ impl<B: OutBuf> MessageBuilder<B> {
     /// Starts a message at the current end of `buf` (anything already in
     /// it, such as a TCP length prefix, is kept and not counted as part of
     /// the message). Writes a zeroed header.
+    ///
+    /// # Errors
+    ///
+    /// [`Error::BufferTooSmall`] if the buffer cannot hold the 12-byte
+    /// header after what it already contains.
+    ///
+    /// ```
+    /// use dnsbox::{MessageBuilder, OutBuf, WireWriter};
+    ///
+    /// let mut buf = [0u8; 64];
+    /// let mut w = WireWriter::new(&mut buf);
+    /// w.append(b"prefix")?; // left alone by the builder
+    /// let mut b = MessageBuilder::from_buf(w)?;
+    /// b.set_id(9);
+    /// assert_eq!(b.as_bytes().len(), 12);
+    /// let out = b.finish();
+    /// assert_eq!(&out[..8], b"prefix\x00\x09");
+    /// # Ok::<(), dnsbox::Error>(())
+    /// ```
     #[inline]
     pub fn from_buf(mut buf: B) -> Result<Self> {
         let base = buf.as_bytes().len();
@@ -219,6 +304,26 @@ impl<B: OutBuf> MessageBuilder<B> {
 
     /// Enables or disables name compression for names written from now on
     /// (enabled by default).
+    ///
+    /// ```
+    /// use dnsbox::rdata::A;
+    /// use dnsbox::{Class, MessageBuilder, NameBuf};
+    ///
+    /// let name: NameBuf = "www.example.com".parse()?;
+    /// let a = A::new([192, 0, 2, 1].into());
+    /// let mut buf = [0u8; 128];
+    /// let mut b = MessageBuilder::new(&mut buf)?;
+    /// b.push_answer(&name, Class::IN, 60, &a)?;
+    /// b.push_answer(&name, Class::IN, 60, &a)?; // owner: a 2-byte pointer
+    /// let compressed = b.len();
+    /// let mut buf = [0u8; 128];
+    /// let mut b = MessageBuilder::new(&mut buf)?;
+    /// b.set_compression(false);
+    /// b.push_answer(&name, Class::IN, 60, &a)?;
+    /// b.push_answer(&name, Class::IN, 60, &a)?; // owner written in full
+    /// assert_eq!(b.len(), compressed + 17 - 2);
+    /// # Ok::<(), dnsbox::Error>(())
+    /// ```
     #[inline]
     pub fn set_compression(&mut self, enabled: bool) {
         self.compress = enabled;
@@ -233,6 +338,21 @@ impl<B: OutBuf> MessageBuilder<B> {
     /// Caps the message size (e.g. 512 for plain UDP, or the EDNS payload
     /// size). Values above the buffer capacity or 65535 are clamped. Pushes
     /// that would exceed it fail with [`Error::BufferTooSmall`].
+    ///
+    /// ```
+    /// use dnsbox::rdata::A;
+    /// use dnsbox::{Class, Error, MessageBuilder, NameBuf};
+    ///
+    /// let name: NameBuf = "example".parse()?;
+    /// let mut buf = [0u8; 4096];
+    /// let mut b = MessageBuilder::new(&mut buf)?;
+    /// b.set_limit(40); // 12-byte header + 28 bytes
+    /// b.push_answer(&name, Class::IN, 60, &A::new([192, 0, 2, 1].into()))?; // 23 bytes
+    /// let res = b.push_answer(&name, Class::IN, 60, &A::new([192, 0, 2, 2].into()));
+    /// assert_eq!(res, Err(Error::BufferTooSmall));
+    /// assert_eq!((b.len(), b.remaining()), (35, 5));
+    /// # Ok::<(), Error>(())
+    /// ```
     pub fn set_limit(&mut self, limit: usize) {
         let cap = self
             .buf
@@ -253,6 +373,23 @@ impl<B: OutBuf> MessageBuilder<B> {
     /// room for records that must be added last even when the message is
     /// truncated — the OPT record (RFC 6891 §7) or a TSIG / SIG(0) record
     /// (RFC 8945 §5.3) — then set it back to 0 before adding them.
+    ///
+    /// ```
+    /// use dnsbox::builder::Truncation;
+    /// use dnsbox::rdata::A;
+    /// use dnsbox::{Class, MessageBuilder, NameBuf, Section};
+    ///
+    /// let name: NameBuf = "example".parse()?;
+    /// let addrs = [A::new([192, 0, 2, 1].into()); 30];
+    /// let mut buf = [0u8; 512];
+    /// let mut b = MessageBuilder::new(&mut buf)?;
+    /// b.set_truncation(Truncation::SetTc);
+    /// b.set_reserve(100); // room for a TSIG record, added last
+    /// let _ = b.push_rrset(Section::Answer, &name, Class::IN, 60, &addrs)?; // truncated
+    /// b.set_reserve(0);
+    /// assert!(b.remaining() >= 100);
+    /// # Ok::<(), dnsbox::Error>(())
+    /// ```
     #[inline]
     pub fn set_reserve(&mut self, bytes: usize) {
         self.reserve = bytes;
@@ -333,6 +470,13 @@ impl<B: OutBuf> MessageBuilder<B> {
     }
 
     /// Appends a question (RFC 1035 §4.1.2).
+    ///
+    /// # Errors
+    ///
+    /// [`Error::SectionOrder`] once a record has been pushed,
+    /// [`Error::BufferTooSmall`] if the question does not fit within the
+    /// limit, [`Error::CountOverflow`] past 65535 questions. On error the
+    /// message is unchanged.
     pub fn push_question(&mut self, name: impl ToName, qtype: Rtype, qclass: Class) -> Result<()> {
         let cp = self.checkpoint();
         let res = self.write_question(name.to_name(), qtype, qclass);
@@ -345,6 +489,30 @@ impl<B: OutBuf> MessageBuilder<B> {
     /// Appends a resource record (RFC 1035 §4.1.3) to `section`, which
     /// must not be [`Section::Question`] nor precede the current section.
     /// The TYPE comes from `data`.
+    ///
+    /// # Errors
+    ///
+    /// [`Error::SectionOrder`] for [`Section::Question`] or a section
+    /// before the current one, [`Error::BufferTooSmall`] if the record does
+    /// not fit within the limit (minus the [reserve](Self::set_reserve)),
+    /// [`Error::CountOverflow`] past 65535 records in the section, or the
+    /// error of `data`'s [`ComposeRdata::compose_rdata`]. On error the
+    /// message is unchanged.
+    ///
+    /// ```
+    /// use dnsbox::rdata::A;
+    /// use dnsbox::{Class, Error, MessageBuilder, NameBuf, Section};
+    ///
+    /// let name: NameBuf = "example".parse()?;
+    /// let a = A::new([192, 0, 2, 1].into());
+    /// let mut buf = [0u8; 512];
+    /// let mut b = MessageBuilder::new(&mut buf)?;
+    /// b.push_record(Section::Authority, &name, Class::IN, 60, &a)?;
+    /// // Sections are written in order.
+    /// let res = b.push_record(Section::Answer, &name, Class::IN, 60, &a);
+    /// assert_eq!(res, Err(Error::SectionOrder));
+    /// # Ok::<(), Error>(())
+    /// ```
     pub fn push_record<D: ComposeRdata + ?Sized>(
         &mut self,
         section: Section,
@@ -362,6 +530,25 @@ impl<B: OutBuf> MessageBuilder<B> {
     }
 
     /// Appends a record to the answer section.
+    ///
+    /// # Errors
+    ///
+    /// As [`push_record`](Self::push_record).
+    ///
+    /// ```
+    /// use dnsbox::rdata::{Cname, Txt};
+    /// use dnsbox::{Class, Message, MessageBuilder, NameBuf};
+    ///
+    /// let alias: NameBuf = "www.example".parse()?;
+    /// let target: NameBuf = "web.example".parse()?;
+    /// let mut buf = [0u8; 128];
+    /// let mut b = MessageBuilder::new(&mut buf)?;
+    /// // Any `ComposeRdata`: typed views, `RData`, owned data, ...
+    /// b.push_answer(&alias, Class::IN, 300, &Cname::new(target.as_name()))?;
+    /// b.push_answer(&target, Class::IN, 300, &Txt::from_wire(b"\x05hello")?)?;
+    /// assert_eq!(Message::parse_validated(b.finish())?.header().ancount, 2);
+    /// # Ok::<(), dnsbox::Error>(())
+    /// ```
     #[inline]
     pub fn push_answer<D: ComposeRdata + ?Sized>(
         &mut self,
@@ -374,6 +561,10 @@ impl<B: OutBuf> MessageBuilder<B> {
     }
 
     /// Appends a record to the authority section.
+    ///
+    /// # Errors
+    ///
+    /// As [`push_record`](Self::push_record).
     #[inline]
     pub fn push_authority<D: ComposeRdata + ?Sized>(
         &mut self,
@@ -386,6 +577,10 @@ impl<B: OutBuf> MessageBuilder<B> {
     }
 
     /// Appends a record to the additional section.
+    ///
+    /// # Errors
+    ///
+    /// As [`push_record`](Self::push_record).
     #[inline]
     pub fn push_additional<D: ComposeRdata + ?Sized>(
         &mut self,
@@ -398,6 +593,10 @@ impl<B: OutBuf> MessageBuilder<B> {
     }
 
     /// Copies a question from a parsed message.
+    ///
+    /// # Errors
+    ///
+    /// As [`push_question`](Self::push_question).
     #[inline]
     pub fn copy_question(&mut self, q: &Question<'_>) -> Result<()> {
         self.push_question(q.name(), q.qtype(), q.qclass())
@@ -406,6 +605,30 @@ impl<B: OutBuf> MessageBuilder<B> {
     /// Copies a record from a parsed message, re-encoding its RDATA (so
     /// compressed names are decompressed and recompressed against this
     /// message).
+    ///
+    /// # Errors
+    ///
+    /// The RDATA parse error if `rr` is malformed, otherwise as
+    /// [`push_record`](Self::push_record).
+    ///
+    /// ```
+    /// use dnsbox::{Message, MessageBuilder, Section};
+    /// # use dnsbox::{Class, NameBuf, rdata::Cname};
+    /// # let www: NameBuf = "www.example".parse()?;
+    /// # let target: NameBuf = "example".parse()?;
+    /// # let mut sbuf = [0u8; 128];
+    /// # let mut s = MessageBuilder::new(&mut sbuf)?;
+    /// # s.push_answer(&www, Class::IN, 60, &Cname { cname: target.as_name() })?;
+    /// # let source = s.finish();
+    /// let source = Message::parse(source)?;
+    /// let mut buf = [0u8; 512];
+    /// let mut b = MessageBuilder::new(&mut buf)?;
+    /// for rr in source.answers() {
+    ///     b.copy_record(Section::Answer, &rr?)?;
+    /// }
+    /// assert_eq!(b.header().ancount, 1);
+    /// # Ok::<(), dnsbox::Error>(())
+    /// ```
     pub fn copy_record(&mut self, section: Section, rr: &Record<'_>) -> Result<()> {
         let data = rr.data()?;
         self.push_record(section, rr.name(), rr.class(), rr.ttl(), &data)

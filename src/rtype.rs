@@ -1,4 +1,19 @@
 //! Resource record TYPEs and QTYPEs (RFC 1035 §3.2.2–3.2.3, RFC 6895 §3.1).
+//!
+//! [`Rtype`] is re-exported at the crate root. It covers the whole IANA
+//! registry; [`Rtype::all`] lists it, and the `is_*` methods classify a
+//! value (RFC 6895 §3.1).
+//!
+//! ```
+//! use dnsbox::Rtype;
+//!
+//! assert!(Rtype::MX.is_data());
+//! assert!(Rtype::OPT.is_meta() && !Rtype::OPT.is_data());
+//! assert!(Rtype::AXFR.is_question_only());
+//! assert!(Rtype::new(65280).is_private_use());
+//! assert_eq!(Rtype::from_mnemonic("https"), Some(Rtype::HTTPS));
+//! assert_eq!(Rtype::all().find(|&(_, m)| m == "SVCB").map(|(t, _)| t.get()), Some(64));
+//! ```
 
 // The complete IANA registry as of 2026-08-20
 // (https://www.iana.org/assignments/dns-parameters/dns-parameters-4.csv).
@@ -223,6 +238,13 @@ open_enum! {
 impl Rtype {
     /// Whether this is a QTYPE that may only appear in questions: IXFR,
     /// AXFR, MAILB, MAILA and ANY (RFC 1035 §3.2.3, RFC 6895 §3.1).
+    ///
+    /// ```
+    /// use dnsbox::Rtype;
+    ///
+    /// assert!(Rtype::ANY.is_question_only());
+    /// assert!(!Rtype::A.is_question_only());
+    /// ```
     #[inline]
     #[must_use]
     pub const fn is_question_only(self) -> bool {

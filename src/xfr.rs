@@ -61,6 +61,26 @@ use crate::wire::OutBuf;
 use crate::{Class, Error, Opcode, Rcode, Result, Rtype};
 
 /// Writes an AXFR query for `zone` (RFC 5936 §2.1) into an empty builder.
+///
+/// # Errors
+///
+/// [`Error::SectionOrder`] if the builder is not empty,
+/// [`Error::BufferTooSmall`] if the query does not fit.
+///
+/// ```
+/// use dnsbox::{Class, Message, MessageBuilder, NameBuf, Rtype};
+///
+/// let zone: NameBuf = "example.com".parse()?;
+/// // Zone transfers run over TCP: build the query with its length prefix.
+/// let mut buf = [0u8; 128];
+/// let mut b = MessageBuilder::new_tcp(&mut buf)?;
+/// b.set_id(0x5a5a);
+/// dnsbox::xfr::build_axfr_query(&mut b, &zone, Class::IN)?;
+/// let frame = b.finish();
+/// let (msg, _) = dnsbox::tcp::split_frame(frame).unwrap();
+/// assert_eq!(Message::parse(msg)?.questions().next().unwrap()?.qtype(), Rtype::AXFR);
+/// # Ok::<(), dnsbox::Error>(())
+/// ```
 pub fn build_axfr_query<B: OutBuf>(
     b: &mut MessageBuilder<B>,
     zone: impl ToName,
@@ -75,7 +95,26 @@ pub fn build_axfr_query<B: OutBuf>(
 /// Writes an IXFR query for `zone` (RFC 1995 §3) into an empty builder:
 /// the question `zone IXFR class` and, in the authority section, the SOA
 /// of the version the client has (only its serial matters to servers).
-/// On error the builder is left unchanged.
+///
+/// # Errors
+///
+/// [`Error::SectionOrder`] if the builder is not empty,
+/// [`Error::BufferTooSmall`] if the query does not fit. On error the
+/// builder is left unchanged.
+///
+/// ```
+/// use dnsbox::rdata::{ParseRdataText, Soa};
+/// use dnsbox::{Class, MessageBuilder, NameBuf};
+///
+/// let zone: NameBuf = "example.com".parse()?;
+/// let mut sbuf = [0u8; 128];
+/// let ours = Soa::from_text("ns1.example.com. hostmaster.example.com. 2024010101 1 1 1 1", &mut sbuf)?;
+/// let mut buf = [0u8; 256];
+/// let mut b = MessageBuilder::new(&mut buf)?;
+/// dnsbox::xfr::build_ixfr_query(&mut b, &zone, Class::IN, &ours)?;
+/// assert_eq!((b.header().qdcount, b.header().nscount), (1, 1));
+/// # Ok::<(), dnsbox::Error>(())
+/// ```
 pub fn build_ixfr_query<B: OutBuf>(
     b: &mut MessageBuilder<B>,
     zone: impl ToName,
@@ -97,6 +136,14 @@ pub fn build_ixfr_query<B: OutBuf>(
 }
 
 /// Whether serial `a` is newer than serial `b` (RFC 1982 §3.2).
+///
+/// ```
+/// use dnsbox::xfr::serial_newer;
+///
+/// assert!(serial_newer(2024010102, 2024010101));
+/// assert!(serial_newer(5, u32::MAX)); // wrapped around
+/// assert!(!serial_newer(7, 7));
+/// ```
 #[must_use]
 pub const fn serial_newer(a: u32, b: u32) -> bool {
     matches!(
@@ -108,6 +155,25 @@ pub const fn serial_newer(a: u32, b: u32) -> bool {
 /// One step of a zone transfer, borrowing from the current message.
 ///
 /// More kinds of events may be reported in future versions.
+///
+/// Applying an IXFR to a zone store:
+///
+/// ```
+/// use dnsbox::xfr::XfrEvent;
+///
+/// fn apply(event: XfrEvent<'_>, log: &mut Vec<String>) {
+///     match event {
+///         XfrEvent::Start { soa, .. } => log.push(format!("to serial {}", soa.serial)),
+///         XfrEvent::UpToDate { .. } => log.push("nothing to do".into()),
+///         XfrEvent::Record(rr) | XfrEvent::Add(rr) => log.push(format!("+ {rr}")),
+///         XfrEvent::Delete(rr) => log.push(format!("- {rr}")),
+///         XfrEvent::DeleteStart { soa, .. } => log.push(format!("from {}", soa.serial)),
+///         XfrEvent::AddStart { soa, .. } => log.push(format!("to {}", soa.serial)),
+///         XfrEvent::End { .. } => log.push("commit".into()),
+///         _ => {} // non-exhaustive
+///     }
+/// }
+/// ```
 #[derive(Clone, Copy, Debug)]
 #[non_exhaustive]
 pub enum XfrEvent<'a> {
@@ -158,7 +224,16 @@ pub enum XfrEvent<'a> {
     },
 }
 
-/// How the server answers, once known.
+/// How the server answers, once known ([`XfrProcessor::style`]).
+///
+/// ```
+/// use dnsbox::xfr::{XfrProcessor, XfrStyle};
+///
+/// let xfr = XfrProcessor::ixfr(&"example.com".parse::<dnsbox::NameBuf>()?, 7);
+/// assert_eq!(xfr.style(), None); // nothing received yet
+/// assert_ne!(XfrStyle::Full, XfrStyle::Incremental);
+/// # Ok::<(), dnsbox::Error>(())
+/// ```
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub enum XfrStyle {
     /// A full zone (AXFR, or AXFR-style IXFR).
@@ -197,6 +272,41 @@ enum State {
 /// [`Error::InvalidXfr`]. Only the answer section is processed; TSIG and
 /// OPT records elsewhere are ignored. After an error the processor stays
 /// failed.
+///
+/// ```
+/// use dnsbox::rdata::{A, ParseRdataText, Soa};
+/// use dnsbox::xfr::{XfrEvent, XfrProcessor, XfrStyle};
+/// use dnsbox::{Class, Message, MessageBuilder, NameBuf, Rtype};
+///
+/// // A server's AXFR response: SOA, the zone's records, SOA again.
+/// let zone: NameBuf = "example.com".parse()?;
+/// let www: NameBuf = "www.example.com".parse()?;
+/// let mut sbuf = [0u8; 128];
+/// let soa = Soa::from_text("ns1.example.com. hostmaster.example.com. 42 7200 900 1209600 3600", &mut sbuf)?;
+/// let mut buf = [0u8; 512];
+/// let mut b = MessageBuilder::new(&mut buf)?;
+/// b.set_id(9);
+/// b.set_flags(dnsbox::Flags::default().with_qr(true).with_aa(true));
+/// b.push_question(&zone, Rtype::AXFR, Class::IN)?;
+/// b.push_answer(&zone, Class::IN, 3600, &soa)?;
+/// b.push_answer(&www, Class::IN, 300, &A::new([192, 0, 2, 80].into()))?;
+/// b.push_answer(&zone, Class::IN, 3600, &soa)?;
+/// let response = Message::parse(b.finish())?;
+///
+/// let mut xfr = XfrProcessor::axfr(&zone).with_id(9);
+/// let (mut serial, mut records) = (None, 0);
+/// for event in xfr.process(&response)? {
+///     match event? {
+///         XfrEvent::Start { soa, .. } => serial = Some(soa.serial),
+///         XfrEvent::Record(_) => records += 1,
+///         _ => {}
+///     }
+/// }
+/// assert!(xfr.is_done());
+/// assert_eq!((xfr.style(), serial, records), (Some(XfrStyle::Full), Some(42), 1));
+/// assert_eq!((xfr.message_count(), xfr.record_count()), (1, 3));
+/// # Ok::<(), dnsbox::Error>(())
+/// ```
 #[derive(Clone)]
 pub struct XfrProcessor {
     zone: NameBuf,
@@ -256,7 +366,8 @@ impl XfrProcessor {
     }
 
     /// The serial of the version being transferred (the first SOA), once
-    /// seen.
+    /// seen and while the transfer is in progress (`None` again once it is
+    /// [done](Self::is_done) or failed; [`XfrEvent::End`] carries it).
     #[must_use]
     pub fn serial(&self) -> Option<u32> {
         match self.state {
@@ -284,6 +395,15 @@ impl XfrProcessor {
 
     /// Checks the header and question of the next response message and
     /// returns an iterator over its events.
+    ///
+    /// # Errors
+    ///
+    /// [`Error::ErrorResponse`] for an error RCODE (e.g. a refused
+    /// transfer), [`Error::InvalidXfr`] for a message that is not a
+    /// response to the transfer (QR, opcode, ID, question) or for any
+    /// message after an error or after the end, and the parse error of a
+    /// malformed question. Errors in the records are yielded by the
+    /// iterator.
     pub fn process<'p, 'a>(&'p mut self, msg: &Message<'a>) -> Result<XfrEvents<'p, 'a>> {
         match self.check_message(msg) {
             Ok(()) => {
@@ -435,7 +555,23 @@ impl fmt::Debug for XfrProcessor {
 /// The events of one response message; see [`XfrProcessor::process`].
 ///
 /// Yields one event per answer record; on an error it yields the error
-/// once, marks the processor failed and stops.
+/// once, marks the processor failed and stops. See the [`XfrProcessor`]
+/// example.
+///
+/// ```
+/// use dnsbox::xfr::XfrProcessor;
+/// use dnsbox::Message;
+///
+/// // Count the records of each message as it arrives.
+/// fn count(xfr: &mut XfrProcessor, msg: &Message<'_>) -> dnsbox::Result<usize> {
+///     let mut n = 0;
+///     for event in xfr.process(msg)? {
+///         event?;
+///         n += 1;
+///     }
+///     Ok(n)
+/// }
+/// ```
 #[must_use = "iterators are lazy and do nothing unless consumed"]
 pub struct XfrEvents<'p, 'a> {
     proc: &'p mut XfrProcessor,
