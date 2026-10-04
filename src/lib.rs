@@ -101,7 +101,7 @@
 //! ### Typed record data
 //!
 //! [`Record::data`] decodes the RDATA into [`RData`], an enum with a typed
-//! view for about 80 record types ([`rdata`]); unknown types stay opaque
+//! view for about 85 record types ([`rdata`]); unknown types stay opaque
 //! and round-trip (RFC 3597). [`Record::data_as`] asks for one type.
 //! Names inside RDATA follow compression pointers into the message.
 //!
@@ -390,9 +390,9 @@
 //! # Ok::<(), dnsbox::Error>(())
 //! ```
 //!
-//! SIG(0) ([`sig0`]), dynamic UPDATE ([`update`]), NOTIFY ([`notify`]),
-//! AXFR/IXFR ([`xfr`]) and DNS Stateful Operations ([`dso`]) follow the
-//! same patterns.
+//! SIG(0) ([`sig0`]), TKEY key establishment ([`tkey`]), dynamic UPDATE
+//! ([`update`]), NOTIFY ([`notify`]), AXFR/IXFR ([`xfr`]) and DNS
+//! Stateful Operations ([`dso`]) follow the same patterns.
 //!
 //! ## Examples
 //!
@@ -503,6 +503,7 @@ mod serde_impls;
 pub mod sig0;
 pub mod tcp;
 pub mod text;
+pub mod tkey;
 pub mod tsig;
 pub mod update;
 mod util;

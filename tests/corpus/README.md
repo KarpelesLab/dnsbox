@@ -169,5 +169,7 @@ them, RFC 8976 §2.2.4); ldns writes UINFO/UID/GID/UNSPEC as `TYPE0` and
 the NSAP-PTR name as a quoted string, and cannot read A6, ATMA, AVC,
 NINFO, NXT, RKEY, SINK or TA; BIND refuses MD and MF as obsolete.
 
-Types dnspython implements and dnsbox carries as opaque RFC 3597 data:
-AMTRELAY, DSYNC, TKEY (`rdata.txt` checks the generic form).
+TKEY has no zone-file form, and dnsbox writes BIND's text for it (with
+the key and other data sizes), which dnspython does not read (nor does
+dnsbox read dnspython's); `interop_dnspython.rs` pins dnsbox's text for
+those examples and `gen_rdata.py --check` skips them.

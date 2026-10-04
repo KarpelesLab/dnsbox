@@ -155,10 +155,11 @@ files, DNSSEC, TSIG), and every public item has its own example. The
   (with RFC 9018 server cookies), Padding with RFC 8467 policies, TCP
   keepalive, Extended DNS Errors, NSID, Chain, Key tag, Expire, Zone
   version, Report-Channel, DAU/DHU/N3U.
-- **Record types**: about 80 typed RDATA formats — the RFC 1035 set, SRV,
+- **Record types**: about 85 typed RDATA formats — the RFC 1035 set, SRV,
   NAPTR, CAA, SSHFP, TLSA, SMIMEA, OPENPGPKEY, DNAME, URI, CERT, DHCID, LOC,
   RP, AFSDB, ILNP, EUI48/64, CSYNC, ZONEMD, APL, IPSECKEY, HIP, KX, SVCB and
-  HTTPS (all RFC 9460 SvcParams), the DNSSEC types and the legacy types —
+  HTTPS (all RFC 9460 SvcParams), AMTRELAY, DSYNC, TKEY, HHIT/BRID, DOA,
+  the DNSSEC types and the legacy types —
   each with presentation-format `Display`; unknown types round-trip.
 - **DNSSEC** (RFC 4033–4035, 5155, 6840): canonical form and RRset order,
   key tags, DS digests, NSEC3 hashing, RRSIG validation logic, the chain of
@@ -172,7 +173,7 @@ files, DNSSEC, TSIG), and every public item has its own example. The
   RFC 3597 generic RDATA, errors with line and column) and
   presentation-format parsing of RDATA (`ParseRdataText`).
 - **Transactions and zone transfer**: TSIG (RFC 8945), SIG(0) (RFC 2931),
-  dynamic UPDATE (RFC 2136), NOTIFY (RFC 1996), AXFR/IXFR (RFC 5936,
+  TKEY query/response shapes (RFC 2930), dynamic UPDATE (RFC 2136), NOTIFY (RFC 1996), AXFR/IXFR (RFC 5936,
   RFC 1995) stream processing, DNS Stateful Operations (RFC 8490).
 - **Text and owned data**: `dig`-style `Display` of whole messages (no
   allocation, matches BIND's `dig` line for line), owned `OwnedMessage` /

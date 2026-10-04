@@ -82,6 +82,7 @@ src/
                   adapters over the DNSSEC Signer/Verifier (`alloc`)
   update.rs       dynamic UPDATE (RFC 2136): UpdateBuilder, UpdateMessage
   notify.rs       NOTIFY (RFC 1996)
+  tkey.rs         TKEY (RFC 2930) query/response shapes, find
   xfr.rs, xfr/    AXFR/IXFR (RFC 5936, RFC 1995): queries, XfrProcessor
   dso.rs          DNS Stateful Operations (RFC 8490): TLVs, DsoBuilder
   zone/           presentation format and master files (RFC 1035 §5):
@@ -1058,6 +1059,12 @@ src/dnssec/
   `DnssecSig0Signer` / `DnssecSig0Verifier` (`alloc`) adapt any DNSSEC
   `Signer` / `Verifier`, so with the `dnssec` feature SIG(0) gets RSA,
   ECDSA and EdDSA from purecrypto.
+- **TKEY** (`tkey`): `build_query` (question `key TKEY ANY`, the TKEY
+  record in the additional section, RD clear), `build_response` (TKEY in
+  the answer section, error responses via `Tkey::with_error`) and `find`.
+  The record data (`rdata::Tkey`, `TkeyMode`) shares `TsigRcode` and the
+  sized-base64 text helpers with TSIG. Key agreement itself (DH, GSS-API)
+  is out of scope.
 - **UPDATE** (`update`): section aliases `ZONE`, `PREREQUISITE`,
   `UPDATE`, `ADDITIONAL`; `UpdateBuilder` has one method per RFC 2136
   §2.4/§2.5 form; `UpdateMessage` classifies prerequisites and updates and

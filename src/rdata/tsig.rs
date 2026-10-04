@@ -145,14 +145,19 @@ impl ParseRdataText for Tsig<'_> {
         out.put_u16(s.u16()?)?;
         sized_base64_into(s, out)?;
         out.put_u16(s.u16()?)?;
-        let error = s.word()?;
-        let error = if error.as_bytes().first().is_some_and(u8::is_ascii_digit) {
-            error.u16()?
-        } else {
-            error.as_str()?.parse::<TsigRcode>()?.get()
-        };
-        out.put_u16(error)?;
+        out.put_u16(tsig_error_code(s)?)?;
         sized_base64_into(s, out)
+    }
+}
+
+/// Reads a TSIG / TKEY error code: a [`TsigRcode`] mnemonic, `RCODEnnn`
+/// or a decimal number (as BIND accepts).
+pub(super) fn tsig_error_code(s: &mut Scanner<'_>) -> Result<u16> {
+    let error = s.word()?;
+    if error.as_bytes().first().is_some_and(u8::is_ascii_digit) {
+        error.u16()
+    } else {
+        Ok(error.as_str()?.parse::<TsigRcode>()?.get())
     }
 }
 
@@ -168,8 +173,9 @@ fn time_signed(t: Token<'_>) -> Result<u64> {
 
 /// Reads a 16-bit size and then base64 tokens decoding to exactly that
 /// many octets (none for size 0), and writes the size and the octets (a
-/// TSIG MAC or other data, RFC 8945 §4.2).
-fn sized_base64_into<B: OutBuf + ?Sized>(s: &mut Scanner<'_>, out: &mut B) -> Result<()> {
+/// TSIG MAC or other data, RFC 8945 §4.2; the TKEY key and other data,
+/// RFC 2930 §2).
+pub(super) fn sized_base64_into<B: OutBuf + ?Sized>(s: &mut Scanner<'_>, out: &mut B) -> Result<()> {
     let size = s.u16()?;
     out.put_u16(size)?;
     let size = usize::from(size);

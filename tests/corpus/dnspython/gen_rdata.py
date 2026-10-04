@@ -19,7 +19,8 @@ The check is the reverse direction: rdata.dnsbox.txt is dnsbox's own
 presentation of every wire example, in the same layout (written by
 `DNSBOX_WRITE_DNSPYTHON=1 cargo test --test interop_dnspython`; rerun that
 after changing the examples). Each of dnsbox's texts must be accepted by
-dnspython and produce the same wire bytes.
+dnspython and produce the same wire bytes, except for the types in
+TEXT_DIFFERS.
 """
 
 import os
@@ -31,6 +32,12 @@ import dns.rdatatype
 import dns.version
 
 HERE = os.path.dirname(os.path.abspath(__file__))
+
+# Types whose text form differs between dnspython and BIND, where dnsbox
+# writes BIND's: dnspython cannot read dnsbox's display of these (TKEY has
+# no zone-file form; BIND writes the key and other data sizes, dnspython
+# does not). tests/interop_dnspython.rs pins dnsbox's text for them.
+TEXT_DIFFERS = {"TKEY"}
 
 B64_KEY = (
     "AwEAAagAIKlVZrpC6Ia7gEzahOR+9W29euxhJhVVLOyQbSEW0O8gcCjFFVQUTf6v58fLjwBd0YI0EzrAcQqBGCzh/"
@@ -201,8 +208,8 @@ EXAMPLES = [
     ("WALLET", '"BTC" "bc1qar0srrr7xfkvy5l643lydnw9re59gtzzwf5mdq"'),
     ("TSIG", "hmac-sha256. 1791104299 300 32 " + "A" * 43 + "= 4660 NOERROR 0"),
     ("TSIG", "hmac-md5.sig-alg.reg.int. 1791104299 300 16 AAAAAAAAAAAAAAAAAAAAAA== 1 BADTIME 6 AABqwhUr"),
-    # Implemented by dnspython but not (yet) typed in dnsbox: these must
-    # pass through dnsbox in the RFC 3597 generic form.
+    # RFC 8777, RFC 9859, RFC 2930 (TKEY: dnspython writes no key/other
+    # sizes, dnsbox writes BIND's form; see TEXT_DIFFERS)
     ("AMTRELAY", "0 0 0 ."),
     ("AMTRELAY", "128 1 1 203.0.113.15"),
     ("AMTRELAY", "10 0 2 2001:db8::15"),
@@ -246,6 +253,8 @@ def check(path):
             if line.startswith("#") or not line.strip():
                 continue
             rtype, rclass, text, hexed = line.rstrip("\n").split("\t")
+            if rtype in TEXT_DIFFERS:
+                continue
             n += 1
             try:
                 rd = dns.rdata.from_text(

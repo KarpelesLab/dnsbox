@@ -65,9 +65,25 @@ fn examples() -> Vec<Example> {
         .collect()
 }
 
-/// The types dnspython implements and dnsbox carries opaquely (RFC 3597):
-/// their RDATA must survive in the generic form.
-const OPAQUE: &[Rtype] = &[Rtype::AMTRELAY, Rtype::DSYNC, Rtype::TKEY];
+/// Types whose text form differs between dnspython and BIND, where dnsbox
+/// follows BIND: dnspython writes TKEY (which has no zone-file form) without
+/// the key and other data sizes. Neither tool reads the other's form, and
+/// dnsbox cannot misread dnspython's (a base64 key is not a size).
+const TEXT_DIFFERS: &[Rtype] = &[Rtype::TKEY];
+
+/// dnsbox's display of the [`TEXT_DIFFERS`] examples: (dnspython text,
+/// dnsbox text). dnspython does not read these back (`gen_rdata.py
+/// --check` skips them).
+const BIND_STYLE: &[(&str, &str)] = &[
+    (
+        "gss-tsig. 1791104299 1791107899 3 0 AAEC",
+        "gss-tsig. 1791104299 1791107899 3 NOERROR 3 AAEC 0",
+    ),
+    (
+        "hmac-sha256. 1791104299 1791107899 2 17 AAEC AQID",
+        "hmac-sha256. 1791104299 1791107899 2 BADKEY 3 AAEC 3 AQID",
+    ),
+];
 
 /// Where dnsbox's display legitimately differs from dnspython's beyond
 /// spacing, quoting and letter case: (dnspython text, dnsbox text). Each
@@ -119,10 +135,7 @@ fn covers_every_type() {
     seen.dedup();
     assert!(seen.len() >= 60, "{} types", seen.len());
     for t in &seen {
-        assert!(
-            RData::is_known(*t) || OPAQUE.contains(t),
-            "{t}: neither typed nor expected opaque"
-        );
+        assert!(RData::is_known(*t), "{t}: not typed");
     }
 }
 
@@ -130,9 +143,10 @@ fn covers_every_type() {
 fn dnspython_text_to_dnsbox_wire() {
     let mut failures = String::new();
     for e in examples() {
-        if OPAQUE.contains(&e.rtype) || !RData::is_known(e.rtype) || e.class != Class::IN {
-            // dnsbox has no presentation format for these: dnspython's
-            // typed text is rejected, the generic form is not.
+        if TEXT_DIFFERS.contains(&e.rtype) || !RData::is_known(e.rtype) || e.class != Class::IN {
+            // dnsbox has no presentation format for these, or another
+            // one: dnspython's typed text is rejected, the generic form is
+            // not.
             assert!(
                 OwnedRData::from_text(e.rtype, e.class, &e.text).is_err(),
                 "{} {}",
@@ -195,6 +209,7 @@ fn dnspython_wire_to_dnsbox_text() {
         }
         let expected = STYLE
             .iter()
+            .chain(BIND_STYLE)
             .find(|(theirs, _)| *theirs == e.text)
             .map_or(e.text.as_str(), |(_, ours)| ours);
         if normalize(&shown) != normalize(expected) {

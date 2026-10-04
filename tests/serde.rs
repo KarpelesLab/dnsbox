@@ -10,8 +10,8 @@ use dnsbox::dnssec::{Algorithm, DigestType, Nsec3HashAlgorithm};
 use dnsbox::dso::DsoType;
 use dnsbox::edns::{InfoCode, OptionCode, ZoneVersionType};
 use dnsbox::rdata::{
-    CertType, IpseckeyAlgorithm, SshfpAlgorithm, SshfpFpType, SvcParamKey, TlsaCertUsage,
-    TlsaMatchingType, TlsaSelector, TsigRcode, ZonemdHashAlg, ZonemdScheme,
+    CertType, DsyncScheme, IpseckeyAlgorithm, SshfpAlgorithm, SshfpFpType, SvcParamKey, TkeyMode,
+    TlsaCertUsage, TlsaMatchingType, TlsaSelector, TsigRcode, ZonemdHashAlg, ZonemdScheme,
 };
 use dnsbox::{Class, Flags, NameBuf, Opcode, Rcode, Rtype};
 use serde::Serialize;
@@ -125,6 +125,8 @@ fn every_registry_value_round_trips() {
         IpseckeyAlgorithm: u8,
         SshfpAlgorithm: u8,
         SshfpFpType: u8,
+        DsyncScheme: u8,
+        TkeyMode: u16,
     );
     for v in 0..16 {
         let op = Opcode::new(v);

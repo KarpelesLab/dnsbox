@@ -20,6 +20,7 @@ use dnsbox::rdata::{
 };
 use dnsbox::sig0::{Sig0Record, Validity};
 use dnsbox::tcp::{FrameReassembler, Frames};
+use dnsbox::tkey::TkeyRecord;
 use dnsbox::tsig::{MacBuf, TsigAlgorithm, TsigRecord};
 use dnsbox::update::{UpdateBuilder, UpdateMessage};
 use dnsbox::xfr::{XfrEvent, XfrProcessor, XfrStyle};
@@ -77,6 +78,7 @@ fn send_and_sync() {
     send_sync::<FrameReassembler<'static>>();
     send_sync::<Frames<'static>>();
     send_sync::<TsigRecord<'static>>();
+    send_sync::<TkeyRecord<'static>>();
     send_sync::<MacBuf>();
     send_sync::<Sig0Record<'static>>();
     send_sync::<ZoneKey<'static>>();
