@@ -1,0 +1,4 @@
+# Check out text files with LF everywhere: the tests compare corpus
+# fixtures (zone files, dig output, dumps) byte for byte, and a Windows
+# checkout with core.autocrlf would otherwise turn them into CRLF.
+* text=auto eol=lf
