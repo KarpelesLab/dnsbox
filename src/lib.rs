@@ -80,6 +80,7 @@ pub mod message;
 pub mod name;
 pub mod rdata;
 pub mod rtype;
+pub mod sig0;
 pub mod tcp;
 pub mod text;
 pub mod tsig;
