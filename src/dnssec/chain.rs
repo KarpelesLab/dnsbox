@@ -360,11 +360,11 @@ where
         D: IntoIterator<Item = Ds<'d>> + Clone,
         S: IntoIterator<Item = Rrsig<'s>>,
     {
-        let usable_ds = |d: &Ds<'_>| {
-            d.digest_type.digest_len().is_some()
-                && d.digest_type != DigestType::GOST
-                && verifier.supports(d.algorithm)
-        };
+        // Only digest types we can compute count (RFC 4035 §5.2): any other
+        // (GOST, GOST12, SM3, unassigned) is disregarded, so it neither
+        // displaces SHA-1 (RFC 4509 §3) nor fails the check.
+        let usable_ds =
+            |d: &Ds<'_>| super::DsDigest::supports(d.digest_type) && verifier.supports(d.algorithm);
         if !ds.clone().into_iter().any(|d| usable_ds(&d)) {
             return Err(Error::UnsupportedAlgorithm);
         }

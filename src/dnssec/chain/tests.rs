@@ -593,6 +593,62 @@ fn from_ds() {
     assert!(scratch.is_empty());
 }
 
+/// DS digest types the crate cannot compute (GOST12, SM3, ...) are
+/// disregarded: they neither stop a supported DS from authenticating the
+/// keys, nor displace SHA-1, nor turn a forgery into "insecure".
+#[cfg(feature = "dnssec-digest")]
+#[test]
+fn from_ds_ignores_uncomputable_digests() {
+    use crate::dnssec::DigestType;
+    use crate::rdata::Ds;
+
+    let zone = name("example");
+    let rrset = Rrset::new(zone.as_name(), Class::IN, [KSK, ZSK]);
+    let by_ksk = fake_rrsig(&zone, KSK, &zone, Rtype::DNSKEY);
+    let mut buf = scratch_buf();
+    let mut scratch = WireWriter::new(&mut buf);
+    let v = Fake::default();
+    let ksk = ZoneKey::new(zone.as_name(), KSK);
+    let sha256 = ksk.ds(DigestType::SHA256).unwrap();
+    let sha1 = ksk.ds(DigestType::SHA1).unwrap();
+    let (ds256, ds1) = (sha256.to_ds(), sha1.to_ds());
+    let tag = KSK.key_tag();
+    let other = |t: DigestType| Ds::new(tag, Algorithm::ED25519, t, &[0xab; 32]);
+
+    for t in [DigestType::GOST12, DigestType::SM3, DigestType::GOST] {
+        for ds in [[other(t), ds256], [ds256, other(t)], [ds1, other(t)]] {
+            assert!(
+                TrustedKeys::from_ds(&v, rrset, ds, [by_ksk], NOW, &mut scratch).is_ok(),
+                "{t:?} {:?}",
+                ds.map(|d| d.digest_type)
+            );
+        }
+        // Alone, it leaves no usable DS: insecure.
+        assert_eq!(
+            TrustedKeys::from_ds(&v, rrset, [other(t)], [by_ksk], NOW, &mut scratch).err(),
+            Some(Error::UnsupportedAlgorithm),
+            "{t:?}"
+        );
+    }
+
+    // A forged DNSKEY RRset whose key's tag matches an SM3 DS stays bogus.
+    let forged_key = [9u8; 32];
+    let forged = Dnskey::new(257, 3, Algorithm::ED25519, &forged_key);
+    let forged_set = Rrset::new(zone.as_name(), Class::IN, [forged]);
+    let by_forged = fake_rrsig(&zone, forged, &zone, Rtype::DNSKEY);
+    let sm3 = Ds::new(
+        forged.key_tag(),
+        Algorithm::ED25519,
+        DigestType::SM3,
+        &[0xab; 32],
+    );
+    assert_eq!(
+        TrustedKeys::from_ds(&v, forged_set, [sm3, ds256], [by_forged], NOW, &mut scratch).err(),
+        Some(Error::KeyMismatch)
+    );
+    assert!(scratch.is_empty());
+}
+
 #[cfg(feature = "dnssec-digest")]
 #[test]
 fn from_ds_work_is_bounded() {

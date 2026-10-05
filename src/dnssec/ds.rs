@@ -75,6 +75,16 @@ pub struct DsDigest {
 
 #[cfg(feature = "dnssec-digest")]
 impl DsDigest {
+    /// Whether [`compute`](Self::compute) supports `digest_type`: SHA-1,
+    /// SHA-256 and SHA-384. A DS of any other type is disregarded by the
+    /// chain of trust.
+    pub(crate) const fn supports(digest_type: DigestType) -> bool {
+        matches!(
+            digest_type,
+            DigestType::SHA1 | DigestType::SHA256 | DigestType::SHA384
+        )
+    }
+
     /// Computes the DS digest of `key`, owned by `owner`, with
     /// `digest_type` (RFC 4034 §5.1.4).
     ///
