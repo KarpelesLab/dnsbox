@@ -441,6 +441,75 @@ fn builder_padding() {
     assert_eq!(b.section(), Section::Additional);
 }
 
+/// Padding stops at the limit minus the reserve, so the room kept for a
+/// TSIG / SIG(0) record (or the OPT echo) is never taken, and the push
+/// does not fail for lack of it.
+#[test]
+fn builder_padding_respects_reserve() {
+    use crate::rdata::Null;
+    let name: NameBuf = "example.com".parse().unwrap();
+    for (policy, expect) in [
+        (PaddingPolicy::Maximal, 412),
+        (PaddingPolicy::BlockLength(468), 412),
+        (PaddingPolicy::QUERY, 128),
+    ] {
+        let mut buf = [0u8; 4096];
+        let mut b = MessageBuilder::new(&mut buf).unwrap();
+        b.set_limit(512);
+        b.push_question(&name, Rtype::AAAA, Class::IN).unwrap();
+        b.set_reserve(100);
+        b.push_edns_padded(OptHeader::new(1232), &(), policy)
+            .unwrap();
+        assert_eq!(b.len(), expect, "{policy:?}");
+        b.set_reserve(0);
+        assert!(b.remaining() >= 100);
+    }
+
+    // A response sized past the last 468-octet block below the limit.
+    let mut buf = [0u8; 1232];
+    let mut b = MessageBuilder::new(&mut buf).unwrap();
+    b.push_question(&name, Rtype::A, Class::IN).unwrap();
+    b.push_record(
+        Section::Answer,
+        &name,
+        Class::IN,
+        0,
+        &Null { data: &[0; 960] },
+    )
+    .unwrap();
+    b.set_reserve(100);
+    b.push_edns_padded(OptHeader::new(1232), &(), PaddingPolicy::RESPONSE)
+        .unwrap();
+    assert_eq!(b.len(), 1132);
+
+    // The server flow: start_response_edns reserves room for the OPT echo.
+    let mut qbuf = [0u8; 512];
+    let mut q = MessageBuilder::query(&mut qbuf, 1, &name, Rtype::A, Class::IN).unwrap();
+    q.push_edns(OptHeader::new(1232), &()).unwrap();
+    let query = Message::parse(q.finish()).unwrap();
+    for policy in [PaddingPolicy::Maximal, PaddingPolicy::RESPONSE] {
+        let mut buf = [0u8; 468];
+        let mut b = MessageBuilder::new(&mut buf).unwrap();
+        let opt = b.start_response_edns(&query, 1232).unwrap().unwrap();
+        b.push_edns_padded(opt, &(), policy).unwrap();
+        assert_eq!(b.len(), 468 - OPT_RR_OVERHEAD, "{policy:?}");
+        assert!(
+            Message::parse_validated(b.as_bytes())
+                .unwrap()
+                .edns()
+                .unwrap()
+                .is_some()
+        );
+        // Giving back the OPT reserve pads up to the limit.
+        let mut buf = [0u8; 468];
+        let mut b = MessageBuilder::new(&mut buf).unwrap();
+        let opt = b.start_response_edns(&query, 1232).unwrap().unwrap();
+        b.set_reserve(b.reserve() - OPT_RR_OVERHEAD);
+        b.push_edns_padded(opt, &(), policy).unwrap();
+        assert_eq!(b.len(), 468, "{policy:?}");
+    }
+}
+
 #[cfg(feature = "alloc")]
 #[test]
 fn vec_builder() {

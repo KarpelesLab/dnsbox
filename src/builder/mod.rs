@@ -529,8 +529,9 @@ impl<B: OutBuf> MessageBuilder<B> {
         self.effective_limit().saturating_sub(self.len())
     }
 
+    /// The limit minus the reserve: where pushes stop.
     #[inline]
-    fn effective_limit(&self) -> usize {
+    pub(crate) fn effective_limit(&self) -> usize {
         self.limit.saturating_sub(self.reserve)
     }
 

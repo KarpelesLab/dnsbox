@@ -22,7 +22,7 @@ const OPTION_HEADER: usize = 4;
 /// The padding length is chosen so that the whole message — header,
 /// sections, and the OPT record including the Padding option — reaches the
 /// target size. Padding never takes the message past the builder's size
-/// limit.
+/// limit, nor into its [reserve](MessageBuilder::set_reserve).
 ///
 /// RFC 8467 §4.1 recommends [`QUERY`](Self::QUERY) (block length 128) for
 /// queries and [`RESPONSE`](Self::RESPONSE) (block length 468) for
@@ -182,6 +182,14 @@ impl<B: OutBuf> MessageBuilder<B> {
     /// (RFC 8467 §3). Push this last (only a TSIG or SIG(0) signature
     /// should follow): anything added afterwards changes the padded size.
     ///
+    /// The size limit the policy pads up to is the builder's
+    /// [limit](Self::limit) minus its [reserve](Self::set_reserve), so the
+    /// room kept for a signature stays free. After
+    /// [`start_response_edns`](Self::start_response_edns), which reserves
+    /// [`OPT_RR_OVERHEAD`] octets for this very record, give them back
+    /// first (`set_reserve(reserve() - OPT_RR_OVERHEAD)`) to pad up to the
+    /// limit.
+    ///
     /// # Errors
     ///
     /// As [`push_edns`](Self::push_edns); with
@@ -213,7 +221,9 @@ impl<B: OutBuf> MessageBuilder<B> {
             .saturating_add(OPT_RR_OVERHEAD)
             .saturating_add(counter.0)
             .saturating_add(OPTION_HEADER);
-        let pad = policy.padding_len(unpadded, self.limit());
+        // Pushes stop at the limit minus the reserve (room kept for a
+        // TSIG / SIG(0) record): pad up to there, not into the reserve.
+        let pad = policy.padding_len(unpadded, self.effective_limit());
         let pad = u16::try_from(pad).map_err(|_| Error::BufferTooSmall)?;
         let data = Padded { options, pad };
         self.push_additional(Name::ROOT, header.class(), header.ttl(), &data)
