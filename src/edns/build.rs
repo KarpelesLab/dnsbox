@@ -251,7 +251,8 @@ impl<B: OutBuf> MessageBuilder<B> {
     /// # Errors
     ///
     /// The parse error if the query's OPT record is malformed or
-    /// duplicated ([`Error::DuplicateOpt`], [`Error::OptNotRoot`]: answer
+    /// duplicated or misplaced ([`Error::DuplicateOpt`],
+    /// [`Error::MisplacedOpt`], [`Error::OptNotRoot`]: answer
     /// FORMERR, RFC 6891 §6.1.1), and as
     /// [`start_response`](Self::start_response) otherwise. On error the
     /// builder is unchanged.

@@ -2,19 +2,20 @@
 
 use super::Edns;
 use crate::message::Message;
-use crate::{Error, Rcode, Result, Rtype};
+use crate::{Error, Rcode, Result, Rtype, Section};
 
 impl<'a> Message<'a> {
     /// The message's OPT record, decoded (RFC 6891 §6.1.1), or `None` if
-    /// the additional section has none.
+    /// the message has none. Walks every record once.
     ///
     /// # Errors
     ///
     /// [`Error::DuplicateOpt`] if there is more than one OPT record,
-    /// [`Error::OptNotRoot`] if its owner is not the root, the framing
-    /// error of a truncated option, or any error met while walking the
-    /// message up to and through the additional section. (RFC 6891 §7
-    /// asks responders to answer such queries with FORMERR.)
+    /// [`Error::MisplacedOpt`] if one is in the answer or authority
+    /// section, [`Error::OptNotRoot`] if its owner is not the root, the
+    /// framing error of a truncated option, or any error met while walking
+    /// the message. (RFC 6891 §6.1.1 and §7 ask responders to answer such
+    /// queries with FORMERR.)
     ///
     /// ```
     /// use dnsbox::{Class, Message, MessageBuilder, NameBuf, Rtype};
@@ -32,10 +33,15 @@ impl<'a> Message<'a> {
     /// ```
     pub fn edns(&self) -> Result<Option<Edns<'a>>> {
         let mut found = None;
-        for rr in self.additional() {
-            let rr = rr?;
+        for rr in self.records() {
+            let (section, rr) = rr?;
             if rr.rtype() != Rtype::OPT {
                 continue;
+            }
+            // RFC 6891 §6.1.1: the OPT pseudo-RR belongs in the additional
+            // data section; one anywhere else is malformed, not "no EDNS".
+            if section != Section::Additional {
+                return Err(Error::MisplacedOpt);
             }
             if found.is_some() {
                 return Err(Error::DuplicateOpt);

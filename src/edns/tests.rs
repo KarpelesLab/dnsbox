@@ -280,6 +280,33 @@ fn message_edns() {
     let msg = Message::parse_validated(&wire).unwrap();
     assert_eq!(msg.edns().unwrap_err(), Error::OptNotRoot);
 
+    // An OPT record outside the additional section (RFC 6891 §6.1.1), alone
+    // or besides a proper one, is malformed, not "no EDNS".
+    for section in [Section::Answer, Section::Authority] {
+        for with_proper in [false, true] {
+            let wire = message_with(|b| {
+                b.push_record(
+                    section,
+                    crate::Name::ROOT,
+                    Class::new(1232),
+                    0x8000,
+                    &Opt::EMPTY,
+                )
+                .unwrap();
+                if with_proper {
+                    b.push_edns(OptHeader::new(4096), &()).unwrap();
+                }
+            });
+            let msg = Message::parse_validated(&wire).unwrap();
+            assert_eq!(msg.edns().unwrap_err(), Error::MisplacedOpt, "{section:?}");
+            assert_eq!(msg.effective_rcode(), Err(Error::MisplacedOpt));
+            let mut buf = [0u8; 512];
+            let mut b = MessageBuilder::new(&mut buf).unwrap();
+            assert_eq!(b.start_response_edns(&msg, 1232), Err(Error::MisplacedOpt));
+            assert_eq!((b.len(), b.reserve()), (12, 0));
+        }
+    }
+
     // OPT among other additional records; an A record is not an OPT.
     let wire = message_with(|b| {
         let rr = crate::rdata::A::new([192, 0, 2, 1].into());

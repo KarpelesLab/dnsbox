@@ -660,7 +660,7 @@ src/edns/
                 raw_options() / options() / find() / get::<T>() / validate()
   record.rs     OptHeader (UDP size, extended RCODE, version, EdnsFlags with
                 DO/CO and the Z bits preserved) <-> CLASS/TTL; Edns<'a> view
-  message.rs    Message::edns() (DuplicateOpt / OptNotRoot), effective_rcode()
+  message.rs    Message::edns() (DuplicateOpt / MisplacedOpt / OptNotRoot), effective_rcode()
   compose.rs    ComposeOptions (one option, [T], [T; N], tuples, (), Opt
                 echo), OptData (compose-only OPT RDATA)
   build.rs      MessageBuilder::push_edns / push_edns_padded, PaddingPolicy

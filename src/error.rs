@@ -151,6 +151,9 @@ pub enum Error {
     DuplicateOpt,
     /// An OPT record's owner name is not the root (RFC 6891 §6.1.2).
     OptNotRoot,
+    /// An OPT record outside the additional section (RFC 6891 §6.1.1).
+    /// Servers answer FORMERR.
+    MisplacedOpt,
 
     /// A TSIG or SIG(0) record is not the last record of the additional
     /// section, or appears more than once (RFC 8945 §5.1, RFC 2931 §3).
@@ -243,6 +246,7 @@ impl fmt::Display for Error {
             Error::InvalidOption => "malformed EDNS option",
             Error::DuplicateOpt => "more than one OPT record",
             Error::OptNotRoot => "OPT record owner is not the root",
+            Error::MisplacedOpt => "OPT record outside the additional section",
             Error::MisplacedSignature => "TSIG/SIG(0) record is not last in the message",
             Error::BadMacSize => "invalid TSIG MAC size",
             Error::BadKey => "unknown TSIG key or algorithm",
