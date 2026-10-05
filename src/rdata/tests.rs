@@ -247,8 +247,34 @@ fn type_bitmaps() {
         b"\x00\x02\x40",             // truncated bitmap
         b"\x01\x01\x40\x00\x01\x40", // windows out of order
         b"\x01\x01\x40\x01\x01\x40", // duplicate window
+        // RFC 4034 §4.1.2: "Blocks with no types present MUST NOT be
+        // included. Trailing zero octets in the bitmap MUST be omitted."
+        b"\x00\x02\x40\x00",         // trailing zero octet
+        b"\x00\x01\x00",             // window with no type
+        b"\x00\x01\x40\x01\x01\x00", // trailing empty window
+        b"\x00\x01\x00\x01\x01\x40", // leading empty window
     ] {
         assert_eq!(TypeBitmap::new(bad), Err(Error::InvalidRdata), "{bad:?}");
+    }
+    let mut all_zero = std::vec![0u8, 32];
+    all_zero.extend_from_slice(&[0; 32]);
+    assert_eq!(TypeBitmap::new(&all_zero), Err(Error::InvalidRdata));
+
+    // So every type set has one encoding, for each record type sharing it.
+    for (rtype, rdata) in [
+        (Rtype::NSEC, &b"\x01a\x00\x00\x02\x40\x00"[..]),
+        (Rtype::NSEC, b"\x01a\x00\x00\x01\x40\x01\x01\x00"),
+        (
+            Rtype::NSEC3,
+            b"\x01\x00\x00\x00\x00\x01\xaa\x00\x02\x40\x00",
+        ),
+        (Rtype::CSYNC, b"\x00\x00\x00\x01\x00\x03\x00\x02\x40\x00"),
+    ] {
+        assert_eq!(
+            parse(rtype, Class::IN, rdata).err(),
+            Some(Error::InvalidRdata),
+            "{rtype} {rdata:?}"
+        );
     }
 }
 

@@ -7,8 +7,8 @@ use crate::wire::{Composer, WireReader};
 use crate::{Error, Result, Rtype};
 
 /// A validated type bitmap: a sequence of `(window, length, bitmap)` blocks
-/// with strictly increasing window numbers and lengths 1–32
-/// (RFC 4034 §4.1.2). An empty bitmap is valid (RFC 5155 §3.2.1 allows it).
+/// with strictly increasing window numbers, lengths 1–32 and no trailing
+/// zero octets (RFC 4034 §4.1.2). An empty bitmap is valid (RFC 5155 §3.2.1 allows it).
 ///
 /// ```
 /// use dnsbox::rdata::TypeBitmap;
@@ -31,7 +31,9 @@ impl<'a> TypeBitmap<'a> {
     /// # Errors
     ///
     /// [`Error::InvalidRdata`] for windows out of order, a block length
-    /// outside 1–32, or a truncated block.
+    /// outside 1–32, a truncated block, or a block whose last octet is zero
+    /// (a block with no type, or trailing zero octets, both of which
+    /// RFC 4034 §4.1.2 forbids).
     pub fn new(wire: &'a [u8]) -> Result<Self> {
         let mut rest = wire;
         let mut last: Option<u8> = None;
@@ -40,7 +42,14 @@ impl<'a> TypeBitmap<'a> {
                 return Err(Error::InvalidRdata);
             }
             last = Some(*window);
-            rest = tail.get(*len as usize..).ok_or(Error::InvalidRdata)?;
+            let (bits, next) = tail.split_at_checked(*len as usize).ok_or(Error::InvalidRdata)?;
+            // RFC 4034 §4.1.2: trailing zero octets are omitted and empty
+            // blocks left out, so a block never ends in a zero octet (one
+            // encoding per type set).
+            if bits.last() == Some(&0) {
+                return Err(Error::InvalidRdata);
+            }
+            rest = next;
         }
         if !rest.is_empty() {
             return Err(Error::InvalidRdata);
