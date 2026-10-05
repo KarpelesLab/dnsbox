@@ -508,11 +508,14 @@ impl<'a, R: IncludeResolver> Records<'a, R> {
             let mut r = ZoneReader::resume(frame.text.as_bytes(), state, self.limits, self.records);
             let res = r.next_entry(&mut self.buf);
             self.records = r.records;
+            // No early return before the state is put back: the file must
+            // go on after a faulty entry, not restart from the top.
             let step = match res {
-                Ok(Some(e)) => Ok(Some(Step::from_entry(e, r.state())?)),
+                Ok(Some(e)) => Step::from_entry(e, r.state()).map(Some),
                 Ok(None) => Ok(None),
-                Err(e) => Err(e.in_file(&frame.name)),
-            };
+                Err(e) => Err(e),
+            }
+            .map_err(|e| e.in_file(&frame.name));
             frame.state = r.into_state();
             return step;
         }

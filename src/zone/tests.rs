@@ -196,6 +196,56 @@ fn rfc1035_example_zone_with_include() {
     );
 }
 
+/// A malformed `$INCLUDE` path inside an included file is one error, in
+/// that file: the file then goes on where it was, with its own origin
+/// (it used to restart from the top, forever).
+#[cfg(feature = "alloc")]
+#[test]
+fn bad_include_path_in_included_file() {
+    let resolver = |inner: &'static str| {
+        move |path: &str| {
+            if path == "inc.db" {
+                Ok(inner.to_string())
+            } else {
+                Err(Error::BadInclude)
+            }
+        }
+    };
+    for bad in ["\\255", "\\256", "\\1"] {
+        let inner: &'static str =
+            format!("www 60 A 192.0.2.1\n$INCLUDE {bad}\nmail 60 A 192.0.2.2\n").leak();
+        let items: Vec<_> = ZoneReader::new("$ORIGIN example.\n$INCLUDE inc.db sub\n")
+            .records()
+            .with_includes(resolver(inner))
+            .take(10)
+            .collect();
+        assert_eq!(items.len(), 3, "{bad}: {items:?}");
+        assert_eq!(
+            items[0].as_ref().unwrap().to_string(),
+            "www.sub.example. 60 IN A 192.0.2.1"
+        );
+        let err = items[1].as_ref().unwrap_err();
+        assert_eq!(
+            (err.error(), err.line(), err.file()),
+            (Error::InvalidText, 2, Some("inc.db")),
+            "{bad}"
+        );
+        assert_eq!(
+            items[2].as_ref().unwrap().to_string(),
+            "mail.sub.example. 60 IN A 192.0.2.2"
+        );
+
+        // A file holding nothing but the bad directive ends too.
+        let inner: &'static str = format!("$INCLUDE {bad}\n").leak();
+        let n = ZoneReader::new("$INCLUDE inc.db\n")
+            .records()
+            .with_includes(resolver(inner))
+            .take(10)
+            .count();
+        assert_eq!(n, 1, "{bad}");
+    }
+}
+
 /// `\# <length> <hex>` for `wire`.
 fn generic(wire: &[u8]) -> String {
     let mut s = String::new();
