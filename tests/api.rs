@@ -80,6 +80,7 @@ fn send_and_sync() {
     send_sync::<Frames<'static>>();
     send_sync::<TsigRecord<'static>>();
     send_sync::<TkeyRecord<'static>>();
+    send_sync::<dnsbox::tkey::DhKey<'static>>();
     send_sync::<MacBuf>();
     send_sync::<Sig0Record<'static>>();
     send_sync::<ZoneKey<'static>>();
@@ -116,6 +117,13 @@ fn send_and_sync() {
     }
     #[cfg(feature = "tsig")]
     send_sync::<dnsbox::tsig::HmacKey<'static>>();
+    #[cfg(feature = "tkey")]
+    {
+        send_sync::<dnsbox::tkey::DhGroup>();
+        send_sync::<dnsbox::tkey::DhKeyPair>();
+        send_sync::<dnsbox::tkey::KeyGrant<'static>>();
+        send_sync::<dnsbox::tkey::SharedKey>();
+    }
 }
 
 fn common<T: Clone + core::fmt::Debug + PartialEq + Eq + core::hash::Hash>() {}
@@ -163,6 +171,8 @@ fn common_traits() {
     common::<Nsec3Limits>();
     common::<Timestamp>();
     common::<RsaPublicKey<'static>>();
+    common::<dnsbox::tkey::DhKey<'static>>();
+    common::<dnsbox::tkey::DhPrime<'static>>();
     common::<Denial>();
     common::<BogusReason>();
     common::<InsecureReason>();

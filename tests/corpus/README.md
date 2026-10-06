@@ -119,7 +119,7 @@ and its denial proof gives the expected status.
 
 ## dnspython 2.8 (`dnspython/`)
 
-- `gen_rdata.py` → `rdata.txt`: 139 examples covering every record type
+- `gen_rdata.py` → `rdata.txt`: 142 examples covering every record type
   dnspython implements, as dnspython's text and wire forms. dnsbox reads
   the text to the same wire, and displays the wire as dnspython does
   (up to spacing, quoting and hex case, and the listed style
@@ -318,6 +318,7 @@ the NSAP-PTR name as a quoted string, and cannot read A6, ATMA, AVC,
 NINFO, NXT, RKEY, SINK or TA; BIND refuses MD and MF as obsolete.
 
 TKEY has no zone-file form, and dnsbox writes BIND's text for it (with
-the key and other data sizes), which dnspython does not read (nor does
-dnsbox read dnspython's); `interop_dnspython.rs` pins dnsbox's text for
-those examples and `gen_rdata.py --check` skips them.
+the key and other data sizes), which dnspython does not read; dnsbox reads
+both BIND's and dnspython's form, so dnspython's TKEY text is checked like
+any other type's, `interop_dnspython.rs` pins dnsbox's display of those
+examples, and `gen_rdata.py --check` skips them.

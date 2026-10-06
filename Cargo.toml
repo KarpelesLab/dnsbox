@@ -34,6 +34,11 @@ cookie-siphash = ["dep:purecrypto", "purecrypto/mac"]
 # from purecrypto. The TSIG wire format, MAC input construction and the
 # pluggable `TsigKey`/`TsigMac` traits work without it.
 tsig = ["dep:purecrypto", "purecrypto/hash"]
+# TKEY (RFC 2930) key agreement producing TSIG keys: Diffie-Hellman exchanged
+# keying (RFC 2539 groups, MD5 mixing) and RSA-encrypted server/resolver
+# assigned keying, from purecrypto. The TKEY messages, the deletion mode and the
+# RFC 2539 KEY format work without it. Implies `alloc` and `tsig`.
+tkey = ["alloc", "tsig", "dep:purecrypto", "purecrypto/alloc", "purecrypto/hash", "purecrypto/dh", "purecrypto/rsa"]
 # serde Serialize/Deserialize (no_std) for the protocol-number newtypes, names,
 # header flags and, with `alloc`, the owned message types.
 serde = ["dep:serde"]

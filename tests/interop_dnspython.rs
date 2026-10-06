@@ -66,14 +66,15 @@ fn examples() -> Vec<Example> {
 }
 
 /// Types whose text form differs between dnspython and BIND, where dnsbox
-/// follows BIND: dnspython writes TKEY (which has no zone-file form) without
-/// the key and other data sizes. Neither tool reads the other's form, and
-/// dnsbox cannot misread dnspython's (a base64 key is not a size).
+/// writes BIND's: dnspython writes TKEY (which has no zone-file form)
+/// without the key and other data sizes, and reads only that form. dnsbox
+/// reads both, so dnspython's text is checked like any other
+/// ([`dnspython_text_to_dnsbox_wire`]), but dnspython does not read
+/// dnsbox's display back (`gen_rdata.py --check` skips these types).
 const TEXT_DIFFERS: &[Rtype] = &[Rtype::TKEY];
 
 /// dnsbox's display of the [`TEXT_DIFFERS`] examples: (dnspython text,
-/// dnsbox text). dnspython does not read these back (`gen_rdata.py
-/// --check` skips them).
+/// dnsbox text).
 const BIND_STYLE: &[(&str, &str)] = &[
     (
         "gss-tsig. 1791104299 1791107899 3 0 AAEC",
@@ -82,6 +83,18 @@ const BIND_STYLE: &[(&str, &str)] = &[
     (
         "hmac-sha256. 1791104299 1791107899 2 17 AAEC AQID",
         "hmac-sha256. 1791104299 1791107899 2 BADKEY 3 AAEC 3 AQID",
+    ),
+    (
+        "hmac-md5.sig-alg.reg.int. 1791104299 1791190699 2 0 ESIzRFVmd4iZqrvM3e7/AA==",
+        "hmac-md5.sig-alg.reg.int. 1791104299 1791190699 2 NOERROR 16 ESIzRFVmd4iZqrvM3e7/AA== 0",
+    ),
+    (
+        "server.example. 1791104299 1791107899 1 0 12345678",
+        "server.example. 1791104299 1791107899 1 NOERROR 6 12345678 0",
+    ),
+    (
+        "gss-tsig. 0 0 3 0 YGFiY2RlZmdoaWprbG1ub3BxcnN0dXZ3eHl6e3x9fn+AgYKDhIWGhw== AQIDBAUGBwg=",
+        "gss-tsig. 0 0 3 NOERROR 40 YGFiY2RlZmdoaWprbG1ub3BxcnN0dXZ3eHl6e3x9fn+AgYKDhIWGhw== 8 AQIDBAUGBwg=",
     ),
 ];
 
@@ -143,7 +156,7 @@ fn covers_every_type() {
 fn dnspython_text_to_dnsbox_wire() {
     let mut failures = String::new();
     for e in examples() {
-        if TEXT_DIFFERS.contains(&e.rtype) || !RData::is_known(e.rtype) || e.class != Class::IN {
+        if !RData::is_known(e.rtype) || e.class != Class::IN {
             // dnsbox has no presentation format for these, or another
             // one: dnspython's typed text is rejected, the generic form is
             // not.
@@ -207,6 +220,15 @@ fn dnspython_wire_to_dnsbox_text() {
             assert!(shown.starts_with("\\# "), "{shown}");
             continue;
         }
+        // Every example of a type whose text differs has its BIND-style
+        // display pinned.
+        assert_eq!(
+            TEXT_DIFFERS.contains(&e.rtype),
+            BIND_STYLE.iter().any(|(theirs, _)| *theirs == e.text),
+            "{} {}",
+            e.rtype,
+            e.text
+        );
         let expected = STYLE
             .iter()
             .chain(BIND_STYLE)

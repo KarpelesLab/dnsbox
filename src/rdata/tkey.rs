@@ -58,8 +58,9 @@ open_enum! {
 /// Key Size | Key Data | Other Size | Other Data
 /// ```
 ///
-/// TKEY has no zone-file form; its text is BIND's, with the sizes written
-/// before the base64 data (which is absent when the size is 0):
+/// TKEY has no zone-file form. Its text is BIND's, with the sizes written
+/// before the base64 data (which is absent when the size is 0); dnspython's
+/// form, without the sizes, is read too:
 ///
 /// ```
 /// use dnsbox::rdata::{ParseRdataText, Tkey, TkeyMode, TsigRcode};
@@ -74,6 +75,10 @@ open_enum! {
 /// assert!(tkey.other.is_empty());
 /// assert!(tkey.is_valid_at(1_700_000_100));
 /// assert_eq!(tkey.to_string(), "gss-tsig. 1700000000 1700003600 3 NOERROR 3 AAEC 0");
+///
+/// // dnspython writes the same record without the sizes.
+/// let mut buf2 = [0u8; 64];
+/// assert_eq!(Tkey::from_text("gss-tsig. 1700000000 1700003600 3 0 AAEC", &mut buf2)?, tkey);
 /// # Ok::<(), dnsbox::Error>(())
 /// ```
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
@@ -166,23 +171,70 @@ impl<'a> Tkey<'a> {
 }
 
 impl ParseRdataText for Tkey<'_> {
-    /// `<algorithm> <inception> <expiration> <mode> <error> <key size>
-    /// [<key data>] <other size> [<other data>]`, the layout BIND uses
-    /// (TKEY has no zone-file form; RFC 2930 §2 gives the fields). The
-    /// times are decimal seconds (or `YYYYMMDDHHmmSS`), the mode a number
-    /// or a [`TkeyMode`] mnemonic, the error a mnemonic (`BADMODE`),
-    /// `RCODEnnn` or a number; the key and other data are base64 of
-    /// exactly the stated size, possibly split into several tokens, and
-    /// absent when the size is 0.
+    /// `<algorithm> <inception> <expiration> <mode> <error>` followed by
+    /// the key and other data in either of the two forms in use (TKEY has
+    /// no zone-file form; RFC 2930 §2 gives the fields):
+    ///
+    /// - BIND's (what `Display` writes): `<key size> [<key data>] <other
+    ///   size> [<other data>]`, the data base64 of exactly the stated
+    ///   size, possibly split into several tokens, and absent when the
+    ///   size is 0;
+    /// - dnspython's: `[<key data> [<other data>]]`, the key one base64
+    ///   token, the other data base64 over the remaining tokens.
+    ///
+    /// The times are decimal seconds (or `YYYYMMDDHHmmSS`), the mode a
+    /// number or a [`TkeyMode`] mnemonic, the error a mnemonic
+    /// (`BADMODE`), `RCODEnnn` or a number. Text that reads both ways
+    /// (possible only when the base64 tokens are all digits, as in
+    /// `0000 0000`) is read as BIND's form.
     fn parse_text<B: OutBuf + ?Sized>(s: &mut Scanner<'_>, out: &mut B) -> Result<()> {
         s.name_into(out, NameEncoding::Plain)?;
         out.put_u32(s.timestamp()?)?;
         out.put_u32(s.timestamp()?)?;
         out.put_u16(s.parse::<TkeyMode>()?.get())?;
         out.put_u16(tsig_error_code(s)?)?;
-        sized_base64_into(s, out)?;
-        sized_base64_into(s, out)
+        let (start, saved) = (out.as_bytes().len(), s.clone());
+        let bind = sized_base64_into(s, out)
+            .and_then(|()| sized_base64_into(s, out))
+            .and_then(|()| match s.is_at_end()? {
+                true => Ok(()),
+                false => Err(Error::InvalidText),
+            });
+        let Err(bind_error) = bind else {
+            return Ok(());
+        };
+        // BIND's form starts with a decimal size; report its error when
+        // the text looks like it and does not read as dnspython's either.
+        let sized = saved
+            .clone()
+            .next_token()
+            .ok()
+            .flatten()
+            .is_some_and(|t| !t.is_quoted() && t.as_bytes().iter().all(u8::is_ascii_digit));
+        *s = saved;
+        out.truncate(start);
+        unsized_base64_into(s, out).map_err(|e| if sized { bind_error } else { e })
     }
+}
+
+/// dnspython's key and other data: one base64 token, then base64 over
+/// the remaining tokens, each written after its 16-bit size; nothing at
+/// all for empty key and other data.
+fn unsized_base64_into<B: OutBuf + ?Sized>(s: &mut Scanner<'_>, out: &mut B) -> Result<()> {
+    for rest in [false, true] {
+        let at = out.as_bytes().len();
+        out.put_u16(0)?;
+        let n = if rest {
+            s.base64_rest_into(out)?
+        } else if s.is_at_end()? {
+            0
+        } else {
+            s.base64_into(out)?
+        };
+        let n = u16::try_from(n).map_err(|_| Error::InvalidText)?;
+        out.patch(at, &n.to_be_bytes())?;
+    }
+    Ok(())
 }
 
 impl<'a> ParseRdata<'a> for Tkey<'a> {
@@ -382,6 +434,47 @@ mod tests {
     }
 
     #[test]
+    fn dnspython_form() {
+        // dnspython 2.8 writes the key and other data without their sizes
+        // (`to_text`: `"%s %u %u %u %u %s"` and the other data if any) and
+        // reads them back as one base64 token and the remaining ones.
+        text_round_trip(
+            Rtype::TKEY,
+            "gss-tsig. 1791104299 1791107899 3 0 AAEC",
+            &hex(GSS),
+            "gss-tsig. 1791104299 1791107899 3 NOERROR 3 AAEC 0",
+        );
+        text_round_trip(
+            Rtype::TKEY,
+            "hmac-sha256. 1791104299 1791107899 2 17 AAEC AQID",
+            &hex(DH),
+            "hmac-sha256. 1791104299 1791107899 2 BADKEY 3 AAEC 3 AQID",
+        );
+        // The other data split over several tokens.
+        assert_eq!(
+            text_parse(Rtype::TKEY, "hmac-sha256. 1791104299 1791107899 2 17 AAEC AQ ID").as_deref(),
+            Ok(&hex(DH)[..])
+        );
+        // Without key data (dnspython writes a trailing blank then, and
+        // cannot read it back; dnsbox reads it as empty key and other
+        // data).
+        let empty = "gss-tsig. 1791104299 1791107899 3 BADKEY 0 0";
+        assert_eq!(
+            text_parse(Rtype::TKEY, "gss-tsig. 1791104299 1791107899 3 17 "),
+            text_parse(Rtype::TKEY, empty)
+        );
+        // A key of digits only that is not a size BIND's form can use.
+        let digits = text_parse(Rtype::TKEY, "gss-tsig. 1 2 3 0 12345678").unwrap();
+        assert_eq!(digits.get(22..), Some(&[0, 6, 0xd7, 0x6d, 0xf8, 0xe7, 0xae, 0xfc, 0, 0][..]));
+        // Ambiguous text reads as BIND's form: two sizes of 0, not two
+        // three-octet values.
+        let both = text_parse(Rtype::TKEY, "gss-tsig. 1 2 3 0 0000 0000").unwrap();
+        assert_eq!(both, text_parse(Rtype::TKEY, "gss-tsig. 1 2 3 0 0 0").unwrap());
+        // BIND's form with data left over is not taken for dnspython's.
+        assert_eq!(text_error(Rtype::TKEY, "gss-tsig. 1 2 3 0 0 0 AA=="), Error::InvalidText);
+    }
+
+    #[test]
     fn text() {
         // Relative algorithm (origin `example.`), split base64, mnemonics
         // for the mode and the error, date-form times.
@@ -417,13 +510,18 @@ mod tests {
             (" 1 AA==", " 0 AA==", Error::InvalidText),
             (" 1 AA==", " 1 \"AA==\"", Error::InvalidText),
             (" 1 AA==", "", Error::UnexpectedEof),
-            // dnspython's form, without the sizes.
-            (" 2 AAA= 1 AA==", " AAEC", Error::InvalidText),
+            // Neither BIND's form nor dnspython's: the error of the form
+            // the text starts like.
+            (" 2 AAA= 1 AA==", " AAE", Error::InvalidText),
+            (" 2 AAA= 1 AA==", " 2 AAA= 1", Error::UnexpectedEof),
+            (" 2 AAA= 1 AA==", " AAEC AQI", Error::InvalidText),
+            (" 2 AAA= 1 AA==", " \"AAEC\"", Error::InvalidText),
         ] {
             let bad = ok.replacen(from, to, 1);
             assert_eq!(text_error(Rtype::TKEY, &bad), err, "{bad}");
         }
         assert_eq!(text_error(Rtype::TKEY, "gss-tsig. 1 2"), Error::UnexpectedEof);
+        assert_eq!(text_error(Rtype::TKEY, "gss-tsig. 1 2 3"), Error::UnexpectedEof);
         // The generic form (RFC 3597 §5) works too.
         assert_eq!(
             text_parse(Rtype::TKEY, &std::format!("\\# 29 {GSS}")).as_deref(),

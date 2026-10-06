@@ -851,6 +851,40 @@ pub fn edns(data: &[u8]) {
     }
 }
 
+/// TKEY (RFC 2930): the request/answer/deletion readers agree with each
+/// other, KEY iteration ends, and RFC 2539 Diffie-Hellman keys re-encode
+/// to their octets when written in the shortest form.
+fn check_tkey(msg: &Message<'_>) {
+    use dnsbox::tkey;
+    if let Ok(r) = tkey::find_request(msg) {
+        assert!(!msg.flags().qr());
+        assert!(matches!(r.section, Section::Answer | Section::Additional));
+        assert_eq!(tkey::find(msg), Ok(Some(r)));
+    }
+    if let Ok(a) = tkey::find_answer(msg) {
+        assert!(msg.flags().qr() && a.section == Section::Answer);
+    }
+    if let Ok(Some(d)) = tkey::find_deletion(msg) {
+        assert_eq!(d.data.mode, dnsbox::rdata::TkeyMode::KEY_DELETION);
+    }
+    for section in [Section::Answer, Section::Authority, Section::Additional] {
+        for key in tkey::keys(msg, section) {
+            let Ok((_, key)) = key else { break };
+            if let Ok(dh) = tkey::DhKey::parse(key.public_key) {
+                let mut buf = std::vec![0u8; key.public_key.len()];
+                let mut w = WireWriter::new(&mut buf);
+                dh.compose(&mut w).expect("a parsed DH key composes");
+                let out = w.as_bytes();
+                assert_eq!(out.len(), dh.wire_len());
+                if out.len() == key.public_key.len() {
+                    assert_eq!(out, key.public_key);
+                }
+                let _ = (dh.group(), dh.same_group(&dh));
+            }
+        }
+    }
+}
+
 /// The higher-level views over a parsed message must never panic, and
 /// their accessors must agree with the message.
 fn check_protocol_views(msg: &Message<'_>, data: &[u8]) {
@@ -887,6 +921,7 @@ fn check_protocol_views(msg: &Message<'_>, data: &[u8]) {
     if let Ok(n) = dnsbox::notify::NotifyMessage::new(*msg) {
         let _ = (n.soa(), n.serial());
     }
+    check_tkey(msg);
     if let Some(Ok(q)) = msg.questions().next() {
         for mut p in [
             dnsbox::xfr::XfrProcessor::axfr(q.name()),

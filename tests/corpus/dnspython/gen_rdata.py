@@ -34,9 +34,12 @@ import dns.version
 HERE = os.path.dirname(os.path.abspath(__file__))
 
 # Types whose text form differs between dnspython and BIND, where dnsbox
-# writes BIND's: dnspython cannot read dnsbox's display of these (TKEY has
-# no zone-file form; BIND writes the key and other data sizes, dnspython
-# does not). tests/interop_dnspython.rs pins dnsbox's text for them.
+# writes BIND's: dnspython cannot read dnsbox's display of these, so the
+# check below skips them (TKEY has no zone-file form; BIND writes the key
+# and other data sizes, dnspython does not). dnsbox reads both forms, so
+# the other direction, dnspython's text read by dnsbox, is checked for
+# these types too (tests/interop_dnspython.rs, which also pins dnsbox's
+# text for them).
 TEXT_DIFFERS = {"TKEY"}
 
 B64_KEY = (
@@ -209,7 +212,7 @@ EXAMPLES = [
     ("TSIG", "hmac-sha256. 1791104299 300 32 " + "A" * 43 + "= 4660 NOERROR 0"),
     ("TSIG", "hmac-md5.sig-alg.reg.int. 1791104299 300 16 AAAAAAAAAAAAAAAAAAAAAA== 1 BADTIME 6 AABqwhUr"),
     # RFC 8777, RFC 9859, RFC 2930 (TKEY: dnspython writes no key/other
-    # sizes, dnsbox writes BIND's form; see TEXT_DIFFERS)
+    # sizes, dnsbox reads that and writes BIND's form; see TEXT_DIFFERS)
     ("AMTRELAY", "0 0 0 ."),
     ("AMTRELAY", "128 1 1 203.0.113.15"),
     ("AMTRELAY", "10 0 2 2001:db8::15"),
@@ -217,6 +220,12 @@ EXAMPLES = [
     ("DSYNC", "CDS 1 5359 cds-scanner.example.net."),
     ("TKEY", "gss-tsig. 1791104299 1791107899 3 0 AAEC"),
     ("TKEY", "hmac-sha256. 1791104299 1791107899 2 17 AAEC AQID"),
+    # A BIND-style 16-octet Diffie-Hellman nonce; a key whose base64 is all
+    # digits (dnsbox must not take it for BIND's key size); GSS-API
+    # zero times with a long token and other data.
+    ("TKEY", "hmac-md5.sig-alg.reg.int. 1791104299 1791190699 2 0 ESIzRFVmd4iZqrvM3e7/AA=="),
+    ("TKEY", "server.example. 1791104299 1791107899 1 0 12345678"),
+    ("TKEY", "gss-tsig. 0 0 3 0 YGFiY2RlZmdoaWprbG1ub3BxcnN0dXZ3eHl6e3x9fn+AgYKDhIWGhw== AQIDBAUGBwg="),
     ("A", "chaos.example. 1234", "CH"),
 ]
 

@@ -82,7 +82,12 @@ src/
                   adapters over the DNSSEC Signer/Verifier (`alloc`)
   update.rs       dynamic UPDATE (RFC 2136): UpdateBuilder, UpdateMessage
   notify.rs       NOTIFY (RFC 1996)
-  tkey.rs         TKEY (RFC 2930) query/response shapes, find
+  tkey/           TKEY (RFC 2930): mod.rs messages (query/response shapes,
+                  find_request/find_answer, KEY lookup, deletion mode);
+                  dh.rs RFC 2539 Diffie-Hellman KEY format and well-known
+                  groups; exchange.rs DhGroup, DhKeyPair, SharedKey and the
+                  §4.1 keying material [tkey]; assign.rs RSA server/resolver
+                  assigned keying [tkey]; tests.rs
   xfr.rs, xfr/    AXFR/IXFR (RFC 5936, RFC 1995): queries, XfrProcessor
   dso.rs          DNS Stateful Operations (RFC 8490): TLVs, DsoBuilder
   zone/           presentation format and master files (RFC 1035 §5):
@@ -1011,6 +1016,7 @@ with explicit `dep:` syntax:
 | `dnssec`         | `hash`, `alloc`, `rsa`, `ec` | RRSIG/SIG(0) verification and signing (`PurecryptoVerifier`, `SigningKey`) |
 | `tsig`           | `hash`                      | TSIG HMAC backend (`HmacKey`) |
 | `cookie-siphash` | `mac`                       | RFC 9018 server cookies (`ServerCookie::generate` / `verify`) |
+| `tkey`           | `hash`, `alloc`, `dh`, `rsa` (implies `tsig`) | TKEY key agreement (`tkey::DhKeyPair`, server/resolver assigned keying), TSIG keys (`tkey::SharedKey`) |
 
 Every crypto-using API sits behind a trait (`dnssec::{Signer, Verifier}`,
 `tsig::{TsigKey, TsigMac}`, `sig0::{Sig0Signer, Sig0Verifier}`) so other
@@ -1108,11 +1114,31 @@ src/dnssec/
   `Signer` / `Verifier`, so with the `dnssec` feature SIG(0) gets RSA,
   ECDSA and EdDSA from purecrypto.
 - **TKEY** (`tkey`): `build_query` (question `key TKEY ANY`, the TKEY
-  record in the additional section, RD clear), `build_response` (TKEY in
-  the answer section, error responses via `Tkey::with_error`) and `find`.
-  The record data (`rdata::Tkey`, `TkeyMode`) shares `TsigRcode` and the
-  sized-base64 text helpers with TSIG. Key agreement itself (DH, GSS-API)
-  is out of scope.
+  record in the additional section, RD clear), `build_query_with_key`
+  (plus a KEY, for §4.1/§4.4/§4.5), `build_response` (TKEY in the answer
+  section, error responses via `Tkey::with_error`); `find_request` and
+  `find_answer` enforce the message rules (one TKEY, its section and
+  owner; `Error::InvalidTkey` is FORMERR), `keys` lists a section's KEYs.
+  Key deletion (§4.2, §5.1) needs no crypto: `build_deletion_query`,
+  `build_deletion_response`, `push_deletion_notice`, `find_deletion`.
+  `DhKey` reads and writes the RFC 2539 KEY format (well-known groups 1, 2
+  and BIND's 3) without crypto. With the `tkey` feature: `DhGroup` /
+  `DhKeyPair` (`build_query`, `respond`, `complete`) do Diffie-Hellman
+  exchanged keying (§4.1: the peer's group must equal the local one, so a
+  peer never makes us validate a prime; one Diffie-Hellman computation per
+  call; the DH value without leading zeros, as BIND, mixed with MD5 by
+  `dh_keying_material`), and RSAES-PKCS1-v1_5 under a KEY (§6, implicit
+  rejection on decryption, at most `MAX_ENCRYPTED_BLOCKS` blocks) gives
+  server assigned (`respond_server_assigned`, `server_assigned_key`) and
+  resolver assigned keying (`build_resolver_assigned_query`,
+  `accept_resolver_assigned`, `resolver_assigned_key`). Every helper
+  returns a `SharedKey` (name, algorithm, validity, wiped secret,
+  `hmac_key()`). Signing and verifying the TKEY messages is the caller's
+  (TSIG or SIG(0), §3). GSS-API (§4.3, RFC 3645) is out of scope: the
+  messages carry its tokens, but the mechanism and `gss-tsig` MICs are
+  not provided. The record data (`rdata::Tkey`, `TkeyMode`) shares
+  `TsigRcode` and the sized-base64 text helpers with TSIG; its text reads
+  both BIND's form (with sizes, the `Display` form) and dnspython's.
 - **UPDATE** (`update`): section aliases `ZONE`, `PREREQUISITE`,
   `UPDATE`, `ADDITIONAL`; `UpdateBuilder` has one method per RFC 2136
   §2.4/§2.5 form; `UpdateMessage` classifies prerequisites and updates and

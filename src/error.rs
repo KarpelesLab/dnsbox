@@ -163,7 +163,8 @@ pub enum Error {
     /// the truncation floor (RFC 8945 §5.2.2.1). Servers answer FORMERR.
     BadMacSize,
     /// The TSIG key or algorithm is unknown (TSIG error BADKEY, RFC 8945
-    /// §5.2.1).
+    /// §5.2.1), or a TKEY exchange came with an incompatible or unusable
+    /// KEY (TKEY error BADKEY, RFC 2930 §4.1, §4.5).
     BadKey,
     /// The signature time is outside the allowed window (TSIG error
     /// BADTIME, RFC 8945 §5.2.3; SIG(0) validity period, RFC 2931 §3.1).
@@ -191,6 +192,11 @@ pub enum Error {
     /// A DNS Stateful Operations message is malformed: non-zero section
     /// counts, bad TLV framing or placement (RFC 8490 §5.4, §7.3).
     InvalidDso,
+    /// A TKEY message breaks RFC 2930: not exactly one TKEY record, the
+    /// record in the wrong section or not owned by the question name, the
+    /// wrong mode, or a KEY the mode needs missing (§3, §4). Servers answer
+    /// FORMERR.
+    InvalidTkey,
 }
 
 /// Shorthand for `core::result::Result<T, dnsbox::Error>`.
@@ -258,6 +264,7 @@ impl fmt::Display for Error {
             Error::InvalidXfr => "malformed zone transfer stream",
             Error::ErrorResponse => "response carries an error RCODE",
             Error::InvalidDso => "malformed DSO message",
+            Error::InvalidTkey => "malformed TKEY exchange",
         })
     }
 }

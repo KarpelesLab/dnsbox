@@ -1,0 +1,11 @@
+$TTL 0
+; RFC 2930 TKEY in BIND's text (with the key and other data sizes) and in
+; dnspython's (without them); both read to the same RDATA.
+k1.client.example. ANY TKEY hmac-sha256. 1791104299 1791107899 2 BADKEY 3 AAEC 3 AQID
+k1.client.example. ANY TKEY hmac-sha256. 1791104299 1791107899 2 17 AAEC AQID
+k2.client.example. ANY TKEY gss-tsig. 0 0 3 0 YGFiY2RlZmdoaWprbG1ub3BxcnN0dXZ3eHl6e3x9fn+AgYKDhIWGhw== AQIDBAUGBwg=
+k3.client.example. ANY TKEY server.example. 1791104299 1791107899 1 0 12345678
+k4.client.example. ANY TKEY hmac-md5.sig-alg.reg.int. 0 0 5 NOERROR 0 0
+k5.client.example. ANY TKEY gss-tsig. 1 2 3 0 0000 0000
+; A Diffie-Hellman KEY (RFC 2539) on well-known group 2.
+client.example. ANY KEY 512 3 2 AAECAAAAAQI=

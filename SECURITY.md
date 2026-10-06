@@ -72,6 +72,7 @@ proof), never unbounded work.
 | NSEC3 proofs | at most one hash per label of the name plus one wildcard, each after the iteration count was checked against `Nsec3Limits` (default: insecure above 100, bogus above 500, RFC 9276); one pass over the records per hash; with `ValidationBudget::nsec3_hasher`, at most 64 hashes per budget across all checks (CVE-2023-50868) |
 | ZONEMD | collation and verification in O(n log n), however many apex ZONEMD records there are |
 | TSIG streams | at most 99 unsigned messages in a row |
+| TKEY | a constant number of passes over the message per call; Diffie-Hellman: at most one key agreement per call (purecrypto's public-value check and one exponentiation), only in the local group (a peer's prime is compared, never validated); RSA: KEYs of 1024–4096 bits with exponents of at most 256 bits, at most `MAX_ENCRYPTED_BLOCKS` (4) blocks of key data per message, decrypted with implicit rejection (no padding oracle) |
 | Zone transfers | constant state per transfer, linear work per message; `XfrProcessor::with_max_records` / `with_max_messages` bound the stream (no default: zones range from one record to millions) |
 | Owned messages | `OwnedMessage::from_message` reserves no more entries than the message can hold, whatever its header counts claim; `serde` refuses sections of more than 65535 entries while reading them, and RDATA of more than 65535 octets |
 
@@ -165,10 +166,15 @@ caller's job:
 - **TSIG**: replay protection beyond the time window (remember the last
   Time Signed per key), and matching responses to queries (ID, question)
   are yours. A custom `TsigMac::verify` must compare in constant time.
-- **TKEY**: `tkey` only builds and reads the RFC 2930 messages. Their
-  authentication (TSIG or SIG(0) over the whole message, RFC 2930 §4),
-  the key exchange itself and the validity window (`Tkey::is_valid_at`
-  with a trustworthy `now`) are yours.
+- **TKEY**: authenticate every TKEY message but GSS-API ones (TSIG or
+  SIG(0) under a key established before, RFC 2930 §3) before handing it
+  to `tkey`, and sign what it builds; check that the signer may delete a
+  key before deleting it (§4.2), refuse key names already in use, choose
+  the validity you grant, and check it later (`SharedKey::is_valid_at`
+  with a trustworthy `now`). Use fresh random nonces and secrets from a
+  cryptographically secure generator. The well-known Diffie-Hellman
+  groups (768 to 1536 bits) are weak: prefer an RFC 3526 group where the
+  peer allows it. GSS-API (RFC 3645) is not implemented.
 - **Validate early** when you need to: `Message::parse` is lazy and reports
   an error only when the faulty part is reached; `parse_validated` checks
   everything up front.

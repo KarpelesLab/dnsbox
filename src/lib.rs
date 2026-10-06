@@ -437,6 +437,7 @@
 //! | `dnssec-digest` | | DS digests and NSEC3 hashing ([`dnssec::verify_ds`], [`dnssec::nsec3_hash`]) without `alloc`; with `alloc`, ZONEMD digests |
 //! | `dnssec` | | DNSSEC and SIG(0) signature verification and signing: RSA, ECDSA P-256/P-384, Ed25519, Ed448; implies `alloc` and `dnssec-digest` |
 //! | `tsig` | | the TSIG HMAC backend ([`tsig::HmacKey`]: HMAC-MD5, SHA-1, SHA-2) |
+//! | `tkey` | | TKEY key agreement ([`tkey::DhKeyPair`]: Diffie-Hellman exchanged keying; RSA-encrypted server and resolver assigned keying), producing TSIG keys ([`tkey::SharedKey`]); implies `alloc` and `tsig` |
 //! | `cookie-siphash` | | RFC 9018 server cookies ([`edns::ServerCookie::generate`] / [`verify`][edns::ServerCookie::verify]) |
 //! | `serde` | | `Serialize` / `Deserialize` (`no_std`) for the registries, names, header flags and, with `alloc`, the owned types |
 //!
@@ -524,6 +525,18 @@
 )]
 #![cfg_attr(feature = "tsig", doc = "[`tsig::HmacKey`]: tsig::HmacKey")]
 #![cfg_attr(not(feature = "tsig"), doc = "[`tsig::HmacKey`]: crate#cargo-features")]
+#![cfg_attr(
+    feature = "tkey",
+    doc = "
+[`tkey::DhKeyPair`]: tkey::DhKeyPair
+[`tkey::SharedKey`]: tkey::SharedKey"
+)]
+#![cfg_attr(
+    not(feature = "tkey"),
+    doc = "
+[`tkey::DhKeyPair`]: crate#cargo-features
+[`tkey::SharedKey`]: crate#cargo-features"
+)]
 #![cfg_attr(
     feature = "cookie-siphash",
     doc = "

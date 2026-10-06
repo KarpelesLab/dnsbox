@@ -175,7 +175,9 @@ files, DNSSEC, TSIG), and every public item has its own example. The
   RFC 3597 generic RDATA, errors with line and column) and
   presentation-format parsing of RDATA (`ParseRdataText`).
 - **Transactions and zone transfer**: TSIG (RFC 8945), SIG(0) (RFC 2931),
-  TKEY query/response shapes (RFC 2930), dynamic UPDATE (RFC 2136), NOTIFY (RFC 1996), AXFR/IXFR (RFC 5936,
+  TKEY (RFC 2930: the messages, key deletion, and with the `tkey` feature
+  Diffie-Hellman and RSA-assigned key agreement yielding TSIG keys),
+  dynamic UPDATE (RFC 2136), NOTIFY (RFC 1996), AXFR/IXFR (RFC 5936,
   RFC 1995) stream processing, DNS Stateful Operations (RFC 8490).
 - **Text and owned data**: `dig`-style `Display` of whole messages (no
   allocation, matches BIND's `dig` line for line), owned `OwnedMessage` /
@@ -191,6 +193,7 @@ files, DNSSEC, TSIG), and every public item has its own example. The
 | `dnssec`         |         | DNSSEC and SIG(0) signature verification and signing (implies `alloc`, `dnssec-digest`) |
 | `tsig`           |         | TSIG HMAC backend (HMAC-MD5/SHA-1/SHA-2) |
 | `cookie-siphash` |         | RFC 9018 server cookie generation and verification |
+| `tkey`           |         | TKEY key agreement producing TSIG keys: Diffie-Hellman (RFC 2930 §4.1, RFC 2539) and RSA-encrypted server/resolver assigned keys (implies `alloc`, `tsig`) |
 | `serde`          |         | `Serialize`/`Deserialize` (`no_std`): protocol numbers as mnemonics, names as text, owned types with `alloc` |
 
 dnsbox never implements cryptography itself: the crypto features pull in
