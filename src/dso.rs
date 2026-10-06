@@ -1033,13 +1033,7 @@ impl<B: OutBuf> DsoBuilder<B> {
     /// ```
     pub fn push<T: ComposeDsoTlv + ?Sized>(&mut self, tlv: &T) -> Result<()> {
         let dso_type = tlv.dso_type();
-        if self.padded {
-            return Err(Error::SectionOrder);
-        }
-        if dso_type == DsoType::ENCRYPTION_PADDING && self.tlvs == 0 {
-            // Padding is never the primary TLV (§7.3).
-            return Err(Error::InvalidDso);
-        }
+        self.check_order(dso_type)?;
         let start = self.buf.as_bytes().len();
         let res = (|| {
             self.buf.put_u16(dso_type.get())?;
@@ -1055,6 +1049,18 @@ impl<B: OutBuf> DsoBuilder<B> {
         }
         self.tlvs += 1;
         self.padded = dso_type == DsoType::ENCRYPTION_PADDING;
+        Ok(())
+    }
+
+    /// Whether a TLV of `dso_type` may come next: nothing after Encryption
+    /// Padding, which is never the primary TLV (RFC 8490 §7.3).
+    fn check_order(&self, dso_type: DsoType) -> Result<()> {
+        if self.padded {
+            return Err(Error::SectionOrder);
+        }
+        if dso_type == DsoType::ENCRYPTION_PADDING && self.tlvs == 0 {
+            return Err(Error::InvalidDso);
+        }
         Ok(())
     }
 
@@ -1087,6 +1093,12 @@ impl<B: OutBuf> DsoBuilder<B> {
         }
         let with_header = self.len() + 4;
         let pad = (block - with_header % block) % block;
+        // `block` is the caller's, not bounded by the message: refuse
+        // padding that cannot fit before writing any of it.
+        self.check_order(DsoType::ENCRYPTION_PADDING)?;
+        if pad > self.limit.saturating_sub(with_header) {
+            return Err(Error::BufferTooSmall);
+        }
         let zeros = [0u8; 64];
         // Write the padding in chunks to avoid a large stack buffer.
         struct Zeros<'z> {
@@ -1291,6 +1303,25 @@ mod tests {
         );
         b.push(&RetryDelay { delay: 1 }).unwrap();
         assert_eq!(b.pad_to(0), Err(Error::InvalidDso));
+    }
+
+    /// Padding that cannot fit the 65535-octet message is refused before
+    /// anything is written, however large the block.
+    #[cfg(feature = "alloc")]
+    #[test]
+    fn pad_to_huge_block_is_bounded() {
+        let mut b = DsoBuilder::unidirectional(std::vec::Vec::new()).unwrap();
+        b.push(&RetryDelay { delay: 1000 }).unwrap();
+        let before = b.len();
+        assert_eq!(b.pad_to(1 << 28), Err(Error::BufferTooSmall));
+        assert_eq!(b.pad_to(usize::MAX / 2), Err(Error::BufferTooSmall));
+        assert_eq!(b.pad_to(usize::MAX), Err(Error::BufferTooSmall));
+        assert_eq!(b.len(), before);
+        // The largest padding that fits is still written.
+        b.pad_to(MAX_MESSAGE_LEN).unwrap();
+        let wire = b.finish().unwrap();
+        assert_eq!(wire.len(), MAX_MESSAGE_LEN);
+        assert!(wire.capacity() < 2 * MAX_MESSAGE_LEN, "{}", wire.capacity());
     }
 
     #[test]
