@@ -350,6 +350,124 @@ fn signed_response() -> Vec<u8> {
     b.finish().to_vec()
 }
 
+/// An RRset is its owner, type and class (RFC 2181 §5), wherever its
+/// records are: one split by another record must not be left partial in
+/// the additional section without TC (RFC 2181 §9).
+#[test]
+fn interleaved_additional_rrset_is_never_left_partial_without_tc() {
+    use crate::rdata::Aaaa;
+    let ns = name("ns.example");
+    let mut sbuf = [0u8; 512];
+    let mut s = MessageBuilder::new(&mut sbuf).unwrap();
+    s.push_additional(&ns, Class::IN, 60, &A::new([192, 0, 2, 1].into()))
+        .unwrap();
+    s.push_additional(&ns, Class::IN, 60, &Aaaa::new([0x20; 16].into()))
+        .unwrap();
+    s.push_additional(&ns, Class::IN, 60, &A::new([192, 0, 2, 2].into()))
+        .unwrap();
+    let src = s.finish().to_vec();
+    let msg = Message::parse_validated(&src).unwrap();
+    let mut seen_drop_without_tc = false;
+    for limit in Header::LEN..=src.len() {
+        let mut buf = [0u8; 512];
+        let mut b = MessageBuilder::new(&mut buf).unwrap();
+        b.set_truncation(Truncation::SetTc);
+        b.set_limit(limit);
+        let out = b.copy_message(&msg).unwrap();
+        let m = Message::parse_validated(b.finish()).unwrap();
+        let count = |t| m.additional().filter(|r| r.unwrap().rtype() == t).count();
+        let (a, aaaa) = (count(Rtype::A), count(Rtype::AAAA));
+        assert!(
+            a != 1 || m.flags().tc(),
+            "limit {limit}: partial A RRset without TC"
+        );
+        assert_eq!(m.flags().tc(), out == Outcome::Truncated, "limit {limit}");
+        if limit == Header::LEN {
+            // Nothing fits: both RRsets dropped whole, TC clear.
+            assert_eq!((out, a, aaaa), (Outcome::Dropped, 0, 0));
+        }
+        if out == Outcome::Dropped && a == 2 {
+            // The AAAA RRset dropped whole, the A one kept whole.
+            assert_eq!(aaaa, 0, "limit {limit}");
+            seen_drop_without_tc = true;
+        }
+    }
+    assert!(seen_drop_without_tc);
+}
+
+/// Many additional RRsets that do not fit cost bounded work, and still
+/// never leave a partial RRset without TC.
+#[test]
+fn interleaved_additional_work_is_bounded() {
+    let mut sbuf = [0u8; 65535];
+    let mut s = MessageBuilder::new(&mut sbuf).unwrap();
+    let owners: Vec<NameBuf> = (0..40)
+        .map(|i| name(&std::format!("h{i}.example")))
+        .collect();
+    let mut n = 0;
+    'fill: for round in 0..200u8 {
+        for owner in &owners {
+            if s.push_additional(owner, Class::IN, 60, &A::new([192, 0, round, 1].into()))
+                .is_err()
+            {
+                break 'fill;
+            }
+            n += 1;
+        }
+    }
+    let src = s.finish().to_vec();
+    assert!(n > 4000);
+    let msg = Message::parse_validated(&src).unwrap();
+    let mut buf = [0u8; 512];
+    let mut b = MessageBuilder::new(&mut buf).unwrap();
+    b.set_truncation(Truncation::SetTc);
+    let out = b.copy_message(&msg).unwrap();
+    // Every A RRset is split 200 ways: past the few split RRsets that can
+    // be dropped whole, TC is set.
+    assert_eq!(out, Outcome::Truncated);
+    assert!(Message::parse_validated(b.finish()).unwrap().flags().tc());
+
+    // Thousands of distinct RRsets that do not fit: each drop searches the
+    // section for the RRset's other records, within a budget; once it is
+    // spent, TC is set.
+    let mut sbuf = [0u8; 65535];
+    let mut s = MessageBuilder::new(&mut sbuf).unwrap();
+    let mut n = 0;
+    while s
+        .push_additional(
+            name(&std::format!("h{n}.example")),
+            Class::IN,
+            60,
+            &A::new([192, 0, 2, 1].into()),
+        )
+        .is_ok()
+    {
+        n += 1;
+    }
+    assert!(n > 2000);
+    let src = s.finish().to_vec();
+    let msg = Message::parse_validated(&src).unwrap();
+    let mut buf = [0u8; 512];
+    let mut b = MessageBuilder::new(&mut buf).unwrap();
+    b.set_truncation(Truncation::SetTc);
+    assert_eq!(b.copy_message(&msg), Ok(Outcome::Truncated));
+    // A few drops fit in the budget: small additional sections keep
+    // dropping RRsets without TC.
+    let mut buf = [0u8; 512];
+    let mut b = MessageBuilder::new(&mut buf).unwrap();
+    b.set_truncation(Truncation::SetTc);
+    b.set_limit(Header::LEN);
+    let mut sbuf = [0u8; 2048];
+    let mut s = MessageBuilder::new(&mut sbuf).unwrap();
+    for i in 0..50 {
+        let owner = name(&std::format!("h{i}.example"));
+        s.push_additional(&owner, Class::IN, 60, &A::new([192, 0, 2, 1].into()))
+            .unwrap();
+    }
+    let small = Message::parse_validated(s.finish()).unwrap();
+    assert_eq!(b.copy_message(&small), Ok(Outcome::Dropped));
+}
+
 #[test]
 fn copy_section_keeps_rrsig_with_rrset() {
     let src = signed_response();

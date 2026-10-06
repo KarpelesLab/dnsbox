@@ -137,9 +137,90 @@ fn rrsig_covers(rr: &Record<'_>) -> Option<Rtype> {
     }
 }
 
+/// How many split RRsets (records of one RRset separated by others) one
+/// copy of the additional section can drop whole; past that, TC is set.
+const MAX_SPLIT_RRSETS: usize = 8;
+
+/// How many records one copy of a section may visit in all while looking
+/// for the other parts of RRsets it drops; past that, TC is set.
+const SPLIT_SCAN_BUDGET: usize = 1 << 16;
+
+/// Keeps RRsets whole when the additional section drops them although
+/// their records are not all consecutive (RFC 2181 §5: an RRset is its
+/// owner, type and class, wherever its records are), in bounded work.
+struct SplitRrsets<'a> {
+    /// RRsets dropped whole whose other records come later.
+    dropped: [Option<RrsetKey<'a>>; MAX_SPLIT_RRSETS],
+    /// Records the searches may still visit.
+    budget: usize,
+}
+
+impl<'a> SplitRrsets<'a> {
+    fn new() -> Self {
+        SplitRrsets {
+            dropped: [None; MAX_SPLIT_RRSETS],
+            budget: SPLIT_SCAN_BUDGET,
+        }
+    }
+
+    /// Whether `rr` belongs to an RRset dropped earlier.
+    fn dropped(&self, rr: &Record<'_>) -> bool {
+        self.dropped.iter().flatten().any(|k| k.contains(rr))
+    }
+
+    /// The group of records of the RRset `key` starting at offset `first`
+    /// of `section` did not fit and was removed: whether the RRset can be
+    /// left out whole (its other records, if any, all come later and are
+    /// now skipped). `false` if some of them are already in the message,
+    /// or cannot be tracked within the limits: the caller then sets TC,
+    /// which allows a partial RRset (RFC 2181 §9).
+    fn drop_whole(
+        &mut self,
+        msg: &Message<'_>,
+        section: Section,
+        key: RrsetKey<'a>,
+        first: usize,
+    ) -> Result<bool> {
+        // Whether the walk is in the dropped group, and whether past it.
+        let (mut in_group, mut past) = (false, false);
+        for rr in msg.section(section) {
+            let Some(left) = self.budget.checked_sub(1) else {
+                return Ok(false);
+            };
+            self.budget = left;
+            let rr = rr?;
+            if rr.start() == first {
+                in_group = true;
+            }
+            let member = key.contains(&rr);
+            if in_group {
+                if member {
+                    continue;
+                }
+                (in_group, past) = (false, true);
+            }
+            if member {
+                if !past {
+                    // An earlier part is in the message.
+                    return Ok(false);
+                }
+                return Ok(match self.dropped.iter_mut().find(|k| k.is_none()) {
+                    Some(slot) => {
+                        *slot = Some(key);
+                        true
+                    }
+                    None => false,
+                });
+            }
+        }
+        Ok(true)
+    }
+}
+
 /// The identity of the RRset a parsed record belongs to: owner name
 /// (compared case-insensitively, RFC 4343), type and class. An RRSIG joins
 /// the RRset it covers when it directly follows it.
+#[derive(Clone, Copy)]
 struct RrsetKey<'a> {
     name: Name<'a>,
     rtype: Rtype,
@@ -395,6 +476,13 @@ impl<B: OutBuf> MessageBuilder<B> {
     /// policy. For [`Section::Question`] the questions are copied, and a
     /// question that does not fit is always an error.
     ///
+    /// An RRset is still its owner, type and class wherever its records are
+    /// (RFC 2181 §5): when an additional RRset whose records are split by
+    /// other records is dropped, its later records are left out too; if
+    /// some were already copied, or more than a few such RRsets (or records
+    /// to search) are involved, TC is set instead, so a partial RRset is
+    /// never sent with TC clear (RFC 2181 §9).
+    ///
     /// # Errors
     ///
     /// The parse error of a malformed source message, the errors of
@@ -451,7 +539,9 @@ impl<B: OutBuf> MessageBuilder<B> {
         let mut outcome = Outcome::Added;
         let mut group: Option<RrsetKey<'_>> = None;
         let mut group_start = start;
+        let mut group_first = 0;
         let mut skipping = false;
+        let mut splits = SplitRrsets::new();
         for rr in msg.section(section) {
             let rr = match rr {
                 Ok(rr) => rr,
@@ -473,7 +563,9 @@ impl<B: OutBuf> MessageBuilder<B> {
             if !group.as_ref().is_some_and(|g| g.contains(&rr)) {
                 group = Some(RrsetKey::of(&rr));
                 group_start = self.checkpoint();
-                skipping = false;
+                group_first = rr.start();
+                // The rest of an RRset dropped earlier stays out too.
+                skipping = splits.dropped(&rr);
             }
             if skipping {
                 continue;
@@ -485,6 +577,24 @@ impl<B: OutBuf> MessageBuilder<B> {
                     match self.overflow(section) {
                         Ok(Outcome::Truncated) => return Ok(Outcome::Truncated),
                         Ok(o) => {
+                            // Dropped (additional data): the whole RRset
+                            // must go, not just these consecutive records
+                            // (RFC 2181 §9). If part of it is already in,
+                            // or its other parts cannot be tracked, set TC
+                            // (a partial RRset is allowed then).
+                            if let Some(key) = group {
+                                match splits.drop_whole(msg, section, key, group_first) {
+                                    Ok(true) => {}
+                                    Ok(false) => {
+                                        self.truncate();
+                                        return Ok(Outcome::Truncated);
+                                    }
+                                    Err(e) => {
+                                        self.rollback(start);
+                                        return Err(e);
+                                    }
+                                }
+                            }
                             outcome = outcome.and(o);
                             skipping = true;
                         }
