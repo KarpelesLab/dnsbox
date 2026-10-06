@@ -65,7 +65,9 @@
 //! presentation format (`"10 mail.example.com."`, relative names completed
 //! with the root), parsed as [`OwnedRData::from_text`] does; byte strings
 //! are checked like [`OwnedRData::from_wire`]. Either way typed formats
-//! must be valid for the record's class. Missing sections of a message are
+//! must be valid for the record's class; a lone `OwnedRData` has no class,
+//! so the data of a type defined only for class IN (A, AAAA, SVCB, ...),
+//! which is opaque in other classes, is accepted as it is. Missing sections of a message are
 //! empty, and a section holds at most 65535 entries (the header counts
 //! are 16-bit, RFC 1035 §4.1.1): longer input is refused while it is read,
 //! so its size is bounded by the format, not only by the input.

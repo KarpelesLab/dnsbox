@@ -138,11 +138,19 @@ impl Serialize for OwnedRData {
 }
 
 impl<'de> Deserialize<'de> for OwnedRData {
-    /// Checked as [`OwnedRData::from_wire`] does for class ANY: typed
-    /// formats must be valid unless the data is empty.
+    /// Accepted when [`OwnedRData::from_wire`] (or `from_text`) accepts it
+    /// for some class, since the class is not part of this form: typed
+    /// formats must be valid for class ANY unless the data is empty, except
+    /// for types defined only for class IN (A, AAAA, SVCB, ...), whose data
+    /// in another class is opaque (RFC 3597) and may be anything.
+    /// [`OwnedRData::parse`] checks it for a given class.
     fn deserialize<D: Deserializer<'de>>(d: D) -> Result<Self, D::Error> {
         let r = RDataDe::deserialize(d)?;
-        rdata(r.rtype, Class::ANY, &r.rdata)
+        rdata(r.rtype, Class::ANY, &r.rdata).or_else(|e| {
+            // What Serialize writes for class-specific data held for a
+            // class other than IN (CH stands for any of them).
+            rdata::<D::Error>(r.rtype, Class::CH, &r.rdata).map_err(|_| e)
+        })
     }
 }
 

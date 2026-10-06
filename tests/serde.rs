@@ -438,10 +438,53 @@ mod owned {
         // The reserved SvcParamKey 65535 is refused (RFC 9460 §14.3.2),
         // in text and in the generic form alike.
         assert!(from_json::<OwnedRData>(r#"{"type": "SVCB", "rdata": "1 . key65535"}"#).is_err());
-        assert!(
-            from_json::<OwnedRData>(r#"{"type": "SVCB", "rdata": "\\# 7 0001 00 ffff0000"}"#)
-                .is_err()
-        );
+        let rr = r#"{"name": "x.", "type": "SVCB", "class": "IN", "ttl": 0,
+                     "rdata": "\\# 7 0001 00 ffff0000"}"#;
+        assert!(from_json::<OwnedRecord>(rr).is_err());
+        // Without a class, the generic form may be SVCB data of another
+        // class, which is opaque (RFC 3597): kept as such, and refused once
+        // read for class IN.
+        let opaque: OwnedRData =
+            from_json(r#"{"type": "SVCB", "rdata": "\\# 7 0001 00 ffff0000"}"#).unwrap();
+        assert!(opaque.parse(Class::IN).is_err());
+    }
+
+    #[test]
+    fn class_specific_rdata_of_another_class_round_trips() {
+        // A, AAAA, SVCB, ... are defined for class IN only; in other
+        // classes their data is opaque, and OwnedRData does not carry the
+        // class: what it writes must still read back.
+        for (rtype, wire) in [
+            (Rtype::A, &[1, 2, 3, 4, 5, 6][..]),
+            (Rtype::AAAA, &[1, 2, 3]),
+            (Rtype::SVCB, &[0xff]),
+            (Rtype::KX, &[]),
+        ] {
+            let d = OwnedRData::from_wire(rtype, Class::CH, wire).unwrap();
+            let s = serde_json::to_string(&d).unwrap();
+            let back: OwnedRData = from_json(&s).unwrap_or_else(|e| panic!("{s}: {e}"));
+            assert_eq!(back, d);
+            let c = d.compact();
+            assert_tokens(&c, &compact_rdata_tokens(rtype, wire));
+        }
+        // Types valid in every class are still checked.
+        assert!(from_json::<OwnedRData>(r#"{"type": "MX", "rdata": "\\# 1 00"}"#).is_err());
+    }
+
+    /// The compact serde tokens of `OwnedRData`.
+    fn compact_rdata_tokens(rtype: Rtype, wire: &'static [u8]) -> Vec<Token> {
+        let mut tokens = vec![
+            Token::Struct {
+                name: "OwnedRData",
+                len: 2,
+            },
+            Token::Str("type"),
+            Token::U16(rtype.get()),
+            Token::Str("rdata"),
+            Token::Bytes(wire),
+        ];
+        tokens.push(Token::StructEnd);
+        tokens
     }
 
     #[test]
