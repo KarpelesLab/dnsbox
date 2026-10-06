@@ -124,7 +124,8 @@ pub struct Amtrelay<'a> {
 impl ParseRdataText for Amtrelay<'_> {
     /// `precedence D-bit type relay` (RFC 8777 §4.3.1): decimal precedence,
     /// a D bit of 0 or 1 and a relay type of at most 127; the relay is `.`
-    /// for type 0, an IPv4 address for type 1, an IPv6 address for type 2
+    /// for type 0 (or absent, as BIND 9.18 writes it), an IPv4 address for
+    /// type 1, an IPv6 address for type 2
     /// and a domain name for type 3. Other relay types have no
     /// presentation format and are [`Error::InvalidRdata`] (as in BIND):
     /// write them in the generic form.
@@ -141,9 +142,11 @@ impl ParseRdataText for Amtrelay<'_> {
         }
         out.put_bytes(&[precedence, d | relay_type])?;
         match relay_type {
-            // "the relay field MUST be '.'" (§4.3.1).
+            // "the relay field MUST be '.'" (§4.3.1), as dnsbox and
+            // dnspython write it; BIND 9.18 writes nothing there (and
+            // reads only that), so an absent relay is read too.
             0 => {
-                if !s.word()?.is(".") {
+                if !s.is_at_end()? && !s.word()?.is(".") {
                     return Err(Error::InvalidText);
                 }
                 Ok(())
@@ -384,6 +387,11 @@ mod tests {
         text_round_trip(Rtype::AMTRELAY, "0 0 0 .", b"\x00\x00", "0 0 0 .");
         text_round_trip(Rtype::AMTRELAY, "0 1 0 .", b"\x00\x80", "0 1 0 .");
         text_round_trip(Rtype::AMTRELAY, "255 1 0 .", b"\xff\x80", "255 1 0 .");
+        // BIND 9.18 writes (and reads only) no relay at all for type 0
+        // (found by the BIND interop run, tests/interop_bind.rs): read it,
+        // write RFC 8777's `.`.
+        text_round_trip(Rtype::AMTRELAY, "0 0 0", b"\x00\x00", "0 0 0 .");
+        text_round_trip(Rtype::AMTRELAY, "( 10 1 0 )", b"\x0a\x80", "10 1 0 .");
         text_round_trip(Rtype::AMTRELAY, "0 0 1 0.0.0.0", &hex("000100000000"), "0 0 1 0.0.0.0");
         text_round_trip(
             Rtype::AMTRELAY,
@@ -415,7 +423,6 @@ mod tests {
             ("", Error::UnexpectedEof),
             ("0", Error::UnexpectedEof),
             ("0 0", Error::UnexpectedEof),
-            ("0 0 0", Error::UnexpectedEof),
             ("0 0 1", Error::UnexpectedEof),
             ("0 0 2", Error::UnexpectedEof),
             ("0 0 3", Error::UnexpectedEof),
