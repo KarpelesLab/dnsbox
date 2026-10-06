@@ -100,4 +100,4 @@ required-features = ["std", "tsig", "dnssec"]
 
 [[example]]
 name = "bind_probe"
-required-features = ["std", "tsig", "dnssec"]
+required-features = ["std", "tsig", "dnssec", "tkey"]

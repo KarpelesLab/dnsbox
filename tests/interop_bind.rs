@@ -1061,6 +1061,10 @@ fn tsig_exchanges_verify() {
     let mut by_alg: BTreeMap<String, usize> = BTreeMap::new();
     let mut rejected = 0;
     for ex in exchanges("named") {
+        if ex.label.starts_with("named/probe/tkey-dh/") && !ex.label.ends_with("/exchange") {
+            // Signed with the key TKEY made (named_agrees_on_a_dh_key).
+            continue;
+        }
         let q = ex.query();
         let Some(rec) = tsig::find(&q).unwrap() else {
             continue;
@@ -2038,6 +2042,157 @@ fn named_answers_tkey() {
     v.finish().unwrap();
 }
 
+/// The probe's Diffie-Hellman private value (`examples/bind_probe.rs`).
+#[cfg(feature = "tkey")]
+const TKEY_DH_PRIVATE: [u8; 32] = [0x5a; 32];
+
+/// The probe's Diffie-Hellman TKEY exchange with named (RFC 2930 §4.1,
+/// `tkey-dhkey`): named's response verifies under the TSIG key that
+/// signed the query, dnsbox derives from it (with the probe's private
+/// value) the key named made, `dnsbox-dh.tkey.interop.` under named's
+/// `tkey-domain`, of algorithm HMAC-MD5, and that key verifies named's
+/// answers to the query it signed and to its own deletion (§4.2), after
+/// which named refuses it (BADKEY). Playing the server with named's
+/// private key (`tkey/K*.private`) and nonce, dnsbox derives the same
+/// key: both sides compute the DH value and the §4.1 mixing as BIND does.
+#[cfg(feature = "tkey")]
+#[test]
+fn named_agrees_on_a_dh_key() {
+    use dnsbox::rdata::{Key, TkeyMode};
+    use dnsbox::tkey::{self, DhGroup, DhKey, DhKeyPair, KeyGrant};
+
+    let Some(ex) = exchange("named/probe/tkey-dh/exchange") else {
+        assert!(!live());
+        return;
+    };
+    let q = ex.query();
+    let r = ex.response();
+    let keys = tsig_keys();
+    let rec = tsig::find(&q).unwrap().expect("signed query");
+    let status = tsig::verify_request(&q, &keys[..], rec.data.time_signed);
+    let verified = status.verified().expect("TKEY query rejected");
+    let mut v = TsigVerifier::new(verified.key, verified.request_mac()).unwrap();
+    let t = tsig::find(&r).unwrap().expect("signed").data.time_signed;
+    assert!(v.verify(&r, t).unwrap().is_some());
+    v.finish().unwrap();
+
+    let request = tkey::find_request(&q).unwrap();
+    assert_eq!(request.data.mode, TkeyMode::DIFFIE_HELLMAN);
+    let answer = tkey::find_answer(&r).unwrap();
+    assert_eq!(answer.key_name, name("dnsbox-dh.tkey.interop").as_name());
+    assert_eq!(answer.data.error, TsigRcode::NOERROR);
+    let group = DhGroup::well_known(2).unwrap();
+    let client = DhKeyPair::from_private_bytes(group.clone(), &TKEY_DH_PRIVATE).unwrap();
+    let shared = client.complete(&q, &r).unwrap();
+    assert_eq!(shared.name(), answer.key_name);
+    assert_eq!(shared.algorithm(), TsigAlgorithm::HmacMd5.name());
+    assert_eq!(
+        (shared.inception(), shared.expiration()),
+        (answer.data.inception, answer.data.expiration)
+    );
+
+    // named's own key (dnssec-keygen -a DH -b 1024): the well-known group
+    // 2, its KEY in the answer section.
+    let file = fs::read_dir(dir().join("tkey"))
+        .unwrap()
+        .map(|e| e.unwrap().path())
+        .find(|p| p.extension().is_some_and(|e| e == "private"))
+        .expect("named's DH key");
+    let private = fs::read_to_string(&file).unwrap();
+    let x = private
+        .lines()
+        .find_map(|l| l.strip_prefix("Private_value(x): "))
+        .and_then(base64)
+        .expect("Private_value(x)");
+    let server = DhKeyPair::from_private_bytes(group, &x).unwrap();
+    let (owner, theirs) = tkey::keys(&r, Section::Answer)
+        .map(Result::unwrap)
+        .find(|(_, k)| *k == server.key())
+        .expect("named's KEY in the answer");
+    assert_eq!(owner, name("server.tkey.interop").as_name());
+    let dh = DhKey::parse(theirs.public_key).unwrap();
+    assert_eq!(dh.prime, dnsbox::tkey::DhPrime::WellKnown(2));
+    // The client's KEY comes back too.
+    assert!(
+        tkey::keys(&r, Section::Answer)
+            .map(Result::unwrap)
+            .any(|(_, k): (_, Key<'_>)| k == client.key())
+    );
+    let mut b = MessageBuilder::new_vec();
+    let grant = KeyGrant::new(
+        answer.key_name,
+        answer.data.inception,
+        answer.data.expiration,
+    );
+    let ours = server
+        .respond(&mut b, &q, owner, &grant, answer.data.key)
+        .unwrap();
+    assert_eq!(ours.secret(), shared.secret());
+
+    // The key signs a query named accepts, then its own deletion.
+    let key = shared.hmac_key().unwrap();
+    for (label, rcode) in [("use", Rcode::NOERROR), ("delete", Rcode::NOERROR)] {
+        let ex = exchange(&format!("named/probe/tkey-dh/{label}")).expect(label);
+        let q = ex.query();
+        let rec = tsig::find(&q).unwrap().expect("signed");
+        let status = tsig::verify_request(&q, std::slice::from_ref(&key), rec.data.time_signed);
+        let verified = status.verified().unwrap_or_else(|| panic!("{label}"));
+        let r = ex.response();
+        assert_eq!(r.flags().rcode(), rcode, "{label}");
+        let mut v = TsigVerifier::new(verified.key, verified.request_mac()).unwrap();
+        let t = tsig::find(&r).unwrap().expect("signed").data.time_signed;
+        assert!(v.verify(&r, t).unwrap().is_some(), "{label}");
+        v.finish().unwrap();
+        if label == "delete" {
+            let deleted = tkey::find_deletion(&r).unwrap().expect("deletion");
+            assert_eq!(deleted.key_name, answer.key_name);
+            assert_eq!(deleted.data.error, TsigRcode::NOERROR);
+        }
+    }
+    let ex = exchange("named/probe/tkey-dh/after").expect("after");
+    let r = ex.response();
+    assert_eq!(r.flags().rcode(), Rcode::NOTAUTH);
+    let theirs = tsig::find(&r).unwrap().expect("a TSIG record");
+    assert_eq!(theirs.data.error, TsigRcode::BADKEY);
+}
+
+/// dig's text of the named responses kept in `tests/corpus/named-ci-*.hex`
+/// (`tests/data/dig/`; TKEY records among them, which have no zone-file
+/// form and which dnsbox writes as BIND does) reads back, with dnsbox's
+/// zone reader, to the records of the wire message. `dig_display.rs`
+/// checks the other direction: dnsbox's `Display` writes dig's text.
+#[test]
+fn dig_text_of_kept_responses_reads_back() {
+    let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("tests");
+    let mut checked = 0;
+    let (mut tkey, mut tkey_files) = (0, 0);
+    for e in fs::read_dir(root.join("data/dig")).unwrap() {
+        let path = e.unwrap().path();
+        let stem = path.file_stem().unwrap().to_str().unwrap().to_owned();
+        if !stem.starts_with("named-ci-") {
+            continue;
+        }
+        let wire = hex_file(&root.join("corpus").join(format!("{stem}.hex")));
+        let msg = Message::parse_validated(&wire).unwrap();
+        let ours: Vec<Rr> = msg
+            .records()
+            .map(|r| r.unwrap().1)
+            .filter(|r| r.rtype() != Rtype::OPT)
+            .map(|r| rr_of(&r))
+            .collect();
+        tkey += ours.iter().filter(|r| r.1 == Rtype::TKEY).count();
+        tkey_files += usize::from(stem.contains("tkey"));
+        let output = fs::read_to_string(&path).unwrap();
+        assert_same_records(dig_records(&stem, &output), ours, &stem);
+        checked += 1;
+    }
+    assert!(checked >= 17, "{checked}");
+    assert!(
+        tkey >= tkey_files,
+        "{tkey} TKEY records in {tkey_files} files"
+    );
+}
+
 // ---------------------------------------------------------------------
 // named as a validating resolver.
 // ---------------------------------------------------------------------
@@ -2478,6 +2633,75 @@ fn bind_reads_dnsbox_text_of_new_types() {
             .any(|l| l.contains("AMTRELAY") && l.trim_end().ends_with("AMTRELAY 0 0 0")),
         "{output}"
     );
+}
+
+/// named loaded `drafttypes.zone`: the types only Internet-Drafts define
+/// (IPN, CLA, UNECE, ISO) in dnsbox's presentation, and the same records
+/// in the RFC 3597 generic form. `named-checkzone` leaves out
+/// (`drafttypes-omitted.txt`) exactly the presentation-form records of
+/// the types BIND does not know, and named transfers every other record
+/// as dnsbox's wire form: the generic form of all four, and the
+/// presentation form of those BIND knows. dig's text of them (generic or
+/// typed) reads back to the same wire (`dig_text_reads_back_to_the_wire`).
+#[test]
+fn bind_serves_draft_types() {
+    let drafts: BTreeSet<Rtype> = [Rtype::IPN, Rtype::CLA, Rtype::UNECE, Rtype::ISO].into();
+    let path = Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/corpus/bind/drafttypes.zone");
+    let source = fs::read_to_string(&path).unwrap();
+    let records = read_zone(&source);
+    let generic_apex = name("generic.drafttypes.example");
+    let (generic, typed): (Vec<&ZoneRecordBuf>, Vec<&ZoneRecordBuf>) = records
+        .iter()
+        .filter(|r| drafts.contains(&r.rtype))
+        .partition(|r| r.name.as_name().is_subdomain_of(&generic_apex.as_name()));
+    // The presentation form is dnsbox's, and the generic one holds the same
+    // RDATA under generic.drafttypes.example.
+    for r in &typed {
+        assert!(source.lines().any(|l| l == r.to_string()), "{r}");
+    }
+    let moved: Vec<Rr> = typed
+        .iter()
+        .map(|r| {
+            let label = r.name.to_string();
+            let label = label.split('.').next().unwrap();
+            let owner = name(&format!("{label}.generic.drafttypes.example"));
+            (owner, r.rtype, r.class, r.ttl, r.rdata.clone())
+        })
+        .collect();
+    assert_same_records(
+        generic.iter().map(|r| rr(r)).collect(),
+        moved,
+        "generic forms",
+    );
+    assert_eq!(
+        typed.iter().map(|r| r.rtype).collect::<BTreeSet<_>>(),
+        drafts
+    );
+
+    let Ok(omitted) = fs::read_to_string(dir().join("drafttypes-omitted.txt")) else {
+        assert!(!live());
+        return;
+    };
+    let omitted: Vec<Rr> = read_zone(&omitted).iter().map(rr).collect();
+    // Only presentation forms, and all of a type or none.
+    let unknown: BTreeSet<Rtype> = omitted.iter().map(|r| r.1).collect();
+    let expected: Vec<Rr> = typed
+        .iter()
+        .filter(|r| unknown.contains(&r.rtype))
+        .map(|r| rr(r))
+        .collect();
+    assert_same_records(omitted, expected, "drafttypes-omitted.txt");
+    println!("BIND does not know {unknown:?}");
+
+    let ex = exchange("named/drafttypes/axfr").expect("named's transfer");
+    let t = transfer(&ex, XfrProcessor::axfr(name("drafttypes.example")));
+    assert!(t.done);
+    let served: Vec<Rr> = records
+        .iter()
+        .filter(|r| !unknown.contains(&r.rtype) || generic.iter().any(|g| rr(g) == rr(r)))
+        .map(rr)
+        .collect();
+    assert_same_records(t.full, served, "named (-) and dnsbox (+)");
 }
 
 /// named-checkzone and dnssec-verify accepted every zone dnsbox wrote

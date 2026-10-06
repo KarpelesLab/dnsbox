@@ -40,6 +40,10 @@
 #   alltypes-omitted.txt     the lines of ../bind9/alltypes.dnsbox named
 #                            cannot read (none expected)
 #   newtypes-omitted.txt     likewise for ../knot/newtypes.zone
+#   drafttypes-omitted.txt   likewise for drafttypes.zone (the types only
+#                            Internet-Drafts define, which BIND may not know)
+#   tkey/                    named's Diffie-Hellman key for TKEY (RFC 2930
+#                            §4.1, `tkey-dhkey`): dnssec-keygen -a DH
 #   named/<label>/           exchanges with the authoritative named:
 #                            NN-<udp|tcp>-<q|r>.hex (../knot/proxy.py),
 #                            dig's or nsupdate's output (dig.txt,
@@ -378,6 +382,13 @@ cmd_sign() {
                 "$i" $((i / 256)) $((i % 256)) "$i" "$i"
         done
     } >"$OUT/zones/bulk.interop.zone"
+    # named's Diffie-Hellman key for TKEY exchanged keying (RFC 2930 §4.1,
+    # `tkey-dhkey`; BIND 9.20 removed both): 1024 bits with BIND's default
+    # generator, written as the well-known group 2 of RFC 2539.
+    mkdir -p "$OUT/tkey"
+    dnssec-keygen -q -K "$OUT/tkey" -a DH -b 1024 -n HOST -T KEY server.tkey.interop. \
+        >"$OUT/tkey/name"
+    cat "$OUT/tkey/$(cat "$OUT/tkey/name").key"
 
     log "named-checkzone and dnssec-verify check BIND's zones"
     local rc=0
@@ -412,6 +423,10 @@ cmd_sign() {
             >>"$OUT/zones/newtypes.example.zone"
     fi
     compile newtypes newtypes.example. "$OUT/zones/newtypes.example.zone" || rc=1
+    # The types only drafts define (IPN, CLA, UNECE, ISO): dnsbox's
+    # presentation where named reads it, the RFC 3597 generic form always.
+    readable drafttypes.example. "$HERE/drafttypes.zone" drafttypes || rc=1
+    compile drafttypes.example drafttypes.example. "$OUT/zones/drafttypes.example.zone" || rc=1
     ls -l "$OUT/zones" "$OUT/compiled"
     return $rc
 }
@@ -427,7 +442,10 @@ keys_conf() {
 }
 
 auth_conf() {
-    local d="$WORK/auth"
+    local d="$WORK/auth" dh
+    # The key ID of named's Diffie-Hellman key (Kname.+002+ID).
+    dh=$(cat "$OUT/tkey/name")
+    dh=$((10#${dh##*+}))
     cat <<EOF
 options {
     directory "$d";
@@ -456,6 +474,10 @@ options {
     edns-udp-size 1232;
     max-udp-size 1232;
     minimal-responses no-auth-recursive;
+    # TKEY (RFC 2930): Diffie-Hellman exchanged keying with this key; the
+    # keys it makes are named <question name>.tkey.interop.
+    tkey-domain "tkey.interop.";
+    tkey-dhkey "server.tkey.interop." $dh;
 };
 controls { };
 logging {
@@ -473,7 +495,7 @@ EOF
         printf 'zone "unsigned.%s" { type primary; file "%s/zones/unsigned.%s.zone"; };\n' "$z" "$OUT" "${z%.}"
     done
     for z in interop. bogus.interop. bogus-nsec.interop. bogus-ds.interop. insecure.interop. \
-        bulk.interop. alltypes.example. newtypes.example.; do
+        bulk.interop. alltypes.example. newtypes.example. drafttypes.example.; do
         printf 'zone "%s" { type primary; file "%s/zones/%s.zone"; };\n' "$z" "$OUT" "${z%.}"
     done
     # The dynamic zone: TSIG keys and the SIG(0) keys may update it.
@@ -548,6 +570,8 @@ start_named() {
 cmd_serve() {
     mkdir -p "$WORK/auth" "$WORK/resolver" "$OUT/named" "$OUT/resolver"
     cp "$OUT/zones/dyn.interop.zone" "$WORK/auth/dyn.interop.zone"
+    # tkey-dhkey reads the key from named's directory.
+    cp "$OUT"/tkey/K* "$WORK/auth/"
     auth_conf >"$WORK/auth/named.conf"
     cat "$WORK/auth/named.conf"
     start_named auth "$WORK/auth/named.conf" $AUTH_PORT
@@ -716,6 +740,13 @@ cmd_capture() {
         case $t in DSYNC) n=_dsync ;; HHIT | BRID) n=drip ;; esac
         q "newtypes/$(echo "$t" | tr A-Z a-z)" "$n.newtypes.example." "TYPE$(type_number "$t")"
     done
+    q drafttypes/axfr -y "hmac-sha256:hmac-sha256.key:$SECRET" drafttypes.example. AXFR
+    for t in IPN CLA UNECE ISO; do
+        local n
+        n=$(echo "$t" | tr A-Z a-z)
+        q "drafttypes/$n" "$n.drafttypes.example." "TYPE$(type_number "$t")"
+        q "drafttypes/$n-generic" "$n.generic.drafttypes.example." "TYPE$(type_number "$t")"
+    done
 
     log "named: EDNS, transports, CHAOS"
     local z=ed25519-nsec.interop.
@@ -854,6 +885,10 @@ type_number() {
     HHIT) echo 67 ;;
     BRID) echo 68 ;;
     DOA) echo 259 ;;
+    UNECE) echo 69 ;;
+    ISO) echo 70 ;;
+    CLA) echo 263 ;;
+    IPN) echo 264 ;;
     esac
 }
 

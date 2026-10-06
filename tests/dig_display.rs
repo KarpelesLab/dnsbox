@@ -14,12 +14,16 @@
 //! predating some registrations: it shows the NXNAME type and the dohpath
 //! SvcParamKey in generic form, and EDNS options it does not decode (DAU,
 //! DHU, N3U, CHAIN, Report-Channel) as `OPT=<code>` with hex, where dnsbox
-//! shows their mnemonic and value.
+//! shows their mnemonic and value; and it writes record types it does not
+//! know (those only Internet-Drafts define) as `TYPE<n>` with the RFC 3597
+//! generic form of their data, where dnsbox writes the mnemonic and the
+//! typed data, which must then be dnsbox's display of dig's octets.
 
 use std::fs;
 use std::path::Path;
 
-use dnsbox::Message;
+use dnsbox::rdata::RData;
+use dnsbox::{Class, Message, Rtype, WireReader};
 
 /// Loads the wire message a reference output was produced from.
 fn wire(name: &str) -> Vec<u8> {
@@ -82,6 +86,9 @@ fn same_line(dig: &str, ours: &str) -> bool {
     {
         return same_line(dig, &older);
     }
+    if same_generic_line(dig, ours) {
+        return true;
+    }
     // Owner, TTL, class and type with their separators must be identical.
     let Some(head) = rdata_start(ours) else {
         return false;
@@ -95,6 +102,47 @@ fn same_line(dig: &str, ours: &str) -> bool {
 /// form): the NXNAME type (RFC 9824) of Cloudflare's compact-denial NSEC
 /// bitmaps and the dohpath SvcParamKey (RFC 9461) of DDR SVCB records.
 const NEWER_THAN_DIG: &[(&str, &str)] = &[(" NXNAME", " TYPE128"), (" dohpath=", " key7=")];
+
+/// A question or record line where dig writes a type it does not know as
+/// `TYPE<n>` (and a record's data in the RFC 3597 generic form, `\# len
+/// hex`), and dnsbox writes its mnemonic and typed data: the other fields
+/// agree, and dnsbox displays dig's octets as it displays its own record.
+fn same_generic_line(dig: &str, ours: &str) -> bool {
+    let d: Vec<&str> = dig.split_whitespace().collect();
+    let o: Vec<&str> = ours.split_whitespace().collect();
+    let Some((i, rtype)) = d.iter().enumerate().find_map(|(i, t)| {
+        let n = t.strip_prefix("TYPE")?.parse().ok()?;
+        Some((i, Rtype::new(n)))
+    }) else {
+        return false;
+    };
+    if i == 0 || d[..i] != o[..i.min(o.len())] || o.get(i) != Some(&rtype.to_string().as_str()) {
+        return false;
+    }
+    // A question: nothing follows the type.
+    if d.len() == i + 1 {
+        return o.len() == i + 1;
+    }
+    let (Some(&"\\#"), Some(Ok(len))) = (d.get(i + 1), d.get(i + 2).map(|l| l.parse::<usize>()))
+    else {
+        return false;
+    };
+    let hex: String = d[i + 3..].concat();
+    let Some(octets) = (0..hex.len())
+        .step_by(2)
+        .map(|j| u8::from_str_radix(hex.get(j..j + 2)?, 16).ok())
+        .collect::<Option<Vec<u8>>>()
+    else {
+        return false;
+    };
+    let Ok(class) = d[i - 1].parse::<Class>() else {
+        return false;
+    };
+    octets.len() == len
+        && RData::parse(rtype, class, WireReader::new(&octets)).is_ok_and(|data| {
+            data.to_string().split_whitespace().collect::<String>() == o[i + 1..].concat()
+        })
+}
 
 /// The offset of the RDATA in a record line: after four fields and the
 /// whitespace that follows each.

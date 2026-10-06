@@ -180,14 +180,20 @@ jobs:
           DNSBOX_INTEROP_DIR="$OUT" DNSBOX_INTEROP_COMPILED=1 \
             cargo test --all-features --test interop_bind bind_reads_dnsbox_zones -- --nocapture
 
-      - name: dig's rendering of the corpus messages kept from a run
+      - name: dig's rendering of the responses keep.py keeps
         if: always()
         run: |
-          # tests/corpus/named-ci-*.hex without a reference in
-          # tests/data/dig/ (tests/dig_display.rs); none once kept.
-          python3 tests/corpus/dig_reference.py --missing
+          # The single responses tests/corpus/bind/keep.py keeps from a run
+          # as tests/corpus/named-ci-*.hex, written from this run and
+          # rendered by dig for tests/dig_display.rs (keep.py takes both),
+          # and any other corpus message without a reference.
           mkdir -p "$OUT/dig"
-          cp tests/data/dig/named-ci-*.dig "$OUT/dig/" 2>/dev/null || true
+          names=$(python3 tests/corpus/bind/keep.py --toplevel "$OUT" "this run")
+          python3 tests/corpus/dig_reference.py $names
+          python3 tests/corpus/dig_reference.py --missing
+          for n in $names; do cp "tests/data/dig/$n.dig" "$OUT/dig/" || true; done
+          git ls-files --others --exclude-standard tests/data/dig | xargs -r cp -t "$OUT/dig/"
+          ls "$OUT/dig"
 
       - name: dnspython reads dnsbox's presentation of every type
         if: always()

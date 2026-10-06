@@ -17,7 +17,9 @@
 //! parent's DS (itself verified from the trust anchor), TSIG-signed
 //! queries with every HMAC (which named must accept), a wrong secret and
 //! an unknown key (which it must reject), a TSIG-signed TKEY query (RFC
-//! 2930), TSIG-signed AXFR streams of several messages, dynamic UPDATEs
+//! 2930), a Diffie-Hellman TKEY exchange (RFC 2930 §4.1) with named's
+//! `tkey-dhkey` whose key then signs a query and is deleted again,
+//! TSIG-signed AXFR streams of several messages, dynamic UPDATEs
 //! (RFC 2136) named must apply, refuse or fail on a prerequisite, the IXFR
 //! they produce, UPDATEs signed with SIG(0) (RFC 2931) by a key of the
 //! zone, and the resolver's validated (AD), insecure and bogus (SERVFAIL)
@@ -57,6 +59,15 @@ const SECRET: [u8; 32] = [
 /// named's `cookie-secret` in `run.sh`: 00 01 .. 0f.
 #[cfg(feature = "cookie-siphash")]
 const COOKIE_SECRET: [u8; 16] = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15];
+
+/// The private value of the probe's Diffie-Hellman key (RFC 2539 group 2)
+/// for the TKEY exchange with named: fixed, so that `tests/interop_bind.rs`
+/// can derive the key again from the recorded messages (named's nonce
+/// makes every key fresh).
+const TKEY_DH_PRIVATE: [u8; 32] = [0x5a; 32];
+
+/// The probe's TKEY nonce (RFC 2930 §4.1 "key data" of the query).
+const TKEY_DH_NONCE: [u8; 16] = *b"dnsbox tkey test";
 
 /// How long to wait for a response.
 const TIMEOUT: Duration = Duration::from_secs(5);
@@ -128,6 +139,7 @@ fn run() -> Result<usize> {
     p.check("tsig-badsig", Probe::tsig_badsig);
     p.check("tsig-badkey", Probe::tsig_badkey);
     p.check("tkey", Probe::tkey);
+    p.check("tkey-dh", Probe::tkey_dh);
     for (h, alg) in HMACS {
         p.check(&format!("axfr-{h}"), |p| p.axfr(h, alg));
     }
@@ -554,6 +566,95 @@ impl Probe {
             v.finish()?;
         }
         Ok(())
+    }
+
+    /// Diffie-Hellman exchanged keying (RFC 2930 §4.1) with named's
+    /// `tkey-dhkey` (BIND 9.18; 9.20 removed it): a TKEY query for
+    /// `dnsbox-dh.` with the probe's DH KEY, signed with a configured TSIG
+    /// key as named requires; named answers with its own KEY, a nonce and
+    /// the key name it chose (`dnsbox-dh.tkey.interop.`, under its
+    /// `tkey-domain`). Both sides derive an HMAC-MD5 key (the only
+    /// algorithm named offers for it): it must sign a query named accepts,
+    /// then delete itself (§4.2); a query signed with it afterwards is
+    /// refused with BADKEY.
+    fn tkey_dh(&mut self) -> Result<()> {
+        use dnsbox::tkey::{self, DhGroup, DhKeyPair};
+
+        let creator = Probe::key("sha256", TsigAlgorithm::HmacSha256)?;
+        let pair = DhKeyPair::from_private_bytes(DhGroup::well_known(2)?, &TKEY_DH_PRIVATE)?;
+        let qname = name("dnsbox-dh.")?;
+        let alg = TsigAlgorithm::HmacMd5.name();
+        let t = now() as u32;
+        let request = Tkey::new(alg, t, t + 3600, TkeyMode::DIFFIE_HELLMAN, &TKEY_DH_NONCE);
+        self.label("tkey-dh/exchange");
+        let mut b = MessageBuilder::new_vec();
+        b.set_id(self.next_id());
+        pair.build_query(&mut b, &qname, &request, &qname)?;
+        let mac = TsigSigner::request(&creator).sign(&mut b, now())?;
+        let query = b.finish();
+        let wires = self.tcp(self.named, &query, |_| Ok(true))?;
+        let response = Message::parse_validated(&wires[0])?;
+        let mut v = TsigVerifier::new(&creator, mac.as_slice())?;
+        ensure(v.verify(&response, now())?.is_some(), "response not signed")?;
+        v.finish()?;
+        if let Ok(answer) = tkey::find_answer(&response) {
+            println!(
+                "   named answered: {} TKEY {}",
+                answer.key_name, answer.data
+            );
+        }
+        let shared = pair.complete(&Message::parse_validated(&query)?, &response)?;
+        let key_name = name("dnsbox-dh.tkey.interop.")?;
+        ensure(
+            shared.name() == key_name.as_name(),
+            format!("key name {}", shared.name()),
+        )?;
+        println!(
+            "   agreed on {} ({}, {} octets)",
+            shared.name(),
+            shared.algorithm(),
+            shared.secret().len()
+        );
+        let key = shared.hmac_key()?;
+
+        // The new key signs a query named accepts.
+        self.label("tkey-dh/use");
+        let id = self.next_id();
+        let mut b = MessageBuilder::query_vec(id, &name("interop.")?, Rtype::SOA, Class::IN)?;
+        let mac = TsigSigner::request(&key).sign(&mut b, now())?;
+        let r = self.udp(self.named, &b.finish())?;
+        let msg = Message::parse_validated(&r)?;
+        ensure(
+            msg.flags().rcode() == Rcode::NOERROR,
+            format!(
+                "query signed with the new key: rcode {}",
+                msg.flags().rcode()
+            ),
+        )?;
+        let mut v = TsigVerifier::new(&key, mac.as_slice())?;
+        ensure(v.verify(&msg, now())?.is_some(), "response not signed")?;
+        v.finish()?;
+
+        // It deletes itself (§4.2), signing the request.
+        self.label("tkey-dh/delete");
+        let mut b = MessageBuilder::new_vec();
+        b.set_id(self.next_id());
+        tkey::build_deletion_query(&mut b, &key_name, alg, now() as u32)?;
+        let mac = TsigSigner::request(&key).sign(&mut b, now())?;
+        let r = self.udp(self.named, &b.finish())?;
+        let msg = Message::parse_validated(&r)?;
+        let mut v = TsigVerifier::new(&key, mac.as_slice())?;
+        ensure(v.verify(&msg, now())?.is_some(), "response not signed")?;
+        v.finish()?;
+        let deleted = tkey::find_deletion(&msg)?.ok_or("no TKEY deletion record")?;
+        ensure(
+            deleted.key_name == key_name.as_name() && deleted.data.error == TsigRcode::NOERROR,
+            format!("deletion answered {} {}", deleted.key_name, deleted.data),
+        )?;
+
+        // named no longer knows it.
+        self.label("tkey-dh/after");
+        self.tsig_rejected(&key, TsigRcode::BADKEY)
     }
 
     /// A TSIG-signed AXFR of `bulk.interop.`: a stream of several

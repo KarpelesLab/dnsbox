@@ -4,6 +4,7 @@ data of tests/interop_bind.rs).
 
     gh run download RUN_ID -n interop-bind -D /tmp/interop-bind
     python3 tests/corpus/bind/keep.py /tmp/interop-bind "run RUN_ID, DATE"
+    python3 tests/corpus/bind/keep.py --toplevel OUT "run RUN_ID, DATE"
 
 Replaces the kept data (everything in this directory but the scripts) with:
 eight of the twenty-two signed zones (every algorithm, every denial chain
@@ -12,13 +13,16 @@ DS records, named's answers and transfers, named-compilezone's output of
 three of them in both styles, and the resolver's cases for three of them and for the
 others; named's EDNS, CHAOS, truncation and TSIG exchanges; the dynamic
 zone's updates (TSIG and SIG(0), with the SIG(0) keys) and two of its
-IXFRs; named's transfers of alltypes.example and newtypes.example and its
-answers for each RRset of alltypes.example; the bind_probe exchanges but
-five of its six bulk transfers; the resolver-to-named queries of one zone;
+IXFRs; named's transfers of alltypes.example, newtypes.example and
+drafttypes.example and its answers for each RRset of alltypes.example and
+each draft type; named's Diffie-Hellman TKEY key; the bind_probe
+exchanges but five of its six bulk transfers; the resolver-to-named queries of one zone;
 two of the zones dnsbox re-signed, with named-compilezone's output of them
 and dnssec-verify's verdict. A few single responses also go to
 tests/corpus/named-ci-*.hex, with dig's rendering of them when the run made
-it. Python standard library only.
+it (the workflow writes them with --toplevel, which writes only those
+files and prints their names, and has dig render them). Python standard
+library only.
 """
 
 import os
@@ -26,7 +30,8 @@ import shutil
 import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-KEEP_SCRIPTS = {"run.sh", "keep.py"}
+# Not run output: the scripts and the zone run.sh serves.
+KEEP_SCRIPTS = {"run.sh", "keep.py", "drafttypes.zone"}
 
 CHILDREN = [
     "rsasha1-nsec.interop",
@@ -70,6 +75,7 @@ NAMED = [z + "/" + case for z in CHILDREN for case in CASES] + [
     "notimp",
     "alltypes",
     "newtypes",
+    "drafttypes",
     "dyn/axfr-before",
     "dyn/axfr-after",
     "dyn/ixfr-md5",
@@ -90,6 +96,7 @@ NAMED = [z + "/" + case for z in CHILDREN for case in CASES] + [
     "probe/tsig-badsig",
     "probe/tsig-badkey",
     "probe/tkey",
+    "probe/tkey-dh",
     "probe/axfr-sha384",
     "probe/update",
     "probe/sig0",
@@ -113,6 +120,10 @@ TOPLEVEL = {
     "named-ci-truncated": ("named/transport/truncated", -1),
     "named-ci-dsync": ("named/newtypes/dsync", -1),
     "named-ci-doa": ("named/newtypes/doa", -1),
+    "named-ci-drafttypes-iso": ("named/drafttypes/iso-generic", -1),
+    "named-ci-drafttypes-cla": ("named/drafttypes/cla-generic", -1),
+    "named-ci-tkey": ("named/probe/tkey", -1),
+    "named-ci-tkey-dh": ("named/probe/tkey-dh/exchange", -1),
     "named-ci-resolver-secure": ("resolver/ed25519-nsec/a/answer", -1),
     "named-ci-resolver-nxdomain": ("resolver/ed448-nsec3/nxdomain/answer", -1),
     "named-ci-resolver-insecure": ("resolver/insecure/a/answer", -1),
@@ -128,7 +139,7 @@ def version(src):
     return "named"
 
 
-def toplevel(src, run):
+def toplevel(src, run, dig=True):
     corpus = os.path.dirname(HERE)
     named = version(src)
     for name, (label, which) in TOPLEVEL.items():
@@ -136,8 +147,11 @@ def toplevel(src, run):
         responses = sorted(f for f in os.listdir(d) if f.endswith("-r.hex"))
         with open(os.path.join(d, responses[which])) as f:
             hexdigits = "".join(l.strip() for l in f if not l.startswith("#"))
-        with open(os.path.join(d, "command.txt")) as f:
-            command = f.read().strip()
+        try:
+            with open(os.path.join(d, "command.txt")) as f:
+                command = f.read().strip()
+        except FileNotFoundError:
+            command = "examples/bind_probe.rs, " + label.split("/", 2)[2]
         server = named + (" (validating resolver)" if label.startswith("resolver/") else "")
         with open(os.path.join(corpus, name + ".hex"), "w") as f:
             f.write("# %s on the interop CI runner (%s): %s\n" % (server, run, command))
@@ -146,9 +160,9 @@ def toplevel(src, run):
                 f.write(hexdigits[i:i + 96] + "\n")
         # dig's rendering of it, if the run made one (its workflow renders
         # the kept files that have none).
-        dig = os.path.join(src, "dig", name + ".dig")
-        if os.path.exists(dig):
-            shutil.copy(dig, os.path.join(os.path.dirname(corpus), "data", "dig"))
+        rendered = os.path.join(src, "dig", name + ".dig")
+        if dig and os.path.exists(rendered):
+            shutil.copy(rendered, os.path.join(os.path.dirname(corpus), "data", "dig"))
 
 
 def copy(src, rel, required=True):
@@ -163,6 +177,12 @@ def copy(src, rel, required=True):
 
 
 def main():
+    if sys.argv[1] == "--toplevel":
+        # Only the single responses, for dig to render on the runner.
+        src = sys.argv[2]
+        toplevel(src, sys.argv[3] if len(sys.argv) > 3 else "interop run", dig=False)
+        print(" ".join(TOPLEVEL))
+        return
     src = sys.argv[1]
     run = sys.argv[2] if len(sys.argv) > 2 else "interop run"
     for name in os.listdir(HERE):
@@ -175,14 +195,15 @@ def main():
             os.remove(path)
 
     for rel in ["versions.txt", "now", "anchor.ds", "algorithms.txt", "alltypes-omitted.txt",
-                "newtypes-omitted.txt", "zones/bulk.interop.zone", "zones/newtypes.example.zone",
-                "zones/alltypes.example.zone", "sig0"]:
+                "newtypes-omitted.txt", "drafttypes-omitted.txt", "zones/bulk.interop.zone",
+                "zones/newtypes.example.zone", "zones/drafttypes.example.zone",
+                "zones/alltypes.example.zone", "sig0", "tkey"]:
         copy(src, rel)
     for z in ZONES:
         copy(src, "zones/%s.zone" % z)
         copy(src, "ds/%s.ds" % z)
         copy(src, "keys/" + z)
-    for name in COMPILED + ["alltypes", "newtypes", "bulk.interop"]:
+    for name in COMPILED + ["alltypes", "newtypes", "drafttypes.example", "bulk.interop"]:
         for style in ("full", "relative"):
             copy(src, "compiled/%s.%s" % (name, style))
             copy(src, "compiled/%s.%s.omitted" % (name, style), required=False)
