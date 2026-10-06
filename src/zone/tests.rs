@@ -504,6 +504,22 @@ i A 192.0.2.11
             Ok("i.example. 60 IN A 192.0.2.11".to_string()),
         ]
     );
+    // A stray quote inside a token is an error on its line; it does not
+    // fold the following records into the token.
+    assert_eq!(
+        read_all(
+            "$TTL 60\nscreen TXT 27\"\nwww A 192.0.2.1\nmail A 192.0.2.2\n\
+             tv TXT 55\"\nftp A 192.0.2.3\n",
+            "example."
+        ),
+        [
+            Err((Error::InvalidText, 2, 12)),
+            Ok("www.example. 60 IN A 192.0.2.1".to_string()),
+            Ok("mail.example. 60 IN A 192.0.2.2".to_string()),
+            Err((Error::InvalidText, 5, 8)),
+            Ok("ftp.example. 60 IN A 192.0.2.3".to_string()),
+        ]
+    );
     // A quoted owner.
     assert_eq!(
         read_all("\"q\" 1 A 192.0.2.1\n", "x."),

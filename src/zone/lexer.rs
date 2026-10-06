@@ -234,8 +234,9 @@ fn quoted(
 
 /// A contiguous token: everything up to a blank, newline, parenthesis or
 /// comment. A backslash escapes the next character, and a quote inside the
-/// token groups up to the next quote (as in SVCB `key="a b"` values,
-/// RFC 9460 Appendix A).
+/// token groups up to the next quote on the same line (as in SVCB
+/// `key="a b"` values, RFC 9460 Appendix A); an unescaped newline before
+/// it is an error.
 fn word(
     input: &[u8],
     cur: &mut Cursor,
@@ -264,11 +265,10 @@ fn word(
                 in_quote = !in_quote;
                 j += 1;
             }
-            Some(b'\n') if in_quote => {
-                limits.check_line(pos, j)?;
-                pos.newline(j);
-                j += 1;
-            }
+            // The grouping ends with the line: a stray quote must not fold
+            // the following lines (whole records) into this token. RFC 1035
+            // §5.1 only lets a string that *starts* with a quote span lines.
+            Some(b'\n') if in_quote => return Err((Error::InvalidText, start)),
             Some(&c) if !in_quote && (is_blank(c) || matches!(c, b'\n' | b'(' | b')' | b';')) => {
                 break;
             }
@@ -369,6 +369,21 @@ mod tests {
         assert_eq!(lex_all("x a\\", false), Err((Error::InvalidText, 1, 3)));
         assert_eq!(lex_all("x \"a\\", false), Err((Error::InvalidText, 1, 3)));
         assert_eq!(lex_all("k=\"ab", false), Err((Error::InvalidText, 1, 1)));
+        // A quote inside a token groups up to the end of the line at most:
+        // a stray one must not swallow the lines after it.
+        assert_eq!(
+            lex_all("k=\"ab\ncd\" x", false),
+            Err((Error::InvalidText, 1, 1))
+        );
+        assert_eq!(
+            lex_all("x 27\"\nwww A 1\ntv 55\"", true),
+            Err((Error::InvalidText, 1, 3))
+        );
+        // An escaped newline is still part of the token.
+        assert_eq!(
+            lex_all("k=\"a\\\nb\" c", false),
+            Ok(std::vec![("k=\"a\\\nb\"", 1, 1), ("c", 2, 4)])
+        );
         let deep = "(".repeat(usize::from(MAX_PAREN) + 1);
         assert!(lex_all(&deep, false).is_err());
         // Columns count characters, not bytes.
