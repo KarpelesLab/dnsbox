@@ -730,14 +730,23 @@ impl<'a> ZoneReader<'a> {
     fn start_generate(&mut self, s: &mut Scanner<'a>) -> Result<()> {
         let pos = self.st.cur.pos;
         let range = Range::parse(s.word()?.as_bytes(), self.limits.max_generate)?;
+        // Every record rescans both templates, so they are bounded like
+        // their expansion: the work per record stays O(TEXT_MAX) however
+        // long a `${000...0}` the input spells.
         let lhs = s.word()?;
         let at = s.last_pos().offset;
         let lhs = (at, at + lhs.as_bytes().len());
+        if lhs.1 - lhs.0 > generate::TEXT_MAX {
+            return Err(Error::LimitExceeded);
+        }
         let (ttl, class, rtype) = fields(s)?;
         let rhs = s.token()?;
         let at = s.last_pos().offset;
         let quotes = if rhs.is_quoted() { 2 } else { 0 };
         let rhs = (at, at + rhs.as_bytes().len() + quotes);
+        if rhs.1 - rhs.0 > generate::TEXT_MAX {
+            return Err(Error::LimitExceeded);
+        }
         s.finish()?;
         let ttl = match ttl {
             Some(ttl) => {

@@ -616,6 +616,37 @@ after A 192.0.2.99
     assert_eq!(n, MAX_GENERATE);
 }
 
+/// Each record of a `$GENERATE` rescans its templates, so they are bounded
+/// like their expansion (`${000...0}` is one character from any length).
+#[test]
+fn generate_template_len_is_bounded() {
+    let zeros = "0".repeat(250_000);
+    for (line, col) in [
+        (format!("$GENERATE 0-65535 ${{{zeros}}} A 192.0.2.1\n"), 19),
+        (format!("$GENERATE 0-65535 h$ TXT x${{{zeros}}}\n"), 26),
+        (format!("$GENERATE 0-65535 h$ TXT \"x${{{zeros}}}\"\n"), 26),
+    ] {
+        let text = format!("$TTL 1\n{line}ok A 192.0.2.1\n");
+        assert_eq!(
+            read_all(&text, "x."),
+            [
+                Err((Error::LimitExceeded, 2, col)),
+                Ok("ok.x. 1 IN A 192.0.2.1".to_string()),
+            ]
+        );
+    }
+    // Up to the limit, templates are fine.
+    let zeros = "0".repeat(generate::TEXT_MAX - 4);
+    let text = format!("$TTL 1\n$GENERATE 7-8 ${{{zeros}}} TXT ${{{zeros}}}\n");
+    assert_eq!(
+        read_all(&text, "x."),
+        [
+            Ok("7.x. 1 IN TXT \"7\"".to_string()),
+            Ok("8.x. 1 IN TXT \"8\"".to_string()),
+        ]
+    );
+}
+
 #[cfg(feature = "alloc")]
 #[test]
 fn includes() {

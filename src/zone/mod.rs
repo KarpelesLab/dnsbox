@@ -36,7 +36,9 @@
 //!   `$INCLUDE <file> [<origin>]` (reported as an [`Entry::Include`], or
 //!   followed by [`Records`] with a resolver), and BIND's
 //!   `$GENERATE <start>-<stop>[/<step>] <owner> [TTL] [class] <type>
-//!   <rdata>` with `$` and `${offset,width,base}` substitutions.
+//!   <rdata>` with `$` and `${offset,width,base}` substitutions (each
+//!   template, and what it expands to, at most 1024 characters; a longer
+//!   template is [`Error::LimitExceeded`](crate::Error::LimitExceeded)).
 //!
 //! # Hostile input
 //!
