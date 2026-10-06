@@ -121,13 +121,17 @@ tests/
   interop_knot.rs      Knot DNS / Unbound: Knot-signed zones, knotd,
                   kdig and Unbound exchanges, validation verdicts
                   (corpus/knot/; DNSBOX_INTEROP_DIR for a fresh CI run)
+  interop_bind.rs      BIND 9 in CI: BIND-signed zones, zone tools,
+                  named (authoritative, resolver), dig, nsupdate, TKEY
+                  (corpus/bind/; DNSBOX_INTEROP_DIR likewise)
   dnssec_corpus.rs     corpus DNSSEC validated from the root anchors
   fuzz_regressions.rs  fuzz seeds/regressions replayed on stable
   proptest_roundtrip.rs, no_alloc.rs   property tests, allocation check
   dig_display.rs  Message Display vs BIND dig 9.18 output (tests/data/dig/)
   serde.rs        serde forms and corpus round trips (serde_json, serde_test)
 examples/         small complete programs (stub_resolver, zone2wire,
-                  dnssec_dig, tsig_axfr); `required-features` in Cargo.toml
+                  dnssec_dig, tsig_axfr) and the CI probes (interop_probe,
+                  bind_probe); `required-features` in Cargo.toml
 fuzz/             cargo-fuzz targets (own workspace, nightly)
 benches/          criterion benchmarks (own package; see BENCH.md)
 ```
@@ -970,9 +974,15 @@ common traits, `Display`/`FromStr` pairs, iteration by reference).
     (`tests/corpus/bind/run.sh`) does the same with dnssec-keygen,
     dnssec-signzone, named-checkzone, named-compilezone, `named` (as an
     authoritative server and as a validating resolver), dig, nsupdate
-    and dnsbox's `bind_probe`, checked by `tests/interop_bind.rs` (kept in
-    `tests/corpus/bind/`), and runs dnspython's cross-check
-    (`gen_rdata.py --check`) with the distribution's dnspython.
+    and dnsbox's `bind_probe` (a Diffie-Hellman TKEY exchange with
+    `named` among its checks), checked by `tests/interop_bind.rs` (kept
+    in `tests/corpus/bind/` by `keep.py`, with `dig`'s rendering of the
+    single responses it keeps, made in the same run), and runs
+    dnspython's cross-check (`gen_rdata.py --check`) with the
+    distribution's dnspython. A new record type, protocol helper or
+    probe check that a tool implements gets a case there; a type the
+    tools do not know is still served in the RFC 3597 form (as
+    `drafttypes.zone` does).
   - `tests/no_alloc.rs` — the hot path under a counting allocator, run with
     `--no-default-features` in CI.
   - `benches/` — separate package: criterion comparisons against
@@ -1142,7 +1152,10 @@ src/dnssec/
   `hmac_key()`). Signing and verifying the TKEY messages is the caller's
   (TSIG or SIG(0), §3). GSS-API (§4.3, RFC 3645) is out of scope: the
   messages carry its tokens, but the mechanism and `gss-tsig` MICs are
-  not provided. The record data (`rdata::Tkey`, `TkeyMode`) shares
+  not provided. Diffie-Hellman keying is checked against BIND 9.18's
+  `named` in CI (it offers only HMAC-MD5 and names the key under its
+  `tkey-domain`, which `complete` takes from the answer). The record
+  data (`rdata::Tkey`, `TkeyMode`) shares
   `TsigRcode` and the sized-base64 text helpers with TSIG; its text reads
   both BIND's form (with sizes, the `Display` form) and dnspython's.
 - **UPDATE** (`update`): section aliases `ZONE`, `PREREQUISITE`,

@@ -210,18 +210,44 @@ caller's job:
   target) without a crash. After the work-limits round and the new record
   types, every target ran again for 120 seconds on four workers with
   overflow checks (0.4 to 6.1 million executions per target), without a
+  crash. After the code review round, with the TKEY key agreement and the
+  draft-only types, every target ran for 120 seconds with overflow checks
+  (0.2 to 4.0 million executions per target, the `message` target reading
+  the new TKEY messages, `rdata` and `text` the new types), without a
   crash.
 - **Tests**: truncation at every offset for every parser, property tests
   (`tests/proptest_roundtrip.rs`), a corpus of real responses from BIND,
   NSD, Knot, PowerDNS and Unbound (`tests/corpus/`), tool-level interop
-  with BIND, ldns, dnspython, and Knot DNS and Unbound in CI (whose
-  bogus, insecure and secure verdicts dnsbox's validation must match
-  within one default `ValidationBudget` per response, so the KeyTrap
-  limits are checked against legitimate chains, `tests/interop_knot.rs`),
+  with BIND, ldns, dnspython, and Knot DNS, Unbound and BIND in CI
+  (whose resolvers' bogus, insecure and secure verdicts dnsbox's
+  validation must match within one default `ValidationBudget` per
+  response, so the KeyTrap limits are checked against legitimate chains,
+  `tests/interop_knot.rs`, `tests/interop_bind.rs`),
   RFC test vectors, and one regression test per audit finding
   (`tests/security_audit.rs`).
 
 ## Audit history
+
+### Code review round (October 2026)
+
+A review of the whole crate after the work-limits round, each finding
+verified with a reproduction before it was fixed; every fix has a
+regression test next to the code (`dnssec/chain/tests.rs`,
+`zone/tests.rs`, `zone/lexer.rs`, `builder/truncate/tests.rs`,
+`edns/tests.rs`, `rdata/tests.rs`, `dso.rs`, `tests/serde.rs`).
+
+| Severity | Finding | Fix |
+|----------|---------|-----|
+| High | A malformed `$INCLUDE` path (`\256`, non-UTF-8) inside an `$INCLUDE`d file returned before the file's state was put back: the file restarted from its top, at the root origin, so `Records` never ended (a file holding only that line) or re-read the file up to the record limit | the state is kept before the error is returned, which names the file |
+| Medium | `TrustedKeys::from_ds` took DS records of digest types it cannot compute (GOST R 34.11-2012, SM3) as usable: such a DS first in the RRset turned a secure zone insecure, displaced SHA-1 DS records, and turned a forged DNSKEY RRset whose key tag matched it from bogus into insecure | only SHA-1, SHA-256 and SHA-384 DS records count; others are disregarded (RFC 4035 §5.2) |
+| Medium | `$GENERATE` rescanned its templates for every record: a 250 KB `${000…0}` modifier that expands to one character cost about 20 s of CPU per directive, within the default limits | templates longer than 1024 characters are `LimitExceeded` |
+| Low | A quote inside an unquoted token grouped up to the next quote anywhere in the file, folding whole records into one string without an error | the grouping ends with the line (`InvalidText`) |
+| Low | Type bitmaps (NSEC, NSEC3, CSYNC) accepted empty blocks and trailing zero octets (RFC 4034 §4.1.2): several encodings of one type set, which changed on a text round trip (breaking the RRSIG over them) | a block ending in a zero octet is `InvalidRdata` |
+| Low | `copy_section` / `copy_message` grouped only consecutive records into RRsets: truncation could keep part of an interleaved additional-section RRset with TC clear | the RRset's other parts are dropped too, or TC is set; at most 8 split RRsets and 65 536 record visits per section |
+| Low | An OPT record in the answer or authority section was ignored: `Message::edns` and `start_response_edns` took such a query for one without EDNS | `Error::MisplacedOpt` (FORMERR) |
+| Low | `DsoBuilder::pad_to` on a `Vec` wrote padding of any size the caller asked for before checking the 65 535-octet limit (1 GiB written, larger sizes aborted on allocation failure) | checked before anything is written |
+| Low | `push_edns_padded` sized padding against the limit, not the limit minus the reserve, so padding failed when room was kept for a TSIG or SIG(0) record | padded up to the limit minus the reserve |
+| Low | `OwnedRData`'s serde form of a class-specific type in a class other than IN did not deserialize | read back as the opaque data it is |
 
 ### Work-limits round (October 2026)
 

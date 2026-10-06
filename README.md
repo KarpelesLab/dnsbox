@@ -14,7 +14,7 @@ DNSSEC, SVCB/HTTPS, TSIG, and more).
 > zone transfers, zone files and the long tail of record types, all
 > documented with examples, fuzzed, security-audited
 > ([SECURITY.md](SECURITY.md)) and checked against BIND, ldns, dnspython
-> and live servers, and against Knot DNS and Unbound in CI. The API went
+> and live servers, and against Knot DNS, Unbound and BIND in CI. The API went
 > through its 1.0 review; until 1.0 is tagged, releases may still break it
 > (see [Stability and MSRV policy](#stability-and-msrv-policy)).
 
@@ -144,7 +144,7 @@ files, DNSSEC, TSIG), and every public item has its own example. The
 | [`dnssec_dig`](examples/dnssec_dig.rs) | `cargo run --example dnssec_dig --features dnssec` | validates captured responses from a trust anchor down (DS → DNSKEY → RRset) |
 | [`tsig_axfr`](examples/tsig_axfr.rs) | `cargo run --example tsig_axfr --features tsig` | a TSIG-signed zone transfer, over loopback or from a real server |
 | [`interop_probe`](examples/interop_probe.rs) | (CI only, against `knotd` and `unbound`) | dnsbox-built queries with EDNS options, cookies, TSIG, AXFR/IXFR and UPDATE, checked against Knot DNS and Unbound |
-| [`bind_probe`](examples/bind_probe.rs) | (CI only, against `named`) | dnsbox-built queries with EDNS options, cookies, TSIG, TKEY, AXFR/IXFR and UPDATE (TSIG and SIG(0)), checked against BIND 9 as an authoritative server and as a validating resolver |
+| [`bind_probe`](examples/bind_probe.rs) | (CI only, against `named`) | dnsbox-built queries with EDNS options, cookies, TSIG, TKEY (a Diffie-Hellman key exchange included), AXFR/IXFR and UPDATE (TSIG and SIG(0)), checked against BIND 9 as an authoritative server and as a validating resolver |
 
 ## What is covered
 
@@ -212,9 +212,12 @@ dnsbox is continuously fuzzed with overflow checks (ten
 decisions), property-tested, and checked against real responses from BIND,
 NSD, Knot, PowerDNS, Unbound and public resolvers, against BIND 9.18, ldns
 and dnspython (zone files, signed zones for every algorithm, TSIG, UPDATE,
-ZONEMD), against Knot DNS 3.5 and Unbound 1.19 running in CI (Knot-signed
-zones, `knotd` and `kdig` exchanges, dnsbox's validation verdicts against
-Unbound's, dnsbox-signed zones accepted by `kzonecheck`), and by
+ZONEMD), against Knot DNS 3.5, Unbound 1.19 and BIND 9.18 running in CI
+(Knot- and BIND-signed zones for every algorithm, `knotd`, `named`, `kdig`,
+`dig` and `nsupdate` exchanges, a TKEY Diffie-Hellman exchange with
+`named`, dnsbox's validation verdicts against Unbound's and `named`'s,
+dnsbox-signed zones accepted by `kzonecheck`, `named-checkzone` and
+`dnssec-verify`), and by
 validating the captured DNSSEC data from the IANA root trust anchors
 ([`tests/corpus/`](tests/corpus)). The threat model — what
 is guaranteed on hostile input, the work bounds, what callers must do —

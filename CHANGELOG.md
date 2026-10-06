@@ -9,6 +9,36 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Security
 
+Findings of the post-1.0-review code review, each fixed with a
+regression test:
+
+- **High**: a malformed `$INCLUDE` path inside an `$INCLUDE`d file
+  reset that file to its start, so `Records` never ended (or repeated the
+  file's records up to the record limit). The file's state is kept and
+  the error names the file.
+- **Medium**: `TrustedKeys::from_ds` counted DS records of digest types
+  it cannot compute (GOST R 34.11-2012, SM3) as usable. One such DS
+  ahead of a matching SHA-256 one made a secure zone insecure, its
+  presence dropped SHA-1 DS records (RFC 4509 §3), and a forged DNSKEY
+  RRset whose key tag matched it came out insecure instead of bogus. Only
+  SHA-1, SHA-256 and SHA-384 DS records count now; others are
+  disregarded (RFC 4035 §5.2).
+- **Medium**: `$GENERATE` rescanned its templates for every record, so a
+  256 KiB `${000…0}` modifier cost about 20 s of CPU for one directive.
+  Templates longer than 1024 characters are `LimitExceeded`.
+- **Low**: a quote inside an unquoted token grouped everything up to the
+  next quote, whole lines included, silently folding the records in
+  between into one string. The grouping now ends at the line
+  (`InvalidText`).
+- **Low**: `copy_section` / `copy_message` treated only consecutive
+  records as an RRset, so truncation could keep part of an interleaved
+  additional-section RRset without setting TC. Its other parts are
+  dropped too, or TC is set (bounded: 8 split RRsets, 65 536 record
+  visits per section).
+- **Low**: `DsoBuilder::pad_to` on a `Vec` wrote the whole padding (any
+  size the caller asked) before checking it against the 65 535-octet
+  limit; it now checks first.
+
 Findings of the Milestone 9 security audit (`SECURITY.md`), each fixed
 with a regression test in `tests/security_audit.rs`:
 
@@ -80,7 +110,51 @@ caller duties.
   presentation format, tested with the RFC examples and BIND's and
   dnspython's vectors.
 - `tkey` module: `build_query`, `build_response` and `find` for the
-  RFC 2930 §4 message shapes (no key exchange).
+  RFC 2930 §4 message shapes.
+- Typed RDATA for the types only Internet-Drafts define: IPN and CLA
+  (draft-johnson-dns-ipn-cla-07: `Ipn`, a 64-bit node number written as
+  one number or two dotted halves; `Cla`, convergence-layer adapter
+  names) and UNECE and ISO
+  (draft-woodcock-faltstrom-external-registry-rrtypes-01: `Unece`, `Iso`,
+  with `RegistryValue` and `Precision` for the value grammar), with wire
+  and presentation format and the drafts' examples. Each names its draft
+  version; a later one may change the format.
+- TKEY key agreement and the rest of RFC 2930:
+  - without features: `tkey::build_query_with_key`, `find_request` and
+    `find_answer` (enforcing §3/§4: one TKEY record, its section and
+    owner; `Error::InvalidTkey`, answered FORMERR), `keys`, key deletion
+    (`build_deletion_query`, `build_deletion_response`,
+    `push_deletion_notice`, `find_deletion`), and the RFC 2539
+    Diffie-Hellman KEY format (`DhKey`, `DhPrime`, `well_known_prime`:
+    groups 1, 2 and BIND's 3);
+  - with the new `tkey` feature (purecrypto DH, RSA and MD5; implies
+    `alloc` and `tsig`): Diffie-Hellman exchanged keying (§4.1:
+    `DhGroup`, `DhKeyPair::build_query` / `respond` / `complete`,
+    `dh_keying_material`), server and resolver assigned keying (§4.4,
+    §4.5, RSAES-PKCS1-v1_5 with implicit rejection:
+    `respond_server_assigned`, `server_assigned_key`,
+    `build_resolver_assigned_query`, `accept_resolver_assigned`,
+    `resolver_assigned_key`, `encrypt_keying_material`,
+    `decrypt_keying_material`, `rsa_public_key`, `MAX_ENCRYPTED_BLOCKS`),
+    all yielding a `SharedKey` (wiped on drop, `hmac_key()` for TSIG)
+    under a `KeyGrant`; `tkey::purecrypto` re-exports the crate for its
+    RSA key and RNG types. GSS-API (RFC 3645) is out of scope.
+- TKEY presentation format reads dnspython's form (without the key and
+  other-data sizes) as well as BIND's, which `Display` still writes.
+- `Error::MisplacedOpt` and `Error::InvalidTkey`.
+- Tool-level interop with BIND 9.18 in CI (`.github/workflows/interop.yml`,
+  `tests/corpus/bind/run.sh`, the `bind_probe` example): zones signed by
+  `dnssec-signzone` with every algorithm BIND supports (NSEC, NSEC3,
+  Opt-Out) that dnsbox verifies and re-signs to BIND's bytes, BIND's
+  checkers and `named-compilezone` on dnsbox's zones, `named` serving
+  dnsbox's text of every type (draft-only types in the RFC 3597 form),
+  `dig` (EDNS, cookies, TSIG with six HMACs, transfers, truncation),
+  `nsupdate` (TSIG and SIG(0)), a Diffie-Hellman TKEY exchange with
+  `named` whose key signs a query and deletes itself, and 116 validating
+  resolver cases whose verdicts dnsbox must match;
+  `tests/interop_bind.rs` checks a kept subset offline. The dnspython
+  cross-check rewrites dnsbox's TKEY text to dnspython's layout instead
+  of skipping it, and runs on the CI runner's older dnspython.
 - Work limits: `Error::LimitExceeded`; `ZoneLimits` with
   `ZoneReader::with_limits`, `Records::with_limits` and
   `zone::parse_with_limits`; `IncludeResolver::load_limited` (a default
@@ -135,9 +209,35 @@ caller duties.
 
 ### Changed
 
-- **Breaking**: AMTRELAY, DSYNC, TKEY, DOA, HHIT and BRID parse to their
-  new `RData` variants instead of `RData::Unknown`, and display in their
-  presentation format instead of the RFC 3597 form.
+- **Breaking**: AMTRELAY, DSYNC, TKEY, DOA, HHIT, BRID, IPN, CLA, UNECE
+  and ISO parse to their new `RData` variants instead of
+  `RData::Unknown`, and display in their presentation format instead of
+  the RFC 3597 form.
+- **Breaking**: type bitmaps (NSEC, NSEC3, CSYNC: `TypeBitmap::new`)
+  with a block that ends in a zero octet (an empty block, or trailing
+  zero octets, RFC 4034 §4.1.2) are `InvalidRdata`; they gave one type
+  set several encodings that compared unequal and changed on a text
+  round trip.
+- **Breaking**: `Message::edns` (and so `start_response_edns` and
+  `effective_rcode`) walks every section and returns
+  `Error::MisplacedOpt` for an OPT record in the answer or authority
+  section (RFC 6891 §6.1.1), which it used to ignore (`Ok(None)`).
+- **Breaking**: a quote inside an unquoted presentation-format token
+  groups only up to the end of its line; an unescaped newline before the
+  closing quote is `InvalidText`.
+- **Breaking**: a `$GENERATE` template longer than 1024 characters is
+  `LimitExceeded`.
+- `push_edns_padded` pads up to the size limit minus the reserve
+  (`set_reserve`), leaving room for a TSIG or SIG(0) record, instead of
+  failing with `BufferTooSmall`.
+- `copy_section` / `copy_message` keep an RRset whose records are not
+  consecutive whole: dropped altogether from the additional section, or
+  TC set.
+- `OwnedRData` deserialization also accepts the opaque data its
+  serialization writes for a class-specific type of another class than
+  IN.
+- `Error::BadKey` also stands for TKEY error BADKEY.
+- The `bind_probe` example needs the `tkey` feature.
 - **Breaking**: `zone::parse`, `ZoneReader` and `Records` apply
   `ZoneLimits::DEFAULT`; going over a limit is `Error::LimitExceeded`
   (`ZoneLimits::UNLIMITED` for trusted files; it keeps the `$INCLUDE`
@@ -164,6 +264,17 @@ caller duties.
   enforced, and the CI docs builds deny `missing_docs`,
   `rustdoc::private_doc_tests` and `rustdoc::unescaped_backticks`; CI also
   runs the `alloc`-only doctests and the offline examples.
+
+### Fixed
+
+- AMTRELAY presentation format reads BIND 9.18's relay-less type-0 form
+  (`0 0 0`) as well as RFC 8777's `0 0 0 .`, which it still writes.
+- `TrustedKeys::from_ds`, `Records` with `$INCLUDE`, `$GENERATE`, the
+  zone lexer, `copy_section` and `DsoBuilder::pad_to`: see Security.
+- `push_edns_padded` failed whenever a reserve was set (Maximal padding
+  always, block padding near the limit), against its documentation.
+- `OwnedRData`'s serde form of a class-specific type held in another
+  class than IN did not deserialize.
 
 ## [0.0.2](https://github.com/KarpelesLab/dnsbox/compare/v0.0.1...v0.0.2) - 2026-10-04
 

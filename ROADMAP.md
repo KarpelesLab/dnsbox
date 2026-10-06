@@ -124,6 +124,10 @@ order of work. Items are checked off as they land.
 - [x] Obsolete/legacy types: X25, ISDN, RT, GPOS, NSAP, NSAP-PTR, PX, A6,
       NXT, EID, NIMLOC, ATMA, SINK, NINFO, RKEY, TALINK, SPF, AVC, RESINFO,
       WALLET typed; UINFO/UID/GID/UNSPEC opaque with mnemonics
+- [x] AMTRELAY (RFC 8777), DSYNC (RFC 9859), HHIT/BRID (RFC 9886), and
+      the types only Internet-Drafts define: DOA, IPN and CLA
+      (draft-johnson-dns-ipn-cla-07), UNECE and ISO
+      (draft-woodcock-faltstrom-external-registry-rrtypes-01)
 - [x] Presentation-format (zone-file style) `Display` for every typed RDATA
 
 ## Milestone 5 — DNSSEC
@@ -168,6 +172,11 @@ signatures), through the pluggable `Verifier` / `Signer` traits.
 - [x] SIG(0) (RFC 2931): signed-data construction, sign/find/verify through
       `Sig0Signer` / `Sig0Verifier`; RSA/ECDSA/EdDSA via the DNSSEC
       backend adapters
+- [x] TKEY (RFC 2930): the messages and their rules, key deletion (§4.2,
+      §5.1) and the RFC 2539 Diffie-Hellman KEY format without features;
+      Diffie-Hellman exchanged keying (§4.1) and server/resolver assigned
+      keying (§4.4, §4.5, RSA) yielding TSIG keys behind the `tkey`
+      feature. GSS-API (RFC 3645) is out of scope
 - [x] Dynamic UPDATE (RFC 2136) message helpers (zone/prerequisite/update
       sections, every prerequisite and deletion encoding)
 - [x] NOTIFY (RFC 1996)
@@ -204,7 +213,10 @@ signatures), through the pluggable `Verifier` / `Signer` traits.
       (zone files, signers for every algorithm, a local `named`), ldns
       and dnspython (RDATA text and wire, TSIG, UPDATE, EDNS, ZONEMD),
       and DNSSEC validation of the corpus from the IANA root anchors
-      (`tests/corpus/README.md`)
+      (`tests/corpus/README.md`); in CI, Knot DNS 3.5, Unbound 1.19 and
+      BIND 9.18 (signers, zone tools, servers, validating resolvers,
+      dynamic updates, TKEY) and dnspython, with kept subsets checked
+      offline
 - [x] Allocation-free hot path verified in CI (no-alloc build + tests)
 - [x] Hot-path tuning: name decoder and suffix cache, fixed-field
       parsing, label-trie compression table (`BENCH.md`: faster than
@@ -232,31 +244,45 @@ signatures), through the pluggable `Verifier` / `Signer` traits.
 
 ## Known gaps
 
-Nothing above is open. The gaps found by the Milestone 9 review are
-closed: AMTRELAY, DSYNC and TKEY have typed RDATA (with DOA, HHIT and
-BRID); Knot DNS and Unbound interop runs in CI; work an attacker controls
-is bounded by library limits on by default (`ZoneLimits`,
-`ValidationBudget`); `cargo doc` is clean in every feature combination.
+Nothing above is open. The gaps the previous round left are closed: IPN,
+CLA, UNECE and ISO have typed RDATA; TKEY does key agreement
+(Diffie-Hellman, checked against BIND's `named`, and server or resolver
+assigned keying) and reads dnspython's text form, which the dnspython
+cross-check now reads back; BIND 9 interop runs in CI next to Knot DNS
+and Unbound, and `named` serves dnsbox's text of AMTRELAY, DSYNC and DOA.
 What remains to know before 1.0:
 
-- Record types defined only by drafts that neither BIND nor dnspython
-  implements round-trip as RFC 3597 opaque data: IPN and CLA
-  (draft-johnson-dns-ipn-cla, expired), UNECE and ISO
-  (draft-woodcock-faltstrom-external-registry-rrtypes, still changing).
-  UINFO, UID, GID and UNSPEC are reserved without a format and stay
-  opaque by design.
-- TKEY (RFC 2930): dnsbox builds and reads the messages (`tkey`) but does
-  no key exchange (Diffie-Hellman, GSS-API). Its presentation format is
-  BIND's, with the key and other-data sizes, which dnspython does not
-  write or read (`tests/corpus/dnspython/gen_rdata.py` skips TKEY).
+- Types only Internet-Drafts define follow the version their docs name:
+  IPN and CLA draft-johnson-dns-ipn-cla-07 (expired, the one IANA cites),
+  UNECE and ISO draft-woodcock-faltstrom-external-registry-rrtypes-01
+  (still changing), DOA draft-durand-doa-over-dns as BIND implements it.
+  A later version may change their wire or text form, a breaking change
+  for those types. No other implementation knows IPN, CLA, UNECE or ISO
+  (BIND 9.18 serves them in the RFC 3597 form only), so they are checked
+  against their drafts' examples. The UNECE/ISO draft writes precisions
+  as `2400000(50000)`, which master files split at the parentheses:
+  dnsbox writes them escaped and reads a quoted value (to be raised with
+  the draft's authors). UINFO, UID, GID and UNSPEC are reserved without a
+  format and stay opaque by design.
+- TKEY: GSS-API (RFC 3645, `gss-tsig`) is out of scope. Diffie-Hellman
+  keying is checked against BIND 9.18 (BIND 9.20 removed it), server and
+  resolver assigned keying (§4.4, §4.5) only against an independent
+  implementation, since no server implements them. The `tkey` feature
+  re-exports `purecrypto` (`tkey::purecrypto`) for its RSA key and RNG
+  types, so a new major version of `purecrypto` is a breaking change for
+  users of that feature.
 - Zone transfer limits (`XfrProcessor::with_max_records`,
   `with_max_messages`) are opt-in with no default, since zones range from
   one record to millions.
-- Knot DNS and Unbound interop needs their tools, so it runs only in
-  GitHub CI (`.github/workflows/interop.yml`); `cargo test` checks a kept
-  subset of a CI run offline. Knot 3.5 reads DSYNC but not AMTRELAY,
-  HHIT, BRID or DOA, and `knotd` refuses TKEY, so those are checked
-  against BIND's and dnspython's vectors only.
+- `Message::validate` and `parse_validated` check the wire format only;
+  the OPT record's placement and uniqueness are checked by
+  `Message::edns` (and so `start_response_edns`), TSIG and SIG(0)
+  placement by `tsig::find` and `sig0::find`.
+- Knot DNS, Unbound and BIND interop needs their tools, so it runs only in
+  GitHub CI (`.github/workflows/interop.yml`); `cargo test` checks kept
+  subsets of a run offline. Neither Knot 3.5 nor BIND 9.18.39 knows HHIT
+  or BRID (checked against RFC 9886's examples) or the draft-only types
+  above; Knot reads DSYNC but not AMTRELAY or DOA; `knotd` refuses TKEY.
 
 ## Out of scope
 
