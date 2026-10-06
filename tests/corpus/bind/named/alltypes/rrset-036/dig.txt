@@ -1,0 +1,30 @@
+
+; <<>> DiG 9.18.39-0ubuntu0.24.04.7-Ubuntu <<>> @127.0.0.1 -p 5350 +tries=1 +time=5 +tcp +norec hip.alltypes.example. HIP
+; (1 server found)
+;; global options: +cmd
+;; Got answer:
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 34898
+;; flags: qr aa; QUERY: 1, ANSWER: 1, AUTHORITY: 2, ADDITIONAL: 3
+
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags:; udp: 1232
+; COOKIE: 8fd759cf783a5d74010000006ac43ea825b1d0c670f8f235 (good)
+;; QUESTION SECTION:
+;hip.alltypes.example.		IN	HIP
+
+;; ANSWER SECTION:
+hip.alltypes.example.	3600	IN	HIP	2 200100107B1A74DF365639CC39F1D578 AwEAAbdxyhNuSutc5EMzxTs9LBPCIkOFH8cIvM4p9+LrV4e19WzK00+CI6zBCQTdtWsuxKbWIy87UOoJTwkUs7lBu+Upr1gsNrut79ryra+bSRGQb1slImA8YVJyuIDsj7kwzG7jnERNqnWxZ48AWkskmdHaVDP4BcelrTI3rMXdXF5D rvs.alltypes.example. rvs2.alltypes.example.
+
+;; AUTHORITY SECTION:
+alltypes.example.	3600	IN	NS	ns1.alltypes.example.
+alltypes.example.	3600	IN	NS	ns2.example.net.
+
+;; ADDITIONAL SECTION:
+ns1.alltypes.example.	3600	IN	A	192.0.2.53
+ns1.alltypes.example.	3600	IN	AAAA	2001:db8::53
+
+;; Query time: 0 msec
+;; SERVER: 127.0.0.1#5350(127.0.0.1) (TCP)
+;; WHEN: Tue Oct 06 00:19:52 UTC 2026
+;; MSG SIZE  rcvd: 377
+

@@ -1,0 +1,382 @@
+; File written on Tue Oct  6 00:19:36 2026
+; dnssec_signzone version 9.18.39-0ubuntu0.24.04.7-Ubuntu
+ecdsap384-optout.interop. 3600	IN SOA	ns1.ecdsap384-optout.interop. hostmaster.ecdsap384-optout.interop. (
+					2026100401 ; serial
+					7200       ; refresh (2 hours)
+					3600       ; retry (1 hour)
+					1209600    ; expire (2 weeks)
+					300        ; minimum (5 minutes)
+					)
+			3600	RRSIG	SOA 14 2 3600 (
+					20361003001932 20261005231932 38014 ecdsap384-optout.interop.
+					DVqwv8HbheOJOfgRs+6DL61Vi4IQ+Iifjj9y
+					N4LvQide8eLb8mfeo3tN/x7Rfp0xaByl6iSz
+					+lDxpX9VTKfGY/hG9dPs0iUlBN5FdjHcmoT9
+					dfraeMukMcr9PHRjd+Ty )
+			3600	NS	ns1.ecdsap384-optout.interop.
+			3600	NS	ns2.ecdsap384-optout.interop.
+			3600	RRSIG	NS 14 2 3600 (
+					20361003001932 20261005231932 38014 ecdsap384-optout.interop.
+					90buP70Lv3ebRP6TE0ngSikn7aOhjwOYbTnG
+					dwFXNop1PMT/pskGHK8ARSmxQqIaKBYRFtKh
+					KUCNHB5XMsjtVadP9zQJkSE6BYr5vp05wn7o
+					m2MZDY3W//1WbdQ6r1Fz )
+			3600	MX	10 mail.ecdsap384-optout.interop.
+			3600	RRSIG	MX 14 2 3600 (
+					20361003001932 20261005231932 38014 ecdsap384-optout.interop.
+					DGKKDHFP+vZa4kqMUuaQZffh3A9xQf9jB+r1
+					WXlJdPSQKVH0U8u9ELNpSxAciQrtDaRI4cnR
+					X8340fW66hvv2eRKf0mBxT2yW8u0gLlI9HIW
+					TivLkGmRCJth8QuBO/k/ )
+			3600	TXT	"v=spf1 mx -all"
+			3600	RRSIG	TXT 14 2 3600 (
+					20361003001932 20261005231932 38014 ecdsap384-optout.interop.
+					zDGVldr1nww2hbgBAUSFubr0PKOyZA/8f0wt
+					DH+dtD4TYW52NCj5rpbdltmd46Nw4H1OazRl
+					xRpvH24GulmrqO+tidl8ZUveja9axNdwCIaj
+					ALsPq9xpEDbHARIS6hFt )
+			3600	LOC	52 22 23.000 N 4 53 32.000 E -2.00m 0.00m 10000m 10m
+			3600	RRSIG	LOC 14 2 3600 (
+					20361003001932 20261005231932 38014 ecdsap384-optout.interop.
+					afLOc2CgBgGCvTKtgooSmeSnMGuX/jBJmUfn
+					93u242FgvXMMiS/XDHJvyQcY9JSiRwd3Vmaw
+					cbAvKM9kMwbQSFdK1BCAR3wSQEDYRszQ7O83
+					1070SD54I2ObO80s/NYh )
+			3600	SSHFP	4 2 (
+					123456789ABCDEF67890123456789ABCDEF6
+					7890123456789ABCDEF123456789 )
+			3600	RRSIG	SSHFP 14 2 3600 (
+					20361003001932 20261005231932 38014 ecdsap384-optout.interop.
+					8OPCRWccoh/iTMPmQoLMWmIyQE//d3y6py3o
+					bxWrdbPi29LbKLEkihJdjvi/qO70nAj+p51M
+					B/GF0acYVP+7k1x7B1IBzbAPzFjo01StSeXD
+					ad1U4az/htX7wtkXDvv8 )
+			3600	DNSKEY	256 3 14 (
+					rp3RjImW2HHsIYbxla78d+TipjFFA9LZ1vLb
+					228r8EtgfEwbt6hDPZcK4IVqzmGD1evf0jmv
+					XlwcajF9fPZqSFNyaF1VioVg4yaAJYkd0mZi
+					M0ekhy/LQ0t34aAYnO3w
+					) ; ZSK; alg = ECDSAP384SHA384 ; key id = 38014
+			3600	DNSKEY	257 3 14 (
+					7Ibu6d79UfTAy8qVEsza6bbaIBAUl9iqmnRp
+					B63hbxRHaFkMn1zSFf0XYf4JdkxI7vNUrUxr
+					bzWlrRZP3PGr6gSXUwbfaS2uc3VD5RutvF7Y
+					cMxMHa/tjPr5jnasWn4U
+					) ; KSK; alg = ECDSAP384SHA384 ; key id = 53492
+			3600	RRSIG	DNSKEY 14 2 3600 (
+					20361003001932 20261005231932 53492 ecdsap384-optout.interop.
+					JL5KWfS1fiOb19lmz1e3QRAjJ7fCQl6B3xw9
+					6liflmivAuKe4ACA8mCtTumOKCkVnyn3oNna
+					EYXeCY6G6DZvZRCyxm6GJGz7Hyp5wch+36Kv
+					v6f/wKCBKzMhoe0YOhbr )
+			0	NSEC3PARAM 1 0 0 -
+			0	RRSIG	NSEC3PARAM 14 2 0 (
+					20361003001932 20261005231932 38014 ecdsap384-optout.interop.
+					8CFKG0Y2pvnTQNT4nSejIiDRJULAAQjs+HrT
+					oITkjrrUrwG56tHNue6PLXq5mJyA/z768BHp
+					3PRa/Y3A639LN+tvOR/pvre+6UjTd4MA4Ywb
+					L9Rcv5IeWDxkdfHN4Xej )
+			3600	HTTPS	1 . alpn="h2,h3" ipv4hint=192.0.2.80
+			3600	RRSIG	HTTPS 14 2 3600 (
+					20361003001932 20261005231932 38014 ecdsap384-optout.interop.
+					gGWM9bN2xZ00FBjIlD7yhiNbFc8PKID8WfTy
+					vXJiIOm8PN1EhVuKb7Pm/bNy+Fr7nHcXsx3l
+					OMdDax+Ynt7cw84zYdsVagpPQFWGnDi05XU8
+					WkURUpnxKiltqkeXbadk )
+			3600	CAA	0 issue "letsencrypt.org"
+			3600	RRSIG	CAA 14 2 3600 (
+					20361003001932 20261005231932 38014 ecdsap384-optout.interop.
+					AGU/rGbFaK1qPIgueDYLpmLJHfQ0xzJ4t5cX
+					ZIrnpLC/E22CG68vD2VKfbA94rp+LY1PWFsB
+					c0bbQo5si3xAwBwJjIgmn6OVtd2Zgu72tqJe
+					IUR5zMABe1mMNOeSn5CU )
+insecure.ecdsap384-optout.interop. 3600	IN NS ns.insecure.ecdsap384-optout.interop.
+ns.insecure.ecdsap384-optout.interop. 3600 IN A	192.0.2.98
+_svc.ecdsap384-optout.interop. 3600 IN SVCB 1 www.ecdsap384-optout.interop. alpn="dot" port=853
+			3600	RRSIG	SVCB 14 3 3600 (
+					20361003001932 20261005231932 38014 ecdsap384-optout.interop.
+					t+xyOQ4XgYgEpNhcnW1ztLjCfsL+/Ch+4Swc
+					QesPjpKPe3JqbxXV5eJP81ucJzxS3s0p90l3
+					hEGrM6ds0fnYuXyX/ZDr+1ZOyD5oQ2RImyJt
+					jyIqs11LcQzOzi0+NRBn )
+mail.ecdsap384-optout.interop. 3600 IN A 192.0.2.25
+			3600	RRSIG	A 14 3 3600 (
+					20361003001932 20261005231932 38014 ecdsap384-optout.interop.
+					q3iDuc6Ncat23MJHyuEGbu3+M6OV1t8fLWcd
+					sJ9RZfAYWISPO44+mE40sB4LU/BRh/t2jTJT
+					kxXcYCFhHmd50ezRVaXeUy+626yGzvGKVWGS
+					1o0DRKTyQkb6cFT4RkqP )
+other.ecdsap384-optout.interop.	3600 IN	NS ns.example.net.
+odd\.label\032x.ecdsap384-optout.interop. 3600 IN TXT "a \"quoted\" string" "tab\009and\\backslash"
+			3600	RRSIG	TXT 14 3 3600 (
+					20361003001932 20261005231932 38014 ecdsap384-optout.interop.
+					HmNul5sjAN2ev7S88hkd4OuYg6Tskn8JmxWl
+					RroqkoHkLOrl41HVr6e+pWvdFzPnPxLm3pzj
+					FdhG9kMbZnNeP8AWpehYr12BGAUQd9h2QvUU
+					9sSQRVZ64/Q6VuGoy84c )
+ns.secure.ecdsap384-optout.interop. 3600 IN A 192.0.2.99
+unsigned.ecdsap384-optout.interop. 3600	IN NS ns.unsigned.ecdsap384-optout.interop.
+ns.unsigned.ecdsap384-optout.interop. 3600 IN A	127.0.0.1
+dname.ecdsap384-optout.interop.	3600 IN	DNAME example.net.
+			3600	RRSIG	DNAME 14 3 3600 (
+					20361003001932 20261005231932 38014 ecdsap384-optout.interop.
+					tBkEdqD6MNt79BEyijxA9RHx7wvYPSgF4qY5
+					C8M75F4z0nw6Cu0tnU9tbwT+ZZysmSGoAStA
+					Y6hCaNr5extuMNoGbFTA4nhBI9e3NQ8hFfAX
+					h1KjR4gJDH1JdQp6FYWJ )
+_sip._udp.ecdsap384-optout.interop. 3600 IN SRV	10 60 5060 www.ecdsap384-optout.interop.
+			3600	RRSIG	SRV 14 4 3600 (
+					20361003001932 20261005231932 38014 ecdsap384-optout.interop.
+					lHHJqgO/rNzCmfTVms3dC3RHS9JWZ9jmdfKn
+					ACilOQaO8Zhm5XMt+WFt3dx/eRep3NLV+Szz
+					sTjBIbywmIladitPQaLt1AtvH1qviuUzEOzi
+					o1p1HXNthaxBo53Ljsqq )
+			3600	NAPTR	100 10 "S" "SIP+D2U" "" _sip._udp.ecdsap384-optout.interop.
+			3600	RRSIG	NAPTR 14 4 3600 (
+					20361003001932 20261005231932 38014 ecdsap384-optout.interop.
+					Sw9bFoNpMLK0OUBsl8ATmp7P/MA44VoVWBFQ
+					Vo1yBk2iL1+P+GT2UlwLA/O1SXHGwFl5f1//
+					oGsVLuqnBkppBig3Pr6oCOsPJv4HrlC/UoC6
+					xr3HL7WxIRpqp4VPLdci )
+a.b.ent.ecdsap384-optout.interop. 3600 IN A 192.0.2.7
+			3600	RRSIG	A 14 5 3600 (
+					20361003001932 20261005231932 38014 ecdsap384-optout.interop.
+					oHrg+xIp6RHDDQfza1OmQ0sDYUcjaPhxhR4q
+					2ckGRep3S9Bz0jV0eR9LRr0wkq6ezolttIPP
+					VlAmno/P8alShyNElj8+PzPiGhtlPEHSctQ/
+					BlWU3eXtWoGkzrcgYrHM )
+alias.ecdsap384-optout.interop.	3600 IN	CNAME www.ecdsap384-optout.interop.
+			3600	RRSIG	CNAME 14 3 3600 (
+					20361003001932 20261005231932 38014 ecdsap384-optout.interop.
+					LSChrwEPf4kZjeMqNfuu2y1Nf70KmGFMfaWC
+					5LQH7LJeHhVNnuuo6QBtrx3OUyHwdfWYvPVR
+					zLgkDXLwgpeZqPQLN7QaU/PUxuH8LduafxhP
+					gZEgplk/sE93QXg0O0Mq )
+ns1.ecdsap384-optout.interop. 3600 IN A	127.0.0.1
+			3600	RRSIG	A 14 3 3600 (
+					20361003001932 20261005231932 38014 ecdsap384-optout.interop.
+					61XbtTTNdQLIrbZpofFx2FSBJrWxXoF1x1Xa
+					X3VFNMa/zQD8jKv5uK2i8iMGJt9MC9oDemHs
+					EBdcskzDnP+facgUmh9nLn+cwmCG/uN5zG5S
+					rRCkDNYL7lV0y5mWlV8c )
+secure.ecdsap384-optout.interop. 3600 IN NS ns.secure.ecdsap384-optout.interop.
+			3600	DS	12345 13 2 (
+					E06D44B80B8F1D39A95C0B0D7C65D08458E8
+					80409BBC683457104237C7F8EC8D )
+			3600	RRSIG	DS 14 3 3600 (
+					20361003001932 20261005231932 38014 ecdsap384-optout.interop.
+					kOdCkXpTQw12/B/eqjmjiPlQemBiu3R+nDMm
+					1yvA8e/hJZLCLIWLmpqLZ4aZ5L5aziEuO8fc
+					QLI5kF1Ii4kvdM5GpvHXFJapVgyWmQ0Am2ps
+					nTD2llG6JNWxkctEOEh7 )
+ns2.ecdsap384-optout.interop. 3600 IN A	198.51.100.53
+			3600	RRSIG	A 14 3 3600 (
+					20361003001932 20261005231932 38014 ecdsap384-optout.interop.
+					1UyVnCqEh+s5Vjshy0WyJvvamDbu69ULVq8K
+					mTfm/og+INotwpgD7BZW7pulknigqrIhcT0x
+					fjnqbFeUuMXEDkPiM5OYCxdjEimdGpVUXQ0G
+					dfLrSP3IEOZrADH11b+q )
+2NAMBL4FG34L2MMBG58AU4AO8HIEOQ8K.ecdsap384-optout.interop. 300 IN NSEC3	1 1 0 - (
+					3625IMD06NLL19J6HO9MIM0BPN01C9P8
+					A AAAA RRSIG )
+			300	RRSIG	NSEC3 14 3 300 (
+					20361003001932 20261005231932 38014 ecdsap384-optout.interop.
+					IzlKBeT94Z+JZ2JXxl0fT8FWuABEzX5oTM92
+					YEQ64EQNUt6t6OsfYPC3qB5vfQk06K1gKhNq
+					AqLL5b2IcMy5OigQSs1azfQf/+sfiM7hOCcq
+					eTz5KFDbShFFNLqp4PLy )
+_443._tcp.www.ecdsap384-optout.interop.	3600 IN	TLSA 3 1 1 (
+					0C72AC70B745AC19998811B131D662C9AC69
+					DBDBE7CB23E5B514B56664C5D3D6 )
+			3600	RRSIG	TLSA 14 5 3600 (
+					20361003001932 20261005231932 38014 ecdsap384-optout.interop.
+					RWCx5gETNuH0Rd1haJ8m5V0Z4f4o9eESqKJg
+					j/7OHN14sM3TVZFtBFwWj9LX+ZGw/k8pa14j
+					eZpB7Eao7CqvwJP+r5X6X4bb+TWY63qQquRX
+					rgJnQpzNWpwHCKrvYO2Z )
+www.ecdsap384-optout.interop. 3600 IN A	192.0.2.80
+			3600	RRSIG	A 14 3 3600 (
+					20361003001932 20261005231932 38014 ecdsap384-optout.interop.
+					n9s7U6BiSrdMDzCpRqQ5cHybyrJCFyQhzuVh
+					4cvaYE99XZDDW8sSelKBXZu+PqqvPFoCUfTH
+					Xmvbbg2McoewXpAaAFov/agWvcvQVTU8VWNn
+					a1ufAZztJj7uXQCB5VXI )
+			3600	AAAA	2001:db8::80
+			3600	RRSIG	AAAA 14 3 3600 (
+					20361003001932 20261005231932 38014 ecdsap384-optout.interop.
+					eznVA5qG9YVFbypGOc8zADcVlAtAYeOvLIW7
+					trjFQuyugSO4enGZPf9cm9oOLicUcWws+H40
+					5pxM58dxSjXzOyV1ky2EaDfE7OrCLrgGd7uM
+					sref74qpx5p69NrhOJH7 )
+4IQ85230Q0SKIEIP2VLKQP3F5R4QVDCJ.ecdsap384-optout.interop. 300 IN NSEC3	1 1 0 - (
+					4JBI9TT0TS2RPGGKMVD220MPJROMH8S1 )
+			300	RRSIG	NSEC3 14 3 300 (
+					20361003001932 20261005231932 38014 ecdsap384-optout.interop.
+					G6TQu+dyvD6jhW6FF9EUl5v/t9Gl5nvK39GA
+					chBzqL0Y1JAQcmRK3zAL71z0/Z8BjAW+uxuR
+					Dye/j6HrCS5NJDekloC+uGaBxI8mY3qtkZlS
+					+l0evQQbONJJRFhtCh3p )
+*.wild.ecdsap384-optout.interop. 3600 IN A 192.0.2.42
+			3600	RRSIG	A 14 3 3600 (
+					20361003001932 20261005231932 38014 ecdsap384-optout.interop.
+					dFWejJZ0NlG5OMRMeI+JOiEJY0BI6+3BY46C
+					7NpkgbvlXVLKsNTK4oTDoOaQY9sa5ypHcxUo
+					Aw173D7rzZ1BymxN0FVq1GXZUpKvihbSrPbZ
+					WLtgOPXNEKt9dHknEpbs )
+			3600	TXT	"wildcard"
+			3600	RRSIG	TXT 14 3 3600 (
+					20361003001932 20261005231932 38014 ecdsap384-optout.interop.
+					ViEESUFrACHOFxVawPOjGvcZ9RvSoaWU69ZB
+					mcwIvoesgz1GcfaEpjUaga6DB9QWAP0X8iAP
+					d0X2rN5pJ962smPMXVmUwxMvf+MvfFmaXH/N
+					vvJq/REvQSzXMxGMlioL )
+4JBI9TT0TS2RPGGKMVD220MPJROMH8S1.ecdsap384-optout.interop. 300 IN NSEC3	1 1 0 - (
+					65Q5P9F5VAIEDDN37SI44FQKEJSSR1Q8
+					NS SOA MX TXT LOC SSHFP RRSIG DNSKEY NSEC3PARAM HTTPS
+					CAA )
+			300	RRSIG	NSEC3 14 3 300 (
+					20361003001932 20261005231932 38014 ecdsap384-optout.interop.
+					basYkMn05r6dmKIsq9EBggphWppMEdmET51S
+					bXzPacnN5pOvbXhCNpW0O9TPUVwybZc+IlcW
+					hnVowxpsYZCFWbfIFaav0AeEjCPvDRrvcm+H
+					NB0eJ9Jpbf0FGm2SlAvE )
+6UFULH7PEDPIA7OFUU7147K3UCUF8KJV.ecdsap384-optout.interop. 300 IN NSEC3	1 1 0 - (
+					7V8A1LD6JMM4TPU7BJ6UCIHNOAIVMTUE
+					TXT RRSIG )
+			300	RRSIG	NSEC3 14 3 300 (
+					20361003001932 20261005231932 38014 ecdsap384-optout.interop.
+					lbtSXCiEWWK4Jh9SVz/OyKwC1OPyk+XhNQA3
+					gamK43Un2GqZbwl9D5LuJ1SiTC1WcePMslAs
+					t7q5dvUicyfgSqC2+5F8SDRftoPuP24Q/ii9
+					wBsbW/xoGZ49Ia6Ov/bD )
+65Q5P9F5VAIEDDN37SI44FQKEJSSR1Q8.ecdsap384-optout.interop. 300 IN NSEC3	1 1 0 - (
+					6UFULH7PEDPIA7OFUU7147K3UCUF8KJV
+					A RRSIG )
+			300	RRSIG	NSEC3 14 3 300 (
+					20361003001932 20261005231932 38014 ecdsap384-optout.interop.
+					5z+wVUAINLqR2d6fqd11DrdjDxSaA+HbjEQG
+					nU/WToUyArdFoSE8Nun7+H0adpWjka6S05+Y
+					IGN44uJh06wtaSk9vAZMGMg8E1PAI2dONt9t
+					UQlDZOQVq052yCbH52VR )
+3625IMD06NLL19J6HO9MIM0BPN01C9P8.ecdsap384-optout.interop. 300 IN NSEC3	1 1 0 - (
+					4IQ85230Q0SKIEIP2VLKQP3F5R4QVDCJ )
+			300	RRSIG	NSEC3 14 3 300 (
+					20361003001932 20261005231932 38014 ecdsap384-optout.interop.
+					FJv+7woeNQPXYnrvGjAu6iji6ottvKEcmlK1
+					Cnn+zVia6JE+1eVo9CmQ5sXtR5Ru7i/pyO+k
+					MtDuGaa/CT1lGrG3U+km37E1oVCUCw2mCaxI
+					DnvLALpW7pL/796GnDDp )
+9L6A449G9M7VRGDDM1OPMBRHPJ8JCAJT.ecdsap384-optout.interop. 300 IN NSEC3	1 1 0 - (
+					AOV0BJ4GMRJE8HM7KHCUNOL7ITSAKD49
+					NS DS RRSIG )
+			300	RRSIG	NSEC3 14 3 300 (
+					20361003001932 20261005231932 38014 ecdsap384-optout.interop.
+					CfShHl06o+dgxdglRvnPURTA2Rxj2s0bWb6F
+					ityfphtTCLcLBepS/wWU/9o94+WeCqa2w6Ex
+					9f0YKS5KRlCG2Ki1wJLWBLnntqCDq68eM+6s
+					783BXthA36FXFIBnFYz7 )
+I75T4TIHE2OHIGUBS0RV0CHGUD6ECUAF.ecdsap384-optout.interop. 300 IN NSEC3	1 1 0 - (
+					KBU62EDC2QTEMV0BK1OG77MR4FPPPCTH )
+			300	RRSIG	NSEC3 14 3 300 (
+					20361003001932 20261005231932 38014 ecdsap384-optout.interop.
+					YKtCF8qRsgX7ggjzluIRpXF4YKlvcMPlI19f
+					4X7dxNegWU1Yp08liDvLywHjrAWkRP/4Bm2B
+					hD8ZzNID6oQ9jZxJY1GSkT16l1T5/Det0Fal
+					3MAuiGY92Vtd0CD4vpBx )
+7V8A1LD6JMM4TPU7BJ6UCIHNOAIVMTUE.ecdsap384-optout.interop. 300 IN NSEC3	1 1 0 - (
+					9L6A449G9M7VRGDDM1OPMBRHPJ8JCAJT
+					A TXT RRSIG )
+			300	RRSIG	NSEC3 14 3 300 (
+					20361003001932 20261005231932 38014 ecdsap384-optout.interop.
+					h9bXzZzfIic1KJoklR3WHhn66s96HN9DFl1n
+					ay6/gIIuatdBVYXFpBZAQr7HbuIpv62XCZPZ
+					KHUdLcCgKxEpT5X/HJ6vv6d6atZdGmss6WhK
+					azX+XLgDqcIY/DS7mAIx )
+KBU62EDC2QTEMV0BK1OG77MR4FPPPCTH.ecdsap384-optout.interop. 300 IN NSEC3	1 1 0 - (
+					NDUH0UCNAT26A7A2G1B6D2TCS2HPL45G
+					RRSIG SVCB )
+			300	RRSIG	NSEC3 14 3 300 (
+					20361003001932 20261005231932 38014 ecdsap384-optout.interop.
+					k8juoZacXmN6mxyIueIuQIgxgKOvkp6oLodL
+					vFBOayEYQfFx6gSKdAcU0+ZGOT4tQr0kPkij
+					M6n53+3WdK2ZHUZDCHLLC6zpAaQA49P1jLJy
+					79LUrPnpUZx//nS6Caca )
+AOV0BJ4GMRJE8HM7KHCUNOL7ITSAKD49.ecdsap384-optout.interop. 300 IN NSEC3	1 1 0 - (
+					F6L9AL809EP2THN0UJCJ2488VK0V8NT1 )
+			300	RRSIG	NSEC3 14 3 300 (
+					20361003001932 20261005231932 38014 ecdsap384-optout.interop.
+					o0PvtkCj9pBmmqGLCy7jh6nFFAdhx6E9DaGI
+					UtfKloCmql3PzZ0dPQ5kuqMtRaIB8pMx2VcS
+					vE5Ac9pA9xm6DDe0MfK+mHQSj91a3enQrTHv
+					mNBn6s/qMwQvcpPablQy )
+NDUH0UCNAT26A7A2G1B6D2TCS2HPL45G.ecdsap384-optout.interop. 300 IN NSEC3	1 1 0 - (
+					PKNO1V67MLR4POFVOVQN1G41QQN08PUL
+					DNAME RRSIG )
+			300	RRSIG	NSEC3 14 3 300 (
+					20361003001932 20261005231932 38014 ecdsap384-optout.interop.
+					vK2t0Dwy8lTqUIKlE4CQbNHGdUnrwFymkbJS
+					fu9o4BrB+/Oa1TSLP1ONavPGF+eEJsodhlaW
+					Om5DCXYf9nABVsT7Rh45mBhOPtYiYpNeco2y
+					1uXN+i3OvJyJipKDKMSn )
+QDL64A39UPJGCGJR0UJC9S9IQCBCI1AG.ecdsap384-optout.interop. 300 IN NSEC3	1 1 0 - (
+					TE3DIUVL6S1KT8QC107RTNJ8PTHJV69N
+					CNAME RRSIG )
+			300	RRSIG	NSEC3 14 3 300 (
+					20361003001932 20261005231932 38014 ecdsap384-optout.interop.
+					bRGG7mFANcASKv0b2tS4wwo114dhg5DOyf9J
+					BSNLecXhb+p1WghHJ0u+Wn5kq/neLJZUIOwr
+					R7tFcZJXlzw7NKRZOlRDSs6Rjl203g3Al2Jy
+					J/q3cvFZysI4OtqFDC+z )
+PKNO1V67MLR4POFVOVQN1G41QQN08PUL.ecdsap384-optout.interop. 300 IN NSEC3	1 1 0 - (
+					Q722NBC9GTCAJI07NT7UA38I9SG6I4J9
+					RRSIG TLSA )
+			300	RRSIG	NSEC3 14 3 300 (
+					20361003001932 20261005231932 38014 ecdsap384-optout.interop.
+					rDY90f5v82CTcO+ZiDgGCGuCutqq9EKLBVu4
+					TvW2381+kRz5hF1YA7Dj5Re9jWE6yA+NBK2n
+					7o+ab5afoYT4aDaDF7e7mHxzq2nUf8lJ66aK
+					kyfO6xvTahfWVj+x7iaG )
+F6L9AL809EP2THN0UJCJ2488VK0V8NT1.ecdsap384-optout.interop. 300 IN NSEC3	1 1 0 - (
+					I75T4TIHE2OHIGUBS0RV0CHGUD6ECUAF
+					A RRSIG )
+			300	RRSIG	NSEC3 14 3 300 (
+					20361003001932 20261005231932 38014 ecdsap384-optout.interop.
+					3wShwFWB7VXXuPntSq/0/VjsVcr4ucFyoIXx
+					ay13GorihIBea2X+A90D6EZ1Yb852PwPl4bA
+					CPY+aFgqE8UBgoBIRbsGM+JzMOW3hsBXz4Hd
+					mzw2PdCITk76+XRVHk0F )
+VKO0ULT50J45L4GQT73SHPQMS8SP0SKF.ecdsap384-optout.interop. 300 IN NSEC3	1 1 0 - (
+					2NAMBL4FG34L2MMBG58AU4AO8HIEOQ8K
+					SRV NAPTR RRSIG )
+			300	RRSIG	NSEC3 14 3 300 (
+					20361003001932 20261005231932 38014 ecdsap384-optout.interop.
+					JV9t7g9Q8E/2We58S6CNcxkNGIPBaFW+cqgb
+					nefNkuqf9xgLk+iR5QjoMe94ATMjchSctcBu
+					jVO4/Mh4Y6sW53FIgny1RI/gFw7AjMSGb77i
+					cvetl/H3VMqiK7DgnoU4 )
+Q722NBC9GTCAJI07NT7UA38I9SG6I4J9.ecdsap384-optout.interop. 300 IN NSEC3	1 1 0 - (
+					QDL64A39UPJGCGJR0UJC9S9IQCBCI1AG
+					A RRSIG )
+			300	RRSIG	NSEC3 14 3 300 (
+					20361003001932 20261005231932 38014 ecdsap384-optout.interop.
+					cZ7Hq648f7mRHmvMsQZ85a40/8Yssn57dHCH
+					19gW8yt3Ryqej9Rn+T9Jm9BhD9jM/b/a7foI
+					S6o3gu6L23xTAg/TZsOJDNJSNt/lfjEItyLd
+					e6KLqGauP365ZO4mVrVQ )
+TE3DIUVL6S1KT8QC107RTNJ8PTHJV69N.ecdsap384-optout.interop. 300 IN NSEC3	1 1 0 - (
+					UQDPJBR1QHTSRMK9BOHPV7KEJ0CNQ5BM
+					A RRSIG )
+			300	RRSIG	NSEC3 14 3 300 (
+					20361003001932 20261005231932 38014 ecdsap384-optout.interop.
+					dAjUI3FgT5jkeVfbxhFe/TfcrIOOUE/6gur1
+					SFMg6zp90YOjkEXKCkr1JM3i7kMHAcWaHjDI
+					JbjC6YqH4txWawPh+VHlEovSHnkjXzLZ8+51
+					GPAyyC62RHif4nnCeORE )
+UQDPJBR1QHTSRMK9BOHPV7KEJ0CNQ5BM.ecdsap384-optout.interop. 300 IN NSEC3	1 1 0 - (
+					VKO0ULT50J45L4GQT73SHPQMS8SP0SKF )
+			300	RRSIG	NSEC3 14 3 300 (
+					20361003001932 20261005231932 38014 ecdsap384-optout.interop.
+					Xd1y8/48XFN/uIIl3r7FlQMRifymx3lflm4n
+					TlIIcBdLHfDWWdWqa2Xj72huOAQccB5bhk8Y
+					sk+vuW3ulhy+kztbiPSICXwf6ta1uFpP+Xuy
+					WYq91L9gqWpX+231IdMq )

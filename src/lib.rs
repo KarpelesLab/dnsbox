@@ -407,6 +407,7 @@
 //! | `dnssec_dig` | `dnssec` | validates a captured response against a trust anchor (DS → DNSKEY → RRset) and prints it with the verdict per RRset |
 //! | `tsig_axfr` | `tsig` | signs an AXFR request and verifies a multi-message response stream |
 //! | `interop_probe` | `std`, `tsig`, `dnssec` | the live checks against Knot DNS and Unbound of the interop CI workflow: EDNS, cookies, TSIG, AXFR/IXFR, UPDATE, validation verdicts |
+//! | `bind_probe` | `std`, `tsig`, `dnssec` | the live checks against BIND 9's `named` (authoritative and validating) of the interop CI workflow: EDNS, cookies, TSIG, TKEY, AXFR/IXFR, UPDATE with TSIG and SIG(0), validation verdicts |
 //!
 //! Run one with `cargo run --example <name> --features <features> -- <args>`.
 //!

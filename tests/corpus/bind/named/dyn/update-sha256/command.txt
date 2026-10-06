@@ -1,0 +1,2 @@
+nsupdate -y hmac-sha256:hmac-sha256.key:AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8=
+exit 0

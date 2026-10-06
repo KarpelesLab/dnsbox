@@ -1,0 +1,237 @@
+$ORIGIN .
+$TTL 3600	; 1 hour
+alltypes.example	IN SOA	ns1.alltypes.example. hostmaster.alltypes.example. (
+				2026100401 ; serial
+				7200       ; refresh (2 hours)
+				3600       ; retry (1 hour)
+				1209600    ; expire (2 weeks)
+				300        ; minimum (5 minutes)
+				)
+			NS	ns1.alltypes.example.
+			NS	ns2.example.net.
+$ORIGIN alltypes.example.
+\@\.\032x		A	192.0.2.43
+_443._tcp		TLSA	0 0 0 (
+				30820122300D06092A864886F70D0101010500038201
+				0F003082010A )
+			TLSA	3 1 1 (
+				0C72AC70B745AC19998811B131D662C9AC69DBDBE7CB
+				23E5B514B56664C5D3D6 )
+a			A	192.0.2.1
+a\000b			A	192.0.2.44
+a6			A6	0 2001:db8::1
+			A6	64 ::1:2:3:4 prefix
+			A6	128  prefix
+aaaa			AAAA	::ffff:192.0.2.1
+			AAAA	2001:db8::1
+afsdb			AFSDB	1 afs
+			AFSDB	2 dce
+apl			APL	
+			APL	1:224.0.0.0/4 2:ff00::/8 !2:2001:db8::/32
+			APL	1:192.168.32.0/21 !1:192.168.38.0/28
+atma			ATMA	39246f00e7c9000000000000000102030405060708
+			ATMA	+3584001234567
+avc			AVC	"app-name:WOLFGANG|app-class:OAM|business=yes"
+caa			CAA	0 iodef "mailto:security@example.com"
+			CAA	0 issue "ca.example.net; account=230123"
+			CAA	0 issue "letsencrypt.org"
+			CAA	0 issuewild ";"
+			CAA	128 tbs "Unknown"
+cdnskey			CDNSKEY	0 3 0 (
+				AA==
+				) ; ZSK; alg = 0 ; key id = 768
+			CDNSKEY	257 3 15 (
+				l02Woi0iS8Aa25FQkUd9RMzZHJpBoRQwAQEX1SxZJA4=
+				) ; KSK; alg = ED25519 ; key id = 3613
+cds			CDS	0 0 0 (
+				00 )
+			CDS	60485 5 1 (
+				2BB183AF5F22588179A53B0A98631FAD1A292118 )
+cert			CERT	PKIX 12345 RSASHA256 (
+				MIIBkjCB/KADAgECAgEAMA0GCSqGSIb3DQEBBQUA )
+			CERT	PGP 0 0 (
+				AQID )
+			CERT	IPGP 1 NSEC3RSASHA1 (
+				AQID )
+			CERT	OID 1 NSEC3DSA (
+				AQID )
+			CERT	65280 1 PRIVATEDNS (
+				AQID )
+cname			CNAME	a
+csync			CSYNC	0 0
+			CSYNC	66 3 A NS AAAA
+dhcid			DHCID	( AAIBY2/AuCccgoJbsaxcQc9TUapptP69lOjxfNuVAA2k
+				jEA= ) ; 2 1 32
+dlv			DLV	60485 5 1 (
+				2BB183AF5F22588179A53B0A98631FAD1A292118 )
+dname			DNAME	example.net.
+dnskey			DNSKEY	256 3 15 (
+				l02Woi0iS8Aa25FQkUd9RMzZHJpBoRQwAQEX1SxZJA4=
+				) ; ZSK; alg = ED25519 ; key id = 3612
+			DNSKEY	257 3 8 (
+				AwEAAagAIKlVZrpC6Ia7gEzahOR+9W29euxhJhVVLOyQ
+				bSEW0O8gcCjFFVQUTf6v58fLjwBd0YI0EzrAcQqBGCzh
+				/RStIoO8g0NfnfL2MTJRkxoXbfDaUeVPQuYEhg37NZWA
+				JQ9VnMVDxP/VHL496M/QZxkjf5/Efucp2gaDX6RS6CXp
+				oY68LsvPVjR0ZSwzz1apAzvN9dlzEheX7ICJBBtuA6G3
+				LQpzW5hOA2hzCTMjJPJ8LbqF6dsV6DoBQzgul0sGIcGO
+				Yl7OyQdXfZ57relSQageu+ipAdTTJ25AsRTAoub8ONGc
+				LmqrAmRLKBP1dfwhYB4N7knNnulqQxA+Uk1ihz0=
+				) ; KSK; alg = RSASHA256 ; key id = 19036
+			DNSKEY	385 3 13 (
+				mdsswUyr3DPW132mOi8V9xESWE8jTo0dxCjjnopKl+Gq
+				JxpVXckHAeF+KkxLbxILfDLUT0rAK9iUzy1L53eKGQ==
+				) ; revoked KSK; alg = ECDSAP256SHA256 ; key id = 2499
+ds			DS	12345 8 4 (
+				ABABABABABABABABABABABABABABABABABABABABABAB
+				ABABABABABABABABABABABABABABABABABABABABABAB
+				ABABABAB )
+			DS	20326 8 2 (
+				E06D44B80B8F1D39A95C0B0D7C65D08458E880409BBC
+				683457104237C7F8EC8D )
+			DS	60485 5 1 (
+				2BB183AF5F22588179A53B0A98631FAD1A292118 )
+eid			EID	( 0123456789ABCDEF )
+eui48			EUI48	00-00-5e-00-53-2a
+eui64			EUI64	00-00-5e-ef-10-00-00-2a
+generic			A	192.0.2.2
+			MX	10 a.
+			TYPE65280 \# 5 ( 0102030405 )
+			TYPE65281 \# 0
+gid			GID	\# 4 ( 000003E8 )
+gpos			GPOS	"0" "0" "0"
+			GPOS	"-32.6882" "116.8652" "10.0"
+hinfo			HINFO	"RFC8482" ""
+			HINFO	"Generic PC" "Linux \"6.18\""
+hip			HIP	( 2 200100107B1A74DF365639CC39F1D578
+				AwEAAbdxyhNuSutc5EMzxTs9LBPCIkOFH8cIvM4p9+LrV4e19WzK00+CI6zBCQTdtWsuxKbWIy87UOoJTwkUs7lBu+Upr1gsNrut79ryra+bSRGQb1slImA8YVJyuIDsj7kwzG7jnERNqnWxZ48AWkskmdHaVDP4BcelrTI3rMXdXF5D
+				rvs.alltypes.example.
+				rvs2.alltypes.example. )
+https			HTTPS	0 cdn.example.
+			HTTPS	1 . alpn="h3,h2" ipv4hint=104.16.132.229,104.16.133.229 ipv6hint=2606:4700::6810:84e5,2606:4700::6810:85e5
+ipseckey		IPSECKEY ( 10 0 2 .
+				AQNRU3mG7TVTO2BkR47usntb102uFJtugbo6BSGvgqt4
+				AQ== )
+			IPSECKEY ( 10 1 2 192.0.2.38
+				AQNRU3mG7TVTO2BkR47usntb102uFJtugbo6BSGvgqt4
+				AQ== )
+			IPSECKEY ( 10 2 2 2001:db8:0:8002::2000:1
+				AQNRU3mG7TVTO2BkR47usntb102uFJtugbo6BSGvgqt4
+				AQ== )
+			IPSECKEY ( 10 3 2 gw.alltypes.example.
+				AQNRU3mG7TVTO2BkR47usntb102uFJtugbo6BSGvgqt4
+				AQ== )
+isdn			ISDN	"150862028003217"
+			ISDN	"150862028003217" "004"
+key			KEY	256 3 15 (
+				l02Woi0iS8Aa25FQkUd9RMzZHJpBoRQwAQEX1SxZJA4=
+				); alg = ED25519 ; key id = 3612
+			KEY	49664 3 5
+kx			KX	10 a
+l32			L32	10 10.1.2.0
+l64			L64	10 2001:db8:1140:1000
+loc			LOC	52 22 23.000 N 4 53 32.000 E -2.00m 0.00m 10000m 10m
+			LOC	0 0 0.000 N 0 0 0.000 E 0.00m 1m 10000m 10m
+			LOC	42 21 54.000 N 71 6 18.000 W -24.00m 30m 10000m 10m
+			LOC	90 0 0.000 S 180 0 0.000 W 42849672.95m 90000000m 90000000m 90000000m
+lp			LP	10 l64-subnet1
+mb			MB	a
+mg			MG	a
+minfo			MINFO	rmail emailbx
+mr			MR	a
+mx			MX	0 .
+			MX	10 mail
+naptr			NAPTR	100 10 "S" "SIP+D2U" "" _sip._udp
+			NAPTR	100 50 "u" "E2U+sip" "!^.*$!sip:info@example.com!" .
+nid			NID	10 14:4fff:ff20:ee64
+nimloc			NIMLOC	( 32427B5E4C3B )
+ninfo			NINFO	"Zone Status" "OK"
+ns			NS	ns1
+ns1			A	192.0.2.53
+			AAAA	2001:db8::53
+nsap			NSAP	0x4700058000
+			NSAP	0x47000580005a0000000001e133ffffff00016100
+nsap-ptr		NSAP-PTR foo
+nsec			NSEC	\000.alltypes.example. NS SOA TYPE65534
+			NSEC	host.alltypes.example. A MX RRSIG NSEC TYPE1234
+nsec3param		NSEC3PARAM 1 0 0 -
+			NSEC3PARAM 1 0 12 AABBCCDD
+null			NULL	\# 0
+			NULL	\# 4 ( DEADBEEF )
+nxt			NXT	a A MX SIG NXT
+openpgpkey		OPENPGPKEY ( mQINBFit2jsBEADrbl5vjVxYeAE0g0IDYCBpHirv1Sjl
+				qxx5gjtPhb2YhvyDMXjq )
+ptr			PTR	a
+px			PX	10 map822 mapx400
+rp			RP	. .
+			RP	mbox txt
+rrsig			RRSIG	A 5 3 86400 (
+				20030322173103 20030220173103 2642 example.com.
+				oJB1W6WNGv+ldvQ3WDG0MQkg5IEhjRip8WTrPYGv07h1
+				08dUKGMeDPKijVCHX3DDKdfb+v6oB9wfuh3DTJXUAfI/
+				M0zmO/zz8bW0Rznl8O3tGNazPwQKkRN20XPXV6nwwfoX
+				mJQbsLNrLfkGJ5D6fwFm8nN+6pBzeDQfsS3Ap3o= )
+rt			RT	10 a
+sig			SIG	0 15 0 0 20261004090347 (
+				20261004085347 43160 sig0
+				AAAA )
+sink			SINK	1 0 0
+			SINK	8 0 2 (
+				l1kFqOTsQOFjXWVn )
+smimea			SMIMEA	3 0 1 (
+				ABABABABABABABABABABABABABABABABABABABABABAB
+				ABABABABABABABABABAB )
+spf			SPF	"v=spf1 ip4:192.0.2.0/24 -all"
+srv			SRV	0 0 0 .
+			SRV	10 60 5060 sip
+sshfp			SSHFP	1 1 (
+				DC2A7A1F15B1BA1F4E5D2D8A6E7E4F7E3B1C2D3E )
+			SSHFP	4 2 (
+				123456789ABCDEF67890123456789ABCDEF678901234
+				56789ABCDEF123456789 )
+svcb			SVCB	0 svc.example.
+			SVCB	1 .
+			SVCB	1 doh.example. alpn="h2" key7="/dns-query{?dns}"
+			SVCB	1 dot.example. alpn="dot" no-default-alpn port=853 ech=AEX+DQBBpQAgACCW2/dfOBZAtQU55/KYxUYStyuA6Yg+1Sjqb4o1q7HY0wAEAAEAAQASY2xvdWRmbGFyZS1lY2guY29tAAA=
+			SVCB	1 foo port=53
+			SVCB	1 foo ipv6hint=2001:db8::1,2001:db8::53:1
+			SVCB	1 foo key667="hello"
+			SVCB	1 foo key667="hello\210qoo"
+			SVCB	16 foo.example.org. mandatory=alpn,ipv4hint alpn="h2,h3-19" ipv4hint=192.0.2.1
+			SVCB	16 foo.example.org. alpn="f\\\\oo\\,bar,h2"
+ta			TA	60485 5 1 (
+				2BB183AF5F22588179A53B0A98631FAD1A292118 )
+talink			TALINK	. talink2
+talink2			TALINK	talink .
+$TTL 300	; 5 minutes
+ttl			A	192.0.2.46
+			A	192.0.2.47
+$TTL 3600	; 1 hour
+txt			TXT	""
+			TXT	"first" "second" "semi;colon" "back\\slash" "tab\009" "\195\169"
+			TXT	"unquoted"
+			TXT	"v=spf1 -all"
+uid			UID	\# 4 ( 000003E8 )
+uinfo			UINFO	\# 3 ( 616263 )
+unspec			UNSPEC	\# 2 ( 0102 )
+uri			URI	0 0 "https://example.com/\"q\"\\"
+			URI	10 1 "ftp://ftp1.example.com/public"
+$ORIGIN wild.alltypes.example.
+*			A	192.0.2.42
+$ORIGIN alltypes.example.
+wks			WKS	192.0.2.1 6 25 80 443
+			WKS	192.0.2.1 17 53
+x25			X25	"311061700956"
+zonemd			ZONEMD	2018031900 1 1 (
+				FEBE3D4CE2EC2FFA4BA99D46CD69D6D29711E5521705
+				7BEE7EB1A7B641A47BA7FED2DD5B97AE499FAFA4F22C
+				6BD647DE )
+			ZONEMD	2018031900 240 241 (
+				000102030405060708090A0B )
+\195\169		A	192.0.2.45
+$ORIGIN alltypes.example.
+nsec3			NSEC3	1 0 0 - (
+				2VPTU5TIMAMQTTGL4LUU9KG21E0AOR3S )
+			NSEC3	1 1 12 AABBCCDD (
+				2T7B4G4VSA5SMI47K61MV5BV1A22BOJR
+				NS SOA MX RRSIG DNSKEY NSEC3PARAM )

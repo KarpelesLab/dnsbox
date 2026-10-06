@@ -1,0 +1,24 @@
+
+; <<>> DiG 9.18.39-0ubuntu0.24.04.7-Ubuntu <<>> @127.0.0.1 -p 5450 +tries=1 +time=5 +dnssec +cdflag bogus.interop. DNSKEY
+; (1 server found)
+;; global options: +cmd
+;; Got answer:
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 58708
+;; flags: qr rd ra ad cd; QUERY: 1, ANSWER: 3, AUTHORITY: 0, ADDITIONAL: 1
+
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags: do; udp: 1232
+; COOKIE: 150aa962c5ffe463010000006ac43eb702414021ea0508ff (good)
+;; QUESTION SECTION:
+;bogus.interop.			IN	DNSKEY
+
+;; ANSWER SECTION:
+bogus.interop.		3599	IN	DNSKEY	257 3 13 bIdKpYOilqeOrIyp3pdUcVdicKiGqz33gR+TmP87ikCDftOfCViMZg8P GjrH76OXdzUzWQml/ZiF2AucfY/8Tg==
+bogus.interop.		3599	IN	DNSKEY	256 3 13 ntVMtHcm7NquVvYmnxS7Wa4je2GBHuTVaV7TWiB+Nia5e36nuq5Nzvhw Ms+HdiX2LNtFMFKfhD/7QJg907w5+Q==
+bogus.interop.		3599	IN	RRSIG	DNSKEY 13 2 3600 20361003001932 20261005231932 36243 bogus.interop. Cc7e2A8vXXt8EWWND6KKhervRjvZx9z0/X/Aqgpo8C5/BWFvTjLG8FMF TP2nbQETYEYaIAcyn2kxdDS5zhrXvw==
+
+;; Query time: 0 msec
+;; SERVER: 127.0.0.1#5450(127.0.0.1) (UDP)
+;; WHEN: Tue Oct 06 00:20:07 UTC 2026
+;; MSG SIZE  rcvd: 339
+

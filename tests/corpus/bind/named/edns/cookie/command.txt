@@ -1,0 +1,1 @@
+dig +cookie ed25519-nsec.interop. SOA

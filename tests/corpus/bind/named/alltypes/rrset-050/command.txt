@@ -1,0 +1,1 @@
+dig +tcp +norec mx.alltypes.example. MX

@@ -1,0 +1,1 @@
+dig +tcp +norec *.wild.alltypes.example. A

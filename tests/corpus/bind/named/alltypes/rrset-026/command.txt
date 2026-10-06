@@ -1,0 +1,1 @@
+dig +tcp +norec eid.alltypes.example. EID

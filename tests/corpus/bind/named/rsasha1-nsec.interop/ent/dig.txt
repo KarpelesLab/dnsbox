@@ -1,0 +1,26 @@
+
+; <<>> DiG 9.18.39-0ubuntu0.24.04.7-Ubuntu <<>> @127.0.0.1 -p 5350 +tries=1 +time=5 +dnssec b.ent.rsasha1-nsec.interop. A
+; (1 server found)
+;; global options: +cmd
+;; Got answer:
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 43545
+;; flags: qr aa rd; QUERY: 1, ANSWER: 0, AUTHORITY: 4, ADDITIONAL: 1
+;; WARNING: recursion requested but not available
+
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags: do; udp: 1232
+; COOKIE: ef751c054365e497010000006ac43ea09894b671baf42e32 (good)
+;; QUESTION SECTION:
+;b.ent.rsasha1-nsec.interop.	IN	A
+
+;; AUTHORITY SECTION:
+rsasha1-nsec.interop.	300	IN	SOA	ns1.rsasha1-nsec.interop. hostmaster.rsasha1-nsec.interop. 2026100401 7200 3600 1209600 300
+rsasha1-nsec.interop.	300	IN	RRSIG	SOA 5 2 3600 20361003001932 20261005231932 21015 rsasha1-nsec.interop. c249Wfum1pJE9gAYqMlChXN91zzCUzS+RMRfEUWjJrFHdHTGjLJQKOT4 lJuWUMhSrrcozwCK5s4b9S1WlQGfmxyohtU8hYb7lWUKRHOaVQ2WrcRo YSF9gsi6zqx7lcRILssEUR99C2CCK9dcQueHjyHrY/b0Fmxvfagw+QaV lik=
+dname.rsasha1-nsec.interop. 300	IN	NSEC	a.b.ent.rsasha1-nsec.interop. DNAME RRSIG NSEC
+dname.rsasha1-nsec.interop. 300	IN	RRSIG	NSEC 5 3 300 20361003001932 20261005231932 21015 rsasha1-nsec.interop. Zf0qiG1QKR9QLdp/KrgqB43ThU+5VErmOJB6VStCBpdHrWNVPi/6SX8z EhK2qi/gEcyei8kWDP0tMZ3OFmpKhFdcxm+KFABD0L+SvM4S3L4qnoju xYG/CPHovTdHKCmBDw1HtDPQ5oPqx+1RM81EbMaAu6SLB65Uz85OY8Jw BM4=
+
+;; Query time: 0 msec
+;; SERVER: 127.0.0.1#5350(127.0.0.1) (UDP)
+;; WHEN: Tue Oct 06 00:19:44 UTC 2026
+;; MSG SIZE  rcvd: 570
+

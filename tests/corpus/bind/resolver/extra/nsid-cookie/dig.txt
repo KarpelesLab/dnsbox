@@ -1,0 +1,23 @@
+
+; <<>> DiG 9.18.39-0ubuntu0.24.04.7-Ubuntu <<>> @127.0.0.1 -p 5450 +tries=1 +time=5 +nsid +cookie www.ed25519-nsec.interop. A
+; (1 server found)
+;; global options: +cmd
+;; Got answer:
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 55291
+;; flags: qr rd ra ad; QUERY: 1, ANSWER: 1, AUTHORITY: 0, ADDITIONAL: 1
+
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags:; udp: 1232
+; NSID: 72 65 73 6f 6c 76 65 72 2e 64 6e 73 62 6f 78 2d 69 6e 74 65 72 6f 70 ("resolver.dnsbox-interop")
+; COOKIE: d1b04d829ffe0fb3010000006ac43eb717b52d810681a6e0 (good)
+;; QUESTION SECTION:
+;www.ed25519-nsec.interop.	IN	A
+
+;; ANSWER SECTION:
+www.ed25519-nsec.interop. 3577	IN	A	192.0.2.80
+
+;; Query time: 0 msec
+;; SERVER: 127.0.0.1#5450(127.0.0.1) (UDP)
+;; WHEN: Tue Oct 06 00:20:07 UTC 2026
+;; MSG SIZE  rcvd: 124
+

@@ -1,0 +1,1 @@
+dig +tcp +norec nsec3.alltypes.example. NSEC3

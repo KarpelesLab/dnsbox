@@ -1,0 +1,1 @@
+dig +tcp +norec mg.alltypes.example. MG

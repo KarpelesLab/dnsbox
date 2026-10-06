@@ -1,0 +1,26 @@
+
+; <<>> DiG 9.18.39-0ubuntu0.24.04.7-Ubuntu <<>> @127.0.0.1 -p 5350 +tries=1 +time=5 +dnssec b.ent.rsasha256-optout.interop. A
+; (1 server found)
+;; global options: +cmd
+;; Got answer:
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 60833
+;; flags: qr aa rd; QUERY: 1, ANSWER: 0, AUTHORITY: 4, ADDITIONAL: 1
+;; WARNING: recursion requested but not available
+
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags: do; udp: 1232
+; COOKIE: fc668b14ceb3db77010000006ac43ea2a88bec8d67350c48 (good)
+;; QUESTION SECTION:
+;b.ent.rsasha256-optout.interop.	IN	A
+
+;; AUTHORITY SECTION:
+rsasha256-optout.interop. 300	IN	SOA	ns1.rsasha256-optout.interop. hostmaster.rsasha256-optout.interop. 2026100401 7200 3600 1209600 300
+rsasha256-optout.interop. 300	IN	RRSIG	SOA 8 2 3600 20361003001932 20261005231932 44284 rsasha256-optout.interop. q+kd8NtQ1a+X4oizWFUgNaUDzk8ZEe7TsdgzhWm5cFl5668hUaNgCmU8 IOoUQuhZeAcmpiK+lZxeyr5wgX5A8rA3Dljlvv1Hi/q4+gtFmB9ML3bW 0lJXUUCAg4RzB2DEnp4qRhRUMw7Jg6Y75q41SOP525TpbHDO8TvCs/vr Vao=
+BVGALH4D6C38AETPMEJPR3U33TKJ46LD.rsasha256-optout.interop. 300 IN NSEC3	1 1 0 - CJ867G31K3MVGOHDK8OF22QEGJ8GED6M
+BVGALH4D6C38AETPMEJPR3U33TKJ46LD.rsasha256-optout.interop. 300 IN RRSIG	NSEC3 8 3 300 20361003001932 20261005231932 44284 rsasha256-optout.interop. tkNgrDk/+yV+xeWYG8MX5Y9zQ9+USPKAf7lFGMFWZvdRxQ8Z5mTzlZaN Y359T5PmhbV8TKEPZJsZvhBcpbLQPPkAAguJZySCHXwXtsMck+rhVFL/ iWyuIge7KcvQaNuI+c2Lwymlrp9FvKNeeT+lIS5HRmPChmFiKx37qFXC 4ZE=
+
+;; Query time: 0 msec
+;; SERVER: 127.0.0.1#5350(127.0.0.1) (UDP)
+;; WHEN: Tue Oct 06 00:19:46 UTC 2026
+;; MSG SIZE  rcvd: 601
+

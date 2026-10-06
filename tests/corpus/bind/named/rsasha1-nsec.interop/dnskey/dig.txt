@@ -1,0 +1,25 @@
+
+; <<>> DiG 9.18.39-0ubuntu0.24.04.7-Ubuntu <<>> @127.0.0.1 -p 5350 +tries=1 +time=5 +dnssec rsasha1-nsec.interop. DNSKEY
+; (1 server found)
+;; global options: +cmd
+;; Got answer:
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 43050
+;; flags: qr aa rd; QUERY: 1, ANSWER: 3, AUTHORITY: 0, ADDITIONAL: 1
+;; WARNING: recursion requested but not available
+
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags: do; udp: 1232
+; COOKIE: 1af1abee7f935462010000006ac43ea0d014c2e60be4ef89 (good)
+;; QUESTION SECTION:
+;rsasha1-nsec.interop.		IN	DNSKEY
+
+;; ANSWER SECTION:
+rsasha1-nsec.interop.	3600	IN	DNSKEY	257 3 5 AwEAAbL9xscqWqIkizjKodrgmJH7YWK6CkSMxXWBXD9SAR0nCCbFfjJT Qr7d4ZFxfSROLObZDi6BDwYFszp8j/sAoeI9aPzGyDArOfcgvGkPmQae IskV6VGTh9lT+lIboGRwqysVhQiCt7pqAKOI2L1icpTu3cJ4xE7we1po g8DrdZXhDYMAldjkbrwz7KItcD6vHBI+4oH5xA5f3kYorGKvg2R6b8FC os8affN1MEIkZoADyhkpqnu+FgXA9FvvVcT/poMYlhpMD4CT0mrX1ZQU sqLMOoW1HhbifORg6j8nTdrpJoj0CtoHrt7t6tCHk+oZiezSDz9LCLfo OrQKfkbL2+U=
+rsasha1-nsec.interop.	3600	IN	DNSKEY	256 3 5 AwEAAeDt/DV3bl9mY8eSeakf4/Ol11St58mrZ9V9GqT6x+c2UMSh7MDc Uo7D7s/lIT0uUXDIHcI7YaUxFA3GuyJnO2eWtEilgI16svQhyUwB+CpS 3+sLZ84GSUCdTGPAYG26jlNwOwRDX5mikjL8nSvx6mkK9xSItO7goMCh c0Dl22BT
+rsasha1-nsec.interop.	3600	IN	RRSIG	DNSKEY 5 2 3600 20361003001932 20261005231932 40513 rsasha1-nsec.interop. h38sDEFY4zEhxDc7T6ACxeSA8kaZcr0Bx/lu7nZOTeti1QcwP4g7i1ot EXF7/2HkUAeLyxr98x+wN5N+tZ0YWRQasaIydztV9BiEvriW1iS2T/GY QDfIIWXM4CUoC5MaUrjs0ZNg3qvKr++UWagW4MzbvjhZ49xPBYI+piSs QJi7sFMsxJxtIv9pH+7MchTS4X0/tWCn/3+jAVXWWqS4VY8+AvGOxoJr mlP2wtvLuJFiTRECiIvEHolDTmE7ZJhsw38LsBA3U8tzNSiM1A2cdL0B hoJzg2K1/+eWVxcttxg7T6NDHFvn+PL61A5/y5ZaCfMfNqgtjhEg3eaa oIXXSA==
+
+;; Query time: 0 msec
+;; SERVER: 127.0.0.1#5350(127.0.0.1) (UDP)
+;; WHEN: Tue Oct 06 00:19:44 UTC 2026
+;; MSG SIZE  rcvd: 809
+

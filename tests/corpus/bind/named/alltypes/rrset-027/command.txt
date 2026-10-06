@@ -1,0 +1,1 @@
+dig +tcp +norec eui48.alltypes.example. EUI48

@@ -1,0 +1,1 @@
+dig +tcp +dnssec rsasha512-nsec3.interop. DNSKEY

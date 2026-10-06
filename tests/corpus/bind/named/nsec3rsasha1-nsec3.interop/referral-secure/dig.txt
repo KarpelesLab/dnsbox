@@ -1,0 +1,28 @@
+
+; <<>> DiG 9.18.39-0ubuntu0.24.04.7-Ubuntu <<>> @127.0.0.1 -p 5350 +tries=1 +time=5 +dnssec host.secure.nsec3rsasha1-nsec3.interop. A
+; (1 server found)
+;; global options: +cmd
+;; Got answer:
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 23905
+;; flags: qr rd; QUERY: 1, ANSWER: 0, AUTHORITY: 3, ADDITIONAL: 2
+;; WARNING: recursion requested but not available
+
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags: do; udp: 1232
+; COOKIE: bb41bc75933d7950010000006ac43ea1c61f4b2b61cc4699 (good)
+;; QUESTION SECTION:
+;host.secure.nsec3rsasha1-nsec3.interop.	IN A
+
+;; AUTHORITY SECTION:
+secure.nsec3rsasha1-nsec3.interop. 3600	IN NS	ns.secure.nsec3rsasha1-nsec3.interop.
+secure.nsec3rsasha1-nsec3.interop. 3600	IN DS	12345 13 2 E06D44B80B8F1D39A95C0B0D7C65D08458E880409BBC683457104237 C7F8EC8D
+secure.nsec3rsasha1-nsec3.interop. 3600	IN RRSIG DS 7 3 3600 20361003001932 20261005231932 61983 nsec3rsasha1-nsec3.interop. f0rVwD/2u8C4z57UIBIJ2/Fg3th7Vee+elWFkUibazXUICaUU3yhIH7q Lm5QToQqmIh0oewTmv7KtMhaYjNelpACjxWpQYl7jyc6ohMsnFiJ1YDl V9BuJoAXVnlbKRd/oZYlZg8YMTbKeqYtIfbV8Q0PKSrAwKUbiy3Yizen 2gI=
+
+;; ADDITIONAL SECTION:
+ns.secure.nsec3rsasha1-nsec3.interop. 3600 IN A	192.0.2.99
+
+;; Query time: 0 msec
+;; SERVER: 127.0.0.1#5350(127.0.0.1) (UDP)
+;; WHEN: Tue Oct 06 00:19:45 UTC 2026
+;; MSG SIZE  rcvd: 362
+

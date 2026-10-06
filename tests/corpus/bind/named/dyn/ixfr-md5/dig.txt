@@ -1,0 +1,40 @@
+
+; <<>> DiG 9.18.39-0ubuntu0.24.04.7-Ubuntu <<>> @127.0.0.1 -p 5350 +tries=1 +time=5 -y hmac-md5:hmac-md5.key:AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8= dyn.interop. IXFR=2026100601
+; (1 server found)
+;; global options: +cmd
+dyn.interop.		3600	IN	SOA	ns1.dyn.interop. hostmaster.dyn.interop. 2026100608 7200 3600 1209600 300
+dyn.interop.		3600	IN	SOA	ns1.dyn.interop. hostmaster.dyn.interop. 2026100601 7200 3600 1209600 300
+t000.dyn.interop.	3600	IN	TXT	"to be deleted"
+dyn.interop.		3600	IN	SOA	ns1.dyn.interop. hostmaster.dyn.interop. 2026100602 7200 3600 1209600 300
+new1.dyn.interop.	300	IN	A	192.0.2.1
+new1.dyn.interop.	300	IN	TXT	"added with hmac-md5"
+dyn.interop.		3600	IN	SOA	ns1.dyn.interop. hostmaster.dyn.interop. 2026100602 7200 3600 1209600 300
+dyn.interop.		3600	IN	SOA	ns1.dyn.interop. hostmaster.dyn.interop. 2026100603 7200 3600 1209600 300
+new2.dyn.interop.	300	IN	A	192.0.2.2
+new2.dyn.interop.	300	IN	TXT	"added with hmac-sha1"
+dyn.interop.		3600	IN	SOA	ns1.dyn.interop. hostmaster.dyn.interop. 2026100603 7200 3600 1209600 300
+dyn.interop.		3600	IN	SOA	ns1.dyn.interop. hostmaster.dyn.interop. 2026100604 7200 3600 1209600 300
+new3.dyn.interop.	300	IN	A	192.0.2.3
+new3.dyn.interop.	300	IN	TXT	"added with hmac-sha224"
+dyn.interop.		3600	IN	SOA	ns1.dyn.interop. hostmaster.dyn.interop. 2026100604 7200 3600 1209600 300
+dyn.interop.		3600	IN	SOA	ns1.dyn.interop. hostmaster.dyn.interop. 2026100605 7200 3600 1209600 300
+new4.dyn.interop.	300	IN	A	192.0.2.4
+new4.dyn.interop.	300	IN	TXT	"added with hmac-sha256"
+dyn.interop.		3600	IN	SOA	ns1.dyn.interop. hostmaster.dyn.interop. 2026100605 7200 3600 1209600 300
+dyn.interop.		3600	IN	SOA	ns1.dyn.interop. hostmaster.dyn.interop. 2026100606 7200 3600 1209600 300
+new5.dyn.interop.	300	IN	A	192.0.2.5
+new5.dyn.interop.	300	IN	TXT	"added with hmac-sha384"
+dyn.interop.		3600	IN	SOA	ns1.dyn.interop. hostmaster.dyn.interop. 2026100606 7200 3600 1209600 300
+dyn.interop.		3600	IN	SOA	ns1.dyn.interop. hostmaster.dyn.interop. 2026100607 7200 3600 1209600 300
+new6.dyn.interop.	300	IN	A	192.0.2.6
+new6.dyn.interop.	300	IN	TXT	"added with hmac-sha512"
+dyn.interop.		3600	IN	SOA	ns1.dyn.interop. hostmaster.dyn.interop. 2026100607 7200 3600 1209600 300
+dyn.interop.		3600	IN	SOA	ns1.dyn.interop. hostmaster.dyn.interop. 2026100608 7200 3600 1209600 300
+tcp.dyn.interop.	300	IN	AAAA	2001:db8::7
+dyn.interop.		3600	IN	SOA	ns1.dyn.interop. hostmaster.dyn.interop. 2026100608 7200 3600 1209600 300
+hmac-md5.key.		0	ANY	TSIG	hmac-md5.sig-alg.reg.int. 1791245994 300 16 EL+K3T2Bv61VSJQMfmKk4Q== 17044 NOERROR 0 
+;; Query time: 0 msec
+;; SERVER: 127.0.0.1#5350(127.0.0.1) (TCP)
+;; WHEN: Tue Oct 06 00:19:54 UTC 2026
+;; XFR size: 30 records (messages 1, bytes 1135)
+

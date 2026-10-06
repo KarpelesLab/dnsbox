@@ -1,0 +1,1 @@
+dig +tcp +norec eui64.alltypes.example. EUI64

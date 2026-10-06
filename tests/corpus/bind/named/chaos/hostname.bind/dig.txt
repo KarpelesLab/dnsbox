@@ -1,0 +1,23 @@
+
+; <<>> DiG 9.18.39-0ubuntu0.24.04.7-Ubuntu <<>> @127.0.0.1 -p 5350 +tries=1 +time=5 CH TXT hostname.bind.
+; (1 server found)
+;; global options: +cmd
+;; Got answer:
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 22763
+;; flags: qr aa rd; QUERY: 1, ANSWER: 1, AUTHORITY: 0, ADDITIONAL: 1
+;; WARNING: recursion requested but not available
+
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags:; udp: 1232
+; COOKIE: eab540188dd99bbb010000006ac43ea98d4df4c75effcb60 (good)
+;; QUESTION SECTION:
+;hostname.bind.			CH	TXT
+
+;; ANSWER SECTION:
+hostname.bind.		0	CH	TXT	"named.dnsbox-interop"
+
+;; Query time: 0 msec
+;; SERVER: 127.0.0.1#5350(127.0.0.1) (UDP)
+;; WHEN: Tue Oct 06 00:19:53 UTC 2026
+;; MSG SIZE  rcvd: 103
+

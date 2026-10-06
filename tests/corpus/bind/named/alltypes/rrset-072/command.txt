@@ -1,0 +1,1 @@
+dig +tcp +norec sig.alltypes.example. SIG

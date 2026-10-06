@@ -1,0 +1,9 @@
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 46589
+;; flags: qr aa tc rd; QUERY: 1, ANSWER: 0, AUTHORITY: 0, ADDITIONAL: 1
+;; WARNING: recursion requested but not available
+
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags: do; udp: 1232
+; COOKIE: a843e3ed48b78c77010000006ac43ea9e1c8fe111b953d64
+;; QUESTION SECTION:
+;rsasha512-nsec3.interop.	IN	DNSKEY

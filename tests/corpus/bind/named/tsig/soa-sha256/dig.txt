@@ -1,0 +1,26 @@
+
+; <<>> DiG 9.18.39-0ubuntu0.24.04.7-Ubuntu <<>> @127.0.0.1 -p 5350 +tries=1 +time=5 -y hmac-sha256:hmac-sha256.key:AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8= interop. SOA
+; (1 server found)
+;; global options: +cmd
+;; Got answer:
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 7581
+;; flags: qr aa rd; QUERY: 1, ANSWER: 1, AUTHORITY: 0, ADDITIONAL: 2
+;; WARNING: recursion requested but not available
+
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags:; udp: 1232
+; COOKIE: fde978a4bd676d7b010000006ac43eaa34f18943bd1af64c (good)
+;; QUESTION SECTION:
+;interop.			IN	SOA
+
+;; ANSWER SECTION:
+interop.		3600	IN	SOA	ns.interop. hostmaster.interop. 2026100601 7200 3600 1209600 300
+
+;; TSIG PSEUDOSECTION:
+hmac-sha256.key.	0	ANY	TSIG	hmac-sha256. 1791245994 300 32 f7I/H1WzWPzj/mC2gChBI5k3wo6UoZQmBBGks2xb+gE= 7581 NOERROR 0 
+
+;; Query time: 0 msec
+;; SERVER: 127.0.0.1#5350(127.0.0.1) (UDP)
+;; WHEN: Tue Oct 06 00:19:54 UTC 2026
+;; MSG SIZE  rcvd: 202
+

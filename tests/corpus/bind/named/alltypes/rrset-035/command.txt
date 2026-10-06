@@ -1,0 +1,1 @@
+dig +tcp +norec hinfo.alltypes.example. HINFO

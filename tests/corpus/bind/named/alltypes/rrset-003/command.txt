@@ -1,0 +1,1 @@
+dig +tcp +norec \@\.\032x.alltypes.example. A

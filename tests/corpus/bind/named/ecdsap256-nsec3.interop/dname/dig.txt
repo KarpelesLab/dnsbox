@@ -1,0 +1,25 @@
+
+; <<>> DiG 9.18.39-0ubuntu0.24.04.7-Ubuntu <<>> @127.0.0.1 -p 5350 +tries=1 +time=5 +dnssec x.dname.ecdsap256-nsec3.interop. A
+; (1 server found)
+;; global options: +cmd
+;; Got answer:
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 61265
+;; flags: qr aa rd; QUERY: 1, ANSWER: 3, AUTHORITY: 0, ADDITIONAL: 1
+;; WARNING: recursion requested but not available
+
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags: do; udp: 1232
+; COOKIE: d4574f066a006965010000006ac43ea34e7e91c98e7ff3a9 (good)
+;; QUESTION SECTION:
+;x.dname.ecdsap256-nsec3.interop. IN	A
+
+;; ANSWER SECTION:
+dname.ecdsap256-nsec3.interop. 3600 IN	DNAME	example.net.
+dname.ecdsap256-nsec3.interop. 3600 IN	RRSIG	DNAME 13 3 3600 20361003001932 20261005231932 18981 ecdsap256-nsec3.interop. 2LVYcIAngCBQM+ErbsgXT6jRteMLVnqcA/yYlm1kmh6rOZ5vPUCBtOr6 4isFm7/QBBBPqdLmGPchmTrWCL4cgw==
+x.dname.ecdsap256-nsec3.interop. 3600 IN CNAME	x.example.net.
+
+;; Query time: 0 msec
+;; SERVER: 127.0.0.1#5350(127.0.0.1) (UDP)
+;; WHEN: Tue Oct 06 00:19:47 UTC 2026
+;; MSG SIZE  rcvd: 248
+

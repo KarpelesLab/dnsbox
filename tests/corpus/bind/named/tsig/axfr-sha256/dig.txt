@@ -1,0 +1,515 @@
+
+; <<>> DiG 9.18.39-0ubuntu0.24.04.7-Ubuntu <<>> @127.0.0.1 -p 5350 +tries=1 +time=5 -y hmac-sha256:hmac-sha256.key:AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8= bulk.interop. AXFR
+; (1 server found)
+;; global options: +cmd
+bulk.interop.		3600	IN	SOA	ns1.bulk.interop. hostmaster.bulk.interop. 2026100601 7200 3600 1209600 300
+bulk.interop.		3600	IN	NS	ns1.bulk.interop.
+h0001.bulk.interop.	3600	IN	A	192.0.0.1
+h0001.bulk.interop.	3600	IN	TXT	"record 1 of the bulk zone, padded to make the transfer span several messages"
+h0002.bulk.interop.	3600	IN	A	192.0.0.2
+h0002.bulk.interop.	3600	IN	TXT	"record 2 of the bulk zone, padded to make the transfer span several messages"
+h0003.bulk.interop.	3600	IN	A	192.0.0.3
+h0003.bulk.interop.	3600	IN	TXT	"record 3 of the bulk zone, padded to make the transfer span several messages"
+h0004.bulk.interop.	3600	IN	A	192.0.0.4
+h0004.bulk.interop.	3600	IN	TXT	"record 4 of the bulk zone, padded to make the transfer span several messages"
+h0005.bulk.interop.	3600	IN	A	192.0.0.5
+h0005.bulk.interop.	3600	IN	TXT	"record 5 of the bulk zone, padded to make the transfer span several messages"
+h0006.bulk.interop.	3600	IN	A	192.0.0.6
+h0006.bulk.interop.	3600	IN	TXT	"record 6 of the bulk zone, padded to make the transfer span several messages"
+h0007.bulk.interop.	3600	IN	A	192.0.0.7
+h0007.bulk.interop.	3600	IN	TXT	"record 7 of the bulk zone, padded to make the transfer span several messages"
+h0008.bulk.interop.	3600	IN	A	192.0.0.8
+h0008.bulk.interop.	3600	IN	TXT	"record 8 of the bulk zone, padded to make the transfer span several messages"
+h0009.bulk.interop.	3600	IN	A	192.0.0.9
+h0009.bulk.interop.	3600	IN	TXT	"record 9 of the bulk zone, padded to make the transfer span several messages"
+h0010.bulk.interop.	3600	IN	A	192.0.0.10
+h0010.bulk.interop.	3600	IN	TXT	"record 10 of the bulk zone, padded to make the transfer span several messages"
+h0011.bulk.interop.	3600	IN	A	192.0.0.11
+h0011.bulk.interop.	3600	IN	TXT	"record 11 of the bulk zone, padded to make the transfer span several messages"
+h0012.bulk.interop.	3600	IN	A	192.0.0.12
+h0012.bulk.interop.	3600	IN	TXT	"record 12 of the bulk zone, padded to make the transfer span several messages"
+h0013.bulk.interop.	3600	IN	A	192.0.0.13
+h0013.bulk.interop.	3600	IN	TXT	"record 13 of the bulk zone, padded to make the transfer span several messages"
+h0014.bulk.interop.	3600	IN	A	192.0.0.14
+h0014.bulk.interop.	3600	IN	TXT	"record 14 of the bulk zone, padded to make the transfer span several messages"
+h0015.bulk.interop.	3600	IN	A	192.0.0.15
+h0015.bulk.interop.	3600	IN	TXT	"record 15 of the bulk zone, padded to make the transfer span several messages"
+h0016.bulk.interop.	3600	IN	A	192.0.0.16
+h0016.bulk.interop.	3600	IN	TXT	"record 16 of the bulk zone, padded to make the transfer span several messages"
+h0017.bulk.interop.	3600	IN	A	192.0.0.17
+h0017.bulk.interop.	3600	IN	TXT	"record 17 of the bulk zone, padded to make the transfer span several messages"
+h0018.bulk.interop.	3600	IN	A	192.0.0.18
+h0018.bulk.interop.	3600	IN	TXT	"record 18 of the bulk zone, padded to make the transfer span several messages"
+h0019.bulk.interop.	3600	IN	A	192.0.0.19
+h0019.bulk.interop.	3600	IN	TXT	"record 19 of the bulk zone, padded to make the transfer span several messages"
+h0020.bulk.interop.	3600	IN	A	192.0.0.20
+h0020.bulk.interop.	3600	IN	TXT	"record 20 of the bulk zone, padded to make the transfer span several messages"
+h0021.bulk.interop.	3600	IN	A	192.0.0.21
+h0021.bulk.interop.	3600	IN	TXT	"record 21 of the bulk zone, padded to make the transfer span several messages"
+h0022.bulk.interop.	3600	IN	A	192.0.0.22
+h0022.bulk.interop.	3600	IN	TXT	"record 22 of the bulk zone, padded to make the transfer span several messages"
+h0023.bulk.interop.	3600	IN	A	192.0.0.23
+h0023.bulk.interop.	3600	IN	TXT	"record 23 of the bulk zone, padded to make the transfer span several messages"
+h0024.bulk.interop.	3600	IN	A	192.0.0.24
+h0024.bulk.interop.	3600	IN	TXT	"record 24 of the bulk zone, padded to make the transfer span several messages"
+h0025.bulk.interop.	3600	IN	A	192.0.0.25
+h0025.bulk.interop.	3600	IN	TXT	"record 25 of the bulk zone, padded to make the transfer span several messages"
+h0026.bulk.interop.	3600	IN	A	192.0.0.26
+h0026.bulk.interop.	3600	IN	TXT	"record 26 of the bulk zone, padded to make the transfer span several messages"
+h0027.bulk.interop.	3600	IN	A	192.0.0.27
+h0027.bulk.interop.	3600	IN	TXT	"record 27 of the bulk zone, padded to make the transfer span several messages"
+h0028.bulk.interop.	3600	IN	A	192.0.0.28
+h0028.bulk.interop.	3600	IN	TXT	"record 28 of the bulk zone, padded to make the transfer span several messages"
+h0029.bulk.interop.	3600	IN	A	192.0.0.29
+h0029.bulk.interop.	3600	IN	TXT	"record 29 of the bulk zone, padded to make the transfer span several messages"
+h0030.bulk.interop.	3600	IN	A	192.0.0.30
+h0030.bulk.interop.	3600	IN	TXT	"record 30 of the bulk zone, padded to make the transfer span several messages"
+h0031.bulk.interop.	3600	IN	A	192.0.0.31
+h0031.bulk.interop.	3600	IN	TXT	"record 31 of the bulk zone, padded to make the transfer span several messages"
+h0032.bulk.interop.	3600	IN	A	192.0.0.32
+h0032.bulk.interop.	3600	IN	TXT	"record 32 of the bulk zone, padded to make the transfer span several messages"
+h0033.bulk.interop.	3600	IN	A	192.0.0.33
+h0033.bulk.interop.	3600	IN	TXT	"record 33 of the bulk zone, padded to make the transfer span several messages"
+h0034.bulk.interop.	3600	IN	A	192.0.0.34
+h0034.bulk.interop.	3600	IN	TXT	"record 34 of the bulk zone, padded to make the transfer span several messages"
+h0035.bulk.interop.	3600	IN	A	192.0.0.35
+h0035.bulk.interop.	3600	IN	TXT	"record 35 of the bulk zone, padded to make the transfer span several messages"
+h0036.bulk.interop.	3600	IN	A	192.0.0.36
+h0036.bulk.interop.	3600	IN	TXT	"record 36 of the bulk zone, padded to make the transfer span several messages"
+h0037.bulk.interop.	3600	IN	A	192.0.0.37
+h0037.bulk.interop.	3600	IN	TXT	"record 37 of the bulk zone, padded to make the transfer span several messages"
+h0038.bulk.interop.	3600	IN	A	192.0.0.38
+h0038.bulk.interop.	3600	IN	TXT	"record 38 of the bulk zone, padded to make the transfer span several messages"
+h0039.bulk.interop.	3600	IN	A	192.0.0.39
+h0039.bulk.interop.	3600	IN	TXT	"record 39 of the bulk zone, padded to make the transfer span several messages"
+h0040.bulk.interop.	3600	IN	A	192.0.0.40
+h0040.bulk.interop.	3600	IN	TXT	"record 40 of the bulk zone, padded to make the transfer span several messages"
+h0041.bulk.interop.	3600	IN	A	192.0.0.41
+h0041.bulk.interop.	3600	IN	TXT	"record 41 of the bulk zone, padded to make the transfer span several messages"
+h0042.bulk.interop.	3600	IN	A	192.0.0.42
+h0042.bulk.interop.	3600	IN	TXT	"record 42 of the bulk zone, padded to make the transfer span several messages"
+h0043.bulk.interop.	3600	IN	A	192.0.0.43
+h0043.bulk.interop.	3600	IN	TXT	"record 43 of the bulk zone, padded to make the transfer span several messages"
+h0044.bulk.interop.	3600	IN	A	192.0.0.44
+h0044.bulk.interop.	3600	IN	TXT	"record 44 of the bulk zone, padded to make the transfer span several messages"
+h0045.bulk.interop.	3600	IN	A	192.0.0.45
+h0045.bulk.interop.	3600	IN	TXT	"record 45 of the bulk zone, padded to make the transfer span several messages"
+h0046.bulk.interop.	3600	IN	A	192.0.0.46
+h0046.bulk.interop.	3600	IN	TXT	"record 46 of the bulk zone, padded to make the transfer span several messages"
+h0047.bulk.interop.	3600	IN	A	192.0.0.47
+h0047.bulk.interop.	3600	IN	TXT	"record 47 of the bulk zone, padded to make the transfer span several messages"
+h0048.bulk.interop.	3600	IN	A	192.0.0.48
+h0048.bulk.interop.	3600	IN	TXT	"record 48 of the bulk zone, padded to make the transfer span several messages"
+h0049.bulk.interop.	3600	IN	A	192.0.0.49
+h0049.bulk.interop.	3600	IN	TXT	"record 49 of the bulk zone, padded to make the transfer span several messages"
+h0050.bulk.interop.	3600	IN	A	192.0.0.50
+h0050.bulk.interop.	3600	IN	TXT	"record 50 of the bulk zone, padded to make the transfer span several messages"
+h0051.bulk.interop.	3600	IN	A	192.0.0.51
+h0051.bulk.interop.	3600	IN	TXT	"record 51 of the bulk zone, padded to make the transfer span several messages"
+h0052.bulk.interop.	3600	IN	A	192.0.0.52
+h0052.bulk.interop.	3600	IN	TXT	"record 52 of the bulk zone, padded to make the transfer span several messages"
+h0053.bulk.interop.	3600	IN	A	192.0.0.53
+h0053.bulk.interop.	3600	IN	TXT	"record 53 of the bulk zone, padded to make the transfer span several messages"
+h0054.bulk.interop.	3600	IN	A	192.0.0.54
+h0054.bulk.interop.	3600	IN	TXT	"record 54 of the bulk zone, padded to make the transfer span several messages"
+h0055.bulk.interop.	3600	IN	A	192.0.0.55
+h0055.bulk.interop.	3600	IN	TXT	"record 55 of the bulk zone, padded to make the transfer span several messages"
+h0056.bulk.interop.	3600	IN	A	192.0.0.56
+h0056.bulk.interop.	3600	IN	TXT	"record 56 of the bulk zone, padded to make the transfer span several messages"
+h0057.bulk.interop.	3600	IN	A	192.0.0.57
+h0057.bulk.interop.	3600	IN	TXT	"record 57 of the bulk zone, padded to make the transfer span several messages"
+h0058.bulk.interop.	3600	IN	A	192.0.0.58
+h0058.bulk.interop.	3600	IN	TXT	"record 58 of the bulk zone, padded to make the transfer span several messages"
+h0059.bulk.interop.	3600	IN	A	192.0.0.59
+h0059.bulk.interop.	3600	IN	TXT	"record 59 of the bulk zone, padded to make the transfer span several messages"
+h0060.bulk.interop.	3600	IN	A	192.0.0.60
+h0060.bulk.interop.	3600	IN	TXT	"record 60 of the bulk zone, padded to make the transfer span several messages"
+h0061.bulk.interop.	3600	IN	A	192.0.0.61
+h0061.bulk.interop.	3600	IN	TXT	"record 61 of the bulk zone, padded to make the transfer span several messages"
+h0062.bulk.interop.	3600	IN	A	192.0.0.62
+h0062.bulk.interop.	3600	IN	TXT	"record 62 of the bulk zone, padded to make the transfer span several messages"
+h0063.bulk.interop.	3600	IN	A	192.0.0.63
+h0063.bulk.interop.	3600	IN	TXT	"record 63 of the bulk zone, padded to make the transfer span several messages"
+h0064.bulk.interop.	3600	IN	A	192.0.0.64
+h0064.bulk.interop.	3600	IN	TXT	"record 64 of the bulk zone, padded to make the transfer span several messages"
+h0065.bulk.interop.	3600	IN	A	192.0.0.65
+h0065.bulk.interop.	3600	IN	TXT	"record 65 of the bulk zone, padded to make the transfer span several messages"
+h0066.bulk.interop.	3600	IN	A	192.0.0.66
+h0066.bulk.interop.	3600	IN	TXT	"record 66 of the bulk zone, padded to make the transfer span several messages"
+h0067.bulk.interop.	3600	IN	A	192.0.0.67
+h0067.bulk.interop.	3600	IN	TXT	"record 67 of the bulk zone, padded to make the transfer span several messages"
+h0068.bulk.interop.	3600	IN	A	192.0.0.68
+h0068.bulk.interop.	3600	IN	TXT	"record 68 of the bulk zone, padded to make the transfer span several messages"
+h0069.bulk.interop.	3600	IN	A	192.0.0.69
+h0069.bulk.interop.	3600	IN	TXT	"record 69 of the bulk zone, padded to make the transfer span several messages"
+h0070.bulk.interop.	3600	IN	A	192.0.0.70
+h0070.bulk.interop.	3600	IN	TXT	"record 70 of the bulk zone, padded to make the transfer span several messages"
+h0071.bulk.interop.	3600	IN	A	192.0.0.71
+h0071.bulk.interop.	3600	IN	TXT	"record 71 of the bulk zone, padded to make the transfer span several messages"
+h0072.bulk.interop.	3600	IN	A	192.0.0.72
+h0072.bulk.interop.	3600	IN	TXT	"record 72 of the bulk zone, padded to make the transfer span several messages"
+h0073.bulk.interop.	3600	IN	A	192.0.0.73
+h0073.bulk.interop.	3600	IN	TXT	"record 73 of the bulk zone, padded to make the transfer span several messages"
+h0074.bulk.interop.	3600	IN	A	192.0.0.74
+h0074.bulk.interop.	3600	IN	TXT	"record 74 of the bulk zone, padded to make the transfer span several messages"
+h0075.bulk.interop.	3600	IN	A	192.0.0.75
+h0075.bulk.interop.	3600	IN	TXT	"record 75 of the bulk zone, padded to make the transfer span several messages"
+h0076.bulk.interop.	3600	IN	A	192.0.0.76
+h0076.bulk.interop.	3600	IN	TXT	"record 76 of the bulk zone, padded to make the transfer span several messages"
+h0077.bulk.interop.	3600	IN	A	192.0.0.77
+h0077.bulk.interop.	3600	IN	TXT	"record 77 of the bulk zone, padded to make the transfer span several messages"
+h0078.bulk.interop.	3600	IN	A	192.0.0.78
+h0078.bulk.interop.	3600	IN	TXT	"record 78 of the bulk zone, padded to make the transfer span several messages"
+h0079.bulk.interop.	3600	IN	A	192.0.0.79
+h0079.bulk.interop.	3600	IN	TXT	"record 79 of the bulk zone, padded to make the transfer span several messages"
+h0080.bulk.interop.	3600	IN	A	192.0.0.80
+h0080.bulk.interop.	3600	IN	TXT	"record 80 of the bulk zone, padded to make the transfer span several messages"
+h0081.bulk.interop.	3600	IN	A	192.0.0.81
+h0081.bulk.interop.	3600	IN	TXT	"record 81 of the bulk zone, padded to make the transfer span several messages"
+h0082.bulk.interop.	3600	IN	A	192.0.0.82
+h0082.bulk.interop.	3600	IN	TXT	"record 82 of the bulk zone, padded to make the transfer span several messages"
+h0083.bulk.interop.	3600	IN	A	192.0.0.83
+h0083.bulk.interop.	3600	IN	TXT	"record 83 of the bulk zone, padded to make the transfer span several messages"
+h0084.bulk.interop.	3600	IN	A	192.0.0.84
+h0084.bulk.interop.	3600	IN	TXT	"record 84 of the bulk zone, padded to make the transfer span several messages"
+h0085.bulk.interop.	3600	IN	A	192.0.0.85
+h0085.bulk.interop.	3600	IN	TXT	"record 85 of the bulk zone, padded to make the transfer span several messages"
+h0086.bulk.interop.	3600	IN	A	192.0.0.86
+h0086.bulk.interop.	3600	IN	TXT	"record 86 of the bulk zone, padded to make the transfer span several messages"
+h0087.bulk.interop.	3600	IN	A	192.0.0.87
+h0087.bulk.interop.	3600	IN	TXT	"record 87 of the bulk zone, padded to make the transfer span several messages"
+h0088.bulk.interop.	3600	IN	A	192.0.0.88
+h0088.bulk.interop.	3600	IN	TXT	"record 88 of the bulk zone, padded to make the transfer span several messages"
+h0089.bulk.interop.	3600	IN	A	192.0.0.89
+h0089.bulk.interop.	3600	IN	TXT	"record 89 of the bulk zone, padded to make the transfer span several messages"
+h0090.bulk.interop.	3600	IN	A	192.0.0.90
+h0090.bulk.interop.	3600	IN	TXT	"record 90 of the bulk zone, padded to make the transfer span several messages"
+h0091.bulk.interop.	3600	IN	A	192.0.0.91
+h0091.bulk.interop.	3600	IN	TXT	"record 91 of the bulk zone, padded to make the transfer span several messages"
+h0092.bulk.interop.	3600	IN	A	192.0.0.92
+h0092.bulk.interop.	3600	IN	TXT	"record 92 of the bulk zone, padded to make the transfer span several messages"
+h0093.bulk.interop.	3600	IN	A	192.0.0.93
+h0093.bulk.interop.	3600	IN	TXT	"record 93 of the bulk zone, padded to make the transfer span several messages"
+h0094.bulk.interop.	3600	IN	A	192.0.0.94
+h0094.bulk.interop.	3600	IN	TXT	"record 94 of the bulk zone, padded to make the transfer span several messages"
+h0095.bulk.interop.	3600	IN	A	192.0.0.95
+h0095.bulk.interop.	3600	IN	TXT	"record 95 of the bulk zone, padded to make the transfer span several messages"
+h0096.bulk.interop.	3600	IN	A	192.0.0.96
+h0096.bulk.interop.	3600	IN	TXT	"record 96 of the bulk zone, padded to make the transfer span several messages"
+h0097.bulk.interop.	3600	IN	A	192.0.0.97
+h0097.bulk.interop.	3600	IN	TXT	"record 97 of the bulk zone, padded to make the transfer span several messages"
+h0098.bulk.interop.	3600	IN	A	192.0.0.98
+h0098.bulk.interop.	3600	IN	TXT	"record 98 of the bulk zone, padded to make the transfer span several messages"
+h0099.bulk.interop.	3600	IN	A	192.0.0.99
+h0099.bulk.interop.	3600	IN	TXT	"record 99 of the bulk zone, padded to make the transfer span several messages"
+h0100.bulk.interop.	3600	IN	A	192.0.0.100
+h0100.bulk.interop.	3600	IN	TXT	"record 100 of the bulk zone, padded to make the transfer span several messages"
+h0101.bulk.interop.	3600	IN	A	192.0.0.101
+h0101.bulk.interop.	3600	IN	TXT	"record 101 of the bulk zone, padded to make the transfer span several messages"
+h0102.bulk.interop.	3600	IN	A	192.0.0.102
+h0102.bulk.interop.	3600	IN	TXT	"record 102 of the bulk zone, padded to make the transfer span several messages"
+h0103.bulk.interop.	3600	IN	A	192.0.0.103
+h0103.bulk.interop.	3600	IN	TXT	"record 103 of the bulk zone, padded to make the transfer span several messages"
+h0104.bulk.interop.	3600	IN	A	192.0.0.104
+h0104.bulk.interop.	3600	IN	TXT	"record 104 of the bulk zone, padded to make the transfer span several messages"
+h0105.bulk.interop.	3600	IN	A	192.0.0.105
+h0105.bulk.interop.	3600	IN	TXT	"record 105 of the bulk zone, padded to make the transfer span several messages"
+h0106.bulk.interop.	3600	IN	A	192.0.0.106
+h0106.bulk.interop.	3600	IN	TXT	"record 106 of the bulk zone, padded to make the transfer span several messages"
+h0107.bulk.interop.	3600	IN	A	192.0.0.107
+h0107.bulk.interop.	3600	IN	TXT	"record 107 of the bulk zone, padded to make the transfer span several messages"
+h0108.bulk.interop.	3600	IN	A	192.0.0.108
+h0108.bulk.interop.	3600	IN	TXT	"record 108 of the bulk zone, padded to make the transfer span several messages"
+h0109.bulk.interop.	3600	IN	A	192.0.0.109
+h0109.bulk.interop.	3600	IN	TXT	"record 109 of the bulk zone, padded to make the transfer span several messages"
+h0110.bulk.interop.	3600	IN	A	192.0.0.110
+h0110.bulk.interop.	3600	IN	TXT	"record 110 of the bulk zone, padded to make the transfer span several messages"
+h0111.bulk.interop.	3600	IN	A	192.0.0.111
+h0111.bulk.interop.	3600	IN	TXT	"record 111 of the bulk zone, padded to make the transfer span several messages"
+h0112.bulk.interop.	3600	IN	A	192.0.0.112
+h0112.bulk.interop.	3600	IN	TXT	"record 112 of the bulk zone, padded to make the transfer span several messages"
+h0113.bulk.interop.	3600	IN	A	192.0.0.113
+h0113.bulk.interop.	3600	IN	TXT	"record 113 of the bulk zone, padded to make the transfer span several messages"
+h0114.bulk.interop.	3600	IN	A	192.0.0.114
+h0114.bulk.interop.	3600	IN	TXT	"record 114 of the bulk zone, padded to make the transfer span several messages"
+h0115.bulk.interop.	3600	IN	A	192.0.0.115
+h0115.bulk.interop.	3600	IN	TXT	"record 115 of the bulk zone, padded to make the transfer span several messages"
+h0116.bulk.interop.	3600	IN	A	192.0.0.116
+h0116.bulk.interop.	3600	IN	TXT	"record 116 of the bulk zone, padded to make the transfer span several messages"
+h0117.bulk.interop.	3600	IN	A	192.0.0.117
+h0117.bulk.interop.	3600	IN	TXT	"record 117 of the bulk zone, padded to make the transfer span several messages"
+h0118.bulk.interop.	3600	IN	A	192.0.0.118
+h0118.bulk.interop.	3600	IN	TXT	"record 118 of the bulk zone, padded to make the transfer span several messages"
+h0119.bulk.interop.	3600	IN	A	192.0.0.119
+h0119.bulk.interop.	3600	IN	TXT	"record 119 of the bulk zone, padded to make the transfer span several messages"
+h0120.bulk.interop.	3600	IN	A	192.0.0.120
+h0120.bulk.interop.	3600	IN	TXT	"record 120 of the bulk zone, padded to make the transfer span several messages"
+h0121.bulk.interop.	3600	IN	A	192.0.0.121
+h0121.bulk.interop.	3600	IN	TXT	"record 121 of the bulk zone, padded to make the transfer span several messages"
+h0122.bulk.interop.	3600	IN	A	192.0.0.122
+h0122.bulk.interop.	3600	IN	TXT	"record 122 of the bulk zone, padded to make the transfer span several messages"
+h0123.bulk.interop.	3600	IN	A	192.0.0.123
+h0123.bulk.interop.	3600	IN	TXT	"record 123 of the bulk zone, padded to make the transfer span several messages"
+h0124.bulk.interop.	3600	IN	A	192.0.0.124
+h0124.bulk.interop.	3600	IN	TXT	"record 124 of the bulk zone, padded to make the transfer span several messages"
+h0125.bulk.interop.	3600	IN	A	192.0.0.125
+h0125.bulk.interop.	3600	IN	TXT	"record 125 of the bulk zone, padded to make the transfer span several messages"
+h0126.bulk.interop.	3600	IN	A	192.0.0.126
+h0126.bulk.interop.	3600	IN	TXT	"record 126 of the bulk zone, padded to make the transfer span several messages"
+h0127.bulk.interop.	3600	IN	A	192.0.0.127
+h0127.bulk.interop.	3600	IN	TXT	"record 127 of the bulk zone, padded to make the transfer span several messages"
+h0128.bulk.interop.	3600	IN	A	192.0.0.128
+h0128.bulk.interop.	3600	IN	TXT	"record 128 of the bulk zone, padded to make the transfer span several messages"
+h0129.bulk.interop.	3600	IN	A	192.0.0.129
+h0129.bulk.interop.	3600	IN	TXT	"record 129 of the bulk zone, padded to make the transfer span several messages"
+h0130.bulk.interop.	3600	IN	A	192.0.0.130
+h0130.bulk.interop.	3600	IN	TXT	"record 130 of the bulk zone, padded to make the transfer span several messages"
+h0131.bulk.interop.	3600	IN	A	192.0.0.131
+h0131.bulk.interop.	3600	IN	TXT	"record 131 of the bulk zone, padded to make the transfer span several messages"
+h0132.bulk.interop.	3600	IN	A	192.0.0.132
+h0132.bulk.interop.	3600	IN	TXT	"record 132 of the bulk zone, padded to make the transfer span several messages"
+h0133.bulk.interop.	3600	IN	A	192.0.0.133
+h0133.bulk.interop.	3600	IN	TXT	"record 133 of the bulk zone, padded to make the transfer span several messages"
+h0134.bulk.interop.	3600	IN	A	192.0.0.134
+h0134.bulk.interop.	3600	IN	TXT	"record 134 of the bulk zone, padded to make the transfer span several messages"
+h0135.bulk.interop.	3600	IN	A	192.0.0.135
+h0135.bulk.interop.	3600	IN	TXT	"record 135 of the bulk zone, padded to make the transfer span several messages"
+h0136.bulk.interop.	3600	IN	A	192.0.0.136
+h0136.bulk.interop.	3600	IN	TXT	"record 136 of the bulk zone, padded to make the transfer span several messages"
+h0137.bulk.interop.	3600	IN	A	192.0.0.137
+h0137.bulk.interop.	3600	IN	TXT	"record 137 of the bulk zone, padded to make the transfer span several messages"
+h0138.bulk.interop.	3600	IN	A	192.0.0.138
+h0138.bulk.interop.	3600	IN	TXT	"record 138 of the bulk zone, padded to make the transfer span several messages"
+h0139.bulk.interop.	3600	IN	A	192.0.0.139
+h0139.bulk.interop.	3600	IN	TXT	"record 139 of the bulk zone, padded to make the transfer span several messages"
+h0140.bulk.interop.	3600	IN	A	192.0.0.140
+h0140.bulk.interop.	3600	IN	TXT	"record 140 of the bulk zone, padded to make the transfer span several messages"
+h0141.bulk.interop.	3600	IN	A	192.0.0.141
+h0141.bulk.interop.	3600	IN	TXT	"record 141 of the bulk zone, padded to make the transfer span several messages"
+h0142.bulk.interop.	3600	IN	A	192.0.0.142
+h0142.bulk.interop.	3600	IN	TXT	"record 142 of the bulk zone, padded to make the transfer span several messages"
+hmac-sha256.key.	0	ANY	TSIG	hmac-sha256. 1791245994 300 32 1ybPwfyjfYmmgVh5L/aj1y6Nji3IQiMJ1JVCIazTyXQ= 51089 NOERROR 0 
+h0143.bulk.interop.	3600	IN	A	192.0.0.143
+h0143.bulk.interop.	3600	IN	TXT	"record 143 of the bulk zone, padded to make the transfer span several messages"
+h0144.bulk.interop.	3600	IN	A	192.0.0.144
+h0144.bulk.interop.	3600	IN	TXT	"record 144 of the bulk zone, padded to make the transfer span several messages"
+h0145.bulk.interop.	3600	IN	A	192.0.0.145
+h0145.bulk.interop.	3600	IN	TXT	"record 145 of the bulk zone, padded to make the transfer span several messages"
+h0146.bulk.interop.	3600	IN	A	192.0.0.146
+h0146.bulk.interop.	3600	IN	TXT	"record 146 of the bulk zone, padded to make the transfer span several messages"
+h0147.bulk.interop.	3600	IN	A	192.0.0.147
+h0147.bulk.interop.	3600	IN	TXT	"record 147 of the bulk zone, padded to make the transfer span several messages"
+h0148.bulk.interop.	3600	IN	A	192.0.0.148
+h0148.bulk.interop.	3600	IN	TXT	"record 148 of the bulk zone, padded to make the transfer span several messages"
+h0149.bulk.interop.	3600	IN	A	192.0.0.149
+h0149.bulk.interop.	3600	IN	TXT	"record 149 of the bulk zone, padded to make the transfer span several messages"
+h0150.bulk.interop.	3600	IN	A	192.0.0.150
+h0150.bulk.interop.	3600	IN	TXT	"record 150 of the bulk zone, padded to make the transfer span several messages"
+h0151.bulk.interop.	3600	IN	A	192.0.0.151
+h0151.bulk.interop.	3600	IN	TXT	"record 151 of the bulk zone, padded to make the transfer span several messages"
+h0152.bulk.interop.	3600	IN	A	192.0.0.152
+h0152.bulk.interop.	3600	IN	TXT	"record 152 of the bulk zone, padded to make the transfer span several messages"
+h0153.bulk.interop.	3600	IN	A	192.0.0.153
+h0153.bulk.interop.	3600	IN	TXT	"record 153 of the bulk zone, padded to make the transfer span several messages"
+h0154.bulk.interop.	3600	IN	A	192.0.0.154
+h0154.bulk.interop.	3600	IN	TXT	"record 154 of the bulk zone, padded to make the transfer span several messages"
+h0155.bulk.interop.	3600	IN	A	192.0.0.155
+h0155.bulk.interop.	3600	IN	TXT	"record 155 of the bulk zone, padded to make the transfer span several messages"
+h0156.bulk.interop.	3600	IN	A	192.0.0.156
+h0156.bulk.interop.	3600	IN	TXT	"record 156 of the bulk zone, padded to make the transfer span several messages"
+h0157.bulk.interop.	3600	IN	A	192.0.0.157
+h0157.bulk.interop.	3600	IN	TXT	"record 157 of the bulk zone, padded to make the transfer span several messages"
+h0158.bulk.interop.	3600	IN	A	192.0.0.158
+h0158.bulk.interop.	3600	IN	TXT	"record 158 of the bulk zone, padded to make the transfer span several messages"
+h0159.bulk.interop.	3600	IN	A	192.0.0.159
+h0159.bulk.interop.	3600	IN	TXT	"record 159 of the bulk zone, padded to make the transfer span several messages"
+h0160.bulk.interop.	3600	IN	A	192.0.0.160
+h0160.bulk.interop.	3600	IN	TXT	"record 160 of the bulk zone, padded to make the transfer span several messages"
+h0161.bulk.interop.	3600	IN	A	192.0.0.161
+h0161.bulk.interop.	3600	IN	TXT	"record 161 of the bulk zone, padded to make the transfer span several messages"
+h0162.bulk.interop.	3600	IN	A	192.0.0.162
+h0162.bulk.interop.	3600	IN	TXT	"record 162 of the bulk zone, padded to make the transfer span several messages"
+h0163.bulk.interop.	3600	IN	A	192.0.0.163
+h0163.bulk.interop.	3600	IN	TXT	"record 163 of the bulk zone, padded to make the transfer span several messages"
+h0164.bulk.interop.	3600	IN	A	192.0.0.164
+h0164.bulk.interop.	3600	IN	TXT	"record 164 of the bulk zone, padded to make the transfer span several messages"
+h0165.bulk.interop.	3600	IN	A	192.0.0.165
+h0165.bulk.interop.	3600	IN	TXT	"record 165 of the bulk zone, padded to make the transfer span several messages"
+h0166.bulk.interop.	3600	IN	A	192.0.0.166
+h0166.bulk.interop.	3600	IN	TXT	"record 166 of the bulk zone, padded to make the transfer span several messages"
+h0167.bulk.interop.	3600	IN	A	192.0.0.167
+h0167.bulk.interop.	3600	IN	TXT	"record 167 of the bulk zone, padded to make the transfer span several messages"
+h0168.bulk.interop.	3600	IN	A	192.0.0.168
+h0168.bulk.interop.	3600	IN	TXT	"record 168 of the bulk zone, padded to make the transfer span several messages"
+h0169.bulk.interop.	3600	IN	A	192.0.0.169
+h0169.bulk.interop.	3600	IN	TXT	"record 169 of the bulk zone, padded to make the transfer span several messages"
+h0170.bulk.interop.	3600	IN	A	192.0.0.170
+h0170.bulk.interop.	3600	IN	TXT	"record 170 of the bulk zone, padded to make the transfer span several messages"
+h0171.bulk.interop.	3600	IN	A	192.0.0.171
+h0171.bulk.interop.	3600	IN	TXT	"record 171 of the bulk zone, padded to make the transfer span several messages"
+h0172.bulk.interop.	3600	IN	A	192.0.0.172
+h0172.bulk.interop.	3600	IN	TXT	"record 172 of the bulk zone, padded to make the transfer span several messages"
+h0173.bulk.interop.	3600	IN	A	192.0.0.173
+h0173.bulk.interop.	3600	IN	TXT	"record 173 of the bulk zone, padded to make the transfer span several messages"
+h0174.bulk.interop.	3600	IN	A	192.0.0.174
+h0174.bulk.interop.	3600	IN	TXT	"record 174 of the bulk zone, padded to make the transfer span several messages"
+h0175.bulk.interop.	3600	IN	A	192.0.0.175
+h0175.bulk.interop.	3600	IN	TXT	"record 175 of the bulk zone, padded to make the transfer span several messages"
+h0176.bulk.interop.	3600	IN	A	192.0.0.176
+h0176.bulk.interop.	3600	IN	TXT	"record 176 of the bulk zone, padded to make the transfer span several messages"
+h0177.bulk.interop.	3600	IN	A	192.0.0.177
+h0177.bulk.interop.	3600	IN	TXT	"record 177 of the bulk zone, padded to make the transfer span several messages"
+h0178.bulk.interop.	3600	IN	A	192.0.0.178
+h0178.bulk.interop.	3600	IN	TXT	"record 178 of the bulk zone, padded to make the transfer span several messages"
+h0179.bulk.interop.	3600	IN	A	192.0.0.179
+h0179.bulk.interop.	3600	IN	TXT	"record 179 of the bulk zone, padded to make the transfer span several messages"
+h0180.bulk.interop.	3600	IN	A	192.0.0.180
+h0180.bulk.interop.	3600	IN	TXT	"record 180 of the bulk zone, padded to make the transfer span several messages"
+h0181.bulk.interop.	3600	IN	A	192.0.0.181
+h0181.bulk.interop.	3600	IN	TXT	"record 181 of the bulk zone, padded to make the transfer span several messages"
+h0182.bulk.interop.	3600	IN	A	192.0.0.182
+h0182.bulk.interop.	3600	IN	TXT	"record 182 of the bulk zone, padded to make the transfer span several messages"
+h0183.bulk.interop.	3600	IN	A	192.0.0.183
+h0183.bulk.interop.	3600	IN	TXT	"record 183 of the bulk zone, padded to make the transfer span several messages"
+h0184.bulk.interop.	3600	IN	A	192.0.0.184
+h0184.bulk.interop.	3600	IN	TXT	"record 184 of the bulk zone, padded to make the transfer span several messages"
+h0185.bulk.interop.	3600	IN	A	192.0.0.185
+h0185.bulk.interop.	3600	IN	TXT	"record 185 of the bulk zone, padded to make the transfer span several messages"
+h0186.bulk.interop.	3600	IN	A	192.0.0.186
+h0186.bulk.interop.	3600	IN	TXT	"record 186 of the bulk zone, padded to make the transfer span several messages"
+h0187.bulk.interop.	3600	IN	A	192.0.0.187
+h0187.bulk.interop.	3600	IN	TXT	"record 187 of the bulk zone, padded to make the transfer span several messages"
+h0188.bulk.interop.	3600	IN	A	192.0.0.188
+h0188.bulk.interop.	3600	IN	TXT	"record 188 of the bulk zone, padded to make the transfer span several messages"
+h0189.bulk.interop.	3600	IN	A	192.0.0.189
+h0189.bulk.interop.	3600	IN	TXT	"record 189 of the bulk zone, padded to make the transfer span several messages"
+h0190.bulk.interop.	3600	IN	A	192.0.0.190
+h0190.bulk.interop.	3600	IN	TXT	"record 190 of the bulk zone, padded to make the transfer span several messages"
+h0191.bulk.interop.	3600	IN	A	192.0.0.191
+h0191.bulk.interop.	3600	IN	TXT	"record 191 of the bulk zone, padded to make the transfer span several messages"
+h0192.bulk.interop.	3600	IN	A	192.0.0.192
+h0192.bulk.interop.	3600	IN	TXT	"record 192 of the bulk zone, padded to make the transfer span several messages"
+h0193.bulk.interop.	3600	IN	A	192.0.0.193
+h0193.bulk.interop.	3600	IN	TXT	"record 193 of the bulk zone, padded to make the transfer span several messages"
+h0194.bulk.interop.	3600	IN	A	192.0.0.194
+h0194.bulk.interop.	3600	IN	TXT	"record 194 of the bulk zone, padded to make the transfer span several messages"
+h0195.bulk.interop.	3600	IN	A	192.0.0.195
+h0195.bulk.interop.	3600	IN	TXT	"record 195 of the bulk zone, padded to make the transfer span several messages"
+h0196.bulk.interop.	3600	IN	A	192.0.0.196
+h0196.bulk.interop.	3600	IN	TXT	"record 196 of the bulk zone, padded to make the transfer span several messages"
+h0197.bulk.interop.	3600	IN	A	192.0.0.197
+h0197.bulk.interop.	3600	IN	TXT	"record 197 of the bulk zone, padded to make the transfer span several messages"
+h0198.bulk.interop.	3600	IN	A	192.0.0.198
+h0198.bulk.interop.	3600	IN	TXT	"record 198 of the bulk zone, padded to make the transfer span several messages"
+h0199.bulk.interop.	3600	IN	A	192.0.0.199
+h0199.bulk.interop.	3600	IN	TXT	"record 199 of the bulk zone, padded to make the transfer span several messages"
+h0200.bulk.interop.	3600	IN	A	192.0.0.200
+h0200.bulk.interop.	3600	IN	TXT	"record 200 of the bulk zone, padded to make the transfer span several messages"
+h0201.bulk.interop.	3600	IN	A	192.0.0.201
+h0201.bulk.interop.	3600	IN	TXT	"record 201 of the bulk zone, padded to make the transfer span several messages"
+h0202.bulk.interop.	3600	IN	A	192.0.0.202
+h0202.bulk.interop.	3600	IN	TXT	"record 202 of the bulk zone, padded to make the transfer span several messages"
+h0203.bulk.interop.	3600	IN	A	192.0.0.203
+h0203.bulk.interop.	3600	IN	TXT	"record 203 of the bulk zone, padded to make the transfer span several messages"
+h0204.bulk.interop.	3600	IN	A	192.0.0.204
+h0204.bulk.interop.	3600	IN	TXT	"record 204 of the bulk zone, padded to make the transfer span several messages"
+h0205.bulk.interop.	3600	IN	A	192.0.0.205
+h0205.bulk.interop.	3600	IN	TXT	"record 205 of the bulk zone, padded to make the transfer span several messages"
+h0206.bulk.interop.	3600	IN	A	192.0.0.206
+h0206.bulk.interop.	3600	IN	TXT	"record 206 of the bulk zone, padded to make the transfer span several messages"
+h0207.bulk.interop.	3600	IN	A	192.0.0.207
+h0207.bulk.interop.	3600	IN	TXT	"record 207 of the bulk zone, padded to make the transfer span several messages"
+h0208.bulk.interop.	3600	IN	A	192.0.0.208
+h0208.bulk.interop.	3600	IN	TXT	"record 208 of the bulk zone, padded to make the transfer span several messages"
+h0209.bulk.interop.	3600	IN	A	192.0.0.209
+h0209.bulk.interop.	3600	IN	TXT	"record 209 of the bulk zone, padded to make the transfer span several messages"
+h0210.bulk.interop.	3600	IN	A	192.0.0.210
+h0210.bulk.interop.	3600	IN	TXT	"record 210 of the bulk zone, padded to make the transfer span several messages"
+h0211.bulk.interop.	3600	IN	A	192.0.0.211
+h0211.bulk.interop.	3600	IN	TXT	"record 211 of the bulk zone, padded to make the transfer span several messages"
+h0212.bulk.interop.	3600	IN	A	192.0.0.212
+h0212.bulk.interop.	3600	IN	TXT	"record 212 of the bulk zone, padded to make the transfer span several messages"
+h0213.bulk.interop.	3600	IN	A	192.0.0.213
+h0213.bulk.interop.	3600	IN	TXT	"record 213 of the bulk zone, padded to make the transfer span several messages"
+h0214.bulk.interop.	3600	IN	A	192.0.0.214
+h0214.bulk.interop.	3600	IN	TXT	"record 214 of the bulk zone, padded to make the transfer span several messages"
+h0215.bulk.interop.	3600	IN	A	192.0.0.215
+h0215.bulk.interop.	3600	IN	TXT	"record 215 of the bulk zone, padded to make the transfer span several messages"
+h0216.bulk.interop.	3600	IN	A	192.0.0.216
+h0216.bulk.interop.	3600	IN	TXT	"record 216 of the bulk zone, padded to make the transfer span several messages"
+h0217.bulk.interop.	3600	IN	A	192.0.0.217
+h0217.bulk.interop.	3600	IN	TXT	"record 217 of the bulk zone, padded to make the transfer span several messages"
+h0218.bulk.interop.	3600	IN	A	192.0.0.218
+h0218.bulk.interop.	3600	IN	TXT	"record 218 of the bulk zone, padded to make the transfer span several messages"
+h0219.bulk.interop.	3600	IN	A	192.0.0.219
+h0219.bulk.interop.	3600	IN	TXT	"record 219 of the bulk zone, padded to make the transfer span several messages"
+h0220.bulk.interop.	3600	IN	A	192.0.0.220
+h0220.bulk.interop.	3600	IN	TXT	"record 220 of the bulk zone, padded to make the transfer span several messages"
+h0221.bulk.interop.	3600	IN	A	192.0.0.221
+h0221.bulk.interop.	3600	IN	TXT	"record 221 of the bulk zone, padded to make the transfer span several messages"
+h0222.bulk.interop.	3600	IN	A	192.0.0.222
+h0222.bulk.interop.	3600	IN	TXT	"record 222 of the bulk zone, padded to make the transfer span several messages"
+h0223.bulk.interop.	3600	IN	A	192.0.0.223
+h0223.bulk.interop.	3600	IN	TXT	"record 223 of the bulk zone, padded to make the transfer span several messages"
+h0224.bulk.interop.	3600	IN	A	192.0.0.224
+h0224.bulk.interop.	3600	IN	TXT	"record 224 of the bulk zone, padded to make the transfer span several messages"
+h0225.bulk.interop.	3600	IN	A	192.0.0.225
+h0225.bulk.interop.	3600	IN	TXT	"record 225 of the bulk zone, padded to make the transfer span several messages"
+h0226.bulk.interop.	3600	IN	A	192.0.0.226
+h0226.bulk.interop.	3600	IN	TXT	"record 226 of the bulk zone, padded to make the transfer span several messages"
+h0227.bulk.interop.	3600	IN	A	192.0.0.227
+h0227.bulk.interop.	3600	IN	TXT	"record 227 of the bulk zone, padded to make the transfer span several messages"
+h0228.bulk.interop.	3600	IN	A	192.0.0.228
+h0228.bulk.interop.	3600	IN	TXT	"record 228 of the bulk zone, padded to make the transfer span several messages"
+h0229.bulk.interop.	3600	IN	A	192.0.0.229
+h0229.bulk.interop.	3600	IN	TXT	"record 229 of the bulk zone, padded to make the transfer span several messages"
+h0230.bulk.interop.	3600	IN	A	192.0.0.230
+h0230.bulk.interop.	3600	IN	TXT	"record 230 of the bulk zone, padded to make the transfer span several messages"
+h0231.bulk.interop.	3600	IN	A	192.0.0.231
+h0231.bulk.interop.	3600	IN	TXT	"record 231 of the bulk zone, padded to make the transfer span several messages"
+h0232.bulk.interop.	3600	IN	A	192.0.0.232
+h0232.bulk.interop.	3600	IN	TXT	"record 232 of the bulk zone, padded to make the transfer span several messages"
+h0233.bulk.interop.	3600	IN	A	192.0.0.233
+h0233.bulk.interop.	3600	IN	TXT	"record 233 of the bulk zone, padded to make the transfer span several messages"
+h0234.bulk.interop.	3600	IN	A	192.0.0.234
+h0234.bulk.interop.	3600	IN	TXT	"record 234 of the bulk zone, padded to make the transfer span several messages"
+h0235.bulk.interop.	3600	IN	A	192.0.0.235
+h0235.bulk.interop.	3600	IN	TXT	"record 235 of the bulk zone, padded to make the transfer span several messages"
+h0236.bulk.interop.	3600	IN	A	192.0.0.236
+h0236.bulk.interop.	3600	IN	TXT	"record 236 of the bulk zone, padded to make the transfer span several messages"
+h0237.bulk.interop.	3600	IN	A	192.0.0.237
+h0237.bulk.interop.	3600	IN	TXT	"record 237 of the bulk zone, padded to make the transfer span several messages"
+h0238.bulk.interop.	3600	IN	A	192.0.0.238
+h0238.bulk.interop.	3600	IN	TXT	"record 238 of the bulk zone, padded to make the transfer span several messages"
+h0239.bulk.interop.	3600	IN	A	192.0.0.239
+h0239.bulk.interop.	3600	IN	TXT	"record 239 of the bulk zone, padded to make the transfer span several messages"
+h0240.bulk.interop.	3600	IN	A	192.0.0.240
+h0240.bulk.interop.	3600	IN	TXT	"record 240 of the bulk zone, padded to make the transfer span several messages"
+h0241.bulk.interop.	3600	IN	A	192.0.0.241
+h0241.bulk.interop.	3600	IN	TXT	"record 241 of the bulk zone, padded to make the transfer span several messages"
+h0242.bulk.interop.	3600	IN	A	192.0.0.242
+h0242.bulk.interop.	3600	IN	TXT	"record 242 of the bulk zone, padded to make the transfer span several messages"
+h0243.bulk.interop.	3600	IN	A	192.0.0.243
+h0243.bulk.interop.	3600	IN	TXT	"record 243 of the bulk zone, padded to make the transfer span several messages"
+h0244.bulk.interop.	3600	IN	A	192.0.0.244
+h0244.bulk.interop.	3600	IN	TXT	"record 244 of the bulk zone, padded to make the transfer span several messages"
+h0245.bulk.interop.	3600	IN	A	192.0.0.245
+h0245.bulk.interop.	3600	IN	TXT	"record 245 of the bulk zone, padded to make the transfer span several messages"
+h0246.bulk.interop.	3600	IN	A	192.0.0.246
+h0246.bulk.interop.	3600	IN	TXT	"record 246 of the bulk zone, padded to make the transfer span several messages"
+h0247.bulk.interop.	3600	IN	A	192.0.0.247
+h0247.bulk.interop.	3600	IN	TXT	"record 247 of the bulk zone, padded to make the transfer span several messages"
+h0248.bulk.interop.	3600	IN	A	192.0.0.248
+h0248.bulk.interop.	3600	IN	TXT	"record 248 of the bulk zone, padded to make the transfer span several messages"
+h0249.bulk.interop.	3600	IN	A	192.0.0.249
+h0249.bulk.interop.	3600	IN	TXT	"record 249 of the bulk zone, padded to make the transfer span several messages"
+h0250.bulk.interop.	3600	IN	A	192.0.0.250
+h0250.bulk.interop.	3600	IN	TXT	"record 250 of the bulk zone, padded to make the transfer span several messages"
+ns1.bulk.interop.	3600	IN	A	127.0.0.1
+bulk.interop.		3600	IN	SOA	ns1.bulk.interop. hostmaster.bulk.interop. 2026100601 7200 3600 1209600 300
+hmac-sha256.key.	0	ANY	TSIG	hmac-sha256. 1791245994 300 32 zI5hQlVlDhsbvARa7Eb7+7CLW/yCEtandFINDmtFV0k= 51089 NOERROR 0 
+;; Query time: 1 msec
+;; SERVER: 127.0.0.1#5350(127.0.0.1) (TCP)
+;; WHEN: Tue Oct 06 00:19:54 UTC 2026
+;; XFR size: 504 records (messages 2, bytes 28582)
+

@@ -1,0 +1,25 @@
+
+; <<>> DiG 9.18.39-0ubuntu0.24.04.7-Ubuntu <<>> @127.0.0.1 -p 5350 +tries=1 +time=5 +dnssec x.dname.ed448-nsec3.interop. A
+; (1 server found)
+;; global options: +cmd
+;; Got answer:
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 4540
+;; flags: qr aa rd; QUERY: 1, ANSWER: 3, AUTHORITY: 0, ADDITIONAL: 1
+;; WARNING: recursion requested but not available
+
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags: do; udp: 1232
+; COOKIE: 270106362ac1c129010000006ac43ea624afd12cebdfc5fa (good)
+;; QUESTION SECTION:
+;x.dname.ed448-nsec3.interop.	IN	A
+
+;; ANSWER SECTION:
+dname.ed448-nsec3.interop. 3600	IN	DNAME	example.net.
+dname.ed448-nsec3.interop. 3600	IN	RRSIG	DNAME 16 3 3600 20361003001932 20261005231932 60497 ed448-nsec3.interop. sB0m32dtd2pFViG5AikjtXS4XjAyhnFK2YwRvnaUE8RGm3PdUMXsKYB7 +JDONHsxnMTD8hh7wgKAQ1ShdxCaWo4PsdbwhXv2n55vC7iv5OTCLQmt vlE98Co9TRln7+GWP6fFDlgSzwNeRZmdZ6hDdAIA
+x.dname.ed448-nsec3.interop. 3600 IN	CNAME	x.example.net.
+
+;; Query time: 0 msec
+;; SERVER: 127.0.0.1#5350(127.0.0.1) (UDP)
+;; WHEN: Tue Oct 06 00:19:50 UTC 2026
+;; MSG SIZE  rcvd: 290
+

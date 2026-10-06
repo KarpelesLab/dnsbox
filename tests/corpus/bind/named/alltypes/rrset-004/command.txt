@@ -1,0 +1,1 @@
+dig +tcp +norec _443._tcp.alltypes.example. TLSA

@@ -1,0 +1,1 @@
+dig +dnssec +cdflag www.bogus-ds.interop. A

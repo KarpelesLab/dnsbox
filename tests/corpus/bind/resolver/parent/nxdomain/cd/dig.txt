@@ -1,0 +1,27 @@
+
+; <<>> DiG 9.18.39-0ubuntu0.24.04.7-Ubuntu <<>> @127.0.0.1 -p 5450 +tries=1 +time=5 +dnssec +cdflag nosuch.interop. A
+; (1 server found)
+;; global options: +cmd
+;; Got answer:
+;; ->>HEADER<<- opcode: QUERY, status: NXDOMAIN, id: 47049
+;; flags: qr rd ra ad cd; QUERY: 1, ANSWER: 0, AUTHORITY: 6, ADDITIONAL: 1
+
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags: do; udp: 1232
+; COOKIE: 90e92e4543be8ab1010000006ac43eb7155698cbc5ffcea1 (good)
+;; QUESTION SECTION:
+;nosuch.interop.			IN	A
+
+;; AUTHORITY SECTION:
+interop.		300	IN	SOA	ns.interop. hostmaster.interop. 2026100601 7200 3600 1209600 300
+interop.		300	IN	RRSIG	SOA 13 1 3600 20361003001932 20261005231932 6169 interop. p7iJJBLZAxtloGZXGuLaimbFkoMPjEyTldSUiO5KdAdWTWajrAji8g6e 2aOUvfr9gt5qtFf1BLpFt5vdaFWLdQ==
+interop.		300	IN	RRSIG	NSEC 13 1 300 20361003001932 20261005231932 6169 interop. k4jozZByh2lhtAjnKFYvy9H0bh/svzqoP1nac8rV76OfPx0lOFIJPu39 SXY3EIXEg02a7378UDQxMoVApPOK4g==
+interop.		300	IN	NSEC	bogus.interop. NS SOA RRSIG NSEC DNSKEY
+insecure.interop.	300	IN	RRSIG	NSEC 13 2 300 20361003001932 20261005231932 6169 interop. NhD/Q8TsKw9VBTWnWtQHLePfJODNqh7SO8GlxgPZ9Pd9iRtxBmC9rvNb NpWJ7dzGuJqewfwFOvJPE6pd9UzJsw==
+insecure.interop.	300	IN	NSEC	ns.interop. NS RRSIG NSEC
+
+;; Query time: 0 msec
+;; SERVER: 127.0.0.1#5450(127.0.0.1) (UDP)
+;; WHEN: Tue Oct 06 00:20:07 UTC 2026
+;; MSG SIZE  rcvd: 507
+

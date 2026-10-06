@@ -1,0 +1,137 @@
+; File written on Tue Oct  6 00:19:37 2026
+; dnssec_signzone version 9.18.39-0ubuntu0.24.04.7-Ubuntu
+bogus.interop.				      3600 IN SOA	ns1.bogus.interop. hostmaster.bogus.interop. 2026100401 7200 3600 1209600 300
+bogus.interop.				      3600 IN RRSIG	SOA 13 2 3600 20361003001932 20261005231932 30919 bogus.interop. G+azFKhRtL8tXrvp7UE72/jgPWwHGKipCEwZru80Bn479wFBybGH7LaO aGdIKbsJPGRrSUCuJZfgJJnlnxEr/w==
+; resign=20361003001932
+bogus.interop.				      3600 IN NS	ns1.bogus.interop.
+bogus.interop.				      3600 IN NS	ns2.bogus.interop.
+bogus.interop.				      3600 IN RRSIG	NS 13 2 3600 20361003001932 20261005231932 30919 bogus.interop. eQPhplCpcJogHxe6DPqguDL0kc332r1wzd9GeaonOT1v7A1SIurfNsEr Je5iYK2volHzYh5lrb0j7+0M/Dnyjg==
+; resign=20361003001932
+bogus.interop.				      3600 IN MX	10 mail.bogus.interop.
+bogus.interop.				      3600 IN RRSIG	MX 13 2 3600 20361003001932 20261005231932 30919 bogus.interop. iu7KeQXxmMJeWT9RGF/ftSYouvaqXDDIWdx8xQz4BlwTrQ+JE3T/tvtN 8in6teuU57IDGB30DLf/4YYHM3K0Rw==
+; resign=20361003001932
+bogus.interop.				      3600 IN TXT	"v=spf1 mx -all"
+bogus.interop.				      3600 IN RRSIG	TXT 13 2 3600 20361003001932 20261005231932 30919 bogus.interop. U3d4exI0WfQbv2Cl9/xIBgB6RTjByKJdX6I18XgTeEpiRDZkbR/PS0Ev TndlmVfwLqhZTAtACcQBqQd4sc2RdQ==
+; resign=20361003001932
+bogus.interop.				      3600 IN LOC	52 22 23.000 N 4 53 32.000 E -2.00m 0.00m 10000m 10m
+bogus.interop.				      3600 IN RRSIG	LOC 13 2 3600 20361003001932 20261005231932 30919 bogus.interop. dNq0o5n3CIZAf5YTW4zXKFOeGFJsahzQ5QP8mRWFM1EMbRJiNjrHxj+h aRt9NEdJ812xx4bieGjc5d63bnyldA==
+; resign=20361003001932
+bogus.interop.				      3600 IN SSHFP	4 2 123456789ABCDEF67890123456789ABCDEF67890123456789ABCDEF1 23456789
+bogus.interop.				      3600 IN RRSIG	SSHFP 13 2 3600 20361003001932 20261005231932 30919 bogus.interop. 5x+36Ta83TJbsHSsv0+qtkTi1RDCGEgXM3UC53W2U7U6l1rvm19YqPIN 3pVt6LS5vx1/dK8xFUevJwRn/QOZZA==
+; resign=20361003001932
+bogus.interop.				      300 IN NSEC	_svc.bogus.interop. NS SOA MX TXT LOC SSHFP RRSIG NSEC DNSKEY HTTPS CAA
+bogus.interop.				      300 IN RRSIG	NSEC 13 2 300 20361003001932 20261005231932 30919 bogus.interop. w9pRNwPcp4OdvMp4ExECUw0LEhOs1AZWkKR1io/1NpFez0k8ZOhnQHQ9 Ha6EC0QwHnGyo38h1yOepGoqHtnwHw==
+; resign=20361003001932
+bogus.interop.				      3600 IN DNSKEY	256 3 13 ntVMtHcm7NquVvYmnxS7Wa4je2GBHuTVaV7TWiB+Nia5e36nuq5Nzvhw Ms+HdiX2LNtFMFKfhD/7QJg907w5+Q==
+bogus.interop.				      3600 IN DNSKEY	257 3 13 bIdKpYOilqeOrIyp3pdUcVdicKiGqz33gR+TmP87ikCDftOfCViMZg8P GjrH76OXdzUzWQml/ZiF2AucfY/8Tg==
+bogus.interop.				      3600 IN RRSIG	DNSKEY 13 2 3600 20361003001932 20261005231932 36243 bogus.interop. Cc7e2A8vXXt8EWWND6KKhervRjvZx9z0/X/Aqgpo8C5/BWFvTjLG8FMF TP2nbQETYEYaIAcyn2kxdDS5zhrXvw==
+; resign=20361003001932
+bogus.interop.				      3600 IN HTTPS	1 . alpn="h2,h3" ipv4hint=192.0.2.80
+bogus.interop.				      3600 IN RRSIG	HTTPS 13 2 3600 20361003001932 20261005231932 30919 bogus.interop. uNYEp8VVvuaLapX4yPO5VLUec6p8X+FSl+qZU8/60UGGI4KvEKzsysgG AZSUPJJCb0GQJPuW737q1SpO1I2K2Q==
+; resign=20361003001932
+bogus.interop.				      3600 IN CAA	0 issue "letsencrypt.org"
+bogus.interop.				      3600 IN RRSIG	CAA 13 2 3600 20361003001932 20261005231932 30919 bogus.interop. aFBpwVNjhBoBT82pFs7sMVejobjSUAV36qugYOf226HW7VJ7y2arFnEC MBgOX4PvjrPVCLS8H5lB7jpk4awVmg==
+; resign=20361003001932
+ns.insecure.bogus.interop.		      3600 IN A		192.0.2.98
+_svc.bogus.interop.			      300 IN NSEC	_sip._udp.bogus.interop. RRSIG NSEC SVCB
+_svc.bogus.interop.			      300 IN RRSIG	NSEC 13 3 300 20361003001932 20261005231932 30919 bogus.interop. j07UCDxvirdD9/QaBYAXd1wdXGUGPNF8cYWTZKYFGs48Sitf4jCenL8B v2H+elkVconnBz3Ph8lAUY95+m4aaw==
+; resign=20361003001932
+_svc.bogus.interop.			      3600 IN SVCB	1 www.bogus.interop. alpn="dot" port=853
+_svc.bogus.interop.			      3600 IN RRSIG	SVCB 13 3 3600 20361003001932 20261005231932 30919 bogus.interop. cvxgKHOJMtqrf9k/L8MI88wCD9m9BDjJMCjFWgtOTl77B9mZt2dYMhOW ZNRAv0KMXKAk/O07LyHQbCkumx5CpA==
+; resign=20361003001932
+alias.bogus.interop.			      3600 IN CNAME	www.bogus.interop.
+alias.bogus.interop.			      3600 IN RRSIG	CNAME 13 3 3600 20361003001932 20261005231932 30919 bogus.interop. v9eaj7gXucd+sOhcTUfdBp35QEG16Se3A9Q4ulmfwRpxeAMfZNIwb5Tg ZaBbTw28AvVrM74G+wOGOaMX7Ae9sA==
+; resign=20361003001932
+alias.bogus.interop.			      300 IN NSEC	dname.bogus.interop. CNAME RRSIG NSEC
+alias.bogus.interop.			      300 IN RRSIG	NSEC 13 3 300 20361003001932 20261005231932 30919 bogus.interop. sDEgmXBMYhIiv883qDUrO1P1BXZp3qNQvkklOrD0LAF5dnXMsYxzfRbU TTLR90KVVWdi0qMY/ooXssV7kgzC0A==
+; resign=20361003001932
+dname.bogus.interop.			      3600 IN DNAME	example.net.
+dname.bogus.interop.			      3600 IN RRSIG	DNAME 13 3 3600 20361003001932 20261005231932 30919 bogus.interop. qgc5+pyQQKQKtvhaP2+yjRW78h/OZFFE8+ZjcrPyKSuMBJ2R4BrhTxnK 3MAht5dLvHL7eMUI3sdz6gqyFTgzjw==
+; resign=20361003001932
+dname.bogus.interop.			      300 IN NSEC	a.b.ent.bogus.interop. DNAME RRSIG NSEC
+dname.bogus.interop.			      300 IN RRSIG	NSEC 13 3 300 20361003001932 20261005231932 30919 bogus.interop. rP+SdvnSk/JUUkQiIY7WyMrz/m25ZalMo8+0xYcyvrAwdhPojjo/7Kba 9lrHpVA/MPK6ojeR8WWSHPXDjgs6RA==
+; resign=20361003001932
+_sip._udp.bogus.interop.		      3600 IN SRV	10 60 5060 www.bogus.interop.
+_sip._udp.bogus.interop.		      3600 IN RRSIG	SRV 13 4 3600 20361003001932 20261005231932 30919 bogus.interop. qegHt4RkYPJJeS6N1Gj5G9P6/XwWMbHwVkjuevty53OtEA7kxvz7PUti UZbwXXvJBpL1ENpW5uB7WJ/tCSOHgA==
+; resign=20361003001932
+_sip._udp.bogus.interop.		      3600 IN NAPTR	100 10 "S" "SIP+D2U" "" _sip._udp.bogus.interop.
+_sip._udp.bogus.interop.		      3600 IN RRSIG	NAPTR 13 4 3600 20361003001932 20261005231932 30919 bogus.interop. vCeV78Xi6KfAeACnCZl5dyhtwoirhcl0vkmeAR/TANIK8KE2CZzyKY03 7WA48LKaFPjqwEqchrM//xyZ/g6Wwg==
+; resign=20361003001932
+_sip._udp.bogus.interop.		      300 IN NSEC	alias.bogus.interop. SRV NAPTR RRSIG NSEC
+_sip._udp.bogus.interop.		      300 IN RRSIG	NSEC 13 4 300 20361003001932 20261005231932 30919 bogus.interop. AgMgpfDVA9tTSE03U+WxL45DY0QwtHnduo5iFrn4e1oxr7PyFtWJMtrf bBXRI+7NyNicL3bqdAexsBOIpSEo7g==
+; resign=20361003001932
+insecure.bogus.interop.			      3600 IN NS	ns.insecure.bogus.interop.
+insecure.bogus.interop.			      300 IN NSEC	mail.bogus.interop. NS RRSIG NSEC
+insecure.bogus.interop.			      300 IN RRSIG	NSEC 13 3 300 20361003001932 20261005231932 30919 bogus.interop. ZkprIaeIT96k3FACPTsv0XlJ6TfhLn4eU9w7jR0IpmpKVSGzUjg1kIoI T5YEUbfksbG2JiDqdTrURFh3dgjPkw==
+; resign=20361003001932
+ns.secure.bogus.interop.		      3600 IN A		192.0.2.99
+a.b.ent.bogus.interop.			      3600 IN A		192.0.2.7
+a.b.ent.bogus.interop.			      3600 IN RRSIG	A 13 5 3600 20361003001932 20261005231932 30919 bogus.interop. 8nE+QLdNd99HD0Uu0F/cr4i2LVNJjY/dQIMHqObR7SYvGqMmYiI3qaAs ot9u1lz+atvCMyrtyxn2HlWYk/fsNw==
+; resign=20361003001932
+a.b.ent.bogus.interop.			      300 IN NSEC	insecure.bogus.interop. A RRSIG NSEC
+a.b.ent.bogus.interop.			      300 IN RRSIG	NSEC 13 5 300 20361003001932 20261005231932 30919 bogus.interop. C5zR4QgCgi4VJVHVFwBvL/CManEntmLlK1AFXRFNmQcDzQQs1OofpkCb dz+yg282AybWoGHke6IzVPxkevuL1Q==
+; resign=20361003001932
+ns.unsigned.bogus.interop.		      3600 IN A		127.0.0.1
+ns1.bogus.interop.			      3600 IN A		127.0.0.1
+ns1.bogus.interop.			      3600 IN RRSIG	A 13 3 3600 20361003001932 20261005231932 30919 bogus.interop. YZMrQUyXQGaVqkppnBekz3F1Rki88KjaX+GmXR/LaP5WtiifpT0y+U3J Waq5Vub+EpaHZ0DS78QHjYhT2c+ygA==
+; resign=20361003001932
+ns1.bogus.interop.			      300 IN NSEC	ns2.bogus.interop. A RRSIG NSEC
+ns1.bogus.interop.			      300 IN RRSIG	NSEC 13 3 300 20361003001932 20261005231932 30919 bogus.interop. RJAB/soP0QM5JXNTzTFlYWHFmrXaDTH3gL1QRBXf4aKf9Gg9u2xWIsFn k4oWaL1E7hj7OpdZyVihkgU7YFuAjg==
+; resign=20361003001932
+secure.bogus.interop.			      3600 IN NS	ns.secure.bogus.interop.
+secure.bogus.interop.			      3600 IN DS	12345 13 2 E06D44B80B8F1D39A95C0B0D7C65D08458E880409BBC683457104237 C7F8EC8D
+secure.bogus.interop.			      3600 IN RRSIG	DS 13 3 3600 20361003001932 20261005231932 30919 bogus.interop. rjB6TUjK2c5X2M1IT9QqXJkjVv/OhYRo7BZnCEU0MfSOmBP2w+wlZ1r+ fTw5ZYtb1KMWS1SSjkAcf92bq2JLBg==
+; resign=20361003001932
+secure.bogus.interop.			      300 IN NSEC	unsigned.bogus.interop. NS DS RRSIG NSEC
+secure.bogus.interop.			      300 IN RRSIG	NSEC 13 3 300 20361003001932 20261005231932 30919 bogus.interop. +RAELLU/m/dPMkv60cjPwfq65EB78chvmk4a2DyRHWis5yuHATLu+Ndh ndHYBhNymLhPV87EYAJinfCxqB/y6Q==
+; resign=20361003001932
+odd\.label\032x.bogus.interop.		      3600 IN TXT	"a \"quoted\" string" "tab\009and\\backslash"
+odd\.label\032x.bogus.interop.		      3600 IN RRSIG	TXT 13 3 3600 20361003001932 20261005231932 30919 bogus.interop. xVvScAykHCWqS8dNi/zRhlly+Ab8SBk8PDzVRrmA4foIhUW884YvKbGx n7IgM26KNun51V84N4WwT3d8zt9usQ==
+; resign=20361003001932
+odd\.label\032x.bogus.interop.		      300 IN NSEC	other.bogus.interop. TXT RRSIG NSEC
+odd\.label\032x.bogus.interop.		      300 IN RRSIG	NSEC 13 3 300 20361003001932 20261005231932 30919 bogus.interop. Hcukoplvlk3WJmj7ohA8CrW7G4aL27c4f4f1U/qAhR/au6mhUu6vmWog P02xIHXIJK87/NonoXFV41oOqppeCQ==
+; resign=20361003001932
+mail.bogus.interop.			      3600 IN A		192.0.2.25
+mail.bogus.interop.			      3600 IN RRSIG	A 13 3 3600 20361003001932 20261005231932 30919 bogus.interop. SyFfum8XsOgefCLVwxZeFimVcJkg+1xA0hv0G3A9DHAimCbYyopbZQCL TTWIFocoTBWh++7N/kuhC8/mwGm/IQ==
+; resign=20361003001932
+mail.bogus.interop.			      300 IN NSEC	ns1.bogus.interop. A RRSIG NSEC
+mail.bogus.interop.			      300 IN RRSIG	NSEC 13 3 300 20361003001932 20261005231932 30919 bogus.interop. cDqRleVwlmwncuLAmIF81aUFHLcFjgvskbJxS4Hy3+OKpUByMDaDtcVn XocmmvjMvNAymYj4YW+iYTpDfT1bSg==
+; resign=20361003001932
+*.wild.bogus.interop.			      3600 IN A		192.0.2.42
+*.wild.bogus.interop.			      3600 IN RRSIG	A 13 3 3600 20361003001932 20261005231932 30919 bogus.interop. +aPwteItpDof/AstMosnWAzcqhkk58jK8h0XZH3e94i/74Se4BPlV7Np sUcozcWcpjI+7C5GRbRZf7gyAOM2LQ==
+; resign=20361003001932
+*.wild.bogus.interop.			      3600 IN TXT	"wildcard"
+*.wild.bogus.interop.			      3600 IN RRSIG	TXT 13 3 3600 20361003001932 20261005231932 30919 bogus.interop. vFePIyZ1DM55LoHt4Tl8PA77h5FRzVRMxNFCW9BJSwOHc6ho9uUNiCZI z+koAtuqHIfjZBl3Y4gSMVTu2wUqLg==
+; resign=20361003001932
+*.wild.bogus.interop.			      300 IN NSEC	www.bogus.interop. A TXT RRSIG NSEC
+*.wild.bogus.interop.			      300 IN RRSIG	NSEC 13 3 300 20361003001932 20261005231932 30919 bogus.interop. 9NZ2VqEezmdQKNmq6JXfY72ONoyeLFQvTCnqlsBfISqhGSLHcTcMgiGR vdrL74eJEGZArnUofB8u5QoYe5272g==
+; resign=20361003001932
+ns2.bogus.interop.			      3600 IN A		198.51.100.53
+ns2.bogus.interop.			      3600 IN RRSIG	A 13 3 3600 20361003001932 20261005231932 30919 bogus.interop. ut1DVgSOQKE0cNojTA1t/7Itj6EsYmvfOcLnR79FMmBrx/aTl4LwLETw RuT8H9mPyCAOUh5T1UunmcMXNOhaOw==
+; resign=20361003001932
+ns2.bogus.interop.			      300 IN NSEC	odd\.label\032x.bogus.interop. A RRSIG NSEC
+ns2.bogus.interop.			      300 IN RRSIG	NSEC 13 3 300 20361003001932 20261005231932 30919 bogus.interop. obK68OKQmJsaXpk+VpXbZ2hTueTz8695xXiVeFAqcgc+KF4MCEgcEDzh yv4l9UZLCDZD1QiRoL7kYRr4TaXL4Q==
+; resign=20361003001932
+other.bogus.interop.			      3600 IN NS	ns.example.net.
+other.bogus.interop.			      300 IN NSEC	secure.bogus.interop. NS RRSIG NSEC
+other.bogus.interop.			      300 IN RRSIG	NSEC 13 3 300 20361003001932 20261005231932 30919 bogus.interop. G9R6MPPyPTyPOpRNYCCxy/9yIXKqwcLhS318QPZoArgh25KDdJ3yYIas eaMRCei7EpLzTM/idcmfoeTRa3xtSQ==
+; resign=20361003001932
+www.bogus.interop. 3600 IN A 192.0.2.66
+www.bogus.interop.			      3600 IN RRSIG	A 13 3 3600 20361003001932 20261005231932 30919 bogus.interop. u2ibUqaYlREjOytOkyfUMnYT2wf4U9REWa/riIIimKO7IMa5fhbKY/80 PC3dOuvQcbikq/3TM/t2DERvzFRDGw==
+; resign=20361003001932
+www.bogus.interop.			      3600 IN AAAA	2001:db8::80
+www.bogus.interop.			      3600 IN RRSIG	AAAA 13 3 3600 20361003001932 20261005231932 30919 bogus.interop. yHCFAu/SLkoprbY35sZUWVBm0ZCFNV57GgvPlDGtlWIEy9Ru9OLfD2Av GX8dgay/jO4EvAdegRbaSAyVU+irTg==
+; resign=20361003001932
+www.bogus.interop.			      300 IN NSEC	_443._tcp.www.bogus.interop. A AAAA RRSIG NSEC
+www.bogus.interop.			      300 IN RRSIG	NSEC 13 3 300 20361003001932 20261005231932 30919 bogus.interop. +Ygw0wgT2wmQ+lEF8AfpiCDuig02ECWHy8DDkjJvQQKOAF/wFhi7jHrI 3MpZ+7q0md+lwV9xwkz+Jnj0XDXwvA==
+; resign=20361003001932
+unsigned.bogus.interop.			      3600 IN NS	ns.unsigned.bogus.interop.
+unsigned.bogus.interop.			      300 IN NSEC	*.wild.bogus.interop. NS RRSIG NSEC
+unsigned.bogus.interop.			      300 IN RRSIG	NSEC 13 3 300 20361003001932 20261005231932 30919 bogus.interop. ZlhgNT2agsBDJtsQNEgr8hv+OkSreE6xWY+EKpO5XsayTncuSnRL+Nv9 kxYf9RYykHXVHChnx793vccVQGtzvw==
+; resign=20361003001932
+_443._tcp.www.bogus.interop.		      300 IN NSEC	bogus.interop. RRSIG NSEC TLSA
+_443._tcp.www.bogus.interop.		      300 IN RRSIG	NSEC 13 5 300 20361003001932 20261005231932 30919 bogus.interop. rhH5QxND3USNDtd1B3yIk7OcPEqaK985Ln6mAZLCQn8Gt7Iv5yzQF78D 0RLEf/x8jAUVT3sD22pCcOEp+Znc7w==
+; resign=20361003001932
+_443._tcp.www.bogus.interop.		      3600 IN TLSA	3 1 1 0C72AC70B745AC19998811B131D662C9AC69DBDBE7CB23E5B514B566 64C5D3D6
+_443._tcp.www.bogus.interop.		      3600 IN RRSIG	TLSA 13 5 3600 20361003001932 20261005231932 30919 bogus.interop. hLcK2wcKbJvOvysA762NU0fQz3zqIat3tCDs0anfub9YseohtV8EhD9U 9rsOYOZf9uSOkCJ4aADZgaQJAq1f6g==
+; resign=20361003001932

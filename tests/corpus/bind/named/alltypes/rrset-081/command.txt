@@ -1,0 +1,1 @@
+dig +tcp +norec talink2.alltypes.example. TALINK

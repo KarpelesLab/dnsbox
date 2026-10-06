@@ -1,0 +1,26 @@
+
+; <<>> DiG 9.18.39-0ubuntu0.24.04.7-Ubuntu <<>> @127.0.0.1 -p 5350 +tries=1 +time=5 +dnssec host.wild.rsasha512-nsec.interop. MX
+; (1 server found)
+;; global options: +cmd
+;; Got answer:
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 42086
+;; flags: qr aa rd; QUERY: 1, ANSWER: 0, AUTHORITY: 4, ADDITIONAL: 1
+;; WARNING: recursion requested but not available
+
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags: do; udp: 1232
+; COOKIE: f274206ba6e2118c010000006ac43ea23a7f7384289eef5c (good)
+;; QUESTION SECTION:
+;host.wild.rsasha512-nsec.interop. IN	MX
+
+;; AUTHORITY SECTION:
+rsasha512-nsec.interop.	300	IN	SOA	ns1.rsasha512-nsec.interop. hostmaster.rsasha512-nsec.interop. 2026100401 7200 3600 1209600 300
+rsasha512-nsec.interop.	300	IN	RRSIG	SOA 10 2 3600 20361003001932 20261005231932 5796 rsasha512-nsec.interop. XA+GT2uAwIZ2iBYQJled/IoWLYyZvFLuRCBfHLBrDTiqfp/EgEAN/V/i aGzprULZUDhZOeiIJmlSAf+jmrhkBVp5bsHNahjCl4jVrIPR8pDTZX/b 9hKfpuEycMb3ZRMiVmc3fwBl/zP6niIXMhECGZLdDLxcD4YWU1Vafsd1 dqw=
+*.wild.rsasha512-nsec.interop. 300 IN	NSEC	www.rsasha512-nsec.interop. A TXT RRSIG NSEC
+*.wild.rsasha512-nsec.interop. 300 IN	RRSIG	NSEC 10 3 300 20361003001932 20261005231932 5796 rsasha512-nsec.interop. au4yioZnhTJ9xJrrsq1dnITuYLmup9JMswS8jB4eyGgrXbq/NMVEh8LF hFwmdBEB0BhZNHomZmS/GM1Vm/ovMkBTMgdx69PEosFvLx6iBLmwTkbW aTB9UILqPIuo4p/29YfX6o4ufYTjTCb7vOyq334mzrXBF+D28IWehPQM o1Y=
+
+;; Query time: 0 msec
+;; SERVER: 127.0.0.1#5350(127.0.0.1) (UDP)
+;; WHEN: Tue Oct 06 00:19:46 UTC 2026
+;; MSG SIZE  rcvd: 576
+

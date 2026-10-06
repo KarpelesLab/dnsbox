@@ -1,0 +1,1 @@
+dig +dnssec host.wild.ed448-nsec3.interop. A

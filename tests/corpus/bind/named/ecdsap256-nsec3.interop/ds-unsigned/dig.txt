@@ -1,0 +1,26 @@
+
+; <<>> DiG 9.18.39-0ubuntu0.24.04.7-Ubuntu <<>> @127.0.0.1 -p 5350 +tries=1 +time=5 +dnssec other.ecdsap256-nsec3.interop. DS
+; (1 server found)
+;; global options: +cmd
+;; Got answer:
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 62301
+;; flags: qr aa rd; QUERY: 1, ANSWER: 0, AUTHORITY: 4, ADDITIONAL: 1
+;; WARNING: recursion requested but not available
+
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags: do; udp: 1232
+; COOKIE: d880a6b74ba8866b010000006ac43ea330dd272e77781109 (good)
+;; QUESTION SECTION:
+;other.ecdsap256-nsec3.interop.	IN	DS
+
+;; AUTHORITY SECTION:
+ecdsap256-nsec3.interop. 300	IN	SOA	ns1.ecdsap256-nsec3.interop. hostmaster.ecdsap256-nsec3.interop. 2026100401 7200 3600 1209600 300
+ecdsap256-nsec3.interop. 300	IN	RRSIG	SOA 13 2 3600 20361003001932 20261005231932 18981 ecdsap256-nsec3.interop. pQJc4n4Dmsl+qIuOV7GJNqzb0NOJ4WLI+aI8CkoXbHr8ueMjEgWmB3Y/ BgUt1suq0+dSpfyG03/J3gI5jTt8Wg==
+91AJQ988SDC764PNR2PK903CL2IB6H38.ecdsap256-nsec3.interop. 300 IN NSEC3 1 0 5 AABBCCDD 9BMQLH5RH8BOU9RSBPGSH9MIKHPFUEM2 NS
+91AJQ988SDC764PNR2PK903CL2IB6H38.ecdsap256-nsec3.interop. 300 IN RRSIG NSEC3 13 3 300 20361003001932 20261005231932 18981 ecdsap256-nsec3.interop. nSJRB/6q0Y7wJKu2K+Z+AJEcBagMI1XpQirfK6eAIfa/Nr1bII+FunCI OFtZ/CCuVRjIWGiFnJXw7CFzRctnkg==
+
+;; Query time: 0 msec
+;; SERVER: 127.0.0.1#5350(127.0.0.1) (UDP)
+;; WHEN: Tue Oct 06 00:19:47 UTC 2026
+;; MSG SIZE  rcvd: 453
+

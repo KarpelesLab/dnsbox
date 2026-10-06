@@ -1,0 +1,1 @@
+dig +dnssec www.ed448-nsec3.interop. MX

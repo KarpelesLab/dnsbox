@@ -1,0 +1,9 @@
+Answer:
+;; ->>HEADER<<- opcode: UPDATE, status: NOERROR, id:   2599
+;; flags: qr; ZONE: 1, PREREQ: 0, UPDATE: 0, ADDITIONAL: 1
+;; ZONE SECTION:
+;dyn.interop.			IN	SOA
+
+;; TSIG PSEUDOSECTION:
+hmac-sha512.key.	0	ANY	TSIG	hmac-sha512. 1791245994 300 64 nmxpPLb3OqFYRrHu2co4YvlEXrY0m7Qf7g62VSbEEK5LW/6duV0VgC5T XZj1TmZY5cDTwzHjIc3JwSmhlFCB7g== 2599 NOERROR 0 
+

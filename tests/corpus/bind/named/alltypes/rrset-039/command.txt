@@ -1,0 +1,1 @@
+dig +tcp +norec isdn.alltypes.example. ISDN

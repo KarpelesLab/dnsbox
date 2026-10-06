@@ -1,0 +1,1 @@
+dig +dnssec alias.nsec3rsasha1-nsec3.interop. A

@@ -1,0 +1,28 @@
+
+; <<>> DiG 9.18.39-0ubuntu0.24.04.7-Ubuntu <<>> @127.0.0.1 -p 5350 +tries=1 +time=5 +dnssec host.wild.ed448-nsec3.interop. A
+; (1 server found)
+;; global options: +cmd
+;; Got answer:
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 10847
+;; flags: qr aa rd; QUERY: 1, ANSWER: 2, AUTHORITY: 2, ADDITIONAL: 1
+;; WARNING: recursion requested but not available
+
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags: do; udp: 1232
+; COOKIE: a38df9f4ce77582b010000006ac43ea6eb95ed818680389b (good)
+;; QUESTION SECTION:
+;host.wild.ed448-nsec3.interop.	IN	A
+
+;; ANSWER SECTION:
+host.wild.ed448-nsec3.interop. 3600 IN	A	192.0.2.42
+host.wild.ed448-nsec3.interop. 3600 IN	RRSIG	A 16 3 3600 20361003001932 20261005231932 60497 ed448-nsec3.interop. SRlJyGNuRdKzfk7tFg/eZVcVPz5xB1ilYEIY1BN3sim4jBX2g5DRTBIo z+tuDuG5JkGN+0oCr+oAFiCXi0EWvaw7wquq/kTlMJKcdKJxYOlcxiiN nq9y5KUBkJ4tBRJd7MmeDHsE/LKLOmadx4AsMCAA
+
+;; AUTHORITY SECTION:
+VU2841CMMAGT2AJ88MM32QV0KM7LBEJS.ed448-nsec3.interop. 300 IN NSEC3 1 0 5 AABBCCDD 42GQAA1JDE56O08D3OKCVOM7LKF0PHAJ NS
+VU2841CMMAGT2AJ88MM32QV0KM7LBEJS.ed448-nsec3.interop. 300 IN RRSIG NSEC3 16 3 300 20361003001932 20261005231932 60497 ed448-nsec3.interop. O0y4I/D4SYmCEFdvFDFWYe/FuKd6L3OSGaY8+l1QKrYJwRBpHktNMAcK 2JIG3Pj8haLE5nym9mQA3OShZdh4Z154cpzgD5NeW7EAwi5ftbXxA8qF RuFlw2LWwLLWynx8PiTCCm+PH5f2hI9MXZW+OQ8A
+
+;; Query time: 0 msec
+;; SERVER: 127.0.0.1#5350(127.0.0.1) (UDP)
+;; WHEN: Tue Oct 06 00:19:50 UTC 2026
+;; MSG SIZE  rcvd: 510
+

@@ -1,0 +1,1 @@
+dig +tcp +norec l32.alltypes.example. L32

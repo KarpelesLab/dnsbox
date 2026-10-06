@@ -1,0 +1,24 @@
+
+; <<>> DiG 9.18.39-0ubuntu0.24.04.7-Ubuntu <<>> @127.0.0.1 -p 5350 +tries=1 +time=5 doa.newtypes.example. TYPE259
+; (1 server found)
+;; global options: +cmd
+;; Got answer:
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 58789
+;; flags: qr aa rd; QUERY: 1, ANSWER: 2, AUTHORITY: 0, ADDITIONAL: 1
+;; WARNING: recursion requested but not available
+
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags:; udp: 1232
+; COOKIE: 9cce654602568711010000006ac43ea9b50a2d6621ff546e (good)
+;; QUESTION SECTION:
+;doa.newtypes.example.		IN	DOA
+
+;; ANSWER SECTION:
+doa.newtypes.example.	3600	IN	DOA	1234567890 100 1 "text/plain" -
+doa.newtypes.example.	3600	IN	DOA	0 1 2 "" aHR0cHM6Ly93d3cuaXNjLm9yZy8=
+
+;; Query time: 0 msec
+;; SERVER: 127.0.0.1#5350(127.0.0.1) (UDP)
+;; WHEN: Tue Oct 06 00:19:53 UTC 2026
+;; MSG SIZE  rcvd: 151
+

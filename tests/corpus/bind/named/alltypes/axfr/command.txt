@@ -1,0 +1,1 @@
+dig -y hmac-sha256:hmac-sha256.key:AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8= alltypes.example. AXFR

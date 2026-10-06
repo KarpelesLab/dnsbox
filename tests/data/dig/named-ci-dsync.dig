@@ -1,0 +1,12 @@
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 41549
+;; flags: qr aa rd; QUERY: 1, ANSWER: 1, AUTHORITY: 0, ADDITIONAL: 1
+;; WARNING: recursion requested but not available
+
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags:; udp: 1232
+; COOKIE: b401fc81b37ef2db010000006ac43ea9fc55c5150ac44aef
+;; QUESTION SECTION:
+;_dsync.newtypes.example.	IN	DSYNC
+
+;; ANSWER SECTION:
+_dsync.newtypes.example. 3600	IN	DSYNC	CSYNC NOTIFY 5360 csync-scanner.example.net.

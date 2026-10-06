@@ -1,0 +1,24 @@
+
+; <<>> DiG 9.18.39-0ubuntu0.24.04.7-Ubuntu <<>> @127.0.0.1 -p 5350 +tries=1 +time=5 +tcp +keepalive ed25519-nsec.interop. SOA
+; (1 server found)
+;; global options: +cmd
+;; Got answer:
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 60536
+;; flags: qr aa rd; QUERY: 1, ANSWER: 1, AUTHORITY: 0, ADDITIONAL: 1
+;; WARNING: recursion requested but not available
+
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags:; udp: 1232
+; COOKIE: e0069f2149d3d161010000006ac43ea9ea5fca7825759ab3 (good)
+; TCP KEEPALIVE: 30.0 secs
+;; QUESTION SECTION:
+;ed25519-nsec.interop.		IN	SOA
+
+;; ANSWER SECTION:
+ed25519-nsec.interop.	3600	IN	SOA	ns1.ed25519-nsec.interop. hostmaster.ed25519-nsec.interop. 2026100401 7200 3600 1209600 300
+
+;; Query time: 0 msec
+;; SERVER: 127.0.0.1#5350(127.0.0.1) (TCP)
+;; WHEN: Tue Oct 06 00:19:53 UTC 2026
+;; MSG SIZE  rcvd: 134
+

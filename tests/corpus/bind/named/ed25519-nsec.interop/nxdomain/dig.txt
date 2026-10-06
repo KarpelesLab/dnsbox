@@ -1,0 +1,28 @@
+
+; <<>> DiG 9.18.39-0ubuntu0.24.04.7-Ubuntu <<>> @127.0.0.1 -p 5350 +tries=1 +time=5 +dnssec nosuch.ed25519-nsec.interop. A
+; (1 server found)
+;; global options: +cmd
+;; Got answer:
+;; ->>HEADER<<- opcode: QUERY, status: NXDOMAIN, id: 50908
+;; flags: qr aa rd; QUERY: 1, ANSWER: 0, AUTHORITY: 6, ADDITIONAL: 1
+;; WARNING: recursion requested but not available
+
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags: do; udp: 1232
+; COOKIE: 36dd3f192d99f01b010000006ac43ea4ff981e1b63a6e68d (good)
+;; QUESTION SECTION:
+;nosuch.ed25519-nsec.interop.	IN	A
+
+;; AUTHORITY SECTION:
+ed25519-nsec.interop.	300	IN	SOA	ns1.ed25519-nsec.interop. hostmaster.ed25519-nsec.interop. 2026100401 7200 3600 1209600 300
+ed25519-nsec.interop.	300	IN	RRSIG	SOA 15 2 3600 20361003001932 20261005231932 48895 ed25519-nsec.interop. mylIywYWaeRQP8BNJj6eZxRmw1UsNQ5uAMe/EeeH5sK57hmukpG+s26a pXeCiVlj4nS88LCdNGoHZGZ93UvDBQ==
+ed25519-nsec.interop.	300	IN	NSEC	_svc.ed25519-nsec.interop. NS SOA MX TXT LOC SSHFP RRSIG NSEC DNSKEY HTTPS CAA
+ed25519-nsec.interop.	300	IN	RRSIG	NSEC 15 2 300 20361003001932 20261005231932 48895 ed25519-nsec.interop. TLcZY3MOkKuM412SuPXRuJiSnz2cPUUZVR8U0azi0S5oUAMCMudia9X+ 5vOJKus2vHdZCIDVt2OcW6O4ljTxAw==
+mail.ed25519-nsec.interop. 300	IN	NSEC	ns1.ed25519-nsec.interop. A RRSIG NSEC
+mail.ed25519-nsec.interop. 300	IN	RRSIG	NSEC 15 3 300 20361003001932 20261005231932 48895 ed25519-nsec.interop. A/KI8FtwgBr7UwJI28SEJzYgBk4CLVwgwWAY6VkzjJ1kNfNyS3uuHP3s E29dNIMyyXK/BtT6IBLdETWCXVd0Dw==
+
+;; Query time: 0 msec
+;; SERVER: 127.0.0.1#5350(127.0.0.1) (UDP)
+;; WHEN: Tue Oct 06 00:19:48 UTC 2026
+;; MSG SIZE  rcvd: 587
+

@@ -1,0 +1,22 @@
+
+; <<>> DiG 9.18.39-0ubuntu0.24.04.7-Ubuntu <<>> @127.0.0.1 -p 5450 +tries=1 +time=5 +dnssec +cdflag www.insecure.interop. A
+; (1 server found)
+;; global options: +cmd
+;; Got answer:
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 6551
+;; flags: qr rd ra cd; QUERY: 1, ANSWER: 1, AUTHORITY: 0, ADDITIONAL: 1
+
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags: do; udp: 1232
+; COOKIE: 710551085abbb5a1010000006ac43eb7df1de66e77ceba62 (good)
+;; QUESTION SECTION:
+;www.insecure.interop.		IN	A
+
+;; ANSWER SECTION:
+www.insecure.interop.	3600	IN	A	192.0.2.80
+
+;; Query time: 0 msec
+;; SERVER: 127.0.0.1#5450(127.0.0.1) (UDP)
+;; WHEN: Tue Oct 06 00:20:07 UTC 2026
+;; MSG SIZE  rcvd: 93
+

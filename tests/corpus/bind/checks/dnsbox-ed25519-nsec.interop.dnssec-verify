@@ -1,0 +1,7 @@
+Loading zone 'ed25519-nsec.interop.' from file '/home/runner/work/_temp/interop-bind/dnsbox/ed25519-nsec.interop.zone'
+
+Verifying the zone using the following algorithms:
+- ED25519
+Zone fully signed:
+Algorithm: ED25519: KSKs: 1 active, 0 stand-by, 0 revoked
+                    ZSKs: 1 active, 0 stand-by, 0 revoked

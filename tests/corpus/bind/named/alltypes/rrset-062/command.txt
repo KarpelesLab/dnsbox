@@ -1,0 +1,1 @@
+dig +tcp +norec nsec3param.alltypes.example. NSEC3PARAM

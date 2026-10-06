@@ -1,0 +1,1 @@
+dig +tcp +norec uri.alltypes.example. URI

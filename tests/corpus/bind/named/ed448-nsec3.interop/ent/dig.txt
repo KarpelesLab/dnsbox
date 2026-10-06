@@ -1,0 +1,26 @@
+
+; <<>> DiG 9.18.39-0ubuntu0.24.04.7-Ubuntu <<>> @127.0.0.1 -p 5350 +tries=1 +time=5 +dnssec b.ent.ed448-nsec3.interop. A
+; (1 server found)
+;; global options: +cmd
+;; Got answer:
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 20083
+;; flags: qr aa rd; QUERY: 1, ANSWER: 0, AUTHORITY: 4, ADDITIONAL: 1
+;; WARNING: recursion requested but not available
+
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags: do; udp: 1232
+; COOKIE: 097330b45554ace1010000006ac43ea6f9f4bc8b36d134be (good)
+;; QUESTION SECTION:
+;b.ent.ed448-nsec3.interop.	IN	A
+
+;; AUTHORITY SECTION:
+ed448-nsec3.interop.	300	IN	SOA	ns1.ed448-nsec3.interop. hostmaster.ed448-nsec3.interop. 2026100401 7200 3600 1209600 300
+ed448-nsec3.interop.	300	IN	RRSIG	SOA 16 2 3600 20361003001932 20261005231932 60497 ed448-nsec3.interop. bym7jvW3ruC/F95TuNI+H3tNdRdRh8q9TyfypfzvYqLgu7odFFLkhQQV GrJpI/dr9G5z+FmHMEoA2OgmpztCsTK/JXsxmuUn64ez4cw8gAYSMw3I OSSr/hMc01/k0c6xk6B+DHi+Ago5dcAWdLLC9TEA
+9HHHU82PR84R95OML0QSE7UDHJI1ANPN.ed448-nsec3.interop. 300 IN NSEC3 1 0 5 AABBCCDD AUHEK0JMRNS9NTL5S018M03TMSJVNB34
+9HHHU82PR84R95OML0QSE7UDHJI1ANPN.ed448-nsec3.interop. 300 IN RRSIG NSEC3 16 3 300 20361003001932 20261005231932 60497 ed448-nsec3.interop. jmqZc/wm1u5/RAnbkMF0z9LEWG3ucM/+YrMjrhoB0eJNGPOZSjtw9Ay+ LepOX8TBF2JHo1eLqXEAHV0ntY1Xhx99cMllZEM7v8sk8qkFycC937Zn WBI+wbiYyID0RtziEC9jSlloSruIc0m+Ak452BoA
+
+;; Query time: 0 msec
+;; SERVER: 127.0.0.1#5350(127.0.0.1) (UDP)
+;; WHEN: Tue Oct 06 00:19:50 UTC 2026
+;; MSG SIZE  rcvd: 557
+

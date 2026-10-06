@@ -1,10 +1,14 @@
-name: Interop (Knot DNS, Unbound)
+name: Interop (Knot DNS, Unbound, BIND)
 
 # Tool-level interop with Knot DNS (keymgr, kzonesign, kzonecheck, knotd,
-# kdig, knsupdate) and Unbound, run on the runner only (see
-# tests/corpus/knot/run.sh and tests/corpus/README.md). The captures are
-# uploaded as the "interop-knot-unbound" artifact; a subset of them is
-# kept in tests/corpus/knot/ for the offline tests.
+# kdig, knsupdate) and Unbound, and with BIND 9 (dnssec-keygen,
+# dnssec-signzone, dnssec-verify, named-checkzone, named-compilezone,
+# named as an authoritative server and as a validating resolver, dig,
+# nsupdate) and dnspython, run on the runner only (see
+# tests/corpus/knot/run.sh, tests/corpus/bind/run.sh and
+# tests/corpus/README.md). The captures are uploaded as the
+# "interop-knot-unbound" and "interop-bind" artifacts; subsets of them are
+# kept in tests/corpus/knot/ and tests/corpus/bind/ for the offline tests.
 
 on:
   push:
@@ -106,4 +110,93 @@ jobs:
         with:
           name: interop-knot-unbound
           path: ${{ runner.temp }}/interop
+          if-no-files-found: error
+
+  bind:
+    name: BIND 9
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Install BIND 9 and dnspython
+        run: |
+          # Keep the package's own named from starting on port 53.
+          printf '#!/bin/sh\nexit 101\n' | sudo tee /usr/sbin/policy-rc.d
+          sudo chmod +x /usr/sbin/policy-rc.d
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            bind9 bind9-utils bind9-dnsutils python3-dnspython
+          sudo systemctl stop named bind9 2>/dev/null || true
+          # Its AppArmor profile confines named to /etc/bind and
+          # /var/cache/bind; run.sh keeps everything in $RUNNER_TEMP.
+          if [ -e /etc/apparmor.d/usr.sbin.named ]; then
+            sudo apparmor_parser -R /etc/apparmor.d/usr.sbin.named || true
+          fi
+          sudo aa-status 2>/dev/null | grep named || true
+          named -V | head -n 3
+          echo "OUT=$RUNNER_TEMP/interop-bind" >> "$GITHUB_ENV"
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache
+        uses: Swatinem/rust-cache@v2
+
+      - name: Build dnsbox's interop test and probe
+        run: |
+          cargo build --all-features --example bind_probe
+          cargo test --all-features --test interop_bind --no-run
+
+      - name: Sign the zones (dnssec-keygen, dnssec-signzone) and check them
+        run: bash tests/corpus/bind/run.sh sign "$OUT"
+
+      - name: Start named (authoritative and validating resolver)
+        run: bash tests/corpus/bind/run.sh serve "$OUT"
+
+      - name: Query them (dig, nsupdate)
+        run: bash tests/corpus/bind/run.sh capture "$OUT"
+
+      - name: Query them with dnsbox (bind_probe)
+        run: |
+          cargo run --all-features --example bind_probe -- \
+            --named 127.0.0.1:5350 --resolver 127.0.0.1:5450 \
+            --anchor "$OUT/anchor.ds" --sig0 "$OUT/sig0" \
+            --named-label "$RUNNER_TEMP/dnsbox-bind-work/named.label" \
+            --resolver-label "$RUNNER_TEMP/dnsbox-bind-work/resolver.label"
+
+      - name: Stop the servers
+        if: always()
+        run: bash tests/corpus/bind/run.sh stop "$OUT"
+
+      - name: dnsbox checks everything BIND produced
+        run: |
+          DNSBOX_INTEROP_DIR="$OUT" DNSBOX_INTEROP_WRITE=1 \
+            cargo test --all-features --test interop_bind -- --nocapture
+
+      - name: BIND checks the zones dnsbox re-signed
+        run: |
+          bash tests/corpus/bind/run.sh check-dnsbox "$OUT"
+          DNSBOX_INTEROP_DIR="$OUT" DNSBOX_INTEROP_COMPILED=1 \
+            cargo test --all-features --test interop_bind bind_reads_dnsbox_zones -- --nocapture
+
+      - name: dig's rendering of the corpus messages kept from a run
+        if: always()
+        run: |
+          # tests/corpus/named-ci-*.hex without a reference in
+          # tests/data/dig/ (tests/dig_display.rs); none once kept.
+          python3 tests/corpus/dig_reference.py --missing
+          mkdir -p "$OUT/dig"
+          cp tests/data/dig/named-ci-*.dig "$OUT/dig/" 2>/dev/null || true
+
+      - name: dnspython reads dnsbox's presentation of every type
+        if: always()
+        run: python3 tests/corpus/dnspython/gen_rdata.py --check
+
+      - name: Upload the captures
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: interop-bind
+          path: ${{ runner.temp }}/interop-bind
           if-no-files-found: error

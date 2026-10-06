@@ -1,0 +1,1 @@
+dig +dnssec ecdsap384-optout.interop. SOA

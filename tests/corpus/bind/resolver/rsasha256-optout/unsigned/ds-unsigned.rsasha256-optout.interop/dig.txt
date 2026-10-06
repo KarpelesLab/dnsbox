@@ -1,0 +1,27 @@
+
+; <<>> DiG 9.18.39-0ubuntu0.24.04.7-Ubuntu <<>> @127.0.0.1 -p 5450 +tries=1 +time=5 +dnssec +cdflag unsigned.rsasha256-optout.interop. DS
+; (1 server found)
+;; global options: +cmd
+;; Got answer:
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 17887
+;; flags: qr rd ra cd; QUERY: 1, ANSWER: 0, AUTHORITY: 6, ADDITIONAL: 1
+
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags: do; udp: 1232
+; COOKIE: c9a7bdbad3b1040d010000006ac43eaeb59aecd38605412d (good)
+;; QUESTION SECTION:
+;unsigned.rsasha256-optout.interop. IN	DS
+
+;; AUTHORITY SECTION:
+rsasha256-optout.interop. 300	IN	SOA	ns1.rsasha256-optout.interop. hostmaster.rsasha256-optout.interop. 2026100401 7200 3600 1209600 300
+rsasha256-optout.interop. 300	IN	RRSIG	SOA 8 2 3600 20361003001932 20261005231932 44284 rsasha256-optout.interop. q+kd8NtQ1a+X4oizWFUgNaUDzk8ZEe7TsdgzhWm5cFl5668hUaNgCmU8 IOoUQuhZeAcmpiK+lZxeyr5wgX5A8rA3Dljlvv1Hi/q4+gtFmB9ML3bW 0lJXUUCAg4RzB2DEnp4qRhRUMw7Jg6Y75q41SOP525TpbHDO8TvCs/vr Vao=
+5FFMNA0AQJ28FF9GCBDHGN6J3E0QEUHQ.rsasha256-optout.interop. 300 IN RRSIG	NSEC3 8 3 300 20361003001932 20261005231932 44284 rsasha256-optout.interop. qIgZxlS9W/9IRf2/qOcWw5Dw7mPy4LxbO97oT7zmc60F/cHh1y1UwZlN 2M1Yxc4t5eAzPpDfvQy1t4PE97u5QWePWOmDm+YrIn0fOrWx42FaGEBx Mso4c/rpfJnExAyoDV7cVxoAbSGMnwt2VYWAur51jMFEhZgxXn600f+m dLA=
+5FFMNA0AQJ28FF9GCBDHGN6J3E0QEUHQ.rsasha256-optout.interop. 300 IN NSEC3	1 1 0 - 6O195PPLOE85R13T0N8F7C10H880BCE2 NS SOA MX TXT LOC SSHFP RRSIG DNSKEY NSEC3PARAM HTTPS CAA
+LBVL33RU27JCTHUA5NTOUCTS78GF0Q34.rsasha256-optout.interop. 300 IN RRSIG	NSEC3 8 3 300 20361003001932 20261005231932 44284 rsasha256-optout.interop. DSEQw5a6QFK31xfYqPkgH3HDtYshYnLyCnxkMolRpb3w214sJRMkiZbj AoN2SOm6m7FSc5CJjoss3E1hBeezPe7k9hewjTWHLX8FUsHVXk73Esyl fHC7fBDIFktNXzEqi1Sxh0JDPoIzO9qQpZMy+VeBV9vkTQTaJnL3qDwT +rg=
+LBVL33RU27JCTHUA5NTOUCTS78GF0Q34.rsasha256-optout.interop. 300 IN NSEC3	1 1 0 - MIU5BG78LLOKC82JJTQSFBEIQQ5HUNFD A RRSIG
+
+;; Query time: 0 msec
+;; SERVER: 127.0.0.1#5450(127.0.0.1) (UDP)
+;; WHEN: Tue Oct 06 00:19:58 UTC 2026
+;; MSG SIZE  rcvd: 857
+

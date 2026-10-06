@@ -1,0 +1,53 @@
+
+; <<>> DiG 9.18.39-0ubuntu0.24.04.7-Ubuntu <<>> @127.0.0.1 -p 5350 +tries=1 +time=5 +dnssec +multiline nosuch.ecdsap256-optout.interop. A
+; (1 server found)
+;; global options: +cmd
+;; Got answer:
+;; ->>HEADER<<- opcode: QUERY, status: NXDOMAIN, id: 18449
+;; flags: qr aa rd; QUERY: 1, ANSWER: 0, AUTHORITY: 8, ADDITIONAL: 1
+;; WARNING: recursion requested but not available
+
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags: do; udp: 1232
+; COOKIE: 796b0a438498267c010000006ac43ea7d76e39d7e904a2a9 (good)
+;; QUESTION SECTION:
+;nosuch.ecdsap256-optout.interop. IN A
+
+;; AUTHORITY SECTION:
+ecdsap256-optout.interop. 300 IN SOA ns1.ecdsap256-optout.interop. hostmaster.ecdsap256-optout.interop. (
+				2026100401 ; serial
+				7200       ; refresh (2 hours)
+				3600       ; retry (1 hour)
+				1209600    ; expire (2 weeks)
+				300        ; minimum (5 minutes)
+				)
+ecdsap256-optout.interop. 300 IN RRSIG SOA 13 2 3600 (
+				20361003001932 20261005231932 29855 ecdsap256-optout.interop.
+				NR/DTRaAd7b/JTOShBGCX/O2M4jZ/v6xpaAazpwID3Em
+				zM9fR9L/EGuo4B3qWhmDhdpc/pSdUFgB1vbLxsHWgA== )
+N0BK858H6Q75B5F0F0QOJIFJL08MPECU.ecdsap256-optout.interop. 300 IN NSEC3	1 1 0 - (
+				OTDJ1AI5AM1F1HGPE0QS5BB01IDVPUCU
+				NS SOA MX TXT LOC SSHFP RRSIG DNSKEY NSEC3PARAM HTTPS
+				CAA )
+N0BK858H6Q75B5F0F0QOJIFJL08MPECU.ecdsap256-optout.interop. 300 IN RRSIG	NSEC3 13 3 300 (
+				20361003001932 20261005231932 29855 ecdsap256-optout.interop.
+				YFRaOB0BMYTbhMxgjtWuyR+pFljmxb8kpaXWuoo2beYj
+				BQsMVrUnAQslYq7Ke2IXDanO8n0jmxUHeAUUmK3V/g== )
+0URH58HSRBCGPAEIS9RT33UQOUD2K7PD.ecdsap256-optout.interop. 300 IN NSEC3	1 1 0 - (
+				3TGUOUAKJ4P4QNS96T7LQT13H84756KT )
+0URH58HSRBCGPAEIS9RT33UQOUD2K7PD.ecdsap256-optout.interop. 300 IN RRSIG	NSEC3 13 3 300 (
+				20361003001932 20261005231932 29855 ecdsap256-optout.interop.
+				cJndR5j0w3FUGAW8ZWSIjoJQ3ryAi/5oSZGEWZam3SgY
+				B45JpOBHxDQbfbMd6fLas0wCu/LhmzpCxhzxddnCtA== )
+3TGUOUAKJ4P4QNS96T7LQT13H84756KT.ecdsap256-optout.interop. 300 IN NSEC3	1 1 0 - (
+				6DM8Q26N3T99T07G5UREQRAQRTLCBK2C )
+3TGUOUAKJ4P4QNS96T7LQT13H84756KT.ecdsap256-optout.interop. 300 IN RRSIG	NSEC3 13 3 300 (
+				20361003001932 20261005231932 29855 ecdsap256-optout.interop.
+				VIW5WHy4AuNeSfN0gAtvwPxM33u/yr6BF5ONfR90KlxN
+				f10vu7ifBJnZ1WCYxvQEY5bQUy7MJILmW4J0s1dsUg== )
+
+;; Query time: 0 msec
+;; SERVER: 127.0.0.1#5350(127.0.0.1) (UDP)
+;; WHEN: Tue Oct 06 00:19:51 UTC 2026
+;; MSG SIZE  rcvd: 846
+

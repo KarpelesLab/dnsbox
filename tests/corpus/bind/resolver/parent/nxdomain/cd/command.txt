@@ -1,0 +1,1 @@
+dig +dnssec +cdflag nosuch.interop. A

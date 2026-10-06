@@ -1,0 +1,1 @@
+dig +tcp +norec x25.alltypes.example. X25

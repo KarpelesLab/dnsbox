@@ -1,0 +1,1 @@
+dig +dnssec host.insecure.rsasha256-optout.interop. A

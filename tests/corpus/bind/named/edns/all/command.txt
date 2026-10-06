@@ -1,0 +1,1 @@
+dig +dnssec +nsid +cookie +padding=128 +subnet=198.51.100.0/24 +expire ed25519-nsec.interop. SOA

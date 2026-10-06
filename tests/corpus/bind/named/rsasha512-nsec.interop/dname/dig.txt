@@ -1,0 +1,25 @@
+
+; <<>> DiG 9.18.39-0ubuntu0.24.04.7-Ubuntu <<>> @127.0.0.1 -p 5350 +tries=1 +time=5 +dnssec x.dname.rsasha512-nsec.interop. A
+; (1 server found)
+;; global options: +cmd
+;; Got answer:
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 15065
+;; flags: qr aa rd; QUERY: 1, ANSWER: 3, AUTHORITY: 0, ADDITIONAL: 1
+;; WARNING: recursion requested but not available
+
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags: do; udp: 1232
+; COOKIE: b4c34cb197401b8f010000006ac43ea2f2a355e71a409de5 (good)
+;; QUESTION SECTION:
+;x.dname.rsasha512-nsec.interop.	IN	A
+
+;; ANSWER SECTION:
+dname.rsasha512-nsec.interop. 3600 IN	DNAME	example.net.
+dname.rsasha512-nsec.interop. 3600 IN	RRSIG	DNAME 10 3 3600 20361003001932 20261005231932 5796 rsasha512-nsec.interop. Y3SS/BbEQhGCd0s3V+Bf7iPwtvO5ld6o1ijVxCbo0f7P8aImmHLbL5Gs oBxTOnQY/8HQGuAi7tObyWThw6RpYubG5Xjr61rMWiicOKrPM4le3W8D SP+k4hw3aGivGOn/N2YYPbPdxLP6wWUQGGwUOh2bTFrSiisFKyzCzAtN uKY=
+x.dname.rsasha512-nsec.interop.	3600 IN	CNAME	x.example.net.
+
+;; Query time: 0 msec
+;; SERVER: 127.0.0.1#5350(127.0.0.1) (UDP)
+;; WHEN: Tue Oct 06 00:19:46 UTC 2026
+;; MSG SIZE  rcvd: 310
+

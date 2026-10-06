@@ -1,0 +1,27 @@
+
+; <<>> DiG 9.18.39-0ubuntu0.24.04.7-Ubuntu <<>> @127.0.0.1 -p 5450 +tries=1 +time=5 +dnssec +cdflag host.wild.ecdsap256-nsec3.interop. A
+; (1 server found)
+;; global options: +cmd
+;; Got answer:
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 7127
+;; flags: qr rd ra ad cd; QUERY: 1, ANSWER: 2, AUTHORITY: 2, ADDITIONAL: 1
+
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags: do; udp: 1232
+; COOKIE: 8769474402c7b970010000006ac43eb109b12ca91714797a (good)
+;; QUESTION SECTION:
+;host.wild.ecdsap256-nsec3.interop. IN	A
+
+;; ANSWER SECTION:
+host.wild.ecdsap256-nsec3.interop. 300 IN A	192.0.2.42
+host.wild.ecdsap256-nsec3.interop. 300 IN RRSIG	A 13 3 3600 20361003001932 20261005231932 18981 ecdsap256-nsec3.interop. MskZVda+uJ1lX7szgAMcl1jO5lS07QCauj3AITJW75UAim8Fx9eOa/G/ pr4szNVT8myvQexyWMkt3n4nks/CJw==
+
+;; AUTHORITY SECTION:
+JNSAH94N4MQ05514RURIPOUII3NB6IOQ.ecdsap256-nsec3.interop. 300 IN NSEC3 1 0 5 AABBCCDD P0RJO59SQJA6QEP3AFTTAA200J6CUFPJ NS
+JNSAH94N4MQ05514RURIPOUII3NB6IOQ.ecdsap256-nsec3.interop. 300 IN RRSIG NSEC3 13 3 300 20361003001932 20261005231932 18981 ecdsap256-nsec3.interop. 10dpxtz+Mh8VO3QWhwSMs5TYWPR4/yO/qNMzSMILQcxGzxru6hRuu5ni HRfXTsxdQGCZeukkLvaVm5di7EVVkw==
+
+;; Query time: 0 msec
+;; SERVER: 127.0.0.1#5450(127.0.0.1) (UDP)
+;; WHEN: Tue Oct 06 00:20:01 UTC 2026
+;; MSG SIZE  rcvd: 422
+

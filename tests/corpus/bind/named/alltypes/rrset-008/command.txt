@@ -1,0 +1,1 @@
+dig +tcp +norec aaaa.alltypes.example. AAAA

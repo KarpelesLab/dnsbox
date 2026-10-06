@@ -1,0 +1,1 @@
+dig +dnssec +multiline ed25519-nsec3.interop. DNSKEY

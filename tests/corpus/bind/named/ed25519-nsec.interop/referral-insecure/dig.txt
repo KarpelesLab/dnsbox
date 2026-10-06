@@ -1,0 +1,28 @@
+
+; <<>> DiG 9.18.39-0ubuntu0.24.04.7-Ubuntu <<>> @127.0.0.1 -p 5350 +tries=1 +time=5 +dnssec host.insecure.ed25519-nsec.interop. A
+; (1 server found)
+;; global options: +cmd
+;; Got answer:
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 14705
+;; flags: qr rd; QUERY: 1, ANSWER: 0, AUTHORITY: 3, ADDITIONAL: 2
+;; WARNING: recursion requested but not available
+
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags: do; udp: 1232
+; COOKIE: 075727855d33c4fe010000006ac43ea5464c0a9bcd44cbb4 (good)
+;; QUESTION SECTION:
+;host.insecure.ed25519-nsec.interop. IN	A
+
+;; AUTHORITY SECTION:
+insecure.ed25519-nsec.interop. 3600 IN	NS	ns.insecure.ed25519-nsec.interop.
+insecure.ed25519-nsec.interop. 300 IN	NSEC	mail.ed25519-nsec.interop. NS RRSIG NSEC
+insecure.ed25519-nsec.interop. 300 IN	RRSIG	NSEC 15 3 300 20361003001932 20261005231932 48895 ed25519-nsec.interop. Q1fznjHEBYssFxKMC739gBMGfff/BTwlbdahYuzp5RlUhDbWVjgF1L88 ZPmSRKqZMc6f44uG9UdW3uKAsSeuDw==
+
+;; ADDITIONAL SECTION:
+ns.insecure.ed25519-nsec.interop. 3600 IN A	192.0.2.98
+
+;; Query time: 0 msec
+;; SERVER: 127.0.0.1#5350(127.0.0.1) (UDP)
+;; WHEN: Tue Oct 06 00:19:49 UTC 2026
+;; MSG SIZE  rcvd: 287
+

@@ -1,0 +1,24 @@
+
+; <<>> DiG 9.18.39-0ubuntu0.24.04.7-Ubuntu <<>> @127.0.0.1 -p 5450 +tries=1 +time=5 +dnssec +cdflag ed25519-nsec.interop. DS
+; (1 server found)
+;; global options: +cmd
+;; Got answer:
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 16764
+;; flags: qr rd ra ad cd; QUERY: 1, ANSWER: 3, AUTHORITY: 0, ADDITIONAL: 1
+
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags: do; udp: 1232
+; COOKIE: 52d8713a344a0fb4010000006ac43eb3c90c231d893f1d94 (good)
+;; QUESTION SECTION:
+;ed25519-nsec.interop.		IN	DS
+
+;; ANSWER SECTION:
+ed25519-nsec.interop.	3581	IN	DS	14566 15 2 7C97A4080651F9BCAE127F0D73BEC40F742703923762625864667D54 39C422E5
+ed25519-nsec.interop.	3581	IN	DS	14566 15 4 81E90319AB669F06C0F640040F7E8387BF1CA8B2887D66F7AD42CBE9 D7215AB6C809EB11DCA88DA9548A778416D61B79
+ed25519-nsec.interop.	3581	IN	RRSIG	DS 13 2 3600 20361003001932 20261005231932 6169 interop. MJGZ/WAwbjhdXUcjdbRPrvjmVkf3jWJEeEG6RcouclEAR50btMccTyma cAy4C3vNJWZuW4ryo2wDSmbzBfm8kg==
+
+;; Query time: 0 msec
+;; SERVER: 127.0.0.1#5450(127.0.0.1) (UDP)
+;; WHEN: Tue Oct 06 00:20:03 UTC 2026
+;; MSG SIZE  rcvd: 292
+

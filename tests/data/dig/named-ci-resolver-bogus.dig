@@ -1,0 +1,8 @@
+;; ->>HEADER<<- opcode: QUERY, status: SERVFAIL, id: 15232
+;; flags: qr rd ra; QUERY: 1, ANSWER: 0, AUTHORITY: 0, ADDITIONAL: 1
+
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags: do; udp: 1232
+; COOKIE: ed7c6fc0adbc6fb6010000006ac43eb6c9a799e91894da4b
+;; QUESTION SECTION:
+;www.bogus.interop.		IN	A

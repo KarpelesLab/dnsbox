@@ -1,0 +1,22 @@
+
+; <<>> DiG 9.18.39-0ubuntu0.24.04.7-Ubuntu <<>> @127.0.0.1 -p 5450 +tries=1 +time=5 +dnssec +cdflag unsigned.rsasha256-optout.interop. DNSKEY
+; (1 server found)
+;; global options: +cmd
+;; Got answer:
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 59443
+;; flags: qr rd ra cd; QUERY: 1, ANSWER: 0, AUTHORITY: 1, ADDITIONAL: 1
+
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags: do; udp: 1232
+; COOKIE: 68c3c7e0055abb48010000006ac43eae740d352e1c6e683e (good)
+;; QUESTION SECTION:
+;unsigned.rsasha256-optout.interop. IN	DNSKEY
+
+;; AUTHORITY SECTION:
+unsigned.rsasha256-optout.interop. 300 IN SOA	ns.unsigned.rsasha256-optout.interop. hostmaster.unsigned.rsasha256-optout.interop. 2026100601 7200 3600 1209600 300
+
+;; Query time: 0 msec
+;; SERVER: 127.0.0.1#5450(127.0.0.1) (UDP)
+;; WHEN: Tue Oct 06 00:19:58 UTC 2026
+;; MSG SIZE  rcvd: 140
+

@@ -1,0 +1,1 @@
+dig +tcp +norec ns1.alltypes.example. A

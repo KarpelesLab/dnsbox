@@ -1,0 +1,1 @@
+dig +dnssec nsec3rsasha1-nsec3.interop. DNSKEY

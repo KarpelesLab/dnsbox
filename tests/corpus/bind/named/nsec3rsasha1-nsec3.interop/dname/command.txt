@@ -1,0 +1,1 @@
+dig +dnssec x.dname.nsec3rsasha1-nsec3.interop. A

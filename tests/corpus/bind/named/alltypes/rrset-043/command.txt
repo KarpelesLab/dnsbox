@@ -1,0 +1,1 @@
+dig +tcp +norec l64.alltypes.example. L64

@@ -1,0 +1,9 @@
+# Tool versions of this run
+BIND 9.18.39-0ubuntu0.24.04.7-Ubuntu (Extended Support Version) <id:>
+DiG 9.18.39-0ubuntu0.24.04.7-Ubuntu
+nsupdate 9.18.39-0ubuntu0.24.04.7-Ubuntu
+dnssec-signzone 9.18.39-0ubuntu0.24.04.7-Ubuntu
+9.18.39-0ubuntu0.24.04.7-Ubuntu
+dnspython 2.6.1
+OpenSSL 3.0.13 30 Jan 2024 (Library: OpenSSL 3.0.13 30 Jan 2024)
+Linux 6.17.0-1022-azure

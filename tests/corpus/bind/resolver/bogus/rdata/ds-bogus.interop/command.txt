@@ -1,0 +1,1 @@
+dig +dnssec +cdflag bogus.interop. DS

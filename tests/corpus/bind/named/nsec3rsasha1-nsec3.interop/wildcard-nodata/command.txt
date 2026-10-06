@@ -1,0 +1,1 @@
+dig +dnssec host.wild.nsec3rsasha1-nsec3.interop. MX

@@ -1,0 +1,1 @@
+dig +tcp +norec px.alltypes.example. PX

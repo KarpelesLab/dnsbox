@@ -1,0 +1,29 @@
+
+; <<>> DiG 9.18.39-0ubuntu0.24.04.7-Ubuntu <<>> @127.0.0.1 -p 5350 +tries=1 +time=5 +tcp +norec ns1.alltypes.example. A
+; (1 server found)
+;; global options: +cmd
+;; Got answer:
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 43443
+;; flags: qr aa; QUERY: 1, ANSWER: 1, AUTHORITY: 2, ADDITIONAL: 2
+
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags:; udp: 1232
+; COOKIE: 8109810612a48db2010000006ac43ea85b38ac28a83f3692 (good)
+;; QUESTION SECTION:
+;ns1.alltypes.example.		IN	A
+
+;; ANSWER SECTION:
+ns1.alltypes.example.	3600	IN	A	192.0.2.53
+
+;; AUTHORITY SECTION:
+alltypes.example.	3600	IN	NS	ns2.example.net.
+alltypes.example.	3600	IN	NS	ns1.alltypes.example.
+
+;; ADDITIONAL SECTION:
+ns1.alltypes.example.	3600	IN	AAAA	2001:db8::53
+
+;; Query time: 0 msec
+;; SERVER: 127.0.0.1#5350(127.0.0.1) (TCP)
+;; WHEN: Tue Oct 06 00:19:52 UTC 2026
+;; MSG SIZE  rcvd: 164
+

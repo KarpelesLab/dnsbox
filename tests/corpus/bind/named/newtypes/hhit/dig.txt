@@ -1,0 +1,23 @@
+
+; <<>> DiG 9.18.39-0ubuntu0.24.04.7-Ubuntu <<>> @127.0.0.1 -p 5350 +tries=1 +time=5 drip.newtypes.example. TYPE67
+; (1 server found)
+;; global options: +cmd
+;; Got answer:
+;; ->>HEADER<<- opcode: QUERY, status: NXDOMAIN, id: 2294
+;; flags: qr aa rd; QUERY: 1, ANSWER: 0, AUTHORITY: 1, ADDITIONAL: 1
+;; WARNING: recursion requested but not available
+
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags:; udp: 1232
+; COOKIE: 260bcea3a8d50a83010000006ac43ea9cc314af287ab7418 (good)
+;; QUESTION SECTION:
+;drip.newtypes.example.		IN	TYPE67
+
+;; AUTHORITY SECTION:
+newtypes.example.	3600	IN	SOA	ns1.newtypes.example. hostmaster.newtypes.example. 2026100501 7200 900 1209600 3600
+
+;; Query time: 0 msec
+;; SERVER: 127.0.0.1#5350(127.0.0.1) (UDP)
+;; WHEN: Tue Oct 06 00:19:53 UTC 2026
+;; MSG SIZE  rcvd: 129
+

@@ -1,0 +1,1 @@
+dig +tcp +norec ta.alltypes.example. TA

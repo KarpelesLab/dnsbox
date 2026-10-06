@@ -1,0 +1,1 @@
+dig +tcp +norec rp.alltypes.example. RP

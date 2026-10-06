@@ -1,0 +1,28 @@
+
+; <<>> DiG 9.18.39-0ubuntu0.24.04.7-Ubuntu <<>> @127.0.0.1 -p 5350 +tries=1 +time=5 +dnssec host.secure.rsasha512-nsec.interop. A
+; (1 server found)
+;; global options: +cmd
+;; Got answer:
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 18210
+;; flags: qr rd; QUERY: 1, ANSWER: 0, AUTHORITY: 3, ADDITIONAL: 2
+;; WARNING: recursion requested but not available
+
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags: do; udp: 1232
+; COOKIE: c5364e0a309b2f48010000006ac43ea245dc6eb32bfedc3b (good)
+;; QUESTION SECTION:
+;host.secure.rsasha512-nsec.interop. IN	A
+
+;; AUTHORITY SECTION:
+secure.rsasha512-nsec.interop. 3600 IN	NS	ns.secure.rsasha512-nsec.interop.
+secure.rsasha512-nsec.interop. 3600 IN	DS	12345 13 2 E06D44B80B8F1D39A95C0B0D7C65D08458E880409BBC683457104237 C7F8EC8D
+secure.rsasha512-nsec.interop. 3600 IN	RRSIG	DS 10 3 3600 20361003001932 20261005231932 5796 rsasha512-nsec.interop. YGN5UfAdbRodZPiMwXbcEeAmHZPqVvqR3AUvMbWfn1apMU3tG2W90Juk P0T5ayJbz8NIKryFI9OpB4/Oz2TUuhOF0GgjMsOnawAoOtMgZadqOEHB RvKelLhdl+eYKq5dT4iSr0kpC4HUal9gpImkgFp1a+RYQccEDdEr9pJe 4tM=
+
+;; ADDITIONAL SECTION:
+ns.secure.rsasha512-nsec.interop. 3600 IN A	192.0.2.99
+
+;; Query time: 0 msec
+;; SERVER: 127.0.0.1#5350(127.0.0.1) (UDP)
+;; WHEN: Tue Oct 06 00:19:46 UTC 2026
+;; MSG SIZE  rcvd: 354
+

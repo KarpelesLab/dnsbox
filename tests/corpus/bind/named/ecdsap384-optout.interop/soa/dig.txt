@@ -1,0 +1,24 @@
+
+; <<>> DiG 9.18.39-0ubuntu0.24.04.7-Ubuntu <<>> @127.0.0.1 -p 5350 +tries=1 +time=5 +dnssec ecdsap384-optout.interop. SOA
+; (1 server found)
+;; global options: +cmd
+;; Got answer:
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 2872
+;; flags: qr aa rd; QUERY: 1, ANSWER: 2, AUTHORITY: 0, ADDITIONAL: 1
+;; WARNING: recursion requested but not available
+
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags: do; udp: 1232
+; COOKIE: 9f421c4c1c195dc8010000006ac43ea4c301cdd3c20ae512 (good)
+;; QUESTION SECTION:
+;ecdsap384-optout.interop.	IN	SOA
+
+;; ANSWER SECTION:
+ecdsap384-optout.interop. 3600	IN	SOA	ns1.ecdsap384-optout.interop. hostmaster.ecdsap384-optout.interop. 2026100401 7200 3600 1209600 300
+ecdsap384-optout.interop. 3600	IN	RRSIG	SOA 14 2 3600 20361003001932 20261005231932 38014 ecdsap384-optout.interop. DVqwv8HbheOJOfgRs+6DL61Vi4IQ+Iifjj9yN4LvQide8eLb8mfeo3tN /x7Rfp0xaByl6iSz+lDxpX9VTKfGY/hG9dPs0iUlBN5FdjHcmoT9dfra eMukMcr9PHRjd+Ty
+
+;; Query time: 0 msec
+;; SERVER: 127.0.0.1#5350(127.0.0.1) (UDP)
+;; WHEN: Tue Oct 06 00:19:48 UTC 2026
+;; MSG SIZE  rcvd: 284
+

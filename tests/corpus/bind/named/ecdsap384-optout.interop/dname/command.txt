@@ -1,0 +1,1 @@
+dig +dnssec x.dname.ecdsap384-optout.interop. A

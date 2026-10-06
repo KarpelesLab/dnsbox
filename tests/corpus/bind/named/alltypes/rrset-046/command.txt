@@ -1,0 +1,1 @@
+dig +tcp +norec mb.alltypes.example. MB

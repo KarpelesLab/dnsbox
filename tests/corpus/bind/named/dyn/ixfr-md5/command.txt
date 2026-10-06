@@ -1,0 +1,1 @@
+dig -y hmac-md5:hmac-md5.key:AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8= dyn.interop. IXFR=2026100601

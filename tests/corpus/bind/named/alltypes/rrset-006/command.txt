@@ -1,0 +1,1 @@
+dig +tcp +norec a6.alltypes.example. A6

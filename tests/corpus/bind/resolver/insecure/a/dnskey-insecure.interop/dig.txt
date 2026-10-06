@@ -1,0 +1,22 @@
+
+; <<>> DiG 9.18.39-0ubuntu0.24.04.7-Ubuntu <<>> @127.0.0.1 -p 5450 +tries=1 +time=5 +dnssec +cdflag insecure.interop. DNSKEY
+; (1 server found)
+;; global options: +cmd
+;; Got answer:
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 16386
+;; flags: qr rd ra cd; QUERY: 1, ANSWER: 0, AUTHORITY: 1, ADDITIONAL: 1
+
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags: do; udp: 1232
+; COOKIE: b0d3e2c7bf298bd9010000006ac43eb7257ae0f3718f476f (good)
+;; QUESTION SECTION:
+;insecure.interop.		IN	DNSKEY
+
+;; AUTHORITY SECTION:
+insecure.interop.	300	IN	SOA	ns1.insecure.interop. hostmaster.insecure.interop. 2026100601 7200 3600 1209600 300
+
+;; Query time: 1 msec
+;; SERVER: 127.0.0.1#5450(127.0.0.1) (UDP)
+;; WHEN: Tue Oct 06 00:20:07 UTC 2026
+;; MSG SIZE  rcvd: 124
+

@@ -1,0 +1,7 @@
+update failed: REFUSED
+Answer:
+;; ->>HEADER<<- opcode: UPDATE, status: REFUSED, id:  40779
+;; flags: qr; ZONE: 1, PREREQ: 0, UPDATE: 0, ADDITIONAL: 0
+;; ZONE SECTION:
+;dyn.interop.			IN	SOA
+

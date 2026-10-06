@@ -1,0 +1,1 @@
+dig +dnssec +multiline nosuch.ecdsap256-optout.interop. A

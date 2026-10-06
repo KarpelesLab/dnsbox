@@ -1,0 +1,1 @@
+dig +dnssec host.wild.ecdsap256-nsec3.interop. A

@@ -1,0 +1,1 @@
+dig +dnssec other.rsasha512-nsec.interop. DS

@@ -1,0 +1,1 @@
+dig +notcp -y hmac-sha256:hmac-sha256.key:AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8= dyn.interop. IXFR=2026100601

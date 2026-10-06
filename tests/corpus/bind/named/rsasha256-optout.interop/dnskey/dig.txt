@@ -1,0 +1,25 @@
+
+; <<>> DiG 9.18.39-0ubuntu0.24.04.7-Ubuntu <<>> @127.0.0.1 -p 5350 +tries=1 +time=5 +dnssec rsasha256-optout.interop. DNSKEY
+; (1 server found)
+;; global options: +cmd
+;; Got answer:
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 10004
+;; flags: qr aa rd; QUERY: 1, ANSWER: 3, AUTHORITY: 0, ADDITIONAL: 1
+;; WARNING: recursion requested but not available
+
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags: do; udp: 1232
+; COOKIE: 64d7ac444853ed22010000006ac43ea22f0e97500e4f61cb (good)
+;; QUESTION SECTION:
+;rsasha256-optout.interop.	IN	DNSKEY
+
+;; ANSWER SECTION:
+rsasha256-optout.interop. 3600	IN	DNSKEY	257 3 8 AwEAAZVks5VqP3MPiwt5a6rZtL7WdAz0EN/eARE9i3aABqUEoRVt7GBR Ark+AUXwtx2BUPYByGJ45t+6IocXFdmzUO2mktj2Rx7GpTduc1nT1bQw +9XIi6EdfQRvWyWur4hh0KIuqVf6XWoL0DsTl9taZwv6mtiQaZb8+gD5 LOk6rz/jsJ2rY0OO3btU0ivVZ5ZS2HQXyd5dxtQdHNttZ0T51vPHy5Tu voDK6YIhI3C0I8O6YJTtZjiuQj6YoQB+aVxqMwt9HdKj6kL9f+pIyMPa bsrsoGDJ8cnUO+zSSNuL1sKJunHfElTgZGPH84ApPlehFic5lEQW8dph XZ9woaE/qd8=
+rsasha256-optout.interop. 3600	IN	DNSKEY	256 3 8 AwEAAdQVzrZXtk0PkSkGNLrFtrZ3JZRhfwogRAcxTCvs4JP06uEUF+PW rNa9iF+PcpSX8NH0NQ/qVMG/2B8idOjjmUGROGPlgoIzbo+/gHuCYqov VoY95cNFdF2WUJEz5JPTlScBGJT0drPeCm7RTf2eQGmyihB2JNAe7kN6 DwuYR2iV
+rsasha256-optout.interop. 3600	IN	RRSIG	DNSKEY 8 2 3600 20361003001932 20261005231932 48034 rsasha256-optout.interop. etSU0FZqb65ynndBqFmMTvnVCa3GaVpKFRRNeQM0lB+6HqZX3CMT806p LsqvYnaF7YwD2bGROQrLkLCdRud9vULrv5hChPEnuhoMcH39hU97NDqi G95SG/5tWLW9PrmdSPAbaIAfjagA8scib8aog1j0BXKQV/Lbl0hjWNMx /sgAwrGHYrGOXcI44ItUt6vnWqby4MRaSbbFjt+ldYvEw+E9waqLh+Jw IlFmVAEIrebuaq8AROIlDCfDuYTVc+A6TpLWGr3H4ECz7rpGv0rm7rEk mpjOlDdmBHy3K4K/oGCuduBz0N88gULnjVcmmMwIWlkZWiGxIv4oShUl qNdU1A==
+
+;; Query time: 0 msec
+;; SERVER: 127.0.0.1#5350(127.0.0.1) (UDP)
+;; WHEN: Tue Oct 06 00:19:46 UTC 2026
+;; MSG SIZE  rcvd: 817
+

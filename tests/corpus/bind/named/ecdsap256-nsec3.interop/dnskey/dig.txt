@@ -1,0 +1,25 @@
+
+; <<>> DiG 9.18.39-0ubuntu0.24.04.7-Ubuntu <<>> @127.0.0.1 -p 5350 +tries=1 +time=5 +dnssec ecdsap256-nsec3.interop. DNSKEY
+; (1 server found)
+;; global options: +cmd
+;; Got answer:
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 50434
+;; flags: qr aa rd; QUERY: 1, ANSWER: 3, AUTHORITY: 0, ADDITIONAL: 1
+;; WARNING: recursion requested but not available
+
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags: do; udp: 1232
+; COOKIE: 98ae6ffcf7ec11a9010000006ac43ea3d748ee0b26820139 (good)
+;; QUESTION SECTION:
+;ecdsap256-nsec3.interop.	IN	DNSKEY
+
+;; ANSWER SECTION:
+ecdsap256-nsec3.interop. 3600	IN	DNSKEY	257 3 13 5WKYtEPBy4adeUKVyaukfIbjfi+sDdCP9FS/zZz+KD2lbekwFau0BihC FiLrnKgJlLRsGs5+MXeBG8oyw4Jxmw==
+ecdsap256-nsec3.interop. 3600	IN	DNSKEY	256 3 13 1X6JyvAzXKKQo1qfnUVjtmBhz+EOxqJVxA830EbMqaznvBjtfJZyvZr4 co2a3zBWWBiQCaJ4u+Jm17FMKPGPtQ==
+ecdsap256-nsec3.interop. 3600	IN	RRSIG	DNSKEY 13 2 3600 20361003001932 20261005231932 34368 ecdsap256-nsec3.interop. TTe97pCZqScZJMNOyvnl3bL6LrHmI5nlipoupZWnXZf0Qg+3xFGpBAyA +tfLEWfONRwA1ZYv3vmRq66ku6eDrw==
+
+;; Query time: 0 msec
+;; SERVER: 127.0.0.1#5350(127.0.0.1) (UDP)
+;; WHEN: Tue Oct 06 00:19:47 UTC 2026
+;; MSG SIZE  rcvd: 359
+

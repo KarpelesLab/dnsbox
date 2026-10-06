@@ -10,8 +10,9 @@ Everything was produced on 2026-10-04 with BIND 9.18.49 (`named`, `dig`,
 ldns 1.8.4 (built from the NLnet Labs release tarball without root:
 `./configure --prefix=$HOME/ldns --with-examples --with-drill && make install`),
 dnspython 2.8.0 and Python 3.14, plus queries to public servers. The Knot
-DNS 3.5 and Unbound 1.19 tools run on a GitHub Actions runner instead
-(`knot/`, below); NSD, PowerDNS and the large resolvers are covered by live
+DNS 3.5 and Unbound 1.19 tools, and Ubuntu's BIND 9.18.39 serving and
+validating, run on a GitHub Actions runner instead (`knot/` and `bind/`,
+below); NSD, PowerDNS and the large resolvers are covered by live
 captures.
 
 ## Layout
@@ -25,8 +26,9 @@ captures.
 | `ldns/` | ldns-written zone text, ldns-signed zones with ZONEMD | `ldns/gen.sh` | `interop_zones.rs` |
 | `dnspython/` | RDATA text/wire pairs, TSIG, UPDATE, ZONEMD; `dnspython-*.hex` | `dnspython/gen_*.py` | `interop_dnspython.rs` |
 | `knot/` | Knot-signed zones, keys, DS; knotd and Unbound exchanges (a subset of a CI run) | `knot/run.sh` in `.github/workflows/interop.yml`, `knot/keep.py` | `interop_knot.rs` |
+| `bind/` | BIND-signed zones (every algorithm, NSEC/NSEC3/Opt-Out), keys, DS, `named-compilezone` output; exchanges with `named` (authoritative, validating resolver); `named-ci-*.hex` (a subset of a CI run) | `bind/run.sh` in `.github/workflows/interop.yml`, `bind/keep.py` | `interop_bind.rs` |
 
-Every message of the corpus (190 of them) must validate, survive
+Every message of the corpus (207 of them) must validate, survive
 parse → build → parse (and rebuild to a fixed point), reject every
 truncation (`tests/corpus.rs`), round-trip through serde
 (`tests/serde.rs`) and display exactly as `dig` 9.18 shows it, up to the
@@ -285,6 +287,142 @@ child zones, and on DS queries for names that are not zone cuts: `knotd`
 answers for every zone it serves with authority, so Unbound never saw the
 cuts (hence one stub zone per zone).
 
+## BIND 9.18 on the CI runner (`bind/`)
+
+The `bind` job of `.github/workflows/interop.yml` (on pushes to `master`,
+pull requests and on demand) installs Ubuntu 24.04's BIND 9.18.39
+(`bind9`, `bind9-utils`, `bind9-dnsutils`) and dnspython 2.6.1, and runs
+`bind/run.sh` (BIND's own servers and tools, never on a workstation):
+
+- **sign**: `dnssec-keygen` is tried with every DNSSEC algorithm mnemonic
+  BIND has had (`algorithms.txt`): RSAMD5, DSA, NSEC3DSA and ECCGOST are
+  refused, the eight others (RSASHA1, NSEC3RSASHA1, RSASHA256, RSASHA512,
+  ECDSAP256SHA256, ECDSAP384SHA384, ED25519, ED448) make a KSK and a ZSK
+  for `../knot/child.zone` signed by `dnssec-signzone -S` with NSEC, NSEC3
+  (salt `aabbccdd`, 5 iterations, CDS/CDNSKEY published with `-P sync`)
+  and NSEC3 Opt-Out (`-A`, no salt): 22 zones
+  `<algorithm>-<chain>.interop.` (RSASHA1 has NSEC only), valid ten years.
+  `dnssec-dsfromkey` gives SHA-1, SHA-256 and SHA-384 DS records; the
+  parent `interop.` holds the SHA-256 and SHA-384 ones, and its own DS is
+  the trust anchor. Three zones are broken after signing (`bogus.`: an A
+  record changed, `bogus-nsec.`: every NSEC bitmap, `bogus-ds.`: the
+  parent's DS digests; signed with `-O full`, one record per line).
+  `named-checkzone -i full` and `dnssec-verify` accept every BIND zone
+  and `dnssec-verify` rejects the tampered ones. `named-compilezone`
+  writes the zones, `bulk.interop.`, `../bind9/alltypes.zone` and
+  `../knot/newtypes.zone` in both text styles (`-s full`, `-s relative`).
+  `named-checkzone` reads dnsbox's presentation of every type BIND
+  knows (`../bind9/alltypes.dnsbox`) and of the types typed since
+  (`../knot/newtypes.zone`), but for the lines it cannot read (listed in
+  `alltypes-omitted.txt`, `newtypes-omitted.txt`).
+- **serve**: an authoritative `named` (127.0.0.1:5351) serves them, an
+  unsigned zone below each child, `insecure.interop.`, a 503-record
+  `bulk.interop.`, `alltypes.example.` and `newtypes.example.` (dnsbox's
+  text), and `dyn.interop.` (dynamic: an update policy for six TSIG keys,
+  HMAC-MD5 to HMAC-SHA512 with the secret `00 01 .. 1f`, and three SIG(0)
+  KEYs, `dnssec-keygen -T KEY`), with NSID, CHAOS identity and version,
+  RFC 9018 cookies (`cookie-secret 00 01 .. 0f`), response padding (128)
+  and TSIG-only transfers. A second `named` (127.0.0.1:5355) is a
+  validating resolver: `interop.`'s DS as a static trust anchor, the zone
+  forwarded to the first. `../knot/proxy.py` sits in front of both (5350,
+  5450) and records every message with the client's output.
+- **capture**: `dig` asks the 12 questions of `bind9/` in every signed
+  zone and an AXFR of each (also with `+multiline`), every RRset of
+  `alltypes.example.` and the new types, EDNS (NSID, cookies with and
+  without a server cookie, Client Subnet v4/v6/0, Padding over UDP and
+  TCP, EXPIRE, TCP keepalive, an unknown option and flag, version 1 with
+  and without negotiation, no EDNS), TCP, truncation and the retry, ANY,
+  CHAOS, REFUSED, NOTIMP, TSIG-signed queries and AXFRs with every HMAC, a
+  wrong secret, an unknown key and none; `nsupdate` sends seven
+  TSIG-signed UPDATEs (one over TCP), one with a failing prerequisite,
+  an unsigned one and three signed with SIG(0); `dig` asks for the IXFR
+  with every HMAC, an up-to-date IXFR and one over UDP. The resolver
+  answers 116 cases (the Unbound cases of `knot/`, for 22 zones: 76
+  secure, 37 insecure, 3 bogus), with DO and again with CD, with the DS
+  and DNSKEY RRsets of every zone from `interop.` down.
+- **probe**: dnsbox's `bind_probe` example sends its own queries (EDNS
+  options, padding, cookies it recomputes, TCP, TSIG with every HMAC,
+  BADSIG and BADKEY, a TSIG-signed TKEY query, AXFR streams, UPDATEs
+  added, deleted, refused or failing a prerequisite, the IXFR they make,
+  an UPDATE signed with SIG(0) from BIND's private key) to both `named`
+  and checks their answers.
+- **check-dnsbox**: `tests/interop_bind.rs` (with `DNSBOX_INTEROP_DIR`
+  and `DNSBOX_INTEROP_WRITE`) writes every intact zone again, displayed by
+  dnsbox and re-signed by dnsbox with BIND's keys; `named-checkzone -i
+  full` and `dnssec-verify` accept all 24, and `named-compilezone`'s
+  output of them in both styles reads back to dnsbox's records.
+- The same job runs `dnspython/gen_rdata.py --check` with the
+  distribution's dnspython (below).
+
+The whole run is uploaded as the `interop-bind` artifact. `bind/keep.py`
+copied a subset of run 37393349277 (2026-10-06) here, so that `cargo test
+--test interop_bind` checks it offline (nothing in this directory but
+`run.sh` and `keep.py` is written by hand): eight of the signed zones (each
+algorithm, each chain at least twice), the parent and the bogus zones with
+their keys (throwaway; BIND's private key format v1.3), DS records,
+`named`'s answers and transfers, `named-compilezone`'s output of three of
+them, of `alltypes.zone`, `newtypes.zone` and the bulk zone, the EDNS,
+CHAOS, truncation and TSIG exchanges, the dynamic zone's updates (TSIG and
+SIG(0), with the SIG(0) keys) and two of its IXFRs, the `alltypes` and
+`newtypes` transfers and queries, the probe's exchanges (one of its bulk
+transfers), the resolver's cases for one zone per denial chain and for
+the bogus, insecure and parent zones (21 of 116), its queries for one
+zone, and two of the zones dnsbox re-signed with BIND's verdicts; 17
+single responses are also kept as `named-ci-*.hex`, with their `dig`
+rendering (made on the runner by `dig_reference.py`, in run 37393968644,
+the first with those files; `keep.py` copies them when the run has
+them). To refresh: `gh run download <run> -n interop-bind -D
+/tmp/interop-bind && python3 tests/corpus/bind/keep.py /tmp/interop-bind
+"run <run>, <date>"`, then take `dig/named-ci-*.dig` from the next run.
+
+`tests/interop_bind.rs` checks, as of the run's time (`bind/now`):
+
+- `dnssec-keygen` supports exactly the algorithms dnsbox signs and
+  verifies; dnsbox reads every BIND zone file in both of `dnssec-signzone`'s
+  output formats; the DS records authenticate the keys, every RRSIG
+  verifies (the tampered ones fail), the NSEC and NSEC3 chains are those
+  dnsbox's canonical order and NSEC3 hashing predict (BIND leaves unsigned
+  delegations out of Opt-Out chains), CDS/CDNSKEY are the KSK's, and
+  dnsbox, signing with the private keys read from BIND's `.private` files,
+  reproduces every RSA, Ed25519 and Ed448 signature byte for byte;
+- each zone file holds exactly the records of `named`'s AXFR, dnsbox reads
+  `named-compilezone`'s output in both styles to the records BIND loaded,
+  and `dig`'s text of every response (one-line and `+multiline`, TSIG
+  records included) reads back to its wire records;
+- every captured message (2756 in a run) validates, passes the shared
+  fuzz checks and rebuilds to the same message (84% byte for byte, the
+  rest within 5% of BIND's size: dnsbox's compression table holds 128
+  labels and it never points into names it may not compress, RRSIG
+  signers, NSEC next names, DNAME targets, where BIND does; BIND leaves
+  some authority owners uncompressed, where dnsbox's are smaller);
+- every `named` answer verifies and its denial proof gives the expected
+  status; every TSIG MAC verifies and `named`'s BADSIG and BADKEY answers
+  carry the error with an empty MAC; every transfer stream is complete,
+  the IXFR applied to the AXFR before the updates gives the AXFR after
+  them; nsupdate's UPDATEs decode as sent; every SIG(0) of nsupdate and of
+  the probe verifies with its KEY, and dnsbox reproduces the Ed25519 and
+  RSA ones from the private keys; the EDNS options decode as sent and as
+  `named` answered them (its server cookies recomputed with SipHash-2-4
+  from the configured secret);
+- for every resolver case, dnsbox validating the data `named` fetched
+  (CD) from the trust anchor down reaches `named`'s verdict (AD: secure;
+  no AD: insecure; SERVFAIL: bogus), which is also the one the case was
+  made for, within one default `ValidationBudget`;
+- `named` read dnsbox's text of every type BIND 9.18 knows to BIND's own
+  wire form (`named-alltypes-axfr.hex`), and of AMTRELAY, DSYNC and DOA
+  to dnsbox's; `named-checkzone`, `named-compilezone` and `dnssec-verify`
+  accept the zones dnsbox re-signed.
+
+What BIND 9.18.39 does that dnsbox now tests for: `named` echoes Client
+Subnet with scope 0 as an authoritative server; it pads responses over
+TCP, and over UDP only for a client with a valid server cookie; it never
+sends BADCOOKIE without `require-server-cookie`; it answers a TKEY
+deletion of a configured key NOERROR with a TKEY record carrying BADNAME,
+signed; since 9.18.28 (CVE-2024-1975) it no longer verifies SIG(0) and its
+update policy refuses SIG(0)-signed updates as unsigned (dnsbox verifies
+them); it does not know HHIT or BRID; its resolver gives no Extended DNS
+Error for bogus answers.
+
 ## Discrepancies found
 
 Fixed in dnsbox (with tests):
@@ -297,6 +435,11 @@ Fixed in dnsbox (with tests):
   `ECC`), keeping numbers for 4, 6, 7 and 12 where they differ.
 - **SIG/RRSIG type covered**: BIND writes `SIG 0 ...` (a bare number) for
   SIG(0) records and reads numbers there; dnsbox now reads them too.
+- **AMTRELAY relay type 0** (RFC 8777 §4.3.1): BIND 9.18 writes no relay
+  for type 0 (`0 0 0`) and reads only that, where the RFC (and dnsbox,
+  and dnspython) has `.`; dnsbox rejected BIND's form. dnsbox now reads
+  both and keeps writing `.` (found by the BIND CI run; `named` serves
+  both forms there, and dig's text of them reads back).
 
 Differences of style, left as they are (both sides read each other):
 LOC sizes (dnspython always writes decimals and drops default fields),
@@ -315,10 +458,23 @@ or MINFO class and keeps their compressed RDATA as opaque bytes, and
 accepts ZONEMD digests shorter than 12 octets (BIND and dnsbox reject
 them, RFC 8976 §2.2.4); ldns writes UINFO/UID/GID/UNSPEC as `TYPE0` and
 the NSAP-PTR name as a quoted string, and cannot read A6, ATMA, AVC,
-NINFO, NXT, RKEY, SINK or TA; BIND refuses MD and MF as obsolete.
+NINFO, NXT, RKEY, SINK or TA; BIND refuses MD and MF as obsolete. BIND
+9.18.39 takes the key of a KEY, DNSKEY or RKEY of algorithm 253
+(PRIVATEDNS) to start with a domain name (RFC 4034 Appendix A.1.1): it
+loads `alltypes.zone`'s RKEY, whose key does not, but `named-compilezone
+-s relative` then aborts (an assertion in `dns_name_fromregion`) and dig
+rejects `named`'s answers holding it ("bad label type"), while dnsbox and
+dnspython read it as opaque key data (`bind/run.sh` compiles the zone
+without it, and the tests pin both failures). dnspython 2.6.1 has no
+DSYNC, RESINFO or WALLET class nor the `ohttp` SvcParamKey (2.8 has).
 
 TKEY has no zone-file form, and dnsbox writes BIND's text for it (with
 the key and other data sizes), which dnspython does not read; dnsbox reads
 both BIND's and dnspython's form, so dnspython's TKEY text is checked like
-any other type's, `interop_dnspython.rs` pins dnsbox's display of those
-examples, and `gen_rdata.py --check` skips them.
+any other type's, and `interop_dnspython.rs` pins dnsbox's display of those
+examples. `gen_rdata.py --check` checks the sizes against the data and
+rewrites dnsbox's text to dnspython's layout (error number, no sizes)
+before dnspython reads it. With an older dnspython (the CI runner's),
+`--check` skips the types and SvcParamKeys it does not implement and
+lists them, which is an error with a dnspython at least as recent as the
+one that wrote `rdata.txt`.

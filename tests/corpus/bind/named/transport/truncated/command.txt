@@ -1,0 +1,1 @@
+dig +notcp +ignore +bufsize=512 +dnssec rsasha512-nsec3.interop. DNSKEY

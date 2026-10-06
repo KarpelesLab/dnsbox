@@ -1,0 +1,33 @@
+
+; <<>> DiG 9.18.39-0ubuntu0.24.04.7-Ubuntu <<>> @127.0.0.1 -p 5350 +tries=1 +time=5 -y hmac-sha256:hmac-sha256.key:AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8= dyn.interop. AXFR
+; (1 server found)
+;; global options: +cmd
+dyn.interop.		3600	IN	SOA	ns1.dyn.interop. hostmaster.dyn.interop. 2026100608 7200 3600 1209600 300
+dyn.interop.		3600	IN	NS	ns1.dyn.interop.
+new1.dyn.interop.	300	IN	TXT	"added with hmac-md5"
+new1.dyn.interop.	300	IN	A	192.0.2.1
+new2.dyn.interop.	300	IN	TXT	"added with hmac-sha1"
+new2.dyn.interop.	300	IN	A	192.0.2.2
+new3.dyn.interop.	300	IN	TXT	"added with hmac-sha224"
+new3.dyn.interop.	300	IN	A	192.0.2.3
+new4.dyn.interop.	300	IN	TXT	"added with hmac-sha256"
+new4.dyn.interop.	300	IN	A	192.0.2.4
+new5.dyn.interop.	300	IN	TXT	"added with hmac-sha384"
+new5.dyn.interop.	300	IN	A	192.0.2.5
+new6.dyn.interop.	300	IN	TXT	"added with hmac-sha512"
+new6.dyn.interop.	300	IN	A	192.0.2.6
+ns1.dyn.interop.	3600	IN	A	127.0.0.1
+old.dyn.interop.	3600	IN	A	192.0.2.99
+sig0-ecdsap256.dyn.interop. 3600 IN	KEY	512 3 13 HTbLHqApzdkc/gYrxlaUdUDn/5XxcezgwaI5gFY7ojFm6b1sIUQNQoxx 6hWhh21oER1s5iJfM9p8aMikP9sjvg==
+sig0-ed25519.dyn.interop. 3600	IN	KEY	512 3 15 oYV/B620jbnBg8HoP0dB3XgrtCfHPdseWZ09RETDPk0=
+sig0-rsasha256.dyn.interop. 3600 IN	KEY	512 3 8 AwEAAcAOlF56JSby5R6wwvmrHqm5GDXhSVRaSqtXtDgIh9Ed+J1+12lX 7oAvAlu7Vf4A0EoLrOEe/1jxtJ+cRCnWUEl0WMSFNoN1yyunIY5nKvnP jkRnffYvCB1r+SaxdS+MMRXSJZHoV5iFU0DKrDsCoK4T/FDERvb8sqZ1 DvF0Msp1
+t001.dyn.interop.	3600	IN	TXT	"to be deleted"
+tcp.dyn.interop.	300	IN	AAAA	2001:db8::7
+www.dyn.interop.	3600	IN	A	192.0.2.80
+dyn.interop.		3600	IN	SOA	ns1.dyn.interop. hostmaster.dyn.interop. 2026100608 7200 3600 1209600 300
+hmac-sha256.key.	0	ANY	TSIG	hmac-sha256. 1791245994 300 32 Fn/3GLuF+P81G166Z1QSu9EpA1g5IAccY2gdoZ6cF/Q= 15710 NOERROR 0 
+;; Query time: 0 msec
+;; SERVER: 127.0.0.1#5350(127.0.0.1) (TCP)
+;; WHEN: Tue Oct 06 00:19:54 UTC 2026
+;; XFR size: 23 records (messages 1, bytes 1026)
+

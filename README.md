@@ -144,6 +144,7 @@ files, DNSSEC, TSIG), and every public item has its own example. The
 | [`dnssec_dig`](examples/dnssec_dig.rs) | `cargo run --example dnssec_dig --features dnssec` | validates captured responses from a trust anchor down (DS → DNSKEY → RRset) |
 | [`tsig_axfr`](examples/tsig_axfr.rs) | `cargo run --example tsig_axfr --features tsig` | a TSIG-signed zone transfer, over loopback or from a real server |
 | [`interop_probe`](examples/interop_probe.rs) | (CI only, against `knotd` and `unbound`) | dnsbox-built queries with EDNS options, cookies, TSIG, AXFR/IXFR and UPDATE, checked against Knot DNS and Unbound |
+| [`bind_probe`](examples/bind_probe.rs) | (CI only, against `named`) | dnsbox-built queries with EDNS options, cookies, TSIG, TKEY, AXFR/IXFR and UPDATE (TSIG and SIG(0)), checked against BIND 9 as an authoritative server and as a validating resolver |
 
 ## What is covered
 

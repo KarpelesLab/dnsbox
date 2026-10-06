@@ -1,0 +1,13 @@
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 58789
+;; flags: qr aa rd; QUERY: 1, ANSWER: 2, AUTHORITY: 0, ADDITIONAL: 1
+;; WARNING: recursion requested but not available
+
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags:; udp: 1232
+; COOKIE: 9cce654602568711010000006ac43ea9b50a2d6621ff546e
+;; QUESTION SECTION:
+;doa.newtypes.example.		IN	DOA
+
+;; ANSWER SECTION:
+doa.newtypes.example.	3600	IN	DOA	1234567890 100 1 "text/plain" -
+doa.newtypes.example.	3600	IN	DOA	0 1 2 "" aHR0cHM6Ly93d3cuaXNjLm9yZy8=

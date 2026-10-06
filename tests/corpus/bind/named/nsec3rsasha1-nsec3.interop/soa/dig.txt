@@ -1,0 +1,24 @@
+
+; <<>> DiG 9.18.39-0ubuntu0.24.04.7-Ubuntu <<>> @127.0.0.1 -p 5350 +tries=1 +time=5 +dnssec nsec3rsasha1-nsec3.interop. SOA
+; (1 server found)
+;; global options: +cmd
+;; Got answer:
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 36069
+;; flags: qr aa rd; QUERY: 1, ANSWER: 2, AUTHORITY: 0, ADDITIONAL: 1
+;; WARNING: recursion requested but not available
+
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags: do; udp: 1232
+; COOKIE: ea751dcce0babdd5010000006ac43ea18843ad7398865d0f (good)
+;; QUESTION SECTION:
+;nsec3rsasha1-nsec3.interop.	IN	SOA
+
+;; ANSWER SECTION:
+nsec3rsasha1-nsec3.interop. 3600 IN	SOA	ns1.nsec3rsasha1-nsec3.interop. hostmaster.nsec3rsasha1-nsec3.interop. 2026100401 7200 3600 1209600 300
+nsec3rsasha1-nsec3.interop. 3600 IN	RRSIG	SOA 7 2 3600 20361003001932 20261005231932 61983 nsec3rsasha1-nsec3.interop. HPah4yfp+t/lutVUccCykQ38Ri8imHfjs4GUkfmCVIJtcC33RGTW6seC s6xWPd8MbbaJpmblrnYy7eqN2nZGqXbE3kLcoqwBPEE6FKSx8kt4F4eO dPy47DmzTiCvE2qliQG6+J/y+B6UwCwyLwVg1mEsXOao8+COerXw0kXS c7A=
+
+;; Query time: 0 msec
+;; SERVER: 127.0.0.1#5350(127.0.0.1) (UDP)
+;; WHEN: Tue Oct 06 00:19:45 UTC 2026
+;; MSG SIZE  rcvd: 320
+

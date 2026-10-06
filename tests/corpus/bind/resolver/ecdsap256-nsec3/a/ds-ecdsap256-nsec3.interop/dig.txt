@@ -1,0 +1,24 @@
+
+; <<>> DiG 9.18.39-0ubuntu0.24.04.7-Ubuntu <<>> @127.0.0.1 -p 5450 +tries=1 +time=5 +dnssec +cdflag ecdsap256-nsec3.interop. DS
+; (1 server found)
+;; global options: +cmd
+;; Got answer:
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 51957
+;; flags: qr rd ra ad cd; QUERY: 1, ANSWER: 3, AUTHORITY: 0, ADDITIONAL: 1
+
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags: do; udp: 1232
+; COOKIE: b3183b46152fcfff010000006ac43eb086d0683d5f6ddb32 (good)
+;; QUESTION SECTION:
+;ecdsap256-nsec3.interop.	IN	DS
+
+;; ANSWER SECTION:
+ecdsap256-nsec3.interop. 3600	IN	DS	34368 13 4 95C3EF5F7CEAE0129EABC6A1F114029908F14194892A1F8C4E977CB9 D02E524305EBBC900DABAD66F345E36F7F891FD3
+ecdsap256-nsec3.interop. 3600	IN	DS	34368 13 2 2FBA6C90B605CC89CF76B199CDEBD4CF8DB7A9F5D6D8BE5789C2CF7E AAA701C8
+ecdsap256-nsec3.interop. 3600	IN	RRSIG	DS 13 2 3600 20361003001932 20261005231932 6169 interop. 7IvS+VaBa3SNMCzAcJh4OAOHHyoKiZTF23tEu60Mp0Pms3QcoqQLPtEt Io7yI4RqRrCh48XMk4ESk4+BrWIvVA==
+
+;; Query time: 0 msec
+;; SERVER: 127.0.0.1#5450(127.0.0.1) (UDP)
+;; WHEN: Tue Oct 06 00:20:00 UTC 2026
+;; MSG SIZE  rcvd: 295
+

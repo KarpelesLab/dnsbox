@@ -1,0 +1,1 @@
+dig +tcp +norec nid.alltypes.example. NID

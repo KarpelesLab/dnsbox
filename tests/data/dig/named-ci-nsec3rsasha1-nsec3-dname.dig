@@ -1,0 +1,14 @@
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 47422
+;; flags: qr aa rd; QUERY: 1, ANSWER: 3, AUTHORITY: 0, ADDITIONAL: 1
+;; WARNING: recursion requested but not available
+
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags: do; udp: 1232
+; COOKIE: 90ee2f630a890172010000006ac43ea167d14d93cbcbc40a
+;; QUESTION SECTION:
+;x.dname.nsec3rsasha1-nsec3.interop. IN	A
+
+;; ANSWER SECTION:
+dname.nsec3rsasha1-nsec3.interop. 3600 IN DNAME	example.net.
+dname.nsec3rsasha1-nsec3.interop. 3600 IN RRSIG	DNAME 7 3 3600 20361003001932 20261005231932 61983 nsec3rsasha1-nsec3.interop. nb8TYU95xKyrsH9mLzkF7Enp7nz6t1S2lTXhvbGabarDyelRXlC5gWQ2 d4LBr4ELS8iLRvYNVt36eInxjMvfeu6FbAUUwXPxDZdDz0hULYUcDQX1 +MhoaHZJw1QD3bXxGPmNM2rGsZ58YuYt1D1Zwm26T9O64qCHbXLckPL3 55g=
+x.dname.nsec3rsasha1-nsec3.interop. 3600 IN CNAME x.example.net.

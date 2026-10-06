@@ -1,0 +1,11 @@
+
+; <<>> DiG 9.18.39-0ubuntu0.24.04.7-Ubuntu <<>> @127.0.0.1 -p 5350 +tries=1 +time=5 -y hmac-sha256:hmac-sha256.key:AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8= dyn.interop. IXFR=2026100608
+; (1 server found)
+;; global options: +cmd
+dyn.interop.		3600	IN	SOA	ns1.dyn.interop. hostmaster.dyn.interop. 2026100608 7200 3600 1209600 300
+hmac-sha256.key.	0	ANY	TSIG	hmac-sha256. 1791245994 300 32 W54exCOeNOkVBMsXG4amszx0Slgs0teJAtdusUseqcU= 26613 NOERROR 0 
+;; Query time: 0 msec
+;; SERVER: 127.0.0.1#5350(127.0.0.1) (TCP)
+;; WHEN: Tue Oct 06 00:19:54 UTC 2026
+;; XFR size: 1 records (messages 1, bytes 207)
+

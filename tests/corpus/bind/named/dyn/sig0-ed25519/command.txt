@@ -1,0 +1,2 @@
+nsupdate -k /home/runner/work/_temp/interop-bind/sig0/Ksig0-ed25519.dyn.interop.+015+20029.private
+exit 2

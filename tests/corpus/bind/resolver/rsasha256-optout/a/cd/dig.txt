@@ -1,0 +1,23 @@
+
+; <<>> DiG 9.18.39-0ubuntu0.24.04.7-Ubuntu <<>> @127.0.0.1 -p 5450 +tries=1 +time=5 +dnssec +cdflag www.rsasha256-optout.interop. A
+; (1 server found)
+;; global options: +cmd
+;; Got answer:
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 62059
+;; flags: qr rd ra ad cd; QUERY: 1, ANSWER: 2, AUTHORITY: 0, ADDITIONAL: 1
+
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags: do; udp: 1232
+; COOKIE: 4a8447b2e8c5c94f010000006ac43eaec40c705b013a3e5a (good)
+;; QUESTION SECTION:
+;www.rsasha256-optout.interop.	IN	A
+
+;; ANSWER SECTION:
+www.rsasha256-optout.interop. 3600 IN	A	192.0.2.80
+www.rsasha256-optout.interop. 3600 IN	RRSIG	A 8 3 3600 20361003001932 20261005231932 44284 rsasha256-optout.interop. Oks707JP9/MHSachVz/RmGvYRxnuVLiC0qMrg+PJHcOx273ZgSqqcrvZ Qmq6ycMEvUlQ7GewlxaaeXuay9p6ehAnzsx7a6OL9Yn3WsWlU5xPQbjv 80uVVxIo0semEmpnv7jyVgrvSbC3DUK5B3Qi5LTjLms9YwrjWGbXFfLo OF0=
+
+;; Query time: 0 msec
+;; SERVER: 127.0.0.1#5450(127.0.0.1) (UDP)
+;; WHEN: Tue Oct 06 00:19:58 UTC 2026
+;; MSG SIZE  rcvd: 285
+

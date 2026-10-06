@@ -1,0 +1,31 @@
+
+; <<>> DiG 9.18.39-0ubuntu0.24.04.7-Ubuntu <<>> @127.0.0.1 -p 5350 +tries=1 +time=5 +tcp +norec https.alltypes.example. HTTPS
+; (1 server found)
+;; global options: +cmd
+;; Got answer:
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 8684
+;; flags: qr aa; QUERY: 1, ANSWER: 2, AUTHORITY: 2, ADDITIONAL: 3
+
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags:; udp: 1232
+; COOKIE: 72783d1df12bcb72010000006ac43ea8c8350d8562ce123e (good)
+;; QUESTION SECTION:
+;https.alltypes.example.		IN	HTTPS
+
+;; ANSWER SECTION:
+https.alltypes.example.	3600	IN	HTTPS	1 . alpn="h3,h2" ipv4hint=104.16.132.229,104.16.133.229 ipv6hint=2606:4700::6810:84e5,2606:4700::6810:85e5
+https.alltypes.example.	3600	IN	HTTPS	0 cdn.example.
+
+;; AUTHORITY SECTION:
+alltypes.example.	3600	IN	NS	ns1.alltypes.example.
+alltypes.example.	3600	IN	NS	ns2.example.net.
+
+;; ADDITIONAL SECTION:
+ns1.alltypes.example.	3600	IN	A	192.0.2.53
+ns1.alltypes.example.	3600	IN	AAAA	2001:db8::53
+
+;; Query time: 0 msec
+;; SERVER: 127.0.0.1#5350(127.0.0.1) (TCP)
+;; WHEN: Tue Oct 06 00:19:52 UTC 2026
+;; MSG SIZE  rcvd: 270
+

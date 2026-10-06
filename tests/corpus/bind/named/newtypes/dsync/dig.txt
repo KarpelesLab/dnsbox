@@ -1,0 +1,23 @@
+
+; <<>> DiG 9.18.39-0ubuntu0.24.04.7-Ubuntu <<>> @127.0.0.1 -p 5350 +tries=1 +time=5 _dsync.newtypes.example. TYPE66
+; (1 server found)
+;; global options: +cmd
+;; Got answer:
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 41549
+;; flags: qr aa rd; QUERY: 1, ANSWER: 1, AUTHORITY: 0, ADDITIONAL: 1
+;; WARNING: recursion requested but not available
+
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags:; udp: 1232
+; COOKIE: b401fc81b37ef2db010000006ac43ea9fc55c5150ac44aef (good)
+;; QUESTION SECTION:
+;_dsync.newtypes.example.	IN	DSYNC
+
+;; ANSWER SECTION:
+_dsync.newtypes.example. 3600	IN	DSYNC	CSYNC NOTIFY 5360 csync-scanner.example.net.
+
+;; Query time: 0 msec
+;; SERVER: 127.0.0.1#5350(127.0.0.1) (UDP)
+;; WHEN: Tue Oct 06 00:19:53 UTC 2026
+;; MSG SIZE  rcvd: 124
+

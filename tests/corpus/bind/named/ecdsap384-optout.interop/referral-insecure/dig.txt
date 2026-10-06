@@ -1,0 +1,30 @@
+
+; <<>> DiG 9.18.39-0ubuntu0.24.04.7-Ubuntu <<>> @127.0.0.1 -p 5350 +tries=1 +time=5 +dnssec host.insecure.ecdsap384-optout.interop. A
+; (1 server found)
+;; global options: +cmd
+;; Got answer:
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 36998
+;; flags: qr rd; QUERY: 1, ANSWER: 0, AUTHORITY: 5, ADDITIONAL: 2
+;; WARNING: recursion requested but not available
+
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags: do; udp: 1232
+; COOKIE: db5dc91757035980010000006ac43ea4d3b9d74466779841 (good)
+;; QUESTION SECTION:
+;host.insecure.ecdsap384-optout.interop.	IN A
+
+;; AUTHORITY SECTION:
+insecure.ecdsap384-optout.interop. 3600	IN NS	ns.insecure.ecdsap384-optout.interop.
+4JBI9TT0TS2RPGGKMVD220MPJROMH8S1.ecdsap384-optout.interop. 300 IN NSEC3	1 1 0 - 65Q5P9F5VAIEDDN37SI44FQKEJSSR1Q8 NS SOA MX TXT LOC SSHFP RRSIG DNSKEY NSEC3PARAM HTTPS CAA
+4JBI9TT0TS2RPGGKMVD220MPJROMH8S1.ecdsap384-optout.interop. 300 IN RRSIG	NSEC3 14 3 300 20361003001932 20261005231932 38014 ecdsap384-optout.interop. basYkMn05r6dmKIsq9EBggphWppMEdmET51SbXzPacnN5pOvbXhCNpW0 O9TPUVwybZc+IlcWhnVowxpsYZCFWbfIFaav0AeEjCPvDRrvcm+HNB0e J9Jpbf0FGm2SlAvE
+QDL64A39UPJGCGJR0UJC9S9IQCBCI1AG.ecdsap384-optout.interop. 300 IN NSEC3	1 1 0 - TE3DIUVL6S1KT8QC107RTNJ8PTHJV69N CNAME RRSIG
+QDL64A39UPJGCGJR0UJC9S9IQCBCI1AG.ecdsap384-optout.interop. 300 IN RRSIG	NSEC3 14 3 300 20361003001932 20261005231932 38014 ecdsap384-optout.interop. bRGG7mFANcASKv0b2tS4wwo114dhg5DOyf9JBSNLecXhb+p1WghHJ0u+ Wn5kq/neLJZUIOwrR7tFcZJXlzw7NKRZOlRDSs6Rjl203g3Al2JyJ/q3 cvFZysI4OtqFDC+z
+
+;; ADDITIONAL SECTION:
+ns.insecure.ecdsap384-optout.interop. 3600 IN A	192.0.2.98
+
+;; Query time: 0 msec
+;; SERVER: 127.0.0.1#5350(127.0.0.1) (UDP)
+;; WHEN: Tue Oct 06 00:19:48 UTC 2026
+;; MSG SIZE  rcvd: 620
+

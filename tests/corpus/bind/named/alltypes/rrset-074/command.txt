@@ -1,0 +1,1 @@
+dig +tcp +norec smimea.alltypes.example. SMIMEA

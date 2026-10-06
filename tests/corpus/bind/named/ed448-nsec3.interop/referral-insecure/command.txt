@@ -1,0 +1,1 @@
+dig +dnssec host.insecure.ed448-nsec3.interop. A

@@ -1,0 +1,25 @@
+
+; <<>> DiG 9.18.39-0ubuntu0.24.04.7-Ubuntu <<>> @127.0.0.1 -p 5350 +tries=1 +time=5 +dnssec x.dname.ecdsap384-optout.interop. A
+; (1 server found)
+;; global options: +cmd
+;; Got answer:
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 2626
+;; flags: qr aa rd; QUERY: 1, ANSWER: 3, AUTHORITY: 0, ADDITIONAL: 1
+;; WARNING: recursion requested but not available
+
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags: do; udp: 1232
+; COOKIE: f440974f22e0da7d010000006ac43ea42098724fec68e24f (good)
+;; QUESTION SECTION:
+;x.dname.ecdsap384-optout.interop. IN	A
+
+;; ANSWER SECTION:
+dname.ecdsap384-optout.interop.	3600 IN	DNAME	example.net.
+dname.ecdsap384-optout.interop.	3600 IN	RRSIG	DNAME 14 3 3600 20361003001932 20261005231932 38014 ecdsap384-optout.interop. tBkEdqD6MNt79BEyijxA9RHx7wvYPSgF4qY5C8M75F4z0nw6Cu0tnU9t bwT+ZZysmSGoAStAY6hCaNr5extuMNoGbFTA4nhBI9e3NQ8hFfAXh1Kj R4gJDH1JdQp6FYWJ
+x.dname.ecdsap384-optout.interop. 3600 IN CNAME	x.example.net.
+
+;; Query time: 0 msec
+;; SERVER: 127.0.0.1#5350(127.0.0.1) (UDP)
+;; WHEN: Tue Oct 06 00:19:48 UTC 2026
+;; MSG SIZE  rcvd: 282
+

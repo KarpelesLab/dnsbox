@@ -1,0 +1,1 @@
+dig +dnssec +cdflag www.unsigned.ecdsap256-nsec3.interop. A

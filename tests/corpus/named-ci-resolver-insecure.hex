@@ -1,0 +1,4 @@
+# named 9.18.39-0ubuntu0.24.04.7-Ubuntu (validating resolver) on the interop CI runner (run 37393349277, 2026-10-06): dig +dnssec www.insecure.interop. A
+# tests/corpus/bind/keep.py from resolver/insecure/a/answer (tests/corpus/README.md)
+78bb818000010001000000010377777708696e73656375726507696e7465726f700000010001c00c0001000100000e10
+0004c000025000002904d000008000001c000a00183c3ba703621cccc2010000006ac43eb732d454f4d81fa838

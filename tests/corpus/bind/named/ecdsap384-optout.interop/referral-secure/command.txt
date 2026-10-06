@@ -1,0 +1,1 @@
+dig +dnssec host.secure.ecdsap384-optout.interop. A

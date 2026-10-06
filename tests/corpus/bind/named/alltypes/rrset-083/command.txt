@@ -1,0 +1,1 @@
+dig +tcp +norec txt.alltypes.example. TXT

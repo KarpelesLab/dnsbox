@@ -1,0 +1,1 @@
+dig +tcp +norec svcb.alltypes.example. SVCB

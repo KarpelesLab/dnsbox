@@ -1,0 +1,23 @@
+$ORIGIN .
+$TTL 3600	; 1 hour
+newtypes.example	IN SOA	ns1.newtypes.example. hostmaster.newtypes.example. (
+				2026100501 ; serial
+				7200       ; refresh (2 hours)
+				900        ; retry (15 minutes)
+				1209600    ; expire (2 weeks)
+				3600       ; minimum (1 hour)
+				)
+			NS	ns1.newtypes.example.
+$ORIGIN newtypes.example.
+_dsync			DSYNC	CSYNC NOTIFY 5360 csync-scanner.example.net.
+$ORIGIN _dsync.newtypes.example.
+*			DSYNC	CDS NOTIFY 5359 cds-scanner.example.net.
+child			DSYNC	CDS NOTIFY 5300 rr-endpoint.newtypes.example.
+$ORIGIN newtypes.example.
+amtrelay		AMTRELAY 0 0 0
+			AMTRELAY 10 0 1 203.0.113.15
+			AMTRELAY 10 0 2 2001:db8::15
+			AMTRELAY 128 1 3 amtrelays.example.com.
+doa			DOA	0 1 2 "" aHR0cHM6Ly93d3cuaXNjLm9yZy8=
+			DOA	1234567890 100 1 "text/plain" -
+ns1			A	192.0.2.53

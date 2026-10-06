@@ -1,0 +1,31 @@
+
+; <<>> DiG 9.18.39-0ubuntu0.24.04.7-Ubuntu <<>> @127.0.0.1 -p 5350 +tries=1 +time=5 +tcp +norec kx.alltypes.example. KX
+; (1 server found)
+;; global options: +cmd
+;; Got answer:
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 19991
+;; flags: qr aa; QUERY: 1, ANSWER: 1, AUTHORITY: 2, ADDITIONAL: 4
+
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags:; udp: 1232
+; COOKIE: a27bcb3ff47ee7cf010000006ac43ea8bc3326fe0feb2b4d (good)
+;; QUESTION SECTION:
+;kx.alltypes.example.		IN	KX
+
+;; ANSWER SECTION:
+kx.alltypes.example.	3600	IN	KX	10 a.alltypes.example.
+
+;; AUTHORITY SECTION:
+alltypes.example.	3600	IN	NS	ns2.example.net.
+alltypes.example.	3600	IN	NS	ns1.alltypes.example.
+
+;; ADDITIONAL SECTION:
+a.alltypes.example.	3600	IN	A	192.0.2.1
+ns1.alltypes.example.	3600	IN	A	192.0.2.53
+ns1.alltypes.example.	3600	IN	AAAA	2001:db8::53
+
+;; Query time: 0 msec
+;; SERVER: 127.0.0.1#5350(127.0.0.1) (TCP)
+;; WHEN: Tue Oct 06 00:19:52 UTC 2026
+;; MSG SIZE  rcvd: 217
+

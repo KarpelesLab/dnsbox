@@ -1,0 +1,1 @@
+dig +cookie=0102030405060708a1a2a3a4a5a6a7a8a9aaabacadaeafb0 ed25519-nsec.interop. SOA

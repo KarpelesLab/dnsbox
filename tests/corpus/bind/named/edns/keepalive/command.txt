@@ -1,0 +1,1 @@
+dig +tcp +keepalive ed25519-nsec.interop. SOA

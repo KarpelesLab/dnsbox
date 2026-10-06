@@ -1,0 +1,12 @@
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 17427
+;; flags: qr aa rd; QUERY: 1, ANSWER: 1, AUTHORITY: 0, ADDITIONAL: 1
+;; WARNING: recursion requested but not available
+
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags:; udp: 1232
+; COOKIE: 52328c977d0e9513010000006ac43ea900a329c946b89a7e
+;; QUESTION SECTION:
+;version.bind.			CH	TXT
+
+;; ANSWER SECTION:
+version.bind.		0	CH	TXT	"dnsbox-interop"

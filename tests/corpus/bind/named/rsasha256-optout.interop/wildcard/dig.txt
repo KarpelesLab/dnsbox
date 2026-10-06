@@ -1,0 +1,28 @@
+
+; <<>> DiG 9.18.39-0ubuntu0.24.04.7-Ubuntu <<>> @127.0.0.1 -p 5350 +tries=1 +time=5 +dnssec host.wild.rsasha256-optout.interop. A
+; (1 server found)
+;; global options: +cmd
+;; Got answer:
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 22209
+;; flags: qr aa rd; QUERY: 1, ANSWER: 2, AUTHORITY: 2, ADDITIONAL: 1
+;; WARNING: recursion requested but not available
+
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags: do; udp: 1232
+; COOKIE: e4b02fbaf7225e2a010000006ac43ea2ce6e1910280b1349 (good)
+;; QUESTION SECTION:
+;host.wild.rsasha256-optout.interop. IN	A
+
+;; ANSWER SECTION:
+host.wild.rsasha256-optout.interop. 3600 IN A	192.0.2.42
+host.wild.rsasha256-optout.interop. 3600 IN RRSIG A 8 3 3600 20361003001932 20261005231932 44284 rsasha256-optout.interop. HpWwtY+FUasJaAT65fbIW87h92kLIFoBCdt8Czc5B8L6AgTO5W5yArtF opaFuLFenk0gQv+lRlWlwSIq8jqJqbxAPuMA+xCPAq0qVvyZPi8TiPwd 709LRfR7RvJLnlB+JRAmjIFVFLTe9IUMFX33d/8eHDoLe5rqK0jId6Jl Q5Q=
+
+;; AUTHORITY SECTION:
+F32CICG094LISBI9H3Q42CG31L0BO887.rsasha256-optout.interop. 300 IN NSEC3	1 1 0 - LBVL33RU27JCTHUA5NTOUCTS78GF0Q34 RRSIG TLSA
+F32CICG094LISBI9H3Q42CG31L0BO887.rsasha256-optout.interop. 300 IN RRSIG	NSEC3 8 3 300 20361003001932 20261005231932 44284 rsasha256-optout.interop. SF7a2JYHxFaq/9r0EMEXCXNQa64G0l1LN4n2NF30Bf4eUvyALM9PqgQU Hyj1lEotFjEsu3RoASUOOm5NQCNV2e8V4hirNcmTjsqIkNGFrpSjsAh8 w+oF02jFJg74OMxSiSTZfXqp2oXkiUO1eN1DDV2IbFzngCeTpujoS25g 3Pk=
+
+;; Query time: 0 msec
+;; SERVER: 127.0.0.1#5350(127.0.0.1) (UDP)
+;; WHEN: Tue Oct 06 00:19:46 UTC 2026
+;; MSG SIZE  rcvd: 555
+

@@ -1,0 +1,1 @@
+dig +dnssec host.wild.rsasha256-optout.interop. MX

@@ -1,0 +1,39 @@
+
+; <<>> DiG 9.18.39-0ubuntu0.24.04.7-Ubuntu <<>> @127.0.0.1 -p 5350 +tries=1 +time=5 +tcp +norec svcb.alltypes.example. SVCB
+; (1 server found)
+;; global options: +cmd
+;; Got answer:
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 18731
+;; flags: qr aa; QUERY: 1, ANSWER: 10, AUTHORITY: 2, ADDITIONAL: 3
+
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags:; udp: 1232
+; COOKIE: abebc2ab6ef7e4e3010000006ac43ea9afc57fca3dd03dbe (good)
+;; QUESTION SECTION:
+;svcb.alltypes.example.		IN	SVCB
+
+;; ANSWER SECTION:
+svcb.alltypes.example.	3600	IN	SVCB	1 doh.example. alpn="h2" key7="/dns-query{?dns}"
+svcb.alltypes.example.	3600	IN	SVCB	1 foo.alltypes.example. key667="hello\210qoo"
+svcb.alltypes.example.	3600	IN	SVCB	0 svc.example.
+svcb.alltypes.example.	3600	IN	SVCB	1 foo.alltypes.example. ipv6hint=2001:db8::1,2001:db8::53:1
+svcb.alltypes.example.	3600	IN	SVCB	1 foo.alltypes.example. port=53
+svcb.alltypes.example.	3600	IN	SVCB	1 .
+svcb.alltypes.example.	3600	IN	SVCB	1 foo.alltypes.example. key667="hello"
+svcb.alltypes.example.	3600	IN	SVCB	1 dot.example. alpn="dot" no-default-alpn port=853 ech=AEX+DQBBpQAgACCW2/dfOBZAtQU55/KYxUYStyuA6Yg+1Sjqb4o1q7HY0wAEAAEAAQASY2xvdWRmbGFyZS1lY2guY29tAAA=
+svcb.alltypes.example.	3600	IN	SVCB	16 foo.example.org. mandatory=alpn,ipv4hint alpn="h2,h3-19" ipv4hint=192.0.2.1
+svcb.alltypes.example.	3600	IN	SVCB	16 foo.example.org. alpn="f\\\\oo\\,bar,h2"
+
+;; AUTHORITY SECTION:
+alltypes.example.	3600	IN	NS	ns1.alltypes.example.
+alltypes.example.	3600	IN	NS	ns2.example.net.
+
+;; ADDITIONAL SECTION:
+ns1.alltypes.example.	3600	IN	A	192.0.2.53
+ns1.alltypes.example.	3600	IN	AAAA	2001:db8::53
+
+;; Query time: 0 msec
+;; SERVER: 127.0.0.1#5350(127.0.0.1) (TCP)
+;; WHEN: Tue Oct 06 00:19:53 UTC 2026
+;; MSG SIZE  rcvd: 700
+

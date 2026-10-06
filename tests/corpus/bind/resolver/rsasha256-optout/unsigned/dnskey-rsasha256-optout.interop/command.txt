@@ -1,0 +1,1 @@
+dig +dnssec +cdflag rsasha256-optout.interop. DNSKEY

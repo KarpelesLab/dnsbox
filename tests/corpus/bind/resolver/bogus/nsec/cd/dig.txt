@@ -1,0 +1,27 @@
+
+; <<>> DiG 9.18.39-0ubuntu0.24.04.7-Ubuntu <<>> @127.0.0.1 -p 5450 +tries=1 +time=5 +dnssec +cdflag nosuch.bogus-nsec.interop. A
+; (1 server found)
+;; global options: +cmd
+;; Got answer:
+;; ->>HEADER<<- opcode: QUERY, status: NXDOMAIN, id: 4950
+;; flags: qr rd ra cd; QUERY: 1, ANSWER: 0, AUTHORITY: 6, ADDITIONAL: 1
+
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags: do; udp: 1232
+; COOKIE: 92b666ad31de93a8010000006ac43eb7f45b3a414a37ec33 (good)
+;; QUESTION SECTION:
+;nosuch.bogus-nsec.interop.	IN	A
+
+;; AUTHORITY SECTION:
+mail.bogus-nsec.interop. 300	IN	RRSIG	NSEC 14 3 300 20361003001932 20261005231932 41051 bogus-nsec.interop. MA1Jusaudn/QNUDFXdyzVjPrbVO40IMG+94r+cKhjdJKi/RoM40G2Geu LxFGOJ26HieXUUHIWqjuhPXTaYJIFMI91Hz2rAk3L+bHNUVTXQtLtZvS O2bmvb0qIqZnZBha
+mail.bogus-nsec.interop. 300	IN	NSEC	ns1.bogus-nsec.interop. A RRSIG NSEC SPF
+bogus-nsec.interop.	300	IN	SOA	ns1.bogus-nsec.interop. hostmaster.bogus-nsec.interop. 2026100401 7200 3600 1209600 300
+bogus-nsec.interop.	300	IN	RRSIG	SOA 14 2 3600 20361003001932 20261005231932 41051 bogus-nsec.interop. mZJxqFriVS9Ene4encKz2BYTpk2LsWiO97ha0sZLmQO1aXWFtFm6Ndux LaW9dbLiRMatahfgnNjUfRn3ee8QhhaDCQrJBZJW6XcVJrbxU6YrK5Dg BZqPAHoehTizLvb7
+bogus-nsec.interop.	300	IN	RRSIG	NSEC 14 2 300 20361003001932 20261005231932 41051 bogus-nsec.interop. 69jODZWymJ5FYC5TAoNsXXLVf1BItrjqVQ2sqoaNJGZ9Gw+EBLIR2Wtj YOCsmdONcLldgjx51vEMAhdoLS0vSmo9+bcSt+1Cjr4pWdwbeb65IJzR Q8MtZ7oHE1e5gM/D
+bogus-nsec.interop.	300	IN	NSEC	_svc.bogus-nsec.interop. NS SOA MX TXT LOC SSHFP RRSIG NSEC DNSKEY HTTPS SPF CAA
+
+;; Query time: 1 msec
+;; SERVER: 127.0.0.1#5450(127.0.0.1) (UDP)
+;; WHEN: Tue Oct 06 00:20:07 UTC 2026
+;; MSG SIZE  rcvd: 678
+

@@ -1,0 +1,1 @@
+dig +ednsopt=65001:c0ffee ed25519-nsec.interop. SOA

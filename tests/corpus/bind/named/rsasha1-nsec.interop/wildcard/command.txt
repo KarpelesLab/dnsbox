@@ -1,0 +1,1 @@
+dig +dnssec host.wild.rsasha1-nsec.interop. A

@@ -1,0 +1,1 @@
+dig CH TXT version.bind.

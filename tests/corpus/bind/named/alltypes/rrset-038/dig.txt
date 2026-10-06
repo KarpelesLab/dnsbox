@@ -1,0 +1,33 @@
+
+; <<>> DiG 9.18.39-0ubuntu0.24.04.7-Ubuntu <<>> @127.0.0.1 -p 5350 +tries=1 +time=5 +tcp +norec ipseckey.alltypes.example. IPSECKEY
+; (1 server found)
+;; global options: +cmd
+;; Got answer:
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 38392
+;; flags: qr aa; QUERY: 1, ANSWER: 4, AUTHORITY: 2, ADDITIONAL: 3
+
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags:; udp: 1232
+; COOKIE: cae9f3f1b02d3094010000006ac43ea8b8e60710d233f880 (good)
+;; QUESTION SECTION:
+;ipseckey.alltypes.example.	IN	IPSECKEY
+
+;; ANSWER SECTION:
+ipseckey.alltypes.example. 3600	IN	IPSECKEY 10 2 2 2001:db8:0:8002::2000:1 AQNRU3mG7TVTO2BkR47usntb102uFJtugbo6BSGvgqt4AQ==
+ipseckey.alltypes.example. 3600	IN	IPSECKEY 10 3 2 gw.alltypes.example. AQNRU3mG7TVTO2BkR47usntb102uFJtugbo6BSGvgqt4AQ==
+ipseckey.alltypes.example. 3600	IN	IPSECKEY 10 0 2 . AQNRU3mG7TVTO2BkR47usntb102uFJtugbo6BSGvgqt4AQ==
+ipseckey.alltypes.example. 3600	IN	IPSECKEY 10 1 2 192.0.2.38 AQNRU3mG7TVTO2BkR47usntb102uFJtugbo6BSGvgqt4AQ==
+
+;; AUTHORITY SECTION:
+alltypes.example.	3600	IN	NS	ns1.alltypes.example.
+alltypes.example.	3600	IN	NS	ns2.example.net.
+
+;; ADDITIONAL SECTION:
+ns1.alltypes.example.	3600	IN	A	192.0.2.53
+ns1.alltypes.example.	3600	IN	AAAA	2001:db8::53
+
+;; Query time: 0 msec
+;; SERVER: 127.0.0.1#5350(127.0.0.1) (TCP)
+;; WHEN: Tue Oct 06 00:19:52 UTC 2026
+;; MSG SIZE  rcvd: 410
+

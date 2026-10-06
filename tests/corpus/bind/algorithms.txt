@@ -1,0 +1,12 @@
+RSAMD5 1 unsupported: dnssec-keygen: fatal: unsupported algorithm: RSAMD5
+DSA 3 unsupported: dnssec-keygen: fatal: unsupported algorithm: DSA
+RSASHA1 5 ok
+NSEC3DSA 6 unsupported: dnssec-keygen: fatal: unsupported algorithm: NSEC3DSA
+NSEC3RSASHA1 7 ok
+RSASHA256 8 ok
+RSASHA512 10 ok
+ECCGOST 12 unsupported: dnssec-keygen: fatal: unsupported algorithm: ECCGOST
+ECDSAP256SHA256 13 ok
+ECDSAP384SHA384 14 ok
+ED25519 15 ok
+ED448 16 ok

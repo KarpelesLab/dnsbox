@@ -1,0 +1,7 @@
+Loading zone 'rsasha256-optout.interop.' from file '/home/runner/work/_temp/interop-bind/dnsbox/rsasha256-optout.interop.zone'
+
+Verifying the zone using the following algorithms:
+- RSASHA256
+Zone fully signed:
+Algorithm: RSASHA256: KSKs: 1 active, 0 stand-by, 0 revoked
+                      ZSKs: 1 active, 0 stand-by, 0 revoked

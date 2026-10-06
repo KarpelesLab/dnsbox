@@ -966,7 +966,13 @@ common traits, `Display`/`FromStr` pairs, iteration by reference).
     runner (`tests/corpus/knot/run.sh`): Knot signs, serves and transfers,
     Unbound validates, dnsbox's `interop_probe` queries both, and
     `tests/interop_knot.rs` checks everything (a subset is kept in
-    `tests/corpus/knot/` for the offline run).
+    `tests/corpus/knot/` for the offline run). Its BIND 9 job
+    (`tests/corpus/bind/run.sh`) does the same with dnssec-keygen,
+    dnssec-signzone, named-checkzone, named-compilezone, `named` (as an
+    authoritative server and as a validating resolver), dig, nsupdate
+    and dnsbox's `bind_probe`, checked by `tests/interop_bind.rs` (kept in
+    `tests/corpus/bind/`), and runs dnspython's cross-check
+    (`gen_rdata.py --check`) with the distribution's dnspython.
   - `tests/no_alloc.rs` — the hot path under a counting allocator, run with
     `--no-default-features` in CI.
   - `benches/` — separate package: criterion comparisons against

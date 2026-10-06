@@ -1,0 +1,1 @@
+dig +dnssec www.rsasha256-optout.interop. A
