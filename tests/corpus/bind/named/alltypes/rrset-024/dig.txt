@@ -3,12 +3,12 @@
 ; (1 server found)
 ;; global options: +cmd
 ;; Got answer:
-;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 56743
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 37585
 ;; flags: qr aa; QUERY: 1, ANSWER: 3, AUTHORITY: 0, ADDITIONAL: 1
 
 ;; OPT PSEUDOSECTION:
 ; EDNS: version: 0, flags:; udp: 1232
-; COOKIE: 288c315ec4dc464e010000006ac43ea819b2489caebc3e76 (good)
+; COOKIE: 0163ee82c0d59a3a010000006ac4460a0a59a22b3c99387e (good)
 ;; QUESTION SECTION:
 ;dnskey.alltypes.example.	IN	DNSKEY
 
@@ -19,6 +19,6 @@ dnskey.alltypes.example. 3600	IN	DNSKEY	256 3 15 l02Woi0iS8Aa25FQkUd9RMzZHJpBoRQ
 
 ;; Query time: 0 msec
 ;; SERVER: 127.0.0.1#5350(127.0.0.1) (TCP)
-;; WHEN: Tue Oct 06 00:19:52 UTC 2026
+;; WHEN: Tue Oct 06 00:51:22 UTC 2026
 ;; MSG SIZE  rcvd: 484
 

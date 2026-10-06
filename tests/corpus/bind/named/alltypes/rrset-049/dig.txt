@@ -3,12 +3,12 @@
 ; (1 server found)
 ;; global options: +cmd
 ;; Got answer:
-;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 17768
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 37953
 ;; flags: qr aa; QUERY: 1, ANSWER: 1, AUTHORITY: 2, ADDITIONAL: 3
 
 ;; OPT PSEUDOSECTION:
 ; EDNS: version: 0, flags:; udp: 1232
-; COOKIE: 399d21e3ddc96f2c010000006ac43ea8755529c0d73fe995 (good)
+; COOKIE: 00f26bd7e1fbdb7b010000006ac4460be23fdc074aec4970 (good)
 ;; QUESTION SECTION:
 ;mr.alltypes.example.		IN	MR
 
@@ -25,6 +25,6 @@ ns1.alltypes.example.	3600	IN	AAAA	2001:db8::53
 
 ;; Query time: 0 msec
 ;; SERVER: 127.0.0.1#5350(127.0.0.1) (TCP)
-;; WHEN: Tue Oct 06 00:19:52 UTC 2026
+;; WHEN: Tue Oct 06 00:51:23 UTC 2026
 ;; MSG SIZE  rcvd: 183
 

@@ -3,13 +3,13 @@
 ; (1 server found)
 ;; global options: +cmd
 ;; Got answer:
-;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 29147
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 11390
 ;; flags: qr aa rd; QUERY: 1, ANSWER: 1, AUTHORITY: 0, ADDITIONAL: 1
 ;; WARNING: recursion requested but not available
 
 ;; OPT PSEUDOSECTION:
 ; EDNS: version: 0, flags:; udp: 1232
-; COOKIE: 71ad65fbc45be987010000006ac43ea9df08b3c75c86cb9a (good)
+; COOKIE: 5ed11e3419956fe1010000006ac4460c56f8f30f37e689cd (good)
 ; CLIENT-SUBNET: 0.0.0.0/0/0
 ;; QUESTION SECTION:
 ;ed25519-nsec.interop.		IN	SOA
@@ -19,6 +19,6 @@ ed25519-nsec.interop.	3600	IN	SOA	ns1.ed25519-nsec.interop. hostmaster.ed25519-n
 
 ;; Query time: 0 msec
 ;; SERVER: 127.0.0.1#5350(127.0.0.1) (UDP)
-;; WHEN: Tue Oct 06 00:19:53 UTC 2026
+;; WHEN: Tue Oct 06 00:51:24 UTC 2026
 ;; MSG SIZE  rcvd: 136
 

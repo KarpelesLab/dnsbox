@@ -3,23 +3,23 @@
 ; (1 server found)
 ;; global options: +cmd
 ;; Got answer:
-;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 22019
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 20014
 ;; flags: qr aa; QUERY: 1, ANSWER: 3, AUTHORITY: 2, ADDITIONAL: 3
 
 ;; OPT PSEUDOSECTION:
 ; EDNS: version: 0, flags:; udp: 1232
-; COOKIE: db286da892d44a4a010000006ac43ea71be374c9d1720223 (good)
+; COOKIE: ee7e27df2a1e8df3010000006ac4460a040109e7ea1e01a4 (good)
 ;; QUESTION SECTION:
 ;a6.alltypes.example.		IN	A6
 
 ;; ANSWER SECTION:
-a6.alltypes.example.	3600	IN	A6	128  prefix.alltypes.example.
-a6.alltypes.example.	3600	IN	A6	0 2001:db8::1
 a6.alltypes.example.	3600	IN	A6	64 ::1:2:3:4 prefix.alltypes.example.
+a6.alltypes.example.	3600	IN	A6	0 2001:db8::1
+a6.alltypes.example.	3600	IN	A6	128  prefix.alltypes.example.
 
 ;; AUTHORITY SECTION:
-alltypes.example.	3600	IN	NS	ns1.alltypes.example.
 alltypes.example.	3600	IN	NS	ns2.example.net.
+alltypes.example.	3600	IN	NS	ns1.alltypes.example.
 
 ;; ADDITIONAL SECTION:
 ns1.alltypes.example.	3600	IN	A	192.0.2.53
@@ -27,6 +27,6 @@ ns1.alltypes.example.	3600	IN	AAAA	2001:db8::53
 
 ;; Query time: 0 msec
 ;; SERVER: 127.0.0.1#5350(127.0.0.1) (TCP)
-;; WHEN: Tue Oct 06 00:19:51 UTC 2026
+;; WHEN: Tue Oct 06 00:51:22 UTC 2026
 ;; MSG SIZE  rcvd: 280
 

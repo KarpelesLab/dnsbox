@@ -3,22 +3,22 @@
 ; (1 server found)
 ;; global options: +cmd
 ;; Got answer:
-;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 62517
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 45622
 ;; flags: qr rd ra ad cd; QUERY: 1, ANSWER: 3, AUTHORITY: 0, ADDITIONAL: 1
 
 ;; OPT PSEUDOSECTION:
 ; EDNS: version: 0, flags: do; udp: 1232
-; COOKIE: 520d5de75a2e8275010000006ac43eb4419afc3f4aa9476f (good)
+; COOKIE: 0f04989945bda904010000006ac44617e6551803b80b22c2 (good)
 ;; QUESTION SECTION:
 ;ed25519-nsec.interop.		IN	DNSKEY
 
 ;; ANSWER SECTION:
-ed25519-nsec.interop.	3580	IN	DNSKEY	256 3 15 dKKPPMPWI1fdOIZ341jDhHdG0RgIE5A3UwB3tCsr7ss=
-ed25519-nsec.interop.	3580	IN	DNSKEY	257 3 15 m+VyrUv5/w3idTrL221OrO9WCQ9+GsmhHMsydkWwvsw=
-ed25519-nsec.interop.	3580	IN	RRSIG	DNSKEY 15 2 3600 20361003001932 20261005231932 14566 ed25519-nsec.interop. whinvPckJeD6GG5Qpg9mY0mM/mzPZQvENVHhjyuNeJ2C/QZvBGdeNkT0 /AX0ge8/lAhBvwTGLBV/syQd8z/kBA==
+ed25519-nsec.interop.	3580	IN	DNSKEY	257 3 15 5hp281FSc3WqAPCsHuWvHanmGzwTf0r/fRbcAYsS4dM=
+ed25519-nsec.interop.	3580	IN	DNSKEY	256 3 15 sN2bN2VtkS+jP+w+2Vl3L1aYz5vrGlIv75oM5RFRbrw=
+ed25519-nsec.interop.	3580	IN	RRSIG	DNSKEY 15 2 3600 20361003005101 20261005235101 30774 ed25519-nsec.interop. HJpfWv63xb8mfWW+tR/+3uIE8ufVZ3w62jOqL7cf3NWxsP9cFI/JGVft ojKGkhII9tKvuHZlXyvRGIZbhS7lCQ==
 
 ;; Query time: 0 msec
 ;; SERVER: 127.0.0.1#5450(127.0.0.1) (UDP)
-;; WHEN: Tue Oct 06 00:20:04 UTC 2026
+;; WHEN: Tue Oct 06 00:51:35 UTC 2026
 ;; MSG SIZE  rcvd: 289
 

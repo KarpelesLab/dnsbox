@@ -3,18 +3,18 @@
 ; (1 server found)
 ;; global options: +cmd
 ;; Got answer:
-;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 48156
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 5806
 ;; flags: qr aa; QUERY: 1, ANSWER: 2, AUTHORITY: 2, ADDITIONAL: 3
 
 ;; OPT PSEUDOSECTION:
 ; EDNS: version: 0, flags:; udp: 1232
-; COOKIE: f722c6c4e6393bdc010000006ac43ea8d9766259a3145daf (good)
+; COOKIE: 5915f0e8e00c4f81010000006ac4460a7f8c547614a5b40c (good)
 ;; QUESTION SECTION:
 ;hinfo.alltypes.example.		IN	HINFO
 
 ;; ANSWER SECTION:
-hinfo.alltypes.example.	3600	IN	HINFO	"Generic PC" "Linux \"6.18\""
 hinfo.alltypes.example.	3600	IN	HINFO	"RFC8482" ""
+hinfo.alltypes.example.	3600	IN	HINFO	"Generic PC" "Linux \"6.18\""
 
 ;; AUTHORITY SECTION:
 alltypes.example.	3600	IN	NS	ns1.alltypes.example.
@@ -26,6 +26,6 @@ ns1.alltypes.example.	3600	IN	AAAA	2001:db8::53
 
 ;; Query time: 0 msec
 ;; SERVER: 127.0.0.1#5350(127.0.0.1) (TCP)
-;; WHEN: Tue Oct 06 00:19:52 UTC 2026
+;; WHEN: Tue Oct 06 00:51:22 UTC 2026
 ;; MSG SIZE  rcvd: 227
 

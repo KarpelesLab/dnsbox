@@ -3,23 +3,23 @@
 ; (1 server found)
 ;; global options: +cmd
 ;; Got answer:
-;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 17389
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 46548
 ;; flags: qr aa rd; QUERY: 1, ANSWER: 3, AUTHORITY: 0, ADDITIONAL: 1
 ;; WARNING: recursion requested but not available
 
 ;; OPT PSEUDOSECTION:
 ; EDNS: version: 0, flags: do; udp: 1232
-; COOKIE: f483ed6c1eaa96a9010000006ac43ea2c7d77248b3926962 (good)
+; COOKIE: 7aca5854ac146c5f010000006ac446045d66d3a59e54bb70 (good)
 ;; QUESTION SECTION:
 ;x.dname.rsasha256-optout.interop. IN	A
 
 ;; ANSWER SECTION:
 dname.rsasha256-optout.interop.	3600 IN	DNAME	example.net.
-dname.rsasha256-optout.interop.	3600 IN	RRSIG	DNAME 8 3 3600 20361003001932 20261005231932 44284 rsasha256-optout.interop. gmkeiWfOIsuUoMZD6zJQzFuCNqPSGm8HxRE1cf6DSXA6AZy+2nojobZ8 1fzsvMdJf/4bHhUv+w8ARQMtsVRULo3zQnsVE743SDA6ogk+sNXWsQPx U6gwsO5eEouNyEGccRaFQuvBBBELtEDCRI+iFBMWr2tfgKnb6MSHj/7n nEk=
+dname.rsasha256-optout.interop.	3600 IN	RRSIG	DNAME 8 3 3600 20361003005101 20261005235101 3133 rsasha256-optout.interop. AUOcLf4FOfA64Hikyb61Ki6RDk4D3BG+vnnUdhIeTUTLyO+PgodraGB0 zki/5PLBK1ZHmHq3KWLddqg2PXYCp6uz8WnSPRaqsGWf0/l5dhHCLmko NnJjocfhv0iDkdNBJ4AkKWTlCwLEbeliQw5cUybFOnItPS6MnFzgcLDw A+0=
 x.dname.rsasha256-optout.interop. 3600 IN CNAME	x.example.net.
 
 ;; Query time: 0 msec
 ;; SERVER: 127.0.0.1#5350(127.0.0.1) (UDP)
-;; WHEN: Tue Oct 06 00:19:46 UTC 2026
+;; WHEN: Tue Oct 06 00:51:16 UTC 2026
 ;; MSG SIZE  rcvd: 314
 

@@ -3,26 +3,26 @@
 ; (1 server found)
 ;; global options: +cmd
 ;; Got answer:
-;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 14705
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 11269
 ;; flags: qr rd; QUERY: 1, ANSWER: 0, AUTHORITY: 3, ADDITIONAL: 2
 ;; WARNING: recursion requested but not available
 
 ;; OPT PSEUDOSECTION:
 ; EDNS: version: 0, flags: do; udp: 1232
-; COOKIE: 075727855d33c4fe010000006ac43ea5464c0a9bcd44cbb4 (good)
+; COOKIE: 981fb1d3bd20f6a6010000006ac4460724c4a614c936e3aa (good)
 ;; QUESTION SECTION:
 ;host.insecure.ed25519-nsec.interop. IN	A
 
 ;; AUTHORITY SECTION:
 insecure.ed25519-nsec.interop. 3600 IN	NS	ns.insecure.ed25519-nsec.interop.
 insecure.ed25519-nsec.interop. 300 IN	NSEC	mail.ed25519-nsec.interop. NS RRSIG NSEC
-insecure.ed25519-nsec.interop. 300 IN	RRSIG	NSEC 15 3 300 20361003001932 20261005231932 48895 ed25519-nsec.interop. Q1fznjHEBYssFxKMC739gBMGfff/BTwlbdahYuzp5RlUhDbWVjgF1L88 ZPmSRKqZMc6f44uG9UdW3uKAsSeuDw==
+insecure.ed25519-nsec.interop. 300 IN	RRSIG	NSEC 15 3 300 20361003005101 20261005235101 1749 ed25519-nsec.interop. DdwQiuoRQeuS95KiU6ggo7UyXY+5ln2sBSiOn3+UcEdEhq1NrXv30QBQ cVRbI4tnUliiM5e0GbONZ4A0M4GzBw==
 
 ;; ADDITIONAL SECTION:
 ns.insecure.ed25519-nsec.interop. 3600 IN A	192.0.2.98
 
 ;; Query time: 0 msec
 ;; SERVER: 127.0.0.1#5350(127.0.0.1) (UDP)
-;; WHEN: Tue Oct 06 00:19:49 UTC 2026
+;; WHEN: Tue Oct 06 00:51:19 UTC 2026
 ;; MSG SIZE  rcvd: 287
 

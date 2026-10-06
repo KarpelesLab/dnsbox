@@ -3,22 +3,22 @@
 ; (1 server found)
 ;; global options: +cmd
 ;; Got answer:
-;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 23301
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 8115
 ;; flags: qr aa; QUERY: 1, ANSWER: 2, AUTHORITY: 2, ADDITIONAL: 3
 
 ;; OPT PSEUDOSECTION:
 ; EDNS: version: 0, flags:; udp: 1232
-; COOKIE: 656239429c37b1cb010000006ac43ea8a47c37cd9d21b2ad (good)
+; COOKIE: ec0ff78cf9645e06010000006ac4460b82c93f80b0bf1fff (good)
 ;; QUESTION SECTION:
 ;nsap.alltypes.example.		IN	NSAP
 
 ;; ANSWER SECTION:
-nsap.alltypes.example.	3600	IN	NSAP	0x4700058000
 nsap.alltypes.example.	3600	IN	NSAP	0x47000580005a0000000001e133ffffff00016100
+nsap.alltypes.example.	3600	IN	NSAP	0x4700058000
 
 ;; AUTHORITY SECTION:
-alltypes.example.	3600	IN	NS	ns2.example.net.
 alltypes.example.	3600	IN	NS	ns1.alltypes.example.
+alltypes.example.	3600	IN	NS	ns2.example.net.
 
 ;; ADDITIONAL SECTION:
 ns1.alltypes.example.	3600	IN	A	192.0.2.53
@@ -26,6 +26,6 @@ ns1.alltypes.example.	3600	IN	AAAA	2001:db8::53
 
 ;; Query time: 0 msec
 ;; SERVER: 127.0.0.1#5350(127.0.0.1) (TCP)
-;; WHEN: Tue Oct 06 00:19:52 UTC 2026
+;; WHEN: Tue Oct 06 00:51:23 UTC 2026
 ;; MSG SIZE  rcvd: 218
 

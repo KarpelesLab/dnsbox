@@ -8,211 +8,211 @@ ed25519-nsec.interop	IN SOA	ns1.ed25519-nsec.interop. hostmaster.ed25519-nsec.in
 				300        ; minimum (5 minutes)
 				)
 			RRSIG	SOA 15 2 3600 (
-				20261105001932 20261005231932 48895 ed25519-nsec.interop.
-				CNH0yNl6+nUR7H7cnJR1mtEo4i63nEGdC6xa6WRXJ+nP
-				skkwFCY4W29LqPjFfsuriOMEXa/NNrJvygVHDPPzAg== )
+				20261105005101 20261005235101 1749 ed25519-nsec.interop.
+				k5K0pOQdtd2ouL46QS2B9uDBCPleOn+nMl2JVORPiT6G
+				r0PvLJ94HcKLfER1xY5u3w+CEEysMukuLll2DjK0Bg== )
 			NS	ns1.ed25519-nsec.interop.
 			NS	ns2.ed25519-nsec.interop.
 			RRSIG	NS 15 2 3600 (
-				20261105001932 20261005231932 48895 ed25519-nsec.interop.
-				/F+MmUl4O9ctPvmPbK9gCP9S5x4E3ufCMXTOcfF+cdf2
-				pWfepTlAsNWaGK7Q3+VLqh1/OxOrxd80gB5cniimAA== )
+				20261105005101 20261005235101 1749 ed25519-nsec.interop.
+				BnVbfnJCreB52GkmKROwcTnT+p5wSqR50Q7JxXsi3Fft
+				UYt7wkxZhXcveD8uqnKuzmYN0ut+SUCEOq6xf3QmAA== )
 			MX	10 mail.ed25519-nsec.interop.
 			RRSIG	MX 15 2 3600 (
-				20261105001932 20261005231932 48895 ed25519-nsec.interop.
-				EXC4F3VTPXq71pl91sIjofVClw9A6iGkv7JWFPQAstj4
-				/qxRoUr80A2PnlVl9T+eyBL1Yh3e/f0wwcf7Lzi0DQ== )
+				20261105005101 20261005235101 1749 ed25519-nsec.interop.
+				7pLa1VFjqGfmNO86L1NBxRmi6jt93le9WjdwetGbL+kS
+				bjR6lfJBqCdMKFSeme7yRpXynAtjBfyLfoebpBSKAw== )
 			TXT	"v=spf1 mx -all"
 			RRSIG	TXT 15 2 3600 (
-				20261105001932 20261005231932 48895 ed25519-nsec.interop.
-				SFE5dfUWmK6PhY0AvIrLWjXl4rAAMMozFDBCBOphZHGp
-				O7DHo4piLc28Kt+ezO++eprMjOtzummqX/V87YniAA== )
+				20261105005101 20261005235101 1749 ed25519-nsec.interop.
+				3xKs/LMVHHxc/ZqmpqfDL4DJ0I8DfVTBx8zBuW9pYeLM
+				Scdfx9hu9WoRXBGp7rGKgGIEouj63zQCn7SSHC2jBQ== )
 			LOC	52 22 23.000 N 4 53 32.000 E -2.00m 0.00m 10000m 10m
 			RRSIG	LOC 15 2 3600 (
-				20261105001932 20261005231932 48895 ed25519-nsec.interop.
-				CNlxF4I6bsTE9JkmJWRmq01+RiJ7LQ8K5gapT2L1sdzh
-				bzRBIfTpso8/piZ4G7wTNpqsaElXczCxJ6IqvS8ODQ== )
+				20261105005101 20261005235101 1749 ed25519-nsec.interop.
+				PvqI869X2Mpk7oL7xutK2BcBMK+Kx64ihTJMf91LiQpv
+				pQljdv8kX19rM8WaKXYcringAh0DdhHafzpUVt2/AQ== )
 			SSHFP	4 2 (
 				123456789ABCDEF67890123456789ABCDEF678901234
 				56789ABCDEF123456789 )
 			RRSIG	SSHFP 15 2 3600 (
-				20261105001932 20261005231932 48895 ed25519-nsec.interop.
-				xkall/6pMAULgDjzrNZrwg/b4Auiza5bSyaQJLKQ/Tqu
-				jYBl+NvOpbvEn7ddgMoI9fAkNyyQB7Hek6uRA9VcBQ== )
+				20261105005101 20261005235101 1749 ed25519-nsec.interop.
+				qSWdOUA9WiZ3oBRjAkr3tWmK8SLqABRbbxc0vuXXn3bf
+				4A4gLnq0JEv7tImZkEY0/zuBbPQ5ENorPXRISBUWDg== )
 $TTL 300	; 5 minutes
 			NSEC	_svc.ed25519-nsec.interop. NS SOA MX TXT LOC SSHFP RRSIG NSEC DNSKEY HTTPS CAA
 			RRSIG	NSEC 15 2 300 (
-				20261105001932 20261005231932 48895 ed25519-nsec.interop.
-				8Sz5xMBLewZpjPo2RGqtySC/w30Hkomrp6nvG9t0Od42
-				n35XOA3acc7W6RbCORsiqzNamg6jzbiyFPW3bTQHDA== )
+				20261105005101 20261005235101 1749 ed25519-nsec.interop.
+				ObUMKwAOQ0Jd0m24txu6p5xScw3cm8f9j2Rc4hlikatP
+				yxkmXt0lJx41A5dIVZkMz2A5miJNRuJ+GKot9o9tDg== )
 $TTL 3600	; 1 hour
 			DNSKEY	256 3 15 (
-				dKKPPMPWI1fdOIZ341jDhHdG0RgIE5A3UwB3tCsr7ss=
-				) ; ZSK; alg = ED25519 ; key id = 48895
+				sN2bN2VtkS+jP+w+2Vl3L1aYz5vrGlIv75oM5RFRbrw=
+				) ; ZSK; alg = ED25519 ; key id = 1749
 			DNSKEY	257 3 15 (
-				m+VyrUv5/w3idTrL221OrO9WCQ9+GsmhHMsydkWwvsw=
-				) ; KSK; alg = ED25519 ; key id = 14566
+				5hp281FSc3WqAPCsHuWvHanmGzwTf0r/fRbcAYsS4dM=
+				) ; KSK; alg = ED25519 ; key id = 30774
 			RRSIG	DNSKEY 15 2 3600 (
-				20261105001932 20261005231932 14566 ed25519-nsec.interop.
-				956p3kSDz/Xgi4bOnq7ZdOycDDlH9mzrlNb24oXuXbcW
-				Sj0mNWmHAYHg6zR9MsGtNsLSZWtCLZJuzfDn/D7sAg== )
+				20261105005101 20261005235101 30774 ed25519-nsec.interop.
+				OuSGrx33MMwuN2DVoAJgdo02q72EgTXYQTDwF5Rgd/7t
+				Tqi4UO+4fFkj3wx02VMmgG0qQPzIWdGftR6tLBxhBw== )
 			HTTPS	1 . alpn="h2,h3" ipv4hint=192.0.2.80
 			RRSIG	HTTPS 15 2 3600 (
-				20261105001932 20261005231932 48895 ed25519-nsec.interop.
-				ge/g5iYb0Xt6gjSt1EYLtepZn5FbB9UVkKpWVJdUST1u
-				RmCbJJ8jdKhmCvO0WoWmDLNNWBLIt89zLneQBSwwDg== )
+				20261105005101 20261005235101 1749 ed25519-nsec.interop.
+				TsQ4WN27CdTbPSRG4UGBmQjS51rrp7UixsTdfTDHf0bc
+				IKgDwSBXqzdkq0rT3qNk4Esu+FFl3vbWpJC/nQlcAQ== )
 			CAA	0 issue "letsencrypt.org"
 			RRSIG	CAA 15 2 3600 (
-				20261105001932 20261005231932 48895 ed25519-nsec.interop.
-				l5iN/u4iqsAB/Tn3bO3AdPuyBsjN6jOYEwiZgosbU8Dl
-				lVkc3dq+S16y8orHWkvMhCqdQW2512mkHU50wKR/Ag== )
+				20261105005101 20261005235101 1749 ed25519-nsec.interop.
+				CEoDytEHe5Tg2UNGN/vORhkK4YYpwqW22YhWOGpMmqrS
+				OZXjsJjePWqggmX08WCSh+/cH6+5wqzy2amkAa6OCQ== )
 $ORIGIN ed25519-nsec.interop.
 $TTL 300	; 5 minutes
 _svc			NSEC	_sip._udp.ed25519-nsec.interop. RRSIG NSEC SVCB
 			RRSIG	NSEC 15 3 300 (
-				20261105001932 20261005231932 48895 ed25519-nsec.interop.
-				9+ZbRiJ7yLxB0M6pYqr1PCbL+sYcqR6jkHjMzCmbrvJX
-				E/6ApUmxqNQz+Rn2+E4RqBSa1V0fFnsCrpnmVMrWBQ== )
+				20261105005101 20261005235101 1749 ed25519-nsec.interop.
+				w8X50D3FqdCgp5pB608iRKGJ/r+pxwsTZo0QgAGwNfty
+				C9xwWkUmRLsIzijRQHQJXQcvBYQ094DXM5ycbmRGAQ== )
 $TTL 3600	; 1 hour
 			SVCB	1 www alpn="dot" port=853
 			RRSIG	SVCB 15 3 3600 (
-				20261105001932 20261005231932 48895 ed25519-nsec.interop.
-				UlP1PFQy97lYJYLq3vejAfcVoeYeeBkT4c3EhAeaw0dd
-				CMYnFAgyZ/QWsGhdR54u7GXNTX1vMt1chZ3zUZicAg== )
+				20261105005101 20261005235101 1749 ed25519-nsec.interop.
+				7cyeucChDRtp+sWAVDz2C9HyYtkl9+eIaOk0JmBRi/DQ
+				MlerysX2hGLHhSiMyBRUWjAXz5dxpcolrqjHwEYJCQ== )
 _sip._udp		SRV	10 60 5060 www
 			RRSIG	SRV 15 4 3600 (
-				20261105001932 20261005231932 48895 ed25519-nsec.interop.
-				g+JRJeGbbyG2acwjfot8WvUzHfucfkw6rzxVPEQQefte
-				0nrO22eYTw9bcd+x88Z+jkiX8C26Ouc2SP+k9A6ZDw== )
+				20261105005101 20261005235101 1749 ed25519-nsec.interop.
+				muTF6nkifVpy46wJlEw4EiW3vcsFzgWwogKLaAdyGiqT
+				rsa8V/h3Gdx86Gvm9x70+kMhiVO91p0sC/QUUECZCw== )
 			NAPTR	100 10 "S" "SIP+D2U" "" _sip._udp
 			RRSIG	NAPTR 15 4 3600 (
-				20261105001932 20261005231932 48895 ed25519-nsec.interop.
-				XdGPtjcUZP2RplyU76z08q0Jn6sVHocnpPUtfMXZKhd0
-				6xpxgNY+iH4k0moqruZ4PT/fyHYxoc4DMZrSNE1mBg== )
+				20261105005101 20261005235101 1749 ed25519-nsec.interop.
+				iSyfaO2lzO0arqyDzezdea17Ko0+u2qduLg+4iUpU2ZU
+				HtYYXSpk74itoeZPEY6F9zvV5yQbneHt28PJNwJ6Cw== )
 $TTL 300	; 5 minutes
 			NSEC	alias.ed25519-nsec.interop. SRV NAPTR RRSIG NSEC
 			RRSIG	NSEC 15 4 300 (
-				20261105001932 20261005231932 48895 ed25519-nsec.interop.
-				5GnracHGeRsFrwdzg6uHzv8vS/oMZ/J5lkGVNGRpPFPc
-				JpxPsYL5T656ByySTc1ohvtBaKZ3yniq7Ci365FgAQ== )
+				20261105005101 20261005235101 1749 ed25519-nsec.interop.
+				h9QY1t1h+vxnBfS/OiiTrqQ1mKrwzDbqkb3P1lVxQGHL
+				rlM+qIjcy96izYsVO52MVe5J3aBkUez3v8dsgikFDg== )
 $TTL 3600	; 1 hour
 alias			CNAME	www
 			RRSIG	CNAME 15 3 3600 (
-				20261105001932 20261005231932 48895 ed25519-nsec.interop.
-				W1HzFMU3qv0pguZJzZ//+lgOQtDRlgSuceQMpd8+D93Y
-				sZr6w+Unm3r6pJEBEughNOiALQ23K+ird6oljZovDA== )
+				20261105005101 20261005235101 1749 ed25519-nsec.interop.
+				cHLx8hWwB5SBi3mE+eAaBi9ytlza5W1y8yE1mGZwurJz
+				j6gYFNtG6rsAaehDoR9589WnOyWNB1sf1wWyMVpbAQ== )
 $TTL 300	; 5 minutes
 			NSEC	dname.ed25519-nsec.interop. CNAME RRSIG NSEC
 			RRSIG	NSEC 15 3 300 (
-				20261105001932 20261005231932 48895 ed25519-nsec.interop.
-				pu4AtDgjFrYGxcjVH10weGuzLnKckWu2+3WM5DdaI84V
-				QGFo7qb2OR2cG2F51SSh7dFB7zlhk4jXeLeITlLnDA== )
+				20261105005101 20261005235101 1749 ed25519-nsec.interop.
+				p/54O7riuCM+JcL1/cRje7GxTyLNc/gTPR9JMUCe/Ieu
+				/975y16eC6z/WG9YgQKSFPUYVtUy0fOVcpiYZeRkCw== )
 $TTL 3600	; 1 hour
 dname			DNAME	example.net.
 			RRSIG	DNAME 15 3 3600 (
-				20261105001932 20261005231932 48895 ed25519-nsec.interop.
-				vbMIWv5P/3sutosognZ+IraOwbLVsAWc6J7XizmY8AhL
-				5TlZlo2ncqxqPblFDHtiv7c4YHjzZFusHq6RW+noCA== )
+				20261105005101 20261005235101 1749 ed25519-nsec.interop.
+				uX0I+0md6FUNp1kZphwhyOI0bgNRvdL6JyYU+VDSd1OW
+				dRzsyLCp2kTW6vT0EIJrtSHcVZUOjYYiFcY9kIcnBg== )
 $TTL 300	; 5 minutes
 			NSEC	a.b.ent.ed25519-nsec.interop. DNAME RRSIG NSEC
 			RRSIG	NSEC 15 3 300 (
-				20261105001932 20261005231932 48895 ed25519-nsec.interop.
-				xwvPWrTSxAORjT61i0CLk0jMQK34GvivH1fVFMKkZBey
-				7xcyffFtgK2gtyV3uyqF5R+/pOBxCWjlvwH72pNbAw== )
+				20261105005101 20261005235101 1749 ed25519-nsec.interop.
+				2vUB4gKsQhPJNQslJgE4aclAhRYTfVkCotE5MwhHmV1f
+				li8hX3Cwo1aqS7LuXu5qojfQaJUzHhAsrMs1RDjpBw== )
 $TTL 3600	; 1 hour
 a.b.ent			A	192.0.2.7
 			RRSIG	A 15 5 3600 (
-				20261105001932 20261005231932 48895 ed25519-nsec.interop.
-				3jbK034R0DH7lr6HhhbUMv2DSZA8mwBL05KCyX/9Np01
-				+OeMnLHIVmdhgeAelg7youCofKtqzEwgZDmAEcH6Cg== )
+				20261105005101 20261005235101 1749 ed25519-nsec.interop.
+				ZsdiH7MgZpzAAFc035MY2xTECl77cLAgA5hsZnct3Q/R
+				b72bjkt4/Cm8aISbGbqFK0iuZhoVhjnGV5mGmMGYAQ== )
 $TTL 300	; 5 minutes
 			NSEC	insecure.ed25519-nsec.interop. A RRSIG NSEC
 			RRSIG	NSEC 15 5 300 (
-				20261105001932 20261005231932 48895 ed25519-nsec.interop.
-				nnjVEtLQVxR5skvUejtckpvuugMcoqG2RNpHT6wJMENr
-				aomjG/NoBsPYhjZ/ayHH4BvIN2vqVAKCIL7lM6uGCQ== )
+				20261105005101 20261005235101 1749 ed25519-nsec.interop.
+				ilHyw7LYC8swmErS4diVp+OzwvjrxP1ytsTTaAo0UUyh
+				4p8HEZObD2Xz26z8FaSqgDhsNnS3YKfYPM3z/OL9DQ== )
 $TTL 3600	; 1 hour
 insecure		NS	ns.insecure
 $TTL 300	; 5 minutes
 			NSEC	mail.ed25519-nsec.interop. NS RRSIG NSEC
 			RRSIG	NSEC 15 3 300 (
-				20261105001932 20261005231932 48895 ed25519-nsec.interop.
-				VJBYfF0D1Q+ZKfJY+YPe8hB6UcMkphVPoy7SwzJpe8eE
-				rN3xgaZUIe0FvOdFS5iXsS+qCnh20KeZGFBL5mk0DA== )
+				20261105005101 20261005235101 1749 ed25519-nsec.interop.
+				e9E1QHZ2XWmWugh6zstdsgGFCgbxoUj78bHcBD5b0143
+				d4gDulHpmfBFvh0PtkYEsPOWq90z5Dnnk3tUeAWaBg== )
 $ORIGIN insecure.ed25519-nsec.interop.
 $TTL 3600	; 1 hour
 ns			A	192.0.2.98
 $ORIGIN ed25519-nsec.interop.
 mail			A	192.0.2.25
 			RRSIG	A 15 3 3600 (
-				20261105001932 20261005231932 48895 ed25519-nsec.interop.
-				YraRwh/RtcRXOBUj0vMY6WopguGSljnqA9Kl9W2fBkbj
-				Ezd9qQYSoC6ZLoEddx/OYo+BLruJrOzjxtsaBzGtBQ== )
+				20261105005101 20261005235101 1749 ed25519-nsec.interop.
+				QchkOYuDKjs5KgDRzJ5K/1CssULZJ2kj++pLk9xO8vQU
+				0CieDh205EqgvXflYno0i9akHV0EwXObD5Bo+aW9Dg== )
 $TTL 300	; 5 minutes
 			NSEC	ns1.ed25519-nsec.interop. A RRSIG NSEC
 			RRSIG	NSEC 15 3 300 (
-				20261105001932 20261005231932 48895 ed25519-nsec.interop.
-				iJuEstSOjyrUSDpQfaESvSauw6jMLoVmdTa6yQcfoGxE
-				7gFRv7GrFZNlm5vTDNtW4YmCxiJwz0AlSBquryMjAw== )
+				20261105005101 20261005235101 1749 ed25519-nsec.interop.
+				3kEICMxZjo2gmRny3Y55AJyhZMavHo0iD2XLPl40gl8U
+				0ubI0tqBEIeDTyx0++64jwvuzA35laxykIAVh1rjAw== )
 $TTL 3600	; 1 hour
 ns1			A	127.0.0.1
 			RRSIG	A 15 3 3600 (
-				20261105001932 20261005231932 48895 ed25519-nsec.interop.
-				xzxcOOr5NgrEH1BwpeNsS1tJ1Uy4jTvZbLAiIBCf2r4B
-				k7Uh8qJzI9WptNz2SQDnWb08BS3yrY+0tKJUEaw1Bg== )
+				20261105005101 20261005235101 1749 ed25519-nsec.interop.
+				T1ZATaTkJS7PcfTIgpbZ5o3TR/wxZXGUCNYC1FNAQK+Q
+				o+VWp7B/n3aEeG7CxLoFRs2750jsQ5O/s/0blE43Cw== )
 $TTL 300	; 5 minutes
 			NSEC	ns2.ed25519-nsec.interop. A RRSIG NSEC
 			RRSIG	NSEC 15 3 300 (
-				20261105001932 20261005231932 48895 ed25519-nsec.interop.
-				PTYlmFD/P6JNTAFPA9oXV5J2zw9ktAC1vBzmYTi6NkkW
-				eEBiMe/k4VVrsHldsKH3CgCR1zs6/0z56HgNesGrCA== )
+				20261105005101 20261005235101 1749 ed25519-nsec.interop.
+				5W2Ky0IBNEq8UC2f96y7mLrHJKy1XAsXnlqU33eKsfcG
+				sJRsXV5euzhoxa3NClrkp1NlknhFN1MU6AoUVESGBg== )
 $TTL 3600	; 1 hour
 ns2			A	198.51.100.53
 			RRSIG	A 15 3 3600 (
-				20261105001932 20261005231932 48895 ed25519-nsec.interop.
-				e5mrUh6s3TM9vVCsGOGL3Xs73dwA4cyz011HTzW1cN0E
-				SF/ojqGpEcUlSnZFlWLQN2lmhMmpztMix1jYhSqrBQ== )
+				20261105005101 20261005235101 1749 ed25519-nsec.interop.
+				X4tbj/NTSGUXzV8jEFQ5uiZB7Hwkp0FyCds4ArmjwneE
+				VfW5tzBjN1IhGZqsUqHzCzhAin9zEKz0EW+H3bsnDQ== )
 $TTL 300	; 5 minutes
 			NSEC	odd\.label\032x.ed25519-nsec.interop. A RRSIG NSEC
 			RRSIG	NSEC 15 3 300 (
-				20261105001932 20261005231932 48895 ed25519-nsec.interop.
-				41msXd7glBFgLpCA1sWy4JY06oxIzlxjOAV3qgCBNGYx
-				aFZ/i0kbw8LXccUO+Ixi/JHYRXxafjf7JP8ggfMPDw== )
+				20261105005101 20261005235101 1749 ed25519-nsec.interop.
+				K8xkiXX8rkYKi7pRGmiRDuUdwEuP6zRGcXjMqQzk2sv5
+				3rFuPevdIGR8Gqmh7vdLeeqE0+PcaQyLEmjS6x7JDg== )
 $TTL 3600	; 1 hour
 odd\.label\032x		TXT	"a \"quoted\" string" "tab\009and\\backslash"
 			RRSIG	TXT 15 3 3600 (
-				20261105001932 20261005231932 48895 ed25519-nsec.interop.
-				ok8UZrdJ6Cr0oQNFxn0VQuRqkrrbn6abzQGBSjYf7Kvx
-				A6rh03NuM+x+NVJZ3/SLyEOEA6GzQv2A8KgqlB+tAg== )
+				20261105005101 20261005235101 1749 ed25519-nsec.interop.
+				TSHghTHG+dnHmWLM/kJkbu5SUvd+WrMMqDLEjuUwNSBN
+				DehfQ+y+zzcNr9dq5jS0cP3myiDWofrM5Q//RZtAAA== )
 $TTL 300	; 5 minutes
 			NSEC	other.ed25519-nsec.interop. TXT RRSIG NSEC
 			RRSIG	NSEC 15 3 300 (
-				20261105001932 20261005231932 48895 ed25519-nsec.interop.
-				wxzZAyUJMR/SnMApIqakbCh4EQwEyBQ2K7hoSLf2UIl6
-				ARHrQSgEgoIllyrjRtO5tlTvmgu13hc1CTXcEiPsDg== )
+				20261105005101 20261005235101 1749 ed25519-nsec.interop.
+				QhFx4cVZHcnw7Vq2Ey5UwjGsK9l3udq+udsI7vYGizBb
+				9khsPM2hrBp6/H7E5v8GcAfWxLGDKQcPI12PJBxKBw== )
 $TTL 3600	; 1 hour
 other			NS	ns.example.net.
 $TTL 300	; 5 minutes
 			NSEC	secure.ed25519-nsec.interop. NS RRSIG NSEC
 			RRSIG	NSEC 15 3 300 (
-				20261105001932 20261005231932 48895 ed25519-nsec.interop.
-				ejMJpD/9sHZfRpDTgL5fJRGRCs3/qywc00CrqyyG//zR
-				1C6ylYYniSjeBtdFG2+2hrr253uKV1UghTsikaoVBQ== )
+				20261105005101 20261005235101 1749 ed25519-nsec.interop.
+				dkZB37Co96Um4T5JMkV6tuz4tifIzw7y+N8pljlqck5A
+				yz2J21+Ozx6gL0spd07GK7KgC+gV3tUu4s6N5Se9Dg== )
 $TTL 3600	; 1 hour
 secure			NS	ns.secure
 			DS	12345 13 2 (
 				E06D44B80B8F1D39A95C0B0D7C65D08458E880409BBC
 				683457104237C7F8EC8D )
 			RRSIG	DS 15 3 3600 (
-				20261105001932 20261005231932 48895 ed25519-nsec.interop.
-				jK7t2xNTVvRKLQCMh0JTKAxHh2gJqbAp7EniMqaEL7Ix
-				4JSUWjRVUhQEqdJG9sVzIMADd7BhjXgO48bZ/8xmBw== )
+				20261105005101 20261005235101 1749 ed25519-nsec.interop.
+				XFTTfIcaxqxUFCn0pXxb8S4EuBl8BKSZuTLRB3J6a9M5
+				PrI3IG/v8mOT1asrLLPNrr5mC7o30EAlzjd0zQjuCQ== )
 $TTL 300	; 5 minutes
 			NSEC	unsigned.ed25519-nsec.interop. NS DS RRSIG NSEC
 			RRSIG	NSEC 15 3 300 (
-				20261105001932 20261005231932 48895 ed25519-nsec.interop.
-				lXaMdUFTnsOI2adTwr8uWOE/M4lubFY0xfniKstT6+tK
-				Vf5ZoCogA2tkKu+uSWYyZX052mYQdQ9c6MkW5W4MAw== )
+				20261105005101 20261005235101 1749 ed25519-nsec.interop.
+				Slu/bqycWHV0rSqfyTHzJO97+FcqE45bICEn8EpBEhop
+				id3kKQ22dk2EFgKRMVjCkma+GarH0VMY4Yszp9M4AA== )
 $ORIGIN secure.ed25519-nsec.interop.
 $TTL 3600	; 1 hour
 ns			A	192.0.2.99
@@ -221,58 +221,58 @@ unsigned		NS	ns.unsigned
 $TTL 300	; 5 minutes
 			NSEC	*.wild.ed25519-nsec.interop. NS RRSIG NSEC
 			RRSIG	NSEC 15 3 300 (
-				20261105001932 20261005231932 48895 ed25519-nsec.interop.
-				4paUR6QrfAMsUSZN7/DKPZPqmNyAxiSfAcFbnqv1paFJ
-				RoHMqWNvDk6goUxaACBnHC6jXTPvp7ZtgT3u6kgwCg== )
+				20261105005101 20261005235101 1749 ed25519-nsec.interop.
+				tONVcQgeqxjWt5pcJk7TbNzOXaf4LL/fpC1ZwQ7Un5KP
+				/gx16N6jEe5HI337T4SIkYkBshQl/1IoE0Jcee/6Ag== )
 $ORIGIN unsigned.ed25519-nsec.interop.
 $TTL 3600	; 1 hour
 ns			A	127.0.0.1
 $ORIGIN wild.ed25519-nsec.interop.
 *			A	192.0.2.42
 			RRSIG	A 15 3 3600 (
-				20261105001932 20261005231932 48895 ed25519-nsec.interop.
-				aXOchynB+3kKQWpNpZA7Zw1umhJbsysWuktfyCd2ocum
-				FYd4RCJoHJ09k/RpNjoDJ8pmc5pRDp2fMqW12ZBiBA== )
+				20261105005101 20261005235101 1749 ed25519-nsec.interop.
+				7E47f7y08jjqEdcR8ztsUtGj2Rzs7DfFD45ht2sTY1+w
+				OX8VBeZVhMnkfZExnAzDliYv8ceDKX/+XEqp0/LKBA== )
 			TXT	"wildcard"
 			RRSIG	TXT 15 3 3600 (
-				20261105001932 20261005231932 48895 ed25519-nsec.interop.
-				7IZzuhlZ8hFmZJVdlEZ9q7oHPR/kc9vXXZJY9aIC21ou
-				PlNAgFLl5QTAqTx6MJa7jHWeF8UyjQYnd3WjXMqcAQ== )
+				20261105005101 20261005235101 1749 ed25519-nsec.interop.
+				cNSh9oMavDAzjxraMvIomoG4ZnUJ7U1+Yp+V0QPlnmoh
+				cxjqL7er0EbwynhISR7pJmaje9D5C3MkfgSR5///Aw== )
 $TTL 300	; 5 minutes
 			NSEC	www.ed25519-nsec.interop. A TXT RRSIG NSEC
 			RRSIG	NSEC 15 3 300 (
-				20261105001932 20261005231932 48895 ed25519-nsec.interop.
-				B1Bc/hRFYpIqBGRawVJDOMawzWTBfmBEjfZ3s1Fbj4xN
-				wIGKopJbzhw5+IQjlo3bq260360kOO11521LqqjdAg== )
+				20261105005101 20261005235101 1749 ed25519-nsec.interop.
+				cJvtoVh4nf+3wudiXEw+PDm63mS4yP9TQSg1/urZklcr
+				bClSClevjFqjZY5BrT3UWJu7VM7MvH5OljtNaKGuDA== )
 $ORIGIN ed25519-nsec.interop.
 $TTL 3600	; 1 hour
 www			A	192.0.2.80
 			RRSIG	A 15 3 3600 (
-				20261105001932 20261005231932 48895 ed25519-nsec.interop.
-				flZ9tKUoo5EDB7cUpZjh5339DLIo0mfacZ0ul+O+QTFV
-				4WGVTFEokMFGlSRhelkB2yZ28jIj7mWev05GcftYBw== )
+				20261105005101 20261005235101 1749 ed25519-nsec.interop.
+				B2iEej3FMBN0RAhMPvEP6k4F9ZAeXiumTpxrqkBmj8zk
+				424FwD9753t47xN4N/D4DJVSRClfMru2nK6J40BLAw== )
 			AAAA	2001:db8::80
 			RRSIG	AAAA 15 3 3600 (
-				20261105001932 20261005231932 48895 ed25519-nsec.interop.
-				9fa8VExiYfx/iSQ+8UB9GyPqflrXBSdCBaNgf2dTwc/f
-				f+mE8sb3hO/iPKZKBU3vH3NPgjgkCMfBsGMnaiVdAQ== )
+				20261105005101 20261005235101 1749 ed25519-nsec.interop.
+				oBw9Gd/ngP6qkWP1y2m7W8advup+IJFpWK5kMVUhFoKE
+				QSZRctvtafl5qw7RcaknEm37IT9Y+BxXSFzav5PuAA== )
 $TTL 300	; 5 minutes
 			NSEC	_443._tcp.www.ed25519-nsec.interop. A AAAA RRSIG NSEC
 			RRSIG	NSEC 15 3 300 (
-				20261105001932 20261005231932 48895 ed25519-nsec.interop.
-				60L+ngNJr4l3jLkg0at7sW7N3MnwIoqZGZoYFytbcgQ0
-				dBiLAJyXAMnzblI3QGubD+FO6hdm4qFxDUUbTl6aBg== )
+				20261105005101 20261005235101 1749 ed25519-nsec.interop.
+				F3zwl8jeKnMcZHX+Oxt72brnZmDHG28VIu1Y9zb5Ezbc
+				qQuRhKsW138mfy417DhlwY8fJPGz55Yflk4zjHMnBg== )
 $ORIGIN www.ed25519-nsec.interop.
 _443._tcp		NSEC	ed25519-nsec.interop. RRSIG NSEC TLSA
 			RRSIG	NSEC 15 5 300 (
-				20261105001932 20261005231932 48895 ed25519-nsec.interop.
-				YmDJhZ9q+2LXuP/wtyKVy7vjWKQ2m9HF654MP/cT8kdf
-				I1QtEBq3CF2KaCDfBduYWg2H+lf3gurmR2q0qx6/CQ== )
+				20261105005101 20261005235101 1749 ed25519-nsec.interop.
+				DtTwiBSlxyINPvlyqqHZywmtaoiaHkYFbbdGihw39Cd2
+				pB/I0RkHrVSZC0WeTCHxKZvTvMsIejexvGL0wbULAQ== )
 $TTL 3600	; 1 hour
 			TLSA	3 1 1 (
 				0C72AC70B745AC19998811B131D662C9AC69DBDBE7CB
 				23E5B514B56664C5D3D6 )
 			RRSIG	TLSA 15 5 3600 (
-				20261105001932 20261005231932 48895 ed25519-nsec.interop.
-				OWsIQARUHoch9FhxZLf+Hd7YGCso4i+hU0EU1h7+TF0Q
-				OV2n8/Xeoz/KXGi6jtbvVfNb4GcTTMtgIsRvZY5HBQ== )
+				20261105005101 20261005235101 1749 ed25519-nsec.interop.
+				FrquiRcKX4IuV+ovWjlBTnBxkzTsGxkpJw+1bbXI3mbu
+				LvwrzTZphqyaMXQRJU6jB2o5OhQmgoUgZn8Z72EUDw== )

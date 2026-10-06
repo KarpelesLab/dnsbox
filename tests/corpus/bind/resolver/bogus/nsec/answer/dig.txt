@@ -3,17 +3,17 @@
 ; (1 server found)
 ;; global options: +cmd
 ;; Got answer:
-;; ->>HEADER<<- opcode: QUERY, status: SERVFAIL, id: 17094
+;; ->>HEADER<<- opcode: QUERY, status: SERVFAIL, id: 30707
 ;; flags: qr rd ra; QUERY: 1, ANSWER: 0, AUTHORITY: 0, ADDITIONAL: 1
 
 ;; OPT PSEUDOSECTION:
 ; EDNS: version: 0, flags: do; udp: 1232
-; COOKIE: 94620c8c173547d5010000006ac43eb7ef963fadf51614e6 (good)
+; COOKIE: c063647e592f34e8010000006ac4461a487ad44c7b4ff0e3 (good)
 ;; QUESTION SECTION:
 ;nosuch.bogus-nsec.interop.	IN	A
 
-;; Query time: 12 msec
+;; Query time: 11 msec
 ;; SERVER: 127.0.0.1#5450(127.0.0.1) (UDP)
-;; WHEN: Tue Oct 06 00:20:07 UTC 2026
+;; WHEN: Tue Oct 06 00:51:38 UTC 2026
 ;; MSG SIZE  rcvd: 82
 

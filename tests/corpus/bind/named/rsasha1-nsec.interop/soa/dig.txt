@@ -3,22 +3,22 @@
 ; (1 server found)
 ;; global options: +cmd
 ;; Got answer:
-;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 37569
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 37286
 ;; flags: qr aa rd; QUERY: 1, ANSWER: 2, AUTHORITY: 0, ADDITIONAL: 1
 ;; WARNING: recursion requested but not available
 
 ;; OPT PSEUDOSECTION:
 ; EDNS: version: 0, flags: do; udp: 1232
-; COOKIE: f5004389c4d41078010000006ac43ea011d5295a7f135faa (good)
+; COOKIE: b1d552b75ee3183d010000006ac44603475f4b4a9a4e82bc (good)
 ;; QUESTION SECTION:
 ;rsasha1-nsec.interop.		IN	SOA
 
 ;; ANSWER SECTION:
 rsasha1-nsec.interop.	3600	IN	SOA	ns1.rsasha1-nsec.interop. hostmaster.rsasha1-nsec.interop. 2026100401 7200 3600 1209600 300
-rsasha1-nsec.interop.	3600	IN	RRSIG	SOA 5 2 3600 20361003001932 20261005231932 21015 rsasha1-nsec.interop. c249Wfum1pJE9gAYqMlChXN91zzCUzS+RMRfEUWjJrFHdHTGjLJQKOT4 lJuWUMhSrrcozwCK5s4b9S1WlQGfmxyohtU8hYb7lWUKRHOaVQ2WrcRo YSF9gsi6zqx7lcRILssEUR99C2CCK9dcQueHjyHrY/b0Fmxvfagw+QaV lik=
+rsasha1-nsec.interop.	3600	IN	RRSIG	SOA 5 2 3600 20361003005101 20261005235101 60951 rsasha1-nsec.interop. b2dmXZO1VhAsEUS2Lq4JTwLYqdF6SQaA8+cKQLhwSxxhioph4soRk0A5 m3tOfsjgtAwqG3ngEOMn0DItP6i3jOEifmn1EJ7As+cduqCxWKfU4yz5 xTKBHEo97bHFXYdsJXrluwid5/W7OQxhRWA8OSJ/C3JjYn/QUvfC4hge og8=
 
 ;; Query time: 0 msec
 ;; SERVER: 127.0.0.1#5350(127.0.0.1) (UDP)
-;; WHEN: Tue Oct 06 00:19:44 UTC 2026
+;; WHEN: Tue Oct 06 00:51:15 UTC 2026
 ;; MSG SIZE  rcvd: 308
 

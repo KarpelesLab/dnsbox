@@ -32,9 +32,9 @@ dyn.interop.		3600	IN	SOA	ns1.dyn.interop. hostmaster.dyn.interop. 2026100607 72
 dyn.interop.		3600	IN	SOA	ns1.dyn.interop. hostmaster.dyn.interop. 2026100608 7200 3600 1209600 300
 tcp.dyn.interop.	300	IN	AAAA	2001:db8::7
 dyn.interop.		3600	IN	SOA	ns1.dyn.interop. hostmaster.dyn.interop. 2026100608 7200 3600 1209600 300
-hmac-md5.key.		0	ANY	TSIG	hmac-md5.sig-alg.reg.int. 1791245994 300 16 EL+K3T2Bv61VSJQMfmKk4Q== 17044 NOERROR 0 
+hmac-md5.key.		0	ANY	TSIG	hmac-md5.sig-alg.reg.int. 1791247885 300 16 PhQ/yzwjJCjMd7wcbPzZFA== 14040 NOERROR 0 
 ;; Query time: 0 msec
 ;; SERVER: 127.0.0.1#5350(127.0.0.1) (TCP)
-;; WHEN: Tue Oct 06 00:19:54 UTC 2026
+;; WHEN: Tue Oct 06 00:51:25 UTC 2026
 ;; XFR size: 30 records (messages 1, bytes 1135)
 

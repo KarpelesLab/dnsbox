@@ -1,10 +1,10 @@
-;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 25929
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 37779
 ;; flags: qr aa rd; QUERY: 1, ANSWER: 1, AUTHORITY: 0, ADDITIONAL: 1
 ;; WARNING: recursion requested but not available
 
 ;; OPT PSEUDOSECTION:
 ; EDNS: version: 0, flags:; udp: 1232
-; COOKIE: dab94fd5db3d147c010000006ac43ea9523e6e8043feb8b5
+; COOKIE: d666651f31b4b8d3010000006ac4460c92724fbc2d374e74
 ; PAD: (124 bytes)
 ;; QUESTION SECTION:
 ;ed25519-nsec.interop.		IN	SOA

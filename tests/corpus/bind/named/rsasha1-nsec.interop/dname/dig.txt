@@ -3,23 +3,23 @@
 ; (1 server found)
 ;; global options: +cmd
 ;; Got answer:
-;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 5159
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 1079
 ;; flags: qr aa rd; QUERY: 1, ANSWER: 3, AUTHORITY: 0, ADDITIONAL: 1
 ;; WARNING: recursion requested but not available
 
 ;; OPT PSEUDOSECTION:
 ; EDNS: version: 0, flags: do; udp: 1232
-; COOKIE: 3f0502080873818b010000006ac43ea0f89f0fa540f16216 (good)
+; COOKIE: e050b3f461136e0d010000006ac446035bd6cdea4daca395 (good)
 ;; QUESTION SECTION:
 ;x.dname.rsasha1-nsec.interop.	IN	A
 
 ;; ANSWER SECTION:
 dname.rsasha1-nsec.interop. 3600 IN	DNAME	example.net.
-dname.rsasha1-nsec.interop. 3600 IN	RRSIG	DNAME 5 3 3600 20361003001932 20261005231932 21015 rsasha1-nsec.interop. xE520WYop6i0EI4gSPFFijcmsx8JpXSW1nbJZ5AY1LN04g84aoPdKTxW uNA+83lZ6fNLMKRwfHznBxM0ZlOxYPY8aY1cnomZ/LlsLMLHeCnYAooF /HQVUZofCaJFEqUh2U42NGE83RETkO6HAoTO2qPoloisBy+tphLNaots kfA=
+dname.rsasha1-nsec.interop. 3600 IN	RRSIG	DNAME 5 3 3600 20361003005101 20261005235101 60951 rsasha1-nsec.interop. TL/4848pt+SIzq4+9II5PbvHMTzFMb3yd4YkyRtCyKsaepCAH0RXi0NG j7CaGIl8PG8cvGxHBSL4kJZAa00J4P8v2qBnXtkyUAqBP9m5sxRQ5X79 3SfknBwspSo/fLmgdG42MYur3mTW2N2hoSqSyVL9iMU2ON1op/7ipQmF 2+s=
 x.dname.rsasha1-nsec.interop. 3600 IN	CNAME	x.example.net.
 
 ;; Query time: 0 msec
 ;; SERVER: 127.0.0.1#5350(127.0.0.1) (UDP)
-;; WHEN: Tue Oct 06 00:19:44 UTC 2026
+;; WHEN: Tue Oct 06 00:51:15 UTC 2026
 ;; MSG SIZE  rcvd: 306
 

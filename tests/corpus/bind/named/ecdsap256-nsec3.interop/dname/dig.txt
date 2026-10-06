@@ -3,23 +3,23 @@
 ; (1 server found)
 ;; global options: +cmd
 ;; Got answer:
-;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 61265
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 18074
 ;; flags: qr aa rd; QUERY: 1, ANSWER: 3, AUTHORITY: 0, ADDITIONAL: 1
 ;; WARNING: recursion requested but not available
 
 ;; OPT PSEUDOSECTION:
 ; EDNS: version: 0, flags: do; udp: 1232
-; COOKIE: d4574f066a006965010000006ac43ea34e7e91c98e7ff3a9 (good)
+; COOKIE: 41b9a213692c3183010000006ac44606d6fb3159d1554d7a (good)
 ;; QUESTION SECTION:
 ;x.dname.ecdsap256-nsec3.interop. IN	A
 
 ;; ANSWER SECTION:
 dname.ecdsap256-nsec3.interop. 3600 IN	DNAME	example.net.
-dname.ecdsap256-nsec3.interop. 3600 IN	RRSIG	DNAME 13 3 3600 20361003001932 20261005231932 18981 ecdsap256-nsec3.interop. 2LVYcIAngCBQM+ErbsgXT6jRteMLVnqcA/yYlm1kmh6rOZ5vPUCBtOr6 4isFm7/QBBBPqdLmGPchmTrWCL4cgw==
+dname.ecdsap256-nsec3.interop. 3600 IN	RRSIG	DNAME 13 3 3600 20361003005101 20261005235101 17004 ecdsap256-nsec3.interop. Lv3PNmKoG8dvpGymxPg3r7HlDzOL5yYCll4VRp3wdwvFxTXaSZ9cHs9Z O0A8zMKdisny0bMMQWamKLXF/EJhaA==
 x.dname.ecdsap256-nsec3.interop. 3600 IN CNAME	x.example.net.
 
 ;; Query time: 0 msec
 ;; SERVER: 127.0.0.1#5350(127.0.0.1) (UDP)
-;; WHEN: Tue Oct 06 00:19:47 UTC 2026
+;; WHEN: Tue Oct 06 00:51:18 UTC 2026
 ;; MSG SIZE  rcvd: 248
 

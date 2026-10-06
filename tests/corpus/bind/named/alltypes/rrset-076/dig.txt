@@ -3,18 +3,18 @@
 ; (1 server found)
 ;; global options: +cmd
 ;; Got answer:
-;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 54843
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 29067
 ;; flags: qr aa; QUERY: 1, ANSWER: 2, AUTHORITY: 2, ADDITIONAL: 3
 
 ;; OPT PSEUDOSECTION:
 ; EDNS: version: 0, flags:; udp: 1232
-; COOKIE: b2288b2cd974b19f010000006ac43ea9b2b8b9c64fd6370e (good)
+; COOKIE: 647e7bdc33bcc1ed010000006ac4460b898e47ebe22d1c76 (good)
 ;; QUESTION SECTION:
 ;srv.alltypes.example.		IN	SRV
 
 ;; ANSWER SECTION:
-srv.alltypes.example.	3600	IN	SRV	0 0 0 .
 srv.alltypes.example.	3600	IN	SRV	10 60 5060 sip.alltypes.example.
+srv.alltypes.example.	3600	IN	SRV	0 0 0 .
 
 ;; AUTHORITY SECTION:
 alltypes.example.	3600	IN	NS	ns2.example.net.
@@ -26,6 +26,6 @@ ns1.alltypes.example.	3600	IN	AAAA	2001:db8::53
 
 ;; Query time: 0 msec
 ;; SERVER: 127.0.0.1#5350(127.0.0.1) (TCP)
-;; WHEN: Tue Oct 06 00:19:53 UTC 2026
+;; WHEN: Tue Oct 06 00:51:23 UTC 2026
 ;; MSG SIZE  rcvd: 227
 

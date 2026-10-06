@@ -1,0 +1,12 @@
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 197
+;; flags: qr aa rd; QUERY: 1, ANSWER: 1, AUTHORITY: 0, ADDITIONAL: 1
+;; WARNING: recursion requested but not available
+
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags:; udp: 1232
+; COOKIE: f09c13e91715cb92010000006ac4460cedb712aa04e82cc8
+;; QUESTION SECTION:
+;cla.generic.drafttypes.example.	IN	TYPE263
+
+;; ANSWER SECTION:
+cla.generic.drafttypes.example.	3600 IN	TYPE263	\# 20 095443502D56342D5636095443502D56362D5637

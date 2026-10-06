@@ -3,22 +3,22 @@
 ; (1 server found)
 ;; global options: +cmd
 ;; Got answer:
-;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 26789
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 12880
 ;; flags: qr aa rd; QUERY: 1, ANSWER: 2, AUTHORITY: 0, ADDITIONAL: 1
 ;; WARNING: recursion requested but not available
 
 ;; OPT PSEUDOSECTION:
 ; EDNS: version: 0, flags: do; udp: 1232
-; COOKIE: 45e1ae05446e8773010000006ac43ea3257c0d2564407d48 (good)
+; COOKIE: 2e58ca6ddc37d191010000006ac44606e68f4528332c9458 (good)
 ;; QUESTION SECTION:
 ;ecdsap256-nsec3.interop.	IN	SOA
 
 ;; ANSWER SECTION:
 ecdsap256-nsec3.interop. 3600	IN	SOA	ns1.ecdsap256-nsec3.interop. hostmaster.ecdsap256-nsec3.interop. 2026100401 7200 3600 1209600 300
-ecdsap256-nsec3.interop. 3600	IN	RRSIG	SOA 13 2 3600 20361003001932 20261005231932 18981 ecdsap256-nsec3.interop. pQJc4n4Dmsl+qIuOV7GJNqzb0NOJ4WLI+aI8CkoXbHr8ueMjEgWmB3Y/ BgUt1suq0+dSpfyG03/J3gI5jTt8Wg==
+ecdsap256-nsec3.interop. 3600	IN	RRSIG	SOA 13 2 3600 20361003005101 20261005235101 17004 ecdsap256-nsec3.interop. s+sOQOj5PB/e5Ygj1QFTskPL5mhTg5rft/37ZpcXFxUfODibXnXdcdTe Mx8ySCMqcOjhg071GnOGyHuifr76tw==
 
 ;; Query time: 0 msec
 ;; SERVER: 127.0.0.1#5350(127.0.0.1) (UDP)
-;; WHEN: Tue Oct 06 00:19:47 UTC 2026
+;; WHEN: Tue Oct 06 00:51:18 UTC 2026
 ;; MSG SIZE  rcvd: 250
 

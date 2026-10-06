@@ -3,26 +3,26 @@
 ; (1 server found)
 ;; global options: +cmd
 ;; Got answer:
-;; ->>HEADER<<- opcode: QUERY, status: NXDOMAIN, id: 18039
+;; ->>HEADER<<- opcode: QUERY, status: NXDOMAIN, id: 43192
 ;; flags: qr aa rd; QUERY: 1, ANSWER: 0, AUTHORITY: 6, ADDITIONAL: 1
 ;; WARNING: recursion requested but not available
 
 ;; OPT PSEUDOSECTION:
 ; EDNS: version: 0, flags: do; udp: 1232
-; COOKIE: b42a803d043a1344010000006ac43ea22ee183f68c300a88 (good)
+; COOKIE: 4b5b53a73a967eea010000006ac44605a53a867952b4bbfd (good)
 ;; QUESTION SECTION:
 ;nosuch.rsasha512-nsec.interop.	IN	A
 
 ;; AUTHORITY SECTION:
 rsasha512-nsec.interop.	300	IN	SOA	ns1.rsasha512-nsec.interop. hostmaster.rsasha512-nsec.interop. 2026100401 7200 3600 1209600 300
-rsasha512-nsec.interop.	300	IN	RRSIG	SOA 10 2 3600 20361003001932 20261005231932 5796 rsasha512-nsec.interop. XA+GT2uAwIZ2iBYQJled/IoWLYyZvFLuRCBfHLBrDTiqfp/EgEAN/V/i aGzprULZUDhZOeiIJmlSAf+jmrhkBVp5bsHNahjCl4jVrIPR8pDTZX/b 9hKfpuEycMb3ZRMiVmc3fwBl/zP6niIXMhECGZLdDLxcD4YWU1Vafsd1 dqw=
+rsasha512-nsec.interop.	300	IN	RRSIG	SOA 10 2 3600 20361003005101 20261005235101 28655 rsasha512-nsec.interop. lkgbZS18doKzLFW7S2XP9kH1K/ZJxV4meQI58JOxdqEX2PMDueUXcUlI 5L/i3lY84sPo+Ur5WSfdkK4NeaX1npTqkT7Jog92I/e9u0y7w1cLnCXk EaaMjTxyikSlOpPsXf/FzYWCjVou9Q2pBINgbAI7gmZOQAKeM/6wgJ4L 1Yw=
 rsasha512-nsec.interop.	300	IN	NSEC	_svc.rsasha512-nsec.interop. NS SOA MX TXT LOC SSHFP RRSIG NSEC DNSKEY HTTPS CAA
-rsasha512-nsec.interop.	300	IN	RRSIG	NSEC 10 2 300 20361003001932 20261005231932 5796 rsasha512-nsec.interop. nUXR9ZB/L65kBrickFzm3gM/dAdweUPlGmQRZ7ld2qgPiEqg/p6JXPBa UQbKlA+75a5IWCnJjgAp1rfuHt7kXcu9aLV1N8jmGi7ua98fuop1QO5t u940Bb9/670DLsfPDs9MOproU+lZm0NncthR0J1sxBF5JUk1NIXnixn7 c5U=
+rsasha512-nsec.interop.	300	IN	RRSIG	NSEC 10 2 300 20361003005101 20261005235101 28655 rsasha512-nsec.interop. D2IA4rrGomGNadCc9fYYcOqBjuIxjyIgOnkkd/hXdWPZWOwrrjV6fj7G wc4x6gLQo5uO9Y1PH1A7ZdvdbuBYtVkW/Co2LWu04KrR0A3a4+sVNiPc UVSdL/l2EV+Su/FCqmur3xGyV9o7BpvU+S5PY1LXjtPdIj4CtLMDoCfa cME=
 mail.rsasha512-nsec.interop. 300 IN	NSEC	ns1.rsasha512-nsec.interop. A RRSIG NSEC
-mail.rsasha512-nsec.interop. 300 IN	RRSIG	NSEC 10 3 300 20361003001932 20261005231932 5796 rsasha512-nsec.interop. NmDPKdb0WZbp9BN1NMscxEW4NaZ0mLhrQ5JbKpnrbU6F0oxjSH//g4NR 6L/NWkkq7tpioRuar1fZoItUTidvv9x/lErsGvSfPGR8ortziEunSTXe swuTT5TzPf0GmD/XFGVC9qpXYDEpCrKNiYBh6vnGLIGCZ4nAP3tjZREh li0=
+mail.rsasha512-nsec.interop. 300 IN	RRSIG	NSEC 10 3 300 20361003005101 20261005235101 28655 rsasha512-nsec.interop. ZWwZaL5z2Cxy0mraJgvMUmxZciHDiMX+IZ+wnyeek1ayE5my1q3npmxk 549vRtn68hWCngKmryxQCzzj3FMQWSTgm9x1nr4d50Xhd1QbCgNubD9R qTQV5aVoGGMqQesaEEvXXN9+DWffvOGU9Sywv7l8cA9l9Ai1Ek7say3R 230=
 
 ;; Query time: 0 msec
 ;; SERVER: 127.0.0.1#5350(127.0.0.1) (UDP)
-;; WHEN: Tue Oct 06 00:19:46 UTC 2026
+;; WHEN: Tue Oct 06 00:51:17 UTC 2026
 ;; MSG SIZE  rcvd: 791
 

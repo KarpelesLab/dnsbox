@@ -1,0 +1,25 @@
+
+; <<>> DiG 9.18.39-0ubuntu0.24.04.7-Ubuntu <<>> @127.0.0.1 -p 5350 +tries=1 +time=5 unece.generic.drafttypes.example. TYPE69
+; (1 server found)
+;; global options: +cmd
+;; Got answer:
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 63730
+;; flags: qr aa rd; QUERY: 1, ANSWER: 3, AUTHORITY: 0, ADDITIONAL: 1
+;; WARNING: recursion requested but not available
+
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags:; udp: 1232
+; COOKIE: fe75ef11f448ddb4010000006ac4460c87d7873009dfd241 (good)
+;; QUESTION SECTION:
+;unece.generic.drafttypes.example. IN	TYPE69
+
+;; ANSWER SECTION:
+unece.generic.drafttypes.example. 3600 IN TYPE69 \# 29 02313600054A5054594F706C616365206F6620696E7370656374696F 6E
+unece.generic.drafttypes.example. 3600 IN TYPE69 \# 41 023230032D31380343454C636F6C642D636861696E2073746F726167 652074656D7065726174757265
+unece.generic.drafttypes.example. 3600 IN TYPE69 \# 8 0232340003323139
+
+;; Query time: 0 msec
+;; SERVER: 127.0.0.1#5350(127.0.0.1) (UDP)
+;; WHEN: Tue Oct 06 00:51:24 UTC 2026
+;; MSG SIZE  rcvd: 203
+

@@ -3,14 +3,14 @@
 ; (1 server found)
 ;; global options: +cmd
 ;; Got answer:
-;; ->>HEADER<<- opcode: STATUS, status: NOTIMP, id: 38071
+;; ->>HEADER<<- opcode: STATUS, status: NOTIMP, id: 6070
 ;; flags: qr; QUERY: 0, ANSWER: 0, AUTHORITY: 0, ADDITIONAL: 1
 
 ;; OPT PSEUDOSECTION:
 ; EDNS: version: 0, flags:; udp: 1232
-; COOKIE: 4b1dc8eca61e52fa010000006ac43ea9e2ae70bca921c8fe (good)
+; COOKIE: e3ab63c21dd649d5010000006ac4460cd4af42bcbc414c5a (good)
 ;; Query time: 0 msec
 ;; SERVER: 127.0.0.1#5350(127.0.0.1) (UDP)
-;; WHEN: Tue Oct 06 00:19:53 UTC 2026
+;; WHEN: Tue Oct 06 00:51:24 UTC 2026
 ;; MSG SIZE  rcvd: 51
 

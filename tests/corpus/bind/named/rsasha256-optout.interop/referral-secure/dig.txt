@@ -3,26 +3,26 @@
 ; (1 server found)
 ;; global options: +cmd
 ;; Got answer:
-;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 32476
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 20135
 ;; flags: qr rd; QUERY: 1, ANSWER: 0, AUTHORITY: 3, ADDITIONAL: 2
 ;; WARNING: recursion requested but not available
 
 ;; OPT PSEUDOSECTION:
 ; EDNS: version: 0, flags: do; udp: 1232
-; COOKIE: 57435400d8fe5075010000006ac43ea2c4a78c7800c78b20 (good)
+; COOKIE: 8bf457e09ec9842f010000006ac44604c6a5d76cafce73d6 (good)
 ;; QUESTION SECTION:
 ;host.secure.rsasha256-optout.interop. IN A
 
 ;; AUTHORITY SECTION:
 secure.rsasha256-optout.interop. 3600 IN NS	ns.secure.rsasha256-optout.interop.
 secure.rsasha256-optout.interop. 3600 IN DS	12345 13 2 E06D44B80B8F1D39A95C0B0D7C65D08458E880409BBC683457104237 C7F8EC8D
-secure.rsasha256-optout.interop. 3600 IN RRSIG	DS 8 3 3600 20361003001932 20261005231932 44284 rsasha256-optout.interop. Dzg+qgipsnNQf27jwngLWwHHY46X4rqZhhUbolzb98tdtyP8v4UZU8rd ycJyPvyVVUa7Xn9SxxTQdllSZXSWAXx5ROekd/UeKAS5fJRIFqrgtiou aV44B8UlTKNb7ZcZ2hFxrXDP8ePVSGWQGm1VB3lnR2EsEdWhdyu0g/NJ g1Y=
+secure.rsasha256-optout.interop. 3600 IN RRSIG	DS 8 3 3600 20361003005101 20261005235101 3133 rsasha256-optout.interop. i2OL0rfj67/ruEDDau09uEECyLraR17ssXKcV0qzR5oKOKqQroEbxsYp wCZCVuFhx+i+gFmD7BALunxSDDBeJrlXgH8mMh4RaIGgivGW8qVCl508 ymJTprmRbrz2AJxNiLMHIhOdajoa4B0fSL9pzxdNdpnlQ9AtCJ03Eu/3 Z/o=
 
 ;; ADDITIONAL SECTION:
 ns.secure.rsasha256-optout.interop. 3600 IN A	192.0.2.99
 
 ;; Query time: 0 msec
 ;; SERVER: 127.0.0.1#5350(127.0.0.1) (UDP)
-;; WHEN: Tue Oct 06 00:19:46 UTC 2026
+;; WHEN: Tue Oct 06 00:51:16 UTC 2026
 ;; MSG SIZE  rcvd: 358
 

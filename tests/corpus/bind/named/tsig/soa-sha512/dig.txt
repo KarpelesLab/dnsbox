@@ -3,13 +3,13 @@
 ; (1 server found)
 ;; global options: +cmd
 ;; Got answer:
-;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 3843
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 1912
 ;; flags: qr aa rd; QUERY: 1, ANSWER: 1, AUTHORITY: 0, ADDITIONAL: 2
 ;; WARNING: recursion requested but not available
 
 ;; OPT PSEUDOSECTION:
 ; EDNS: version: 0, flags:; udp: 1232
-; COOKIE: 00c17976b999e138010000006ac43eaa36f9c4204333190f (good)
+; COOKIE: b0cc858828215179010000006ac4460d2bc941096aa9fee9 (good)
 ;; QUESTION SECTION:
 ;interop.			IN	SOA
 
@@ -17,10 +17,10 @@
 interop.		3600	IN	SOA	ns.interop. hostmaster.interop. 2026100601 7200 3600 1209600 300
 
 ;; TSIG PSEUDOSECTION:
-hmac-sha512.key.	0	ANY	TSIG	hmac-sha512. 1791245994 300 64 XMt4bbGpy1voaizyJzlKuIl8X0+44FEswXOmBbdrtmWjpNtGCgrAnhUc csU7jSvjWYdSvK+ihVgV9EMj2hTARQ== 3843 NOERROR 0 
+hmac-sha512.key.	0	ANY	TSIG	hmac-sha512. 1791247885 300 64 19U3iV+ivnVA1qhzRmoNt99Q3DW6gBQBFAOm35hxBStZ3Ycd1xZqu/Nl 4QKbkMjI1fIWcffF9xrXH+SaKYmpAA== 1912 NOERROR 0 
 
 ;; Query time: 0 msec
 ;; SERVER: 127.0.0.1#5350(127.0.0.1) (UDP)
-;; WHEN: Tue Oct 06 00:19:54 UTC 2026
+;; WHEN: Tue Oct 06 00:51:25 UTC 2026
 ;; MSG SIZE  rcvd: 234
 

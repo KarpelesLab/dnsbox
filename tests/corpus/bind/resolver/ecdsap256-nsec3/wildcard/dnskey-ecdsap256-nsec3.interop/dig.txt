@@ -3,22 +3,22 @@
 ; (1 server found)
 ;; global options: +cmd
 ;; Got answer:
-;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 7431
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 31692
 ;; flags: qr rd ra ad cd; QUERY: 1, ANSWER: 3, AUTHORITY: 0, ADDITIONAL: 1
 
 ;; OPT PSEUDOSECTION:
 ; EDNS: version: 0, flags: do; udp: 1232
-; COOKIE: 37a8513e07473289010000006ac43eb1bdd958d6c418e906 (good)
+; COOKIE: a87776a40895c884010000006ac446141d9b49bbfcff8bdd (good)
 ;; QUESTION SECTION:
 ;ecdsap256-nsec3.interop.	IN	DNSKEY
 
 ;; ANSWER SECTION:
-ecdsap256-nsec3.interop. 3599	IN	DNSKEY	256 3 13 1X6JyvAzXKKQo1qfnUVjtmBhz+EOxqJVxA830EbMqaznvBjtfJZyvZr4 co2a3zBWWBiQCaJ4u+Jm17FMKPGPtQ==
-ecdsap256-nsec3.interop. 3599	IN	DNSKEY	257 3 13 5WKYtEPBy4adeUKVyaukfIbjfi+sDdCP9FS/zZz+KD2lbekwFau0BihC FiLrnKgJlLRsGs5+MXeBG8oyw4Jxmw==
-ecdsap256-nsec3.interop. 3599	IN	RRSIG	DNSKEY 13 2 3600 20361003001932 20261005231932 34368 ecdsap256-nsec3.interop. TTe97pCZqScZJMNOyvnl3bL6LrHmI5nlipoupZWnXZf0Qg+3xFGpBAyA +tfLEWfONRwA1ZYv3vmRq66ku6eDrw==
+ecdsap256-nsec3.interop. 3599	IN	DNSKEY	256 3 13 UnSPmcdTzUXeO1AVkWuGLTP13HXF6lmZs4/7ZtOFyZWvzadEeRlXoeUM OcR1Kjy4zYXGJ3jJa3ngceN32Bj5Vw==
+ecdsap256-nsec3.interop. 3599	IN	DNSKEY	257 3 13 kfiGrqee86LjOY8DQ92Ke857svssy9ngI0UamFJL95A412gV6+q89HIK wLXlp8JAczjHN9mMJVpoA+J0jFFhKg==
+ecdsap256-nsec3.interop. 3599	IN	RRSIG	DNSKEY 13 2 3600 20361003005101 20261005235101 40490 ecdsap256-nsec3.interop. NmXtEOOUebEuyJUZueS9R9txUTjiTWif1ugJdFuFT2Hpvut2+80ziHkC n089tx5mvVF318rLLpQHsCFsotYGQA==
 
 ;; Query time: 0 msec
 ;; SERVER: 127.0.0.1#5450(127.0.0.1) (UDP)
-;; WHEN: Tue Oct 06 00:20:01 UTC 2026
+;; WHEN: Tue Oct 06 00:51:32 UTC 2026
 ;; MSG SIZE  rcvd: 359
 

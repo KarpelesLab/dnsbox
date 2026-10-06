@@ -3,23 +3,23 @@
 ; (1 server found)
 ;; global options: +cmd
 ;; Got answer:
-;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 21690
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 24193
 ;; flags: qr rd ra ad cd; QUERY: 1, ANSWER: 0, AUTHORITY: 4, ADDITIONAL: 1
 
 ;; OPT PSEUDOSECTION:
 ; EDNS: version: 0, flags: do; udp: 1232
-; COOKIE: 5f7e00951edb679a010000006ac43eb4aaed764b85b4ffbe (good)
+; COOKIE: 8bc6c2d561fc4464010000006ac44617f65c29d813ebe206 (good)
 ;; QUESTION SECTION:
 ;unsigned.ed25519-nsec.interop.	IN	DS
 
 ;; AUTHORITY SECTION:
-unsigned.ed25519-nsec.interop. 300 IN	RRSIG	NSEC 15 3 300 20361003001932 20261005231932 48895 ed25519-nsec.interop. UxlpigZfZoInMdNQek+yt3tWJrBa26DBCWQgR8l3opyS8B5VmKYZGnWq HBprg4KAMITF6tfN+EiWUCyji5iEBw==
+unsigned.ed25519-nsec.interop. 300 IN	RRSIG	NSEC 15 3 300 20361003005101 20261005235101 1749 ed25519-nsec.interop. zP/zsdbgmb8bXmRl4tk9a2Q8VhUzOvmtvwtRr7VjgSWj9bpl7/kSvEXd hjRjokmO3FznfPZxAH20HErBY4UsBA==
 unsigned.ed25519-nsec.interop. 300 IN	NSEC	*.wild.ed25519-nsec.interop. NS RRSIG NSEC
 ed25519-nsec.interop.	300	IN	SOA	ns1.ed25519-nsec.interop. hostmaster.ed25519-nsec.interop. 2026100401 7200 3600 1209600 300
-ed25519-nsec.interop.	300	IN	RRSIG	SOA 15 2 3600 20361003001932 20261005231932 48895 ed25519-nsec.interop. mylIywYWaeRQP8BNJj6eZxRmw1UsNQ5uAMe/EeeH5sK57hmukpG+s26a pXeCiVlj4nS88LCdNGoHZGZ93UvDBQ==
+ed25519-nsec.interop.	300	IN	RRSIG	SOA 15 2 3600 20361003005101 20261005235101 1749 ed25519-nsec.interop. RJLgBW9UA96dgQNK7DDrJKNTEyaZzoeCiCJxwUu0Pbam+qM9GLV4rRuq KbjqINCj28mx9sZpe+k9b4IrghX8CA==
 
 ;; Query time: 0 msec
 ;; SERVER: 127.0.0.1#5450(127.0.0.1) (UDP)
-;; WHEN: Tue Oct 06 00:20:04 UTC 2026
+;; WHEN: Tue Oct 06 00:51:35 UTC 2026
 ;; MSG SIZE  rcvd: 418
 

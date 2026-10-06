@@ -3,12 +3,12 @@
 ; (1 server found)
 ;; global options: +cmd
 ;; Got answer:
-;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 59575
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 48581
 ;; flags: qr rd ra; QUERY: 1, ANSWER: 1, AUTHORITY: 0, ADDITIONAL: 1
 
 ;; OPT PSEUDOSECTION:
 ; EDNS: version: 0, flags: do; udp: 1232
-; COOKIE: 1907535b71058681010000006ac43eb16a15be8c7cbfb289 (good)
+; COOKIE: ed4d4ffff16ddd5a010000006ac446149b1f04bea6116d52 (good)
 ;; QUESTION SECTION:
 ;www.unsigned.ecdsap256-nsec3.interop. IN A
 
@@ -17,6 +17,6 @@ www.unsigned.ecdsap256-nsec3.interop. 3600 IN A	192.0.2.80
 
 ;; Query time: 1 msec
 ;; SERVER: 127.0.0.1#5450(127.0.0.1) (UDP)
-;; WHEN: Tue Oct 06 00:20:01 UTC 2026
+;; WHEN: Tue Oct 06 00:51:32 UTC 2026
 ;; MSG SIZE  rcvd: 109
 

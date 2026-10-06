@@ -1,4 +1,4 @@
-# named 9.18.39-0ubuntu0.24.04.7-Ubuntu (validating resolver) on the interop CI runner (run 37393349277, 2026-10-06): dig +dnssec www.bogus.interop. A
+# named 9.18.39-0ubuntu0.24.04.7-Ubuntu (validating resolver) on the interop CI runner (run 37396071664, 2026-10-06): dig +dnssec www.bogus.interop. A
 # tests/corpus/bind/keep.py from resolver/bogus/rdata/answer (tests/corpus/README.md)
-3b80818200010000000000010377777705626f67757307696e7465726f70000001000100002904d000008000001c000a
-0018ed7c6fc0adbc6fb6010000006ac43eb6c9a799e91894da4b
+51af818200010000000000010377777705626f67757307696e7465726f70000001000100002904d000008000001c000a
+00183d3c174300b8d851010000006ac4461a47a6744696532c7c

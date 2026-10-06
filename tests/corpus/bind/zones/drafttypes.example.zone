@@ -1,0 +1,28 @@
+; dnsbox's presentation of the record types defined only by Internet-Drafts
+; (IPN and CLA, draft-johnson-dns-ipn-cla-07; UNECE and ISO,
+; draft-woodcock-faltstrom-external-registry-rrtypes-01; examples from the
+; drafts), then the same records in the RFC 3597 generic form under
+; generic.drafttypes.example. run.sh has named load the zone but for the
+; lines named-checkzone cannot read (drafttypes-omitted.txt: the
+; presentation form of the types BIND does not know), serve it and
+; transfer it; tests/interop_bind.rs checks what named served.
+$TTL 3600
+drafttypes.example. 3600 IN SOA ns1.drafttypes.example. hostmaster.drafttypes.example. 2026100601 7200 900 1209600 3600
+drafttypes.example. 3600 IN NS ns1.drafttypes.example.
+ns1.drafttypes.example. 3600 IN A 192.0.2.53
+; omitted for named: ipn.drafttypes.example. 3600 IN IPN 977000
+; omitted for named: ipn.drafttypes.example. 3600 IN IPN 4294967298
+; omitted for named: cla.drafttypes.example. 3600 IN CLA TCP-V4-V6 TCP-V6-V7
+; omitted for named: unece.drafttypes.example. 3600 IN UNECE 16 - JPTYO "place of inspection"
+; omitted for named: unece.drafttypes.example. 3600 IN UNECE 20 -18 CEL "cold-chain storage temperature"
+; omitted for named: unece.drafttypes.example. 3600 IN UNECE 24 - 219
+; omitted for named: iso.drafttypes.example. 3600 IN ISO 3166-2 - US-CA "state of incorporation"
+; omitted for named: iso.drafttypes.example. 3600 IN ISO 4217 2400000\(50000\) EUR "insured value, hull and machinery"
+ipn.generic.drafttypes.example. 3600 IN TYPE264 \# 8 00000000000ee868
+ipn.generic.drafttypes.example. 3600 IN TYPE264 \# 8 0000000100000002
+cla.generic.drafttypes.example. 3600 IN TYPE263 \# 20 095443502d56342d5636095443502d56362d5637
+unece.generic.drafttypes.example. 3600 IN TYPE69 \# 29 02313600054a5054594f706c616365206f6620696e7370656374696f6e
+unece.generic.drafttypes.example. 3600 IN TYPE69 \# 41 023230032d31380343454c636f6c642d636861696e2073746f726167652074656d7065726174757265
+unece.generic.drafttypes.example. 3600 IN TYPE69 \# 8 0232340003323139
+iso.generic.drafttypes.example. 3600 IN TYPE70 \# 36 06333136362d32000555532d43417374617465206f6620696e636f72706f726174696f6e
+iso.generic.drafttypes.example. 3600 IN TYPE70 \# 57 04343231370e323430303030302835303030302903455552696e73757265642076616c75652c2068756c6c20616e64206d616368696e657279

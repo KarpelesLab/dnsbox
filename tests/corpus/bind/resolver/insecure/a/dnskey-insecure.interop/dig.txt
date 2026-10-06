@@ -3,12 +3,12 @@
 ; (1 server found)
 ;; global options: +cmd
 ;; Got answer:
-;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 16386
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 51099
 ;; flags: qr rd ra cd; QUERY: 1, ANSWER: 0, AUTHORITY: 1, ADDITIONAL: 1
 
 ;; OPT PSEUDOSECTION:
 ; EDNS: version: 0, flags: do; udp: 1232
-; COOKIE: b0d3e2c7bf298bd9010000006ac43eb7257ae0f3718f476f (good)
+; COOKIE: ef186c1cd641dd67010000006ac4461a2b0f3f43da2e0d5e (good)
 ;; QUESTION SECTION:
 ;insecure.interop.		IN	DNSKEY
 
@@ -17,6 +17,6 @@ insecure.interop.	300	IN	SOA	ns1.insecure.interop. hostmaster.insecure.interop. 
 
 ;; Query time: 1 msec
 ;; SERVER: 127.0.0.1#5450(127.0.0.1) (UDP)
-;; WHEN: Tue Oct 06 00:20:07 UTC 2026
+;; WHEN: Tue Oct 06 00:51:38 UTC 2026
 ;; MSG SIZE  rcvd: 124
 

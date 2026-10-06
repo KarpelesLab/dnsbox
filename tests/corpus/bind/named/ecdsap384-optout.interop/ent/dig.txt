@@ -3,24 +3,24 @@
 ; (1 server found)
 ;; global options: +cmd
 ;; Got answer:
-;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 319
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 38506
 ;; flags: qr aa rd; QUERY: 1, ANSWER: 0, AUTHORITY: 4, ADDITIONAL: 1
 ;; WARNING: recursion requested but not available
 
 ;; OPT PSEUDOSECTION:
 ; EDNS: version: 0, flags: do; udp: 1232
-; COOKIE: f8c1aac7515759a4010000006ac43ea4a2180d3afaf2262d (good)
+; COOKIE: a5ea0235e8832a11010000006ac4460717f313959a574b05 (good)
 ;; QUESTION SECTION:
 ;b.ent.ecdsap384-optout.interop.	IN	A
 
 ;; AUTHORITY SECTION:
 ecdsap384-optout.interop. 300	IN	SOA	ns1.ecdsap384-optout.interop. hostmaster.ecdsap384-optout.interop. 2026100401 7200 3600 1209600 300
-ecdsap384-optout.interop. 300	IN	RRSIG	SOA 14 2 3600 20361003001932 20261005231932 38014 ecdsap384-optout.interop. DVqwv8HbheOJOfgRs+6DL61Vi4IQ+Iifjj9yN4LvQide8eLb8mfeo3tN /x7Rfp0xaByl6iSz+lDxpX9VTKfGY/hG9dPs0iUlBN5FdjHcmoT9dfra eMukMcr9PHRjd+Ty
+ecdsap384-optout.interop. 300	IN	RRSIG	SOA 14 2 3600 20361003005101 20261005235101 57186 ecdsap384-optout.interop. nQmUwVqt/dZwgW6ZDwUQVB4/QzBf9LlMOm8TmZo1DRupfU7R/5o1HXDz Opn99sTPZgu/pwbFyZTdUNntEFCt9s3Hx0MIXKpAS4TnIKzeowRfoTJ5 qDTL4Q3xt2y+Yk/V
 3625IMD06NLL19J6HO9MIM0BPN01C9P8.ecdsap384-optout.interop. 300 IN NSEC3	1 1 0 - 4IQ85230Q0SKIEIP2VLKQP3F5R4QVDCJ
-3625IMD06NLL19J6HO9MIM0BPN01C9P8.ecdsap384-optout.interop. 300 IN RRSIG	NSEC3 14 3 300 20361003001932 20261005231932 38014 ecdsap384-optout.interop. FJv+7woeNQPXYnrvGjAu6iji6ottvKEcmlK1Cnn+zVia6JE+1eVo9CmQ 5sXtR5Ru7i/pyO+kMtDuGaa/CT1lGrG3U+km37E1oVCUCw2mCaxIDnvL ALpW7pL/796GnDDp
+3625IMD06NLL19J6HO9MIM0BPN01C9P8.ecdsap384-optout.interop. 300 IN RRSIG	NSEC3 14 3 300 20361003005101 20261005235101 57186 ecdsap384-optout.interop. CnJTi2BSvF4Ilue5tysvR2kfCSwyvc1v1MdXV+0kJfGMtrTV49yundGl Cz27yhLLnfnMuHvqQFWPI5T9QPd0Nr3rppM2ShYdjeAXyAQYtJCgaB81 V3gWm2a0Jxvr8cbF
 
 ;; Query time: 0 msec
 ;; SERVER: 127.0.0.1#5350(127.0.0.1) (UDP)
-;; WHEN: Tue Oct 06 00:19:48 UTC 2026
+;; WHEN: Tue Oct 06 00:51:19 UTC 2026
 ;; MSG SIZE  rcvd: 537
 

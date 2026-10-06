@@ -3,22 +3,22 @@
 ; (1 server found)
 ;; global options: +cmd
 ;; Got answer:
-;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 46629
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 41132
 ;; flags: qr aa; QUERY: 1, ANSWER: 2, AUTHORITY: 2, ADDITIONAL: 3
 
 ;; OPT PSEUDOSECTION:
 ; EDNS: version: 0, flags:; udp: 1232
-; COOKIE: b8b31c16bcf4de31010000006ac43ea82edb0b3a9a0d3e2d (good)
+; COOKIE: aa7145d41c9d0879010000006ac4460b4aad7cd5e62b46ae (good)
 ;; QUESTION SECTION:
 ;nsec.alltypes.example.		IN	NSEC
 
 ;; ANSWER SECTION:
-nsec.alltypes.example.	3600	IN	NSEC	\000.alltypes.example. NS SOA TYPE65534
 nsec.alltypes.example.	3600	IN	NSEC	host.alltypes.example. A MX RRSIG NSEC TYPE1234
+nsec.alltypes.example.	3600	IN	NSEC	\000.alltypes.example. NS SOA TYPE65534
 
 ;; AUTHORITY SECTION:
-alltypes.example.	3600	IN	NS	ns1.alltypes.example.
 alltypes.example.	3600	IN	NS	ns2.example.net.
+alltypes.example.	3600	IN	NS	ns1.alltypes.example.
 
 ;; ADDITIONAL SECTION:
 ns1.alltypes.example.	3600	IN	A	192.0.2.53
@@ -26,6 +26,6 @@ ns1.alltypes.example.	3600	IN	AAAA	2001:db8::53
 
 ;; Query time: 0 msec
 ;; SERVER: 127.0.0.1#5350(127.0.0.1) (TCP)
-;; WHEN: Tue Oct 06 00:19:52 UTC 2026
+;; WHEN: Tue Oct 06 00:51:23 UTC 2026
 ;; MSG SIZE  rcvd: 310
 

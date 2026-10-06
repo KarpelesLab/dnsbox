@@ -3,20 +3,20 @@
 ; (1 server found)
 ;; global options: +cmd
 ;; Got answer:
-;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 60711
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 41199
 ;; flags: qr rd ra cd; QUERY: 1, ANSWER: 0, AUTHORITY: 1, ADDITIONAL: 1
 
 ;; OPT PSEUDOSECTION:
 ; EDNS: version: 0, flags: do; udp: 1232
-; COOKIE: 45e279d2fcfae692010000006ac43eb455afaecf80eb4b40 (good)
+; COOKIE: 63947f0725f7729e010000006ac44617da16eb7af1a71c09 (good)
 ;; QUESTION SECTION:
 ;unsigned.ed25519-nsec.interop.	IN	DNSKEY
 
 ;; AUTHORITY SECTION:
 unsigned.ed25519-nsec.interop. 300 IN	SOA	ns.unsigned.ed25519-nsec.interop. hostmaster.unsigned.ed25519-nsec.interop. 2026100601 7200 3600 1209600 300
 
-;; Query time: 0 msec
+;; Query time: 1 msec
 ;; SERVER: 127.0.0.1#5450(127.0.0.1) (UDP)
-;; WHEN: Tue Oct 06 00:20:04 UTC 2026
+;; WHEN: Tue Oct 06 00:51:35 UTC 2026
 ;; MSG SIZE  rcvd: 136
 

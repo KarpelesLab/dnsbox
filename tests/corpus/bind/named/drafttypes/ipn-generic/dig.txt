@@ -1,0 +1,24 @@
+
+; <<>> DiG 9.18.39-0ubuntu0.24.04.7-Ubuntu <<>> @127.0.0.1 -p 5350 +tries=1 +time=5 ipn.generic.drafttypes.example. TYPE264
+; (1 server found)
+;; global options: +cmd
+;; Got answer:
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 16540
+;; flags: qr aa rd; QUERY: 1, ANSWER: 2, AUTHORITY: 0, ADDITIONAL: 1
+;; WARNING: recursion requested but not available
+
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags:; udp: 1232
+; COOKIE: 510266af415f571d010000006ac4460c95f7f10724137f80 (good)
+;; QUESTION SECTION:
+;ipn.generic.drafttypes.example.	IN	TYPE264
+
+;; ANSWER SECTION:
+ipn.generic.drafttypes.example.	3600 IN	TYPE264	\# 8 0000000100000002
+ipn.generic.drafttypes.example.	3600 IN	TYPE264	\# 8 00000000000EE868
+
+;; Query time: 0 msec
+;; SERVER: 127.0.0.1#5350(127.0.0.1) (UDP)
+;; WHEN: Tue Oct 06 00:51:24 UTC 2026
+;; MSG SIZE  rcvd: 127
+

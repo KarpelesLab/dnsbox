@@ -15,9 +15,9 @@ doa.newtypes.example.	3600	IN	DOA	0 1 2 "" aHR0cHM6Ly93d3cuaXNjLm9yZy8=
 doa.newtypes.example.	3600	IN	DOA	1234567890 100 1 "text/plain" -
 ns1.newtypes.example.	3600	IN	A	192.0.2.53
 newtypes.example.	3600	IN	SOA	ns1.newtypes.example. hostmaster.newtypes.example. 2026100501 7200 900 1209600 3600
-hmac-sha256.key.	0	ANY	TSIG	hmac-sha256. 1791245991 300 32 LYCL+08gPWH+gOGsuJ8YZstRx0fSkeSC9O7tHcExyGY= 62808 NOERROR 0 
+hmac-sha256.key.	0	ANY	TSIG	hmac-sha256. 1791247882 300 32 Z3pakie7yuImvjvlLu7QRqn3qWeiYXskOYGcomGXd+8= 46913 NOERROR 0 
 ;; Query time: 0 msec
 ;; SERVER: 127.0.0.1#5350(127.0.0.1) (TCP)
-;; WHEN: Tue Oct 06 00:19:51 UTC 2026
+;; WHEN: Tue Oct 06 00:51:22 UTC 2026
 ;; XFR size: 13 records (messages 1, bytes 612)
 

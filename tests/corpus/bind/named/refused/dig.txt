@@ -3,18 +3,18 @@
 ; (1 server found)
 ;; global options: +cmd
 ;; Got answer:
-;; ->>HEADER<<- opcode: QUERY, status: REFUSED, id: 29028
+;; ->>HEADER<<- opcode: QUERY, status: REFUSED, id: 10511
 ;; flags: qr rd; QUERY: 1, ANSWER: 0, AUTHORITY: 0, ADDITIONAL: 1
 ;; WARNING: recursion requested but not available
 
 ;; OPT PSEUDOSECTION:
 ; EDNS: version: 0, flags:; udp: 1232
-; COOKIE: ec9b72914345b30c010000006ac43ea9fb440fdb72b2365c (good)
+; COOKIE: 9bb8d43ff898e55e010000006ac4460c3e862015590a9df7 (good)
 ;; QUESTION SECTION:
 ;example.org.			IN	A
 
 ;; Query time: 0 msec
 ;; SERVER: 127.0.0.1#5350(127.0.0.1) (UDP)
-;; WHEN: Tue Oct 06 00:19:53 UTC 2026
+;; WHEN: Tue Oct 06 00:51:24 UTC 2026
 ;; MSG SIZE  rcvd: 68
 

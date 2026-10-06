@@ -1,0 +1,8 @@
+ipn.drafttypes.example. 3600 IN IPN 977000
+ipn.drafttypes.example. 3600 IN IPN 4294967298
+cla.drafttypes.example. 3600 IN CLA TCP-V4-V6 TCP-V6-V7
+unece.drafttypes.example. 3600 IN UNECE 16 - JPTYO "place of inspection"
+unece.drafttypes.example. 3600 IN UNECE 20 -18 CEL "cold-chain storage temperature"
+unece.drafttypes.example. 3600 IN UNECE 24 - 219
+iso.drafttypes.example. 3600 IN ISO 3166-2 - US-CA "state of incorporation"
+iso.drafttypes.example. 3600 IN ISO 4217 2400000\(50000\) EUR "insured value, hull and machinery"

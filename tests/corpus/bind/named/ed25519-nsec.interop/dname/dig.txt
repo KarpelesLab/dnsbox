@@ -3,23 +3,23 @@
 ; (1 server found)
 ;; global options: +cmd
 ;; Got answer:
-;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 40072
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 3840
 ;; flags: qr aa rd; QUERY: 1, ANSWER: 3, AUTHORITY: 0, ADDITIONAL: 1
 ;; WARNING: recursion requested but not available
 
 ;; OPT PSEUDOSECTION:
 ; EDNS: version: 0, flags: do; udp: 1232
-; COOKIE: ea171e729c4887c0010000006ac43ea5808e2074aef39c89 (good)
+; COOKIE: e21ba0a616eeeeb1010000006ac446078b3b8975cf80400f (good)
 ;; QUESTION SECTION:
 ;x.dname.ed25519-nsec.interop.	IN	A
 
 ;; ANSWER SECTION:
 dname.ed25519-nsec.interop. 3600 IN	DNAME	example.net.
-dname.ed25519-nsec.interop. 3600 IN	RRSIG	DNAME 15 3 3600 20361003001932 20261005231932 48895 ed25519-nsec.interop. IJr3wKgEwXZuTqCPSMZviOo6Qkh74qv5L5G9D2IANasljWbgVEbUo3gg /aULZoDeL2JPOLDhXrQLciSoP+n4AA==
+dname.ed25519-nsec.interop. 3600 IN	RRSIG	DNAME 15 3 3600 20361003005101 20261005235101 1749 ed25519-nsec.interop. EaAzJIbOLaC2TciIK4s4grSGBqrS3+cJYT1eUSYCUnnnWOlffB2JZClN OOu6NK+0kib0NXumL5MLYvXFiPsYBw==
 x.dname.ed25519-nsec.interop. 3600 IN	CNAME	x.example.net.
 
 ;; Query time: 0 msec
 ;; SERVER: 127.0.0.1#5350(127.0.0.1) (UDP)
-;; WHEN: Tue Oct 06 00:19:49 UTC 2026
+;; WHEN: Tue Oct 06 00:51:19 UTC 2026
 ;; MSG SIZE  rcvd: 242
 

@@ -3,26 +3,26 @@
 ; (1 server found)
 ;; global options: +cmd
 ;; Got answer:
-;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 50955
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 31481
 ;; flags: qr aa rd; QUERY: 1, ANSWER: 2, AUTHORITY: 2, ADDITIONAL: 1
 ;; WARNING: recursion requested but not available
 
 ;; OPT PSEUDOSECTION:
 ; EDNS: version: 0, flags: do; udp: 1232
-; COOKIE: de18436b721495e8010000006ac43ea4346a0d1bb5a22f2d (good)
+; COOKIE: e1b5c02fc63f2203010000006ac446071e036dc0216a297d (good)
 ;; QUESTION SECTION:
 ;host.wild.ecdsap384-optout.interop. IN	A
 
 ;; ANSWER SECTION:
 host.wild.ecdsap384-optout.interop. 3600 IN A	192.0.2.42
-host.wild.ecdsap384-optout.interop. 3600 IN RRSIG A 14 3 3600 20361003001932 20261005231932 38014 ecdsap384-optout.interop. dFWejJZ0NlG5OMRMeI+JOiEJY0BI6+3BY46C7NpkgbvlXVLKsNTK4oTD oOaQY9sa5ypHcxUoAw173D7rzZ1BymxN0FVq1GXZUpKvihbSrPbZWLtg OPXNEKt9dHknEpbs
+host.wild.ecdsap384-optout.interop. 3600 IN RRSIG A 14 3 3600 20361003005101 20261005235101 57186 ecdsap384-optout.interop. qeODcB4FgWAnF8IhBDXFPxocAfbvVBY0AkTyxdzQzxSdhzItj56ysLZo ICnIgWF1l8yLzu8J28/kEMzoT3gsbQgsWgtJryvloxIBrBr8a3cVXeEt QJTTvdOXMTVF65Fp
 
 ;; AUTHORITY SECTION:
 9L6A449G9M7VRGDDM1OPMBRHPJ8JCAJT.ecdsap384-optout.interop. 300 IN NSEC3	1 1 0 - AOV0BJ4GMRJE8HM7KHCUNOL7ITSAKD49 NS DS RRSIG
-9L6A449G9M7VRGDDM1OPMBRHPJ8JCAJT.ecdsap384-optout.interop. 300 IN RRSIG	NSEC3 14 3 300 20361003001932 20261005231932 38014 ecdsap384-optout.interop. CfShHl06o+dgxdglRvnPURTA2Rxj2s0bWb6FityfphtTCLcLBepS/wWU /9o94+WeCqa2w6Ex9f0YKS5KRlCG2Ki1wJLWBLnntqCDq68eM+6s783B XthA36FXFIBnFYz7
+9L6A449G9M7VRGDDM1OPMBRHPJ8JCAJT.ecdsap384-optout.interop. 300 IN RRSIG	NSEC3 14 3 300 20361003005101 20261005235101 57186 ecdsap384-optout.interop. CJTxNSpMmk/hdP0s51BzXfgYNi+GGuCpJEh5Z0nevf43ztgZP5L94OvH 0nSdBu/aZCMhOk+0pdJIATkR7SkGGwhVdxQ/U7zxn7jGTRIZkIHWgIMj ukxcYOI0TQfu7IfS
 
 ;; Query time: 0 msec
 ;; SERVER: 127.0.0.1#5350(127.0.0.1) (UDP)
-;; WHEN: Tue Oct 06 00:19:48 UTC 2026
+;; WHEN: Tue Oct 06 00:51:19 UTC 2026
 ;; MSG SIZE  rcvd: 490
 

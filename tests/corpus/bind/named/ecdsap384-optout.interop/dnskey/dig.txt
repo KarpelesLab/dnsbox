@@ -3,23 +3,23 @@
 ; (1 server found)
 ;; global options: +cmd
 ;; Got answer:
-;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 57388
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 15292
 ;; flags: qr aa rd; QUERY: 1, ANSWER: 3, AUTHORITY: 0, ADDITIONAL: 1
 ;; WARNING: recursion requested but not available
 
 ;; OPT PSEUDOSECTION:
 ; EDNS: version: 0, flags: do; udp: 1232
-; COOKIE: 1a601575e55c2e9e010000006ac43ea42ad3a52afd83db65 (good)
+; COOKIE: 75a300d8d4f12fa3010000006ac44607cfe05b1dc2176381 (good)
 ;; QUESTION SECTION:
 ;ecdsap384-optout.interop.	IN	DNSKEY
 
 ;; ANSWER SECTION:
-ecdsap384-optout.interop. 3600	IN	DNSKEY	257 3 14 7Ibu6d79UfTAy8qVEsza6bbaIBAUl9iqmnRpB63hbxRHaFkMn1zSFf0X Yf4JdkxI7vNUrUxrbzWlrRZP3PGr6gSXUwbfaS2uc3VD5RutvF7YcMxM Ha/tjPr5jnasWn4U
-ecdsap384-optout.interop. 3600	IN	DNSKEY	256 3 14 rp3RjImW2HHsIYbxla78d+TipjFFA9LZ1vLb228r8EtgfEwbt6hDPZcK 4IVqzmGD1evf0jmvXlwcajF9fPZqSFNyaF1VioVg4yaAJYkd0mZiM0ek hy/LQ0t34aAYnO3w
-ecdsap384-optout.interop. 3600	IN	RRSIG	DNSKEY 14 2 3600 20361003001932 20261005231932 53492 ecdsap384-optout.interop. JL5KWfS1fiOb19lmz1e3QRAjJ7fCQl6B3xw96liflmivAuKe4ACA8mCt TumOKCkVnyn3oNnaEYXeCY6G6DZvZRCyxm6GJGz7Hyp5wch+36Kvv6f/ wKCBKzMhoe0YOhbr
+ecdsap384-optout.interop. 3600	IN	DNSKEY	256 3 14 ahCcZmQhc3p4CqmnMXfDI9t3zii0X9ejJAV0QFprIVOmQwPe+hzwgCuZ rLJd0euvBJwMeMixZbv62iFdOKwz7TCIfNFjhbKunyuBsMFYHV9mue7k u5nRyvUvEKY5RTkt
+ecdsap384-optout.interop. 3600	IN	DNSKEY	257 3 14 HQpLFEyzEROcArmdChvV7XRahX4E6uGiL1+vjQFON4AAKtifl1H/6NPz scjoraY6FPdTaIzXd92yPmkIFSAsZyqISZ3QECpv28d47vOY+qJFVmfw 8NvXu1AUMiyUz36p
+ecdsap384-optout.interop. 3600	IN	RRSIG	DNSKEY 14 2 3600 20361003005101 20261005235101 890 ecdsap384-optout.interop. Xg6AbeyQVkAirlSM3+9dR018gNAfGrokU/AWzKSlAoIMPPZUoTuKvqpH jV3XeTnMmCt85nfuE7Xj2rHLrqGhQh9/zm1H7eCxt9jC1rCHxWjkxUl6 ny10nF1KQtvO1/Xi
 
 ;; Query time: 0 msec
 ;; SERVER: 127.0.0.1#5350(127.0.0.1) (UDP)
-;; WHEN: Tue Oct 06 00:19:48 UTC 2026
+;; WHEN: Tue Oct 06 00:51:19 UTC 2026
 ;; MSG SIZE  rcvd: 457
 

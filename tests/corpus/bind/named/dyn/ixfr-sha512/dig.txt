@@ -32,9 +32,9 @@ dyn.interop.		3600	IN	SOA	ns1.dyn.interop. hostmaster.dyn.interop. 2026100607 72
 dyn.interop.		3600	IN	SOA	ns1.dyn.interop. hostmaster.dyn.interop. 2026100608 7200 3600 1209600 300
 tcp.dyn.interop.	300	IN	AAAA	2001:db8::7
 dyn.interop.		3600	IN	SOA	ns1.dyn.interop. hostmaster.dyn.interop. 2026100608 7200 3600 1209600 300
-hmac-sha512.key.	0	ANY	TSIG	hmac-sha512. 1791245994 300 64 Vzy1sPR98lBEwGkuS/jRgnpA4huqdJQRZWkcBWMwZwFlvUxAY+t56Np4 0qB01N3h6mlknY7lzBjJam91f0WbWA== 22720 NOERROR 0 
+hmac-sha512.key.	0	ANY	TSIG	hmac-sha512. 1791247885 300 64 CHmD2G+lbG/FZBV5XqM4nPMJ5xpNTAagrqsgwu2hmCgHVBzu2nt682G2 mtKdJl2JBawbJw4A1UxvEAoq5TsYyw== 22463 NOERROR 0 
 ;; Query time: 0 msec
 ;; SERVER: 127.0.0.1#5350(127.0.0.1) (TCP)
-;; WHEN: Tue Oct 06 00:19:54 UTC 2026
+;; WHEN: Tue Oct 06 00:51:25 UTC 2026
 ;; XFR size: 30 records (messages 1, bytes 1173)
 

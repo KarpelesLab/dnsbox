@@ -3,26 +3,26 @@
 ; (1 server found)
 ;; global options: +cmd
 ;; Got answer:
-;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 54720
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 39536
 ;; flags: qr rd; QUERY: 1, ANSWER: 0, AUTHORITY: 3, ADDITIONAL: 2
 ;; WARNING: recursion requested but not available
 
 ;; OPT PSEUDOSECTION:
 ; EDNS: version: 0, flags: do; udp: 1232
-; COOKIE: 8574551a4a685488010000006ac43ea6322bce9dde1e0cc7 (good)
+; COOKIE: 3464f9e258ac8c05010000006ac4460810134cf7a649fc2c (good)
 ;; QUESTION SECTION:
 ;host.secure.ed448-nsec3.interop. IN	A
 
 ;; AUTHORITY SECTION:
 secure.ed448-nsec3.interop. 3600 IN	NS	ns.secure.ed448-nsec3.interop.
 secure.ed448-nsec3.interop. 3600 IN	DS	12345 13 2 E06D44B80B8F1D39A95C0B0D7C65D08458E880409BBC683457104237 C7F8EC8D
-secure.ed448-nsec3.interop. 3600 IN	RRSIG	DS 16 3 3600 20361003001932 20261005231932 60497 ed448-nsec3.interop. oPtwAbH/ejG9sHOmZs1UBIGxCEkutTglOZIxGIRsry0Y42a9gG7W0ViF 2EXy2cJ7iK+cpV1BxFeAobVqOz5a99DyI0Sj2H5z/8krWn1Wo/dG0yGz d7hROk93X98cyFrYeLKvYNqB7Qokwu2BvCcQCxoA
+secure.ed448-nsec3.interop. 3600 IN	RRSIG	DS 16 3 3600 20361003005101 20261005235101 43293 ed448-nsec3.interop. in7ObdgOvtL9OxoMK/WcBtjC3NE7+ZYdLih9L5Y9xEUcm11tqiMbVQ1i lOpZZQUmY5SZFQDOsGIAd9GYL+/6cT0tQi0RBmJUJGCx88ajgCifVx4H EacVgJv5L0Kdxxg8xxQBf10HlhNorsAPFaClsCYA
 
 ;; ADDITIONAL SECTION:
 ns.secure.ed448-nsec3.interop. 3600 IN	A	192.0.2.99
 
 ;; Query time: 0 msec
 ;; SERVER: 127.0.0.1#5350(127.0.0.1) (UDP)
-;; WHEN: Tue Oct 06 00:19:50 UTC 2026
+;; WHEN: Tue Oct 06 00:51:20 UTC 2026
 ;; MSG SIZE  rcvd: 334
 

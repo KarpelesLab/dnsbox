@@ -3,12 +3,12 @@
 ; (1 server found)
 ;; global options: +cmd
 ;; Got answer:
-;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 30036
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 27841
 ;; flags: qr aa; QUERY: 1, ANSWER: 1, AUTHORITY: 2, ADDITIONAL: 3
 
 ;; OPT PSEUDOSECTION:
 ; EDNS: version: 0, flags:; udp: 1232
-; COOKIE: 5dd6ae454e9fc0be010000006ac43ea88f01678aa5cc2b2c (good)
+; COOKIE: 4e2a117dc0950b48010000006ac4460b0515b0da7a8fcd35 (good)
 ;; QUESTION SECTION:
 ;smimea.alltypes.example.	IN	SMIMEA
 
@@ -16,8 +16,8 @@
 smimea.alltypes.example. 3600	IN	SMIMEA	3 0 1 ABABABABABABABABABABABABABABABABABABABABABABABABABABABAB ABABABAB
 
 ;; AUTHORITY SECTION:
-alltypes.example.	3600	IN	NS	ns2.example.net.
 alltypes.example.	3600	IN	NS	ns1.alltypes.example.
+alltypes.example.	3600	IN	NS	ns2.example.net.
 
 ;; ADDITIONAL SECTION:
 ns1.alltypes.example.	3600	IN	A	192.0.2.53
@@ -25,6 +25,6 @@ ns1.alltypes.example.	3600	IN	AAAA	2001:db8::53
 
 ;; Query time: 0 msec
 ;; SERVER: 127.0.0.1#5350(127.0.0.1) (TCP)
-;; WHEN: Tue Oct 06 00:19:52 UTC 2026
+;; WHEN: Tue Oct 06 00:51:23 UTC 2026
 ;; MSG SIZE  rcvd: 218
 

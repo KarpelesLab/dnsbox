@@ -3,22 +3,22 @@
 ; (1 server found)
 ;; global options: +cmd
 ;; Got answer:
-;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 63167
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 10813
 ;; flags: qr rd ra ad cd; QUERY: 1, ANSWER: 3, AUTHORITY: 0, ADDITIONAL: 1
 
 ;; OPT PSEUDOSECTION:
 ; EDNS: version: 0, flags: do; udp: 1232
-; COOKIE: bf93022d8a330a8a010000006ac43eb4d205046e13ab6359 (good)
+; COOKIE: 9ee90358c1d063f1010000006ac44617b528c9fed8733c55 (good)
 ;; QUESTION SECTION:
 ;interop.			IN	DNSKEY
 
 ;; ANSWER SECTION:
-interop.		3580	IN	DNSKEY	256 3 13 KZ+2+lXu2vO+uPivTDYe8FYPD3mYl38iSJDbhK9LU0LQbiTONt7+/lUf ErjWhPrQHmpTN1gc+1p/gGomi12dtg==
-interop.		3580	IN	DNSKEY	257 3 13 74XwZf/UAglGs/Aqr1n0/fQ9hLt+J5MeJnJod6ZHFS8QuUFE+Bt9FBCh gqql4CgXTQ7BpZRGfdneRYwfGRscGQ==
-interop.		3580	IN	RRSIG	DNSKEY 13 1 3600 20361003001932 20261005231932 32396 interop. 3zebfJ+luRAKUUwgk4E6y6W8HaMgM1pXwZp3+5Z4UwZTnQI1tP0Zbh0A z24gUIFxpEHNoJ8DdgGiHaiFVwf9Mg==
+interop.		3580	IN	DNSKEY	257 3 13 t+o18jTCaGVYQaYuez/UR90CnGpas1w342KjeA39S+GTtLBX48RS2vaK /E8F0znzD7uvuhpwGj8cJEpxEwJCuQ==
+interop.		3580	IN	DNSKEY	256 3 13 zgLD7YVkfEDoRnVPXmbiNu8ypohDDuGPr5PPrDAQqzwFlKjLThZe070e ui8WDocgfeK+1L13XEi6e0DYlMyjlg==
+interop.		3580	IN	RRSIG	DNSKEY 13 1 3600 20361003005101 20261005235101 19422 interop. quqK9eCuYx7vJG2ujV/RXF979PSVoXGA7CVmNv8CzMuiDTzajyveRano Huj6Du33RM8PrDMPq3t/lQr0WQ/csg==
 
 ;; Query time: 0 msec
 ;; SERVER: 127.0.0.1#5450(127.0.0.1) (UDP)
-;; WHEN: Tue Oct 06 00:20:04 UTC 2026
+;; WHEN: Tue Oct 06 00:51:35 UTC 2026
 ;; MSG SIZE  rcvd: 327
 

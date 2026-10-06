@@ -1,10 +1,10 @@
-;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 17427
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 37478
 ;; flags: qr aa rd; QUERY: 1, ANSWER: 1, AUTHORITY: 0, ADDITIONAL: 1
 ;; WARNING: recursion requested but not available
 
 ;; OPT PSEUDOSECTION:
 ; EDNS: version: 0, flags:; udp: 1232
-; COOKIE: 52328c977d0e9513010000006ac43ea900a329c946b89a7e
+; COOKIE: 63cfa0542cfc056e010000006ac4460c9abb47949085d314
 ;; QUESTION SECTION:
 ;version.bind.			CH	TXT
 

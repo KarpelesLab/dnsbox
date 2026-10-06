@@ -3,24 +3,24 @@
 ; (1 server found)
 ;; global options: +cmd
 ;; Got answer:
-;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 65460
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 9537
 ;; flags: qr aa rd; QUERY: 1, ANSWER: 4, AUTHORITY: 0, ADDITIONAL: 1
 ;; WARNING: recursion requested but not available
 
 ;; OPT PSEUDOSECTION:
 ; EDNS: version: 0, flags: do; udp: 1232
-; COOKIE: a0128c7f14c33051010000006ac43ea20e8baef050042fad (good)
+; COOKIE: ca7108ad65b2247b010000006ac446054fdb698675d41e32 (good)
 ;; QUESTION SECTION:
 ;alias.rsasha512-nsec.interop.	IN	A
 
 ;; ANSWER SECTION:
 alias.rsasha512-nsec.interop. 3600 IN	CNAME	www.rsasha512-nsec.interop.
-alias.rsasha512-nsec.interop. 3600 IN	RRSIG	CNAME 10 3 3600 20361003001932 20261005231932 5796 rsasha512-nsec.interop. tJSe1hBzQFX0vfn9yVEcYvkd326f/5q7eSZer455X+lJ+gIKwGvTtGDc C+Fohin+Te69vH3if1Mo2hOM5gWY9IOYaq9G2/HnLSTLEfwR8Jzl7F8G Gyhfccn7vp+REsOTLYJVbJ7DRUwokNjgEtCvcG/ejqG+GajI/kzUT/um iCQ=
+alias.rsasha512-nsec.interop. 3600 IN	RRSIG	CNAME 10 3 3600 20361003005101 20261005235101 28655 rsasha512-nsec.interop. FSyvYk8ggmuRl2364Q6oIlUV1Sxa5Edu7NvT/aWZvSb2KSBI3ozonxL0 xvBWpyA9OQhu79uuDH4ogcuCi1ZpVg1m/gkRK3g9SAyaydp6i7+b4M54 0gTvdaNB13T0WS0Bp4IzcSM6DY3UlofT4sW/Z6l+YIvPJq4PEx28SGb/ NsQ=
 www.rsasha512-nsec.interop. 3600 IN	A	192.0.2.80
-www.rsasha512-nsec.interop. 3600 IN	RRSIG	A 10 3 3600 20361003001932 20261005231932 5796 rsasha512-nsec.interop. upththBLsUjsnLmkrAgYqDxyQ04iiXwgmXn4eLP4Kq9CebbICVtIIrDg i3cPRTvfhKPMQ8ELT2MoHDsCJ/eSpk083de7QbSowAxpUYFq2DSuctft IQP/74Ed+GJYdmI0MdCKl/67HlWeda7H/xKqxYZlak08V46lzlL1rRd9 uXA=
+www.rsasha512-nsec.interop. 3600 IN	RRSIG	A 10 3 3600 20361003005101 20261005235101 28655 rsasha512-nsec.interop. JG5yuvoVWM3hwXoFkxapCY4EbrxSArgCsK1tggJ7zgHQWP6ijy/0z6ep omaNtDXJ1ObhByNT16yhhDg7JwvJyojsEriv65LtumWM8tR5BBHN7Vcu B7IDCbWZO9S/sy4gHdsJ4GuU2C/yePR1XLrGC1gja16z0I/UyVdIm4Ge wZE=
 
 ;; Query time: 0 msec
 ;; SERVER: 127.0.0.1#5350(127.0.0.1) (UDP)
-;; WHEN: Tue Oct 06 00:19:46 UTC 2026
+;; WHEN: Tue Oct 06 00:51:17 UTC 2026
 ;; MSG SIZE  rcvd: 483
 

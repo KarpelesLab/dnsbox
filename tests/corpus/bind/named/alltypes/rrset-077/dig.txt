@@ -3,12 +3,12 @@
 ; (1 server found)
 ;; global options: +cmd
 ;; Got answer:
-;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 53852
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 39833
 ;; flags: qr aa; QUERY: 1, ANSWER: 2, AUTHORITY: 2, ADDITIONAL: 3
 
 ;; OPT PSEUDOSECTION:
 ; EDNS: version: 0, flags:; udp: 1232
-; COOKIE: 45e45195fa406fcd010000006ac43ea9089bf2f1dbf91bde (good)
+; COOKIE: 15ca8010390c22b6010000006ac4460bf4bbb24da041db83 (good)
 ;; QUESTION SECTION:
 ;sshfp.alltypes.example.		IN	SSHFP
 
@@ -26,6 +26,6 @@ ns1.alltypes.example.	3600	IN	AAAA	2001:db8::53
 
 ;; Query time: 0 msec
 ;; SERVER: 127.0.0.1#5350(127.0.0.1) (TCP)
-;; WHEN: Tue Oct 06 00:19:53 UTC 2026
+;; WHEN: Tue Oct 06 00:51:23 UTC 2026
 ;; MSG SIZE  rcvd: 250
 

@@ -3,22 +3,22 @@
 ; (1 server found)
 ;; global options: +cmd
 ;; Got answer:
-;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 63563
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 17205
 ;; flags: qr rd ra ad cd; QUERY: 1, ANSWER: 3, AUTHORITY: 0, ADDITIONAL: 1
 
 ;; OPT PSEUDOSECTION:
 ; EDNS: version: 0, flags: do; udp: 1232
-; COOKIE: 67605db00ed20e05010000006ac43eb706b502afa9061479 (good)
+; COOKIE: cb969277a05fdceb010000006ac4461aaf5d934b075da366 (good)
 ;; QUESTION SECTION:
 ;bogus-nsec.interop.		IN	DNSKEY
 
 ;; ANSWER SECTION:
-bogus-nsec.interop.	3600	IN	DNSKEY	257 3 14 CS0wIyDlKo3VNvnmfVgM2tm88OsZbD0XkMVOVIC5or8MBUjpqWa4rx+Y nh24xQkkSHAZT/Ma0njs/XkPN1b3MxpwwwDS3ZO4+xkXGQ5QwgjvTRLZ 2gp5nYiPAHaX/d1I
-bogus-nsec.interop.	3600	IN	DNSKEY	256 3 14 bRpG56vjwP2l8MUTHdFuPp72wedd5MmihjrRulIbKbrWU2BxO4Ld06iy sVKZFh/Z/crupLc1dSHqIMCamEa/rz4HC35513cboPXtSfA882AOVBaN IYRYf+jRlNFeV4Jn
-bogus-nsec.interop.	3600	IN	RRSIG	DNSKEY 14 2 3600 20361003001932 20261005231932 29470 bogus-nsec.interop. Irz7aHOgHrZEI9gxPhrtEwLVM1yg6nJcJlMrRc06Iq/mSgUSE5oPGLzO zluqvmgrpx90QaNQKrRQ1c60OaYfYisdpMMwo42MrDvNu6ZOqWa56/mA EFirJKMtYDB+aSVs
+bogus-nsec.interop.	3600	IN	DNSKEY	257 3 14 +YPDs0Lfv3Qvu1QMmnHj0h7eWWPv3bYkA3FJi0BlTn71o+OuNmrAvbBu nsBB9P3/SzbN7WrX0M1zvG3/HtHISOCWeDhs2t7L4Mw7fxKkkiT1kPhv AN6FVxyz9HNt7yc0
+bogus-nsec.interop.	3600	IN	DNSKEY	256 3 14 tjManSPPtgOxKd67SscWwXtTPqZEy56qk6hUj250+9Hf/4MJMGMjoQQt 8hMNp/D34+4xhcGYJm2D0Y0k1xoqnZsNv6OgmfEv/RsIHIsKgOT/UEqe 074X2EAyL1dTElbf
+bogus-nsec.interop.	3600	IN	RRSIG	DNSKEY 14 2 3600 20361003005101 20261005235101 48403 bogus-nsec.interop. TdES2QRJJhjp3WVrml1T5xm3vnusWrPO5oNxnUP68tRAuPxWHgYhXjAL hSdf1cc1msUaaaNaifCM1aFLNtbKtBbdNHLMJR/q6dOotKydTnH50xa7 3ACpsa+a1WjmluLg
 
 ;; Query time: 0 msec
 ;; SERVER: 127.0.0.1#5450(127.0.0.1) (UDP)
-;; WHEN: Tue Oct 06 00:20:07 UTC 2026
+;; WHEN: Tue Oct 06 00:51:38 UTC 2026
 ;; MSG SIZE  rcvd: 445
 

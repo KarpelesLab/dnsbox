@@ -3,24 +3,24 @@
 ; (1 server found)
 ;; global options: +cmd
 ;; Got answer:
-;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 9429
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 51046
 ;; flags: qr aa rd; QUERY: 1, ANSWER: 4, AUTHORITY: 0, ADDITIONAL: 1
 ;; WARNING: recursion requested but not available
 
 ;; OPT PSEUDOSECTION:
 ; EDNS: version: 0, flags: do; udp: 1232
-; COOKIE: 20c722fd77d281cb010000006ac43ea0a9aaff08fa094096 (good)
+; COOKIE: e04fbadff52cc409010000006ac446032fdd0ae3a6f87549 (good)
 ;; QUESTION SECTION:
 ;alias.rsasha1-nsec.interop.	IN	A
 
 ;; ANSWER SECTION:
 alias.rsasha1-nsec.interop. 3600 IN	CNAME	www.rsasha1-nsec.interop.
-alias.rsasha1-nsec.interop. 3600 IN	RRSIG	CNAME 5 3 3600 20361003001932 20261005231932 21015 rsasha1-nsec.interop. A1BIMkVaKuTwPswBk7kb8vFllWASx0UjHOx6OWcyvkWe9ahdY5KaR5lX yyPOzq/VzOsjGHBb7MOlZ+V6xqmM9ff1+Dott3Ls96uNnD7mLl79R9BT IUOCbLcQIvbDpN2sdFbrP0SxthAYodwq5pygm7SOda2keqptlF6VEi0+ wD8=
+alias.rsasha1-nsec.interop. 3600 IN	RRSIG	CNAME 5 3 3600 20361003005101 20261005235101 60951 rsasha1-nsec.interop. Lqkm1YdgvXGwIfsrxE5cq6joTFZ+lYyqKvhSyyQIpoQ3dR6VAmDmIlJr /msPI9yopCO0iQKwVFQDRLx4jKFYIx+/I1YvvEt9IMmzqHCMrReEZayk tAIuBikkad952aVuUHkCa59yHwZ1hDSSyLNaRpm+jneb85b3jMkxc7CZ pMM=
 www.rsasha1-nsec.interop. 3600	IN	A	192.0.2.80
-www.rsasha1-nsec.interop. 3600	IN	RRSIG	A 5 3 3600 20361003001932 20261005231932 21015 rsasha1-nsec.interop. 307jlvQX22jSMSFis2jn37CTVPPJmrrcc7X2SAYlX9ypfc6Dlf7UEM10 iWe/9Fe2w+HIKI0Sy90cLFU8GkiRuqMhU2juTtYuXKSfj5iz1+ySAYRw OGyU8RHuOnxBATQ7wSlVNdQLV0o/KcADsg7rEZUeDB1z12/5f7O5DQ9o 9B0=
+www.rsasha1-nsec.interop. 3600	IN	RRSIG	A 5 3 3600 20361003005101 20261005235101 60951 rsasha1-nsec.interop. PI1vIPB2IS+BSaTGHzZe41q4NX2Do5zKuQ5cDZCJzxpUOjwSZ4nNVtL5 GIE6PWROF332Rr16S/RWuMQDYtEmfydCCCc0ftYXIOQuaEVaXnLO1goj 9b3zjGQ6l954gl/MXaHe7Nps73WSeFIO3j0KPWBxY9cZybgs2/mCQ9OU 0g8=
 
 ;; Query time: 0 msec
 ;; SERVER: 127.0.0.1#5350(127.0.0.1) (UDP)
-;; WHEN: Tue Oct 06 00:19:44 UTC 2026
+;; WHEN: Tue Oct 06 00:51:15 UTC 2026
 ;; MSG SIZE  rcvd: 477
 

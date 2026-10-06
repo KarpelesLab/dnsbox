@@ -1,4 +1,4 @@
-# named 9.18.39-0ubuntu0.24.04.7-Ubuntu on the interop CI runner (run 37393349277, 2026-10-06): dig +edns=1 +noednsnegotiation ed25519-nsec.interop. SOA
+# named 9.18.39-0ubuntu0.24.04.7-Ubuntu on the interop CI runner (run 37396071664, 2026-10-06): dig +edns=1 +noednsnegotiation ed25519-nsec.interop. SOA
 # tests/corpus/bind/keep.py from named/edns/version1-nonegotiation (tests/corpus/README.md)
-513e810000010000000000010c656432353531392d6e73656307696e7465726f70000006000100002904d00100000000
+ee7b810000010000000000010c656432353531392d6e73656307696e7465726f70000006000100002904d00100000000
 00

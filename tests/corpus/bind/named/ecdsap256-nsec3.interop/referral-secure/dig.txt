@@ -3,26 +3,26 @@
 ; (1 server found)
 ;; global options: +cmd
 ;; Got answer:
-;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 37445
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 41510
 ;; flags: qr rd; QUERY: 1, ANSWER: 0, AUTHORITY: 3, ADDITIONAL: 2
 ;; WARNING: recursion requested but not available
 
 ;; OPT PSEUDOSECTION:
 ; EDNS: version: 0, flags: do; udp: 1232
-; COOKIE: bcce1e9573e9407a010000006ac43ea3868c232be5c986d2 (good)
+; COOKIE: 168fb23d9e933eaf010000006ac4460656cb003c540fef43 (good)
 ;; QUESTION SECTION:
 ;host.secure.ecdsap256-nsec3.interop. IN	A
 
 ;; AUTHORITY SECTION:
 secure.ecdsap256-nsec3.interop.	3600 IN	NS	ns.secure.ecdsap256-nsec3.interop.
 secure.ecdsap256-nsec3.interop.	3600 IN	DS	12345 13 2 E06D44B80B8F1D39A95C0B0D7C65D08458E880409BBC683457104237 C7F8EC8D
-secure.ecdsap256-nsec3.interop.	3600 IN	RRSIG	DS 13 3 3600 20361003001932 20261005231932 18981 ecdsap256-nsec3.interop. 6bKzJ2qkwHk6GqIwvZ603FXNPDmVAoQcAwTkFhqdvV2CVMnTj7fbgHi7 AUPCigRWL8d1jNV6r8OGpWdTejKMVg==
+secure.ecdsap256-nsec3.interop.	3600 IN	RRSIG	DS 13 3 3600 20361003005101 20261005235101 17004 ecdsap256-nsec3.interop. uPg9s0U7OCxqdjF8EwQzTeu1ARd1HF4SuFWyRK6HAgN0WQLiNc128nvo P3521x6By4qLgEC+lJwQFtD+OcQk3w==
 
 ;; ADDITIONAL SECTION:
 ns.secure.ecdsap256-nsec3.interop. 3600	IN A	192.0.2.99
 
 ;; Query time: 0 msec
 ;; SERVER: 127.0.0.1#5350(127.0.0.1) (UDP)
-;; WHEN: Tue Oct 06 00:19:47 UTC 2026
+;; WHEN: Tue Oct 06 00:51:18 UTC 2026
 ;; MSG SIZE  rcvd: 292
 

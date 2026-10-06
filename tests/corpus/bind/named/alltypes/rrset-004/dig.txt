@@ -3,22 +3,22 @@
 ; (1 server found)
 ;; global options: +cmd
 ;; Got answer:
-;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 8360
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 31131
 ;; flags: qr aa; QUERY: 1, ANSWER: 2, AUTHORITY: 2, ADDITIONAL: 3
 
 ;; OPT PSEUDOSECTION:
 ; EDNS: version: 0, flags:; udp: 1232
-; COOKIE: 49fc02c3d237dcdb010000006ac43ea7a4a2e7492415a499 (good)
+; COOKIE: 787990fb7e3aac84010000006ac4460a0eb9a261001296ed (good)
 ;; QUESTION SECTION:
 ;_443._tcp.alltypes.example.	IN	TLSA
 
 ;; ANSWER SECTION:
-_443._tcp.alltypes.example. 3600 IN	TLSA	0 0 0 30820122300D06092A864886F70D01010105000382010F003082010A
 _443._tcp.alltypes.example. 3600 IN	TLSA	3 1 1 0C72AC70B745AC19998811B131D662C9AC69DBDBE7CB23E5B514B566 64C5D3D6
+_443._tcp.alltypes.example. 3600 IN	TLSA	0 0 0 30820122300D06092A864886F70D01010105000382010F003082010A
 
 ;; AUTHORITY SECTION:
-alltypes.example.	3600	IN	NS	ns2.example.net.
 alltypes.example.	3600	IN	NS	ns1.alltypes.example.
+alltypes.example.	3600	IN	NS	ns2.example.net.
 
 ;; ADDITIONAL SECTION:
 ns1.alltypes.example.	3600	IN	A	192.0.2.53
@@ -26,6 +26,6 @@ ns1.alltypes.example.	3600	IN	AAAA	2001:db8::53
 
 ;; Query time: 0 msec
 ;; SERVER: 127.0.0.1#5350(127.0.0.1) (TCP)
-;; WHEN: Tue Oct 06 00:19:51 UTC 2026
+;; WHEN: Tue Oct 06 00:51:22 UTC 2026
 ;; MSG SIZE  rcvd: 280
 

@@ -3,12 +3,12 @@
 ; (1 server found)
 ;; global options: +cmd
 ;; Got answer:
-;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 43163
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 39276
 ;; flags: qr aa; QUERY: 1, ANSWER: 2, AUTHORITY: 2, ADDITIONAL: 3
 
 ;; OPT PSEUDOSECTION:
 ; EDNS: version: 0, flags:; udp: 1232
-; COOKIE: 7fdb8d9f843c4ab2010000006ac43ea72f89fa6a6257ba34 (good)
+; COOKIE: d90fceb75b8de6b0010000006ac4460a3ba7c8c441769fe4 (good)
 ;; QUESTION SECTION:
 ;atma.alltypes.example.		IN	ATMA
 
@@ -17,8 +17,8 @@ atma.alltypes.example.	3600	IN	ATMA	+3584001234567
 atma.alltypes.example.	3600	IN	ATMA	39246f00e7c9000000000000000102030405060708
 
 ;; AUTHORITY SECTION:
-alltypes.example.	3600	IN	NS	ns1.alltypes.example.
 alltypes.example.	3600	IN	NS	ns2.example.net.
+alltypes.example.	3600	IN	NS	ns1.alltypes.example.
 
 ;; ADDITIONAL SECTION:
 ns1.alltypes.example.	3600	IN	A	192.0.2.53
@@ -26,6 +26,6 @@ ns1.alltypes.example.	3600	IN	AAAA	2001:db8::53
 
 ;; Query time: 0 msec
 ;; SERVER: 127.0.0.1#5350(127.0.0.1) (TCP)
-;; WHEN: Tue Oct 06 00:19:51 UTC 2026
+;; WHEN: Tue Oct 06 00:51:22 UTC 2026
 ;; MSG SIZE  rcvd: 229
 

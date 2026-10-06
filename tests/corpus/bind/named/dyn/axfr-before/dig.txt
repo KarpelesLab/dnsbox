@@ -6,16 +6,16 @@ dyn.interop.		3600	IN	SOA	ns1.dyn.interop. hostmaster.dyn.interop. 2026100601 72
 dyn.interop.		3600	IN	NS	ns1.dyn.interop.
 ns1.dyn.interop.	3600	IN	A	127.0.0.1
 old.dyn.interop.	3600	IN	A	192.0.2.99
-sig0-ecdsap256.dyn.interop. 3600 IN	KEY	512 3 13 HTbLHqApzdkc/gYrxlaUdUDn/5XxcezgwaI5gFY7ojFm6b1sIUQNQoxx 6hWhh21oER1s5iJfM9p8aMikP9sjvg==
-sig0-ed25519.dyn.interop. 3600	IN	KEY	512 3 15 oYV/B620jbnBg8HoP0dB3XgrtCfHPdseWZ09RETDPk0=
-sig0-rsasha256.dyn.interop. 3600 IN	KEY	512 3 8 AwEAAcAOlF56JSby5R6wwvmrHqm5GDXhSVRaSqtXtDgIh9Ed+J1+12lX 7oAvAlu7Vf4A0EoLrOEe/1jxtJ+cRCnWUEl0WMSFNoN1yyunIY5nKvnP jkRnffYvCB1r+SaxdS+MMRXSJZHoV5iFU0DKrDsCoK4T/FDERvb8sqZ1 DvF0Msp1
+sig0-ecdsap256.dyn.interop. 3600 IN	KEY	512 3 13 5Hq6u5NkErG3dW+k4L6q1zsXDKNb2rWqUGzPrL2P08eogPY1eSeWFXFE xtgjMuW/bsDF3dRhq8wSd5zpeLQ+QA==
+sig0-ed25519.dyn.interop. 3600	IN	KEY	512 3 15 67c9kJ3GVsLuPoMZuTO3PekuGXgdqgbc7fcPmhQ/TjY=
+sig0-rsasha256.dyn.interop. 3600 IN	KEY	512 3 8 AwEAAcBJ5zRYtCyE01bHYFn9RoZpQ6JcWkDcmQ9oJJvljtfoitjtq/gy oUvLX8xibSB7JeeTxY34KaOstLjZc7E2d8XkeLMGUhabILizMOicwRrC v/Vt+IhYaKbAdGwZC4aEy0WCum3SeHG+QtkXc8OklHi6zdTjeLHu5nr5 O3sFLraF
 t000.dyn.interop.	3600	IN	TXT	"to be deleted"
 t001.dyn.interop.	3600	IN	TXT	"to be deleted"
 www.dyn.interop.	3600	IN	A	192.0.2.80
 dyn.interop.		3600	IN	SOA	ns1.dyn.interop. hostmaster.dyn.interop. 2026100601 7200 3600 1209600 300
-hmac-sha256.key.	0	ANY	TSIG	hmac-sha256. 1791245994 300 32 K/fgdb0BNYtllZsEMDQHZvnMSJ/AO56RuhI+cgHuyq0= 37378 NOERROR 0 
+hmac-sha256.key.	0	ANY	TSIG	hmac-sha256. 1791247885 300 32 CBgC3gbxEV53utUlD+IWgPB4hPIcYBvxxmTmoQ6hE9U= 22761 NOERROR 0 
 ;; Query time: 0 msec
 ;; SERVER: 127.0.0.1#5350(127.0.0.1) (TCP)
-;; WHEN: Tue Oct 06 00:19:54 UTC 2026
+;; WHEN: Tue Oct 06 00:51:25 UTC 2026
 ;; XFR size: 11 records (messages 1, bytes 694)
 

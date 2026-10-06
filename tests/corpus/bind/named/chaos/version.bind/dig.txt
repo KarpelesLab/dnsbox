@@ -3,13 +3,13 @@
 ; (1 server found)
 ;; global options: +cmd
 ;; Got answer:
-;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 17427
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 37478
 ;; flags: qr aa rd; QUERY: 1, ANSWER: 1, AUTHORITY: 0, ADDITIONAL: 1
 ;; WARNING: recursion requested but not available
 
 ;; OPT PSEUDOSECTION:
 ; EDNS: version: 0, flags:; udp: 1232
-; COOKIE: 52328c977d0e9513010000006ac43ea900a329c946b89a7e (good)
+; COOKIE: 63cfa0542cfc056e010000006ac4460c9abb47949085d314 (good)
 ;; QUESTION SECTION:
 ;version.bind.			CH	TXT
 
@@ -18,6 +18,6 @@ version.bind.		0	CH	TXT	"dnsbox-interop"
 
 ;; Query time: 0 msec
 ;; SERVER: 127.0.0.1#5350(127.0.0.1) (UDP)
-;; WHEN: Tue Oct 06 00:19:53 UTC 2026
+;; WHEN: Tue Oct 06 00:51:24 UTC 2026
 ;; MSG SIZE  rcvd: 96
 

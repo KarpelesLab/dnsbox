@@ -288,7 +288,7 @@ h0141.bulk.interop.	3600	IN	A	192.0.0.141
 h0141.bulk.interop.	3600	IN	TXT	"record 141 of the bulk zone, padded to make the transfer span several messages"
 h0142.bulk.interop.	3600	IN	A	192.0.0.142
 h0142.bulk.interop.	3600	IN	TXT	"record 142 of the bulk zone, padded to make the transfer span several messages"
-hmac-sha256.key.	0	ANY	TSIG	hmac-sha256. 1791245994 300 32 1ybPwfyjfYmmgVh5L/aj1y6Nji3IQiMJ1JVCIazTyXQ= 51089 NOERROR 0 
+hmac-sha256.key.	0	ANY	TSIG	hmac-sha256. 1791247885 300 32 JIv2cfYNFlFWBQ8RPf0mmyVXAJDYULQShd9Fz3srCF8= 51394 NOERROR 0 
 h0143.bulk.interop.	3600	IN	A	192.0.0.143
 h0143.bulk.interop.	3600	IN	TXT	"record 143 of the bulk zone, padded to make the transfer span several messages"
 h0144.bulk.interop.	3600	IN	A	192.0.0.144
@@ -507,9 +507,9 @@ h0250.bulk.interop.	3600	IN	A	192.0.0.250
 h0250.bulk.interop.	3600	IN	TXT	"record 250 of the bulk zone, padded to make the transfer span several messages"
 ns1.bulk.interop.	3600	IN	A	127.0.0.1
 bulk.interop.		3600	IN	SOA	ns1.bulk.interop. hostmaster.bulk.interop. 2026100601 7200 3600 1209600 300
-hmac-sha256.key.	0	ANY	TSIG	hmac-sha256. 1791245994 300 32 zI5hQlVlDhsbvARa7Eb7+7CLW/yCEtandFINDmtFV0k= 51089 NOERROR 0 
+hmac-sha256.key.	0	ANY	TSIG	hmac-sha256. 1791247885 300 32 XAyRDmw4sP0LKETmVtm+2kDympXOq9ipz7OVt1tZ2VA= 51394 NOERROR 0 
 ;; Query time: 1 msec
 ;; SERVER: 127.0.0.1#5350(127.0.0.1) (TCP)
-;; WHEN: Tue Oct 06 00:19:54 UTC 2026
+;; WHEN: Tue Oct 06 00:51:25 UTC 2026
 ;; XFR size: 504 records (messages 2, bytes 28582)
 

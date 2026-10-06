@@ -3,23 +3,23 @@
 ; (1 server found)
 ;; global options: +cmd
 ;; Got answer:
-;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 4540
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 39830
 ;; flags: qr aa rd; QUERY: 1, ANSWER: 3, AUTHORITY: 0, ADDITIONAL: 1
 ;; WARNING: recursion requested but not available
 
 ;; OPT PSEUDOSECTION:
 ; EDNS: version: 0, flags: do; udp: 1232
-; COOKIE: 270106362ac1c129010000006ac43ea624afd12cebdfc5fa (good)
+; COOKIE: a459f88faefb820d010000006ac44608371c6a5e2a381ec1 (good)
 ;; QUESTION SECTION:
 ;x.dname.ed448-nsec3.interop.	IN	A
 
 ;; ANSWER SECTION:
 dname.ed448-nsec3.interop. 3600	IN	DNAME	example.net.
-dname.ed448-nsec3.interop. 3600	IN	RRSIG	DNAME 16 3 3600 20361003001932 20261005231932 60497 ed448-nsec3.interop. sB0m32dtd2pFViG5AikjtXS4XjAyhnFK2YwRvnaUE8RGm3PdUMXsKYB7 +JDONHsxnMTD8hh7wgKAQ1ShdxCaWo4PsdbwhXv2n55vC7iv5OTCLQmt vlE98Co9TRln7+GWP6fFDlgSzwNeRZmdZ6hDdAIA
+dname.ed448-nsec3.interop. 3600	IN	RRSIG	DNAME 16 3 3600 20361003005101 20261005235101 43293 ed448-nsec3.interop. e2K6DWZl+uyaNP1/saOx7tdO2kW7uGUC+bf4+5tp1qN37Ppo//88agNw JqmcqspwKY+OhLrtQquAGevnSNY0fSHsFioTBsh/oGAMGjSQ2UN6L45Z +gpndWiaylxEWjScCX3VlgvYzzAYGpddL3sC1xIA
 x.dname.ed448-nsec3.interop. 3600 IN	CNAME	x.example.net.
 
 ;; Query time: 0 msec
 ;; SERVER: 127.0.0.1#5350(127.0.0.1) (UDP)
-;; WHEN: Tue Oct 06 00:19:50 UTC 2026
+;; WHEN: Tue Oct 06 00:51:20 UTC 2026
 ;; MSG SIZE  rcvd: 290
 

@@ -3,5 +3,5 @@
 ; <<>> DiG 9.18.39-0ubuntu0.24.04.7-Ubuntu <<>> @127.0.0.1 -p 5350 +tries=1 +time=5 -y hmac-sha256:no-such.key:AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8= bulk.interop. AXFR
 ; (1 server found)
 ;; global options: +cmd
-no-such.key.		0	ANY	TSIG	hmac-sha256. 1791245994 300 0 55886 BADKEY 0 
+no-such.key.		0	ANY	TSIG	hmac-sha256. 1791247885 300 0 10091 BADKEY 0 
 ; Transfer failed.

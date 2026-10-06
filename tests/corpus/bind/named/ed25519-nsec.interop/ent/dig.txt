@@ -3,24 +3,24 @@
 ; (1 server found)
 ;; global options: +cmd
 ;; Got answer:
-;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 11347
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 41930
 ;; flags: qr aa rd; QUERY: 1, ANSWER: 0, AUTHORITY: 4, ADDITIONAL: 1
 ;; WARNING: recursion requested but not available
 
 ;; OPT PSEUDOSECTION:
 ; EDNS: version: 0, flags: do; udp: 1232
-; COOKIE: e255bc1f918275ad010000006ac43ea4652df4ae35b07aff (good)
+; COOKIE: 16c4970dc66c2517010000006ac446076bd2a36a48dcfcb6 (good)
 ;; QUESTION SECTION:
 ;b.ent.ed25519-nsec.interop.	IN	A
 
 ;; AUTHORITY SECTION:
 ed25519-nsec.interop.	300	IN	SOA	ns1.ed25519-nsec.interop. hostmaster.ed25519-nsec.interop. 2026100401 7200 3600 1209600 300
-ed25519-nsec.interop.	300	IN	RRSIG	SOA 15 2 3600 20361003001932 20261005231932 48895 ed25519-nsec.interop. mylIywYWaeRQP8BNJj6eZxRmw1UsNQ5uAMe/EeeH5sK57hmukpG+s26a pXeCiVlj4nS88LCdNGoHZGZ93UvDBQ==
+ed25519-nsec.interop.	300	IN	RRSIG	SOA 15 2 3600 20361003005101 20261005235101 1749 ed25519-nsec.interop. RJLgBW9UA96dgQNK7DDrJKNTEyaZzoeCiCJxwUu0Pbam+qM9GLV4rRuq KbjqINCj28mx9sZpe+k9b4IrghX8CA==
 dname.ed25519-nsec.interop. 300	IN	NSEC	a.b.ent.ed25519-nsec.interop. DNAME RRSIG NSEC
-dname.ed25519-nsec.interop. 300	IN	RRSIG	NSEC 15 3 300 20361003001932 20261005231932 48895 ed25519-nsec.interop. HtWOVO7S+UO9wEkuG8eHiK68mIPrKDah8We/XwzlyaaLNr3d7PlWlM9d BO8FSxDsEyl4hfP6YrCAvaWeTWkDDw==
+dname.ed25519-nsec.interop. 300	IN	RRSIG	NSEC 15 3 300 20361003005101 20261005235101 1749 ed25519-nsec.interop. +8qTQ/yB8uyuOul8CGMZaZ+eD/NmHtBiti/otKS2qH+bZbx0VJY9nVmx qfsFxR1zyI47j6VDmeFxZJfwyxuFCg==
 
 ;; Query time: 0 msec
 ;; SERVER: 127.0.0.1#5350(127.0.0.1) (UDP)
-;; WHEN: Tue Oct 06 00:19:48 UTC 2026
+;; WHEN: Tue Oct 06 00:51:19 UTC 2026
 ;; MSG SIZE  rcvd: 442
 

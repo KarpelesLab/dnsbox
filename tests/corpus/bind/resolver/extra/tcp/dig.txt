@@ -3,21 +3,21 @@
 ; (1 server found)
 ;; global options: +cmd
 ;; Got answer:
-;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 57634
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 7550
 ;; flags: qr rd ra ad; QUERY: 1, ANSWER: 2, AUTHORITY: 0, ADDITIONAL: 1
 
 ;; OPT PSEUDOSECTION:
 ; EDNS: version: 0, flags: do; udp: 1232
-; COOKIE: c7e2777c99b5c97d010000006ac43eb7241ab621737ad4a4 (good)
+; COOKIE: 9d9db422eea2f060010000006ac4461a7025da5d48340653 (good)
 ;; QUESTION SECTION:
 ;www.ed25519-nsec.interop.	IN	A
 
 ;; ANSWER SECTION:
 www.ed25519-nsec.interop. 3577	IN	A	192.0.2.80
-www.ed25519-nsec.interop. 3577	IN	RRSIG	A 15 3 3600 20361003001932 20261005231932 48895 ed25519-nsec.interop. 2BpQ5kZdnqLh/ZiBOVNfrYYlI3gnMyNqOUwQktUNabLUBKiIMycadEAL nFCT51nMy34sRoLOmL4/uUPNvWhaCQ==
+www.ed25519-nsec.interop. 3577	IN	RRSIG	A 15 3 3600 20361003005101 20261005235101 1749 ed25519-nsec.interop. OYDCjoyPSif64zDS3zNLMCdNcjC/QEKu1eAcjQtMEDg5nY4dRAjTVUlY nu4SNBU7M1zrw6OjfH4X4cZjhW0OAQ==
 
 ;; Query time: 4 msec
 ;; SERVER: 127.0.0.1#5450(127.0.0.1) (TCP)
-;; WHEN: Tue Oct 06 00:20:07 UTC 2026
+;; WHEN: Tue Oct 06 00:51:38 UTC 2026
 ;; MSG SIZE  rcvd: 213
 

@@ -1,0 +1,23 @@
+
+; <<>> DiG 9.18.39-0ubuntu0.24.04.7-Ubuntu <<>> @127.0.0.1 -p 5350 +tries=1 +time=5 cla.generic.drafttypes.example. TYPE263
+; (1 server found)
+;; global options: +cmd
+;; Got answer:
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 197
+;; flags: qr aa rd; QUERY: 1, ANSWER: 1, AUTHORITY: 0, ADDITIONAL: 1
+;; WARNING: recursion requested but not available
+
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags:; udp: 1232
+; COOKIE: f09c13e91715cb92010000006ac4460cedb712aa04e82cc8 (good)
+;; QUESTION SECTION:
+;cla.generic.drafttypes.example.	IN	TYPE263
+
+;; ANSWER SECTION:
+cla.generic.drafttypes.example.	3600 IN	TYPE263	\# 20 095443502D56342D5636095443502D56362D5637
+
+;; Query time: 0 msec
+;; SERVER: 127.0.0.1#5350(127.0.0.1) (UDP)
+;; WHEN: Tue Oct 06 00:51:24 UTC 2026
+;; MSG SIZE  rcvd: 119
+

@@ -3,21 +3,21 @@
 ; (1 server found)
 ;; global options: +cmd
 ;; Got answer:
-;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 10052
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 56552
 ;; flags: qr aa; QUERY: 1, ANSWER: 5, AUTHORITY: 2, ADDITIONAL: 3
 
 ;; OPT PSEUDOSECTION:
 ; EDNS: version: 0, flags:; udp: 1232
-; COOKIE: 5ec0b04f55464025010000006ac43ea74be0ba5212e0cc92 (good)
+; COOKIE: 0075e44146b685de010000006ac4460abd180ea606e578e5 (good)
 ;; QUESTION SECTION:
 ;cert.alltypes.example.		IN	CERT
 
 ;; ANSWER SECTION:
-cert.alltypes.example.	3600	IN	CERT	PKIX 12345 RSASHA256 MIIBkjCB/KADAgECAgEAMA0GCSqGSIb3DQEBBQUA
 cert.alltypes.example.	3600	IN	CERT	OID 1 NSEC3DSA AQID
 cert.alltypes.example.	3600	IN	CERT	IPGP 1 NSEC3RSASHA1 AQID
-cert.alltypes.example.	3600	IN	CERT	PGP 0 0 AQID
 cert.alltypes.example.	3600	IN	CERT	65280 1 PRIVATEDNS AQID
+cert.alltypes.example.	3600	IN	CERT	PGP 0 0 AQID
+cert.alltypes.example.	3600	IN	CERT	PKIX 12345 RSASHA256 MIIBkjCB/KADAgECAgEAMA0GCSqGSIb3DQEBBQUA
 
 ;; AUTHORITY SECTION:
 alltypes.example.	3600	IN	NS	ns1.alltypes.example.
@@ -29,6 +29,6 @@ ns1.alltypes.example.	3600	IN	AAAA	2001:db8::53
 
 ;; Query time: 0 msec
 ;; SERVER: 127.0.0.1#5350(127.0.0.1) (TCP)
-;; WHEN: Tue Oct 06 00:19:51 UTC 2026
+;; WHEN: Tue Oct 06 00:51:22 UTC 2026
 ;; MSG SIZE  rcvd: 296
 

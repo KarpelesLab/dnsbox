@@ -3,30 +3,30 @@
 ; (1 server found)
 ;; global options: +cmd
 ;; Got answer:
-;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 8704
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 48552
 ;; flags: qr aa rd; QUERY: 1, ANSWER: 3, AUTHORITY: 0, ADDITIONAL: 1
 ;; WARNING: recursion requested but not available
 
 ;; OPT PSEUDOSECTION:
 ; EDNS: version: 0, flags: do; udp: 1232
-; COOKIE: a8ae616b2f9662c8010000006ac43ea7f96d5fd8bc06f446 (good)
+; COOKIE: d9ad5c700d820cc2010000006ac4460a789b46771ea26200 (good)
 ;; QUESTION SECTION:
 ;ed25519-nsec3.interop.	IN DNSKEY
 
 ;; ANSWER SECTION:
 ed25519-nsec3.interop.	3600 IN	DNSKEY 257 3 15 (
-				1CCHVa72yOOlBBzehWD1fqiAN8hSfRL74c38KalPiqc=
-				) ; KSK; alg = ED25519 ; key id = 27603
+				LyVqARM12LhihqyXl/spJtpE9mVnOdjHgskGLJjkdOI=
+				) ; KSK; alg = ED25519 ; key id = 205
 ed25519-nsec3.interop.	3600 IN	DNSKEY 256 3 15 (
-				lsCrDq8flgWFuePLZl5uB0E4oFEBs/s365hXwZr0YOI=
-				) ; ZSK; alg = ED25519 ; key id = 59028
+				AW4T6OU8nrPmsDPj7H6EKVbVxqofpVzKj8VW1g2/gDk=
+				) ; ZSK; alg = ED25519 ; key id = 14102
 ed25519-nsec3.interop.	3600 IN	RRSIG DNSKEY 15 2 3600 (
-				20361003001932 20261005231932 27603 ed25519-nsec3.interop.
-				7L1Xj38XynmS0FTiMzPCQNTTQjrByGeauXHeTMq56o11
-				lw5kBJmn+GgWf+w9S7p0641j05qZFIXqVY/mNFnMCQ== )
+				20361003005101 20261005235101 205 ed25519-nsec3.interop.
+				ddXsxG2/y6yuojITDxrQZpNx1sJjml9AuHplX5hai3VR
+				XzFPXnMfiEz0g8D1ZqtDcmKu32Qk/oiJBdWpYaMMCQ== )
 
 ;; Query time: 0 msec
 ;; SERVER: 127.0.0.1#5350(127.0.0.1) (UDP)
-;; WHEN: Tue Oct 06 00:19:51 UTC 2026
+;; WHEN: Tue Oct 06 00:51:22 UTC 2026
 ;; MSG SIZE  rcvd: 291
 

@@ -3,22 +3,22 @@
 ; (1 server found)
 ;; global options: +cmd
 ;; Got answer:
-;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 48753
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 28373
 ;; flags: qr aa rd; QUERY: 1, ANSWER: 2, AUTHORITY: 0, ADDITIONAL: 1
 ;; WARNING: recursion requested but not available
 
 ;; OPT PSEUDOSECTION:
 ; EDNS: version: 0, flags: do; udp: 1232
-; COOKIE: e6282b3278ae9ceb010000006ac43ea48aa72053c814e08b (good)
+; COOKIE: be8f9c7dd3ad3ef5010000006ac44607574222713ad085f8 (good)
 ;; QUESTION SECTION:
 ;ed25519-nsec.interop.		IN	SOA
 
 ;; ANSWER SECTION:
 ed25519-nsec.interop.	3600	IN	SOA	ns1.ed25519-nsec.interop. hostmaster.ed25519-nsec.interop. 2026100401 7200 3600 1209600 300
-ed25519-nsec.interop.	3600	IN	RRSIG	SOA 15 2 3600 20361003001932 20261005231932 48895 ed25519-nsec.interop. mylIywYWaeRQP8BNJj6eZxRmw1UsNQ5uAMe/EeeH5sK57hmukpG+s26a pXeCiVlj4nS88LCdNGoHZGZ93UvDBQ==
+ed25519-nsec.interop.	3600	IN	RRSIG	SOA 15 2 3600 20361003005101 20261005235101 1749 ed25519-nsec.interop. RJLgBW9UA96dgQNK7DDrJKNTEyaZzoeCiCJxwUu0Pbam+qM9GLV4rRuq KbjqINCj28mx9sZpe+k9b4IrghX8CA==
 
 ;; Query time: 0 msec
 ;; SERVER: 127.0.0.1#5350(127.0.0.1) (UDP)
-;; WHEN: Tue Oct 06 00:19:48 UTC 2026
+;; WHEN: Tue Oct 06 00:51:19 UTC 2026
 ;; MSG SIZE  rcvd: 244
 

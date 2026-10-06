@@ -3,23 +3,23 @@
 ; (1 server found)
 ;; global options: +cmd
 ;; Got answer:
-;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 43338
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 46601
 ;; flags: qr aa rd; QUERY: 1, ANSWER: 3, AUTHORITY: 0, ADDITIONAL: 1
 ;; WARNING: recursion requested but not available
 
 ;; OPT PSEUDOSECTION:
 ; EDNS: version: 0, flags: do; udp: 1232
-; COOKIE: 2a8f56f8d1593a22010000006ac43ea57a2b27fc397a0a8d (good)
+; COOKIE: 82dfae0b69d8e81c010000006ac446087e635ed4e044fcfe (good)
 ;; QUESTION SECTION:
 ;ed448-nsec3.interop.		IN	DNSKEY
 
 ;; ANSWER SECTION:
-ed448-nsec3.interop.	3600	IN	DNSKEY	256 3 16 c1ahy2zJEUJEAzkegHPWruVGlDVEJAXzR1kVYEw3N6r2l+1J1MZD9Tb+ sjidV8eyN/MyTooGnXoA
-ed448-nsec3.interop.	3600	IN	DNSKEY	257 3 16 GJE+w6x1JaYl8fm3i9kjRxCW21nVqZfEp1vUKmcSR2GKmwwoLfAjkMMa FCLo60wc8i/Gk8ma2a+A
-ed448-nsec3.interop.	3600	IN	RRSIG	DNSKEY 16 2 3600 20361003001932 20261005231932 20539 ed448-nsec3.interop. G7RwBuzCOEXxs7OgT/Q03aIRTRpVmGMnobZCDN/85D3Xz0aQDHdTYs/a ksR1dK2cqvv/YiLvp3cAO7mEIKR1Lr73jbn2KhrfbL9Br1C3JyiOdSXk mKk9Klh6ODgmGbBNHVuE9haNfpEMc3HmjyjSYQoA
+ed448-nsec3.interop.	3600	IN	DNSKEY	256 3 16 Q64v0Wn3ycQBFNGW20nxGQTcFVuiNmmdN/KDkYN/VynDclZdbQawT5ES HVMaHfZQyqHHKGQGNsCA
+ed448-nsec3.interop.	3600	IN	DNSKEY	257 3 16 bZMni2kXj4157i0VDbC6bdPWilEfO5W9c3XVx5vGN4LrhOuJuFRCZtvC nw1chx0j/gL5prw82SqA
+ed448-nsec3.interop.	3600	IN	RRSIG	DNSKEY 16 2 3600 20361003005101 20261005235101 1012 ed448-nsec3.interop. uAcxdAEtX2GqJsv9sUuzfzwf0hGJLUqmN4q8mgCjBmb57sOyGdg/BqqP ONZOcaHDS+JUGLaTiJYAKgUEMlvdHuQ/lzJ9cyr4WtiFwDdPclR0V3mP nlraGayw5JmrJqLO/Sc/WbKfoyl/bCdz+3n9Hi0A
 
 ;; Query time: 0 msec
 ;; SERVER: 127.0.0.1#5350(127.0.0.1) (UDP)
-;; WHEN: Tue Oct 06 00:19:49 UTC 2026
+;; WHEN: Tue Oct 06 00:51:20 UTC 2026
 ;; MSG SIZE  rcvd: 387
 

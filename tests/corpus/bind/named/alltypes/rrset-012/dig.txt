@@ -3,19 +3,19 @@
 ; (1 server found)
 ;; global options: +cmd
 ;; Got answer:
-;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 32373
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 51629
 ;; flags: qr aa; QUERY: 1, ANSWER: 3, AUTHORITY: 2, ADDITIONAL: 3
 
 ;; OPT PSEUDOSECTION:
 ; EDNS: version: 0, flags:; udp: 1232
-; COOKIE: f6d0d867d0f3c69c010000006ac43ea7e7525e950861f19f (good)
+; COOKIE: 34791e0451041fe5010000006ac4460a372af07c6ae3eae0 (good)
 ;; QUESTION SECTION:
 ;apl.alltypes.example.		IN	APL
 
 ;; ANSWER SECTION:
 apl.alltypes.example.	3600	IN	APL	1:224.0.0.0/4 2:ff00::/8 !2:2001:db8::/32
-apl.alltypes.example.	3600	IN	APL	1:192.168.32.0/21 !1:192.168.38.0/28
 apl.alltypes.example.	3600	IN	APL	
+apl.alltypes.example.	3600	IN	APL	1:192.168.32.0/21 !1:192.168.38.0/28
 
 ;; AUTHORITY SECTION:
 alltypes.example.	3600	IN	NS	ns2.example.net.
@@ -27,6 +27,6 @@ ns1.alltypes.example.	3600	IN	AAAA	2001:db8::53
 
 ;; Query time: 0 msec
 ;; SERVER: 127.0.0.1#5350(127.0.0.1) (TCP)
-;; WHEN: Tue Oct 06 00:19:51 UTC 2026
+;; WHEN: Tue Oct 06 00:51:22 UTC 2026
 ;; MSG SIZE  rcvd: 236
 

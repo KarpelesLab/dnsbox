@@ -3,20 +3,20 @@
 ; (1 server found)
 ;; global options: +cmd
 ;; Got answer:
-;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 26895
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 15473
 ;; flags: qr aa; QUERY: 1, ANSWER: 4, AUTHORITY: 2, ADDITIONAL: 3
 
 ;; OPT PSEUDOSECTION:
 ; EDNS: version: 0, flags:; udp: 1232
-; COOKIE: f300fded0224a273010000006ac43ea97b503e0f64900655 (good)
+; COOKIE: 4b3e3b2940345b51010000006ac4460b5d777db6ef49db83 (good)
 ;; QUESTION SECTION:
 ;txt.alltypes.example.		IN	TXT
 
 ;; ANSWER SECTION:
-txt.alltypes.example.	3600	IN	TXT	"first" "second" "semi;colon" "back\\slash" "tab\009" "\195\169"
-txt.alltypes.example.	3600	IN	TXT	""
-txt.alltypes.example.	3600	IN	TXT	"v=spf1 -all"
 txt.alltypes.example.	3600	IN	TXT	"unquoted"
+txt.alltypes.example.	3600	IN	TXT	"v=spf1 -all"
+txt.alltypes.example.	3600	IN	TXT	""
+txt.alltypes.example.	3600	IN	TXT	"first" "second" "semi;colon" "back\\slash" "tab\009" "\195\169"
 
 ;; AUTHORITY SECTION:
 alltypes.example.	3600	IN	NS	ns1.alltypes.example.
@@ -28,6 +28,6 @@ ns1.alltypes.example.	3600	IN	AAAA	2001:db8::53
 
 ;; Query time: 0 msec
 ;; SERVER: 127.0.0.1#5350(127.0.0.1) (TCP)
-;; WHEN: Tue Oct 06 00:19:53 UTC 2026
+;; WHEN: Tue Oct 06 00:51:23 UTC 2026
 ;; MSG SIZE  rcvd: 281
 

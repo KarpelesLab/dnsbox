@@ -3,18 +3,18 @@
 ; (1 server found)
 ;; global options: +cmd
 ;; Got answer:
-;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 4015
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 17908
 ;; flags: qr aa; QUERY: 1, ANSWER: 2, AUTHORITY: 2, ADDITIONAL: 3
 
 ;; OPT PSEUDOSECTION:
 ; EDNS: version: 0, flags:; udp: 1232
-; COOKIE: e9a3323e89a06afe010000006ac43ea903fcebfdfedf0f74 (good)
+; COOKIE: 2916f78cd5a8b902010000006ac4460b3c03ba965be7d330 (good)
 ;; QUESTION SECTION:
 ;uri.alltypes.example.		IN	URI
 
 ;; ANSWER SECTION:
-uri.alltypes.example.	3600	IN	URI	10 1 "ftp://ftp1.example.com/public"
 uri.alltypes.example.	3600	IN	URI	0 0 "https://example.com/\"q\"\\"
+uri.alltypes.example.	3600	IN	URI	10 1 "ftp://ftp1.example.com/public"
 
 ;; AUTHORITY SECTION:
 alltypes.example.	3600	IN	NS	ns2.example.net.
@@ -26,6 +26,6 @@ ns1.alltypes.example.	3600	IN	AAAA	2001:db8::53
 
 ;; Query time: 0 msec
 ;; SERVER: 127.0.0.1#5350(127.0.0.1) (TCP)
-;; WHEN: Tue Oct 06 00:19:53 UTC 2026
+;; WHEN: Tue Oct 06 00:51:23 UTC 2026
 ;; MSG SIZE  rcvd: 253
 

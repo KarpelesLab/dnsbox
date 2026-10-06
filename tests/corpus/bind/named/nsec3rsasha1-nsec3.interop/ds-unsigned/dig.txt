@@ -3,24 +3,24 @@
 ; (1 server found)
 ;; global options: +cmd
 ;; Got answer:
-;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 8338
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 41931
 ;; flags: qr aa rd; QUERY: 1, ANSWER: 0, AUTHORITY: 4, ADDITIONAL: 1
 ;; WARNING: recursion requested but not available
 
 ;; OPT PSEUDOSECTION:
 ; EDNS: version: 0, flags: do; udp: 1232
-; COOKIE: 5f69b8a6bda7e9c0010000006ac43ea14c598ee9db9978e2 (good)
+; COOKIE: 40e478ae1cbc43f7010000006ac4460305460aed45e93ab2 (good)
 ;; QUESTION SECTION:
 ;other.nsec3rsasha1-nsec3.interop. IN	DS
 
 ;; AUTHORITY SECTION:
 nsec3rsasha1-nsec3.interop. 300	IN	SOA	ns1.nsec3rsasha1-nsec3.interop. hostmaster.nsec3rsasha1-nsec3.interop. 2026100401 7200 3600 1209600 300
-nsec3rsasha1-nsec3.interop. 300	IN	RRSIG	SOA 7 2 3600 20361003001932 20261005231932 61983 nsec3rsasha1-nsec3.interop. HPah4yfp+t/lutVUccCykQ38Ri8imHfjs4GUkfmCVIJtcC33RGTW6seC s6xWPd8MbbaJpmblrnYy7eqN2nZGqXbE3kLcoqwBPEE6FKSx8kt4F4eO dPy47DmzTiCvE2qliQG6+J/y+B6UwCwyLwVg1mEsXOao8+COerXw0kXS c7A=
+nsec3rsasha1-nsec3.interop. 300	IN	RRSIG	SOA 7 2 3600 20361003005101 20261005235101 13188 nsec3rsasha1-nsec3.interop. sQDJF19/4kqdjBCF+m4SeRDcY2MhIzg9r3nByZ00gU8eWg1cgK4Xg8/F 8uNwoHIhaRy7Xu8I09tk5Be9Fz7k+NVwCsggE7wxlcKIZ7qOffw1AUkp +difj/Rj3cbFQ5lyF5R67TZSYp9TlNYaURgCqVT9Cr/sZ0qM3nuL4o+y r44=
 KHVSN4TBARL9TU81MKHRDN2LEERPQCA8.nsec3rsasha1-nsec3.interop. 300 IN NSEC3 1 0 5 AABBCCDD M9PJF0AGGKNATV5VCHROPDCK4E0JJ07A NS
-KHVSN4TBARL9TU81MKHRDN2LEERPQCA8.nsec3rsasha1-nsec3.interop. 300 IN RRSIG NSEC3 7 3 300 20361003001932 20261005231932 61983 nsec3rsasha1-nsec3.interop. dkDh7hUpTCthO88yKi471Damw+qxGDKGQDmO4qVuqkW9UgWx6GNG6GFA +aqzcUwUnI5kyG+8mzRPewwHfVCKVD3HY1HVQHRfBvWSEBgfLgflYXpQ sBAMoyBfDPA9WO+6LyPX7W1MNkGddEIKz/5jNFSaBVnKtspMNwIK/ez6 SpE=
+KHVSN4TBARL9TU81MKHRDN2LEERPQCA8.nsec3rsasha1-nsec3.interop. 300 IN RRSIG NSEC3 7 3 300 20361003005101 20261005235101 13188 nsec3rsasha1-nsec3.interop. arawRCV/WIKwBQnplof6zGdICxEvLEubHS+npLg6oBvpR/YiOLo510JC y2zCue67wnX8bZSzc0ONF7sGILeXdF3DOIJVq8c/WaZMpqaLnKqtMPoE V8mAkLg4oTd22HjnVKS2MUIAinSwaaMakQVocdhwFDzLbof4sm/nnHTJ pGQ=
 
 ;; Query time: 0 msec
 ;; SERVER: 127.0.0.1#5350(127.0.0.1) (UDP)
-;; WHEN: Tue Oct 06 00:19:45 UTC 2026
+;; WHEN: Tue Oct 06 00:51:15 UTC 2026
 ;; MSG SIZE  rcvd: 590
 

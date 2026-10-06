@@ -3,26 +3,26 @@
 ; (1 server found)
 ;; global options: +cmd
 ;; Got answer:
-;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 44966
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 48912
 ;; flags: qr aa rd; QUERY: 1, ANSWER: 2, AUTHORITY: 2, ADDITIONAL: 1
 ;; WARNING: recursion requested but not available
 
 ;; OPT PSEUDOSECTION:
 ; EDNS: version: 0, flags: do; udp: 1232
-; COOKIE: 81f82f4fbf1735b1010000006ac43ea44f25f87c764f1869 (good)
+; COOKIE: 0083b512a7ced335010000006ac44607d97f6b2a18d16ddc (good)
 ;; QUESTION SECTION:
 ;host.wild.ed25519-nsec.interop.	IN	A
 
 ;; ANSWER SECTION:
 host.wild.ed25519-nsec.interop.	3600 IN	A	192.0.2.42
-host.wild.ed25519-nsec.interop.	3600 IN	RRSIG	A 15 3 3600 20361003001932 20261005231932 48895 ed25519-nsec.interop. MX6ORMPSLzlmwmlE5BbVaWs/Sv7z/0ZjmoZXFP54SMwWgNDoqQtgfBGo 0ucRt1RONIN53pSRQA0CnFTYZgxtDQ==
+host.wild.ed25519-nsec.interop.	3600 IN	RRSIG	A 15 3 3600 20361003005101 20261005235101 1749 ed25519-nsec.interop. 1VYIQl33gxqdHmzLl7BvCscoEjikZp5WeGOzQKcbTch033ZEDi55efKk NXz5Q7bFJSWal0UpLXRxJ2Qq4CwWAA==
 
 ;; AUTHORITY SECTION:
 *.wild.ed25519-nsec.interop. 300 IN	NSEC	www.ed25519-nsec.interop. A TXT RRSIG NSEC
-*.wild.ed25519-nsec.interop. 300 IN	RRSIG	NSEC 15 3 300 20361003001932 20261005231932 48895 ed25519-nsec.interop. l5L0igCROy0zdpUpUyKRPkaTKzyXhxm9rngz7yQb7syubl8zyrIRLo4U B7/JboxSpzmI5wDdGvCnMId7agaqAg==
+*.wild.ed25519-nsec.interop. 300 IN	RRSIG	NSEC 15 3 300 20361003005101 20261005235101 1749 ed25519-nsec.interop. RbRMDvuEyMXeGNJf1VMIFdoquN/aXkkrzNl8sNR/1RVFbnu0zaGNDERA VJ4gKZ1RxgijNqBRh/9yrifNLif+Ag==
 
 ;; Query time: 0 msec
 ;; SERVER: 127.0.0.1#5350(127.0.0.1) (UDP)
-;; WHEN: Tue Oct 06 00:19:48 UTC 2026
+;; WHEN: Tue Oct 06 00:51:19 UTC 2026
 ;; MSG SIZE  rcvd: 383
 

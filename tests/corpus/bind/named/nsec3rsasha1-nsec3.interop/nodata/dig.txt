@@ -3,24 +3,24 @@
 ; (1 server found)
 ;; global options: +cmd
 ;; Got answer:
-;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 13293
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 59317
 ;; flags: qr aa rd; QUERY: 1, ANSWER: 0, AUTHORITY: 4, ADDITIONAL: 1
 ;; WARNING: recursion requested but not available
 
 ;; OPT PSEUDOSECTION:
 ; EDNS: version: 0, flags: do; udp: 1232
-; COOKIE: ec2bf10ec62fd95b010000006ac43ea1016f46b94f0ac581 (good)
+; COOKIE: 45bedf7f640cde2a010000006ac446030d989ffa20753338 (good)
 ;; QUESTION SECTION:
 ;www.nsec3rsasha1-nsec3.interop.	IN	MX
 
 ;; AUTHORITY SECTION:
 nsec3rsasha1-nsec3.interop. 300	IN	SOA	ns1.nsec3rsasha1-nsec3.interop. hostmaster.nsec3rsasha1-nsec3.interop. 2026100401 7200 3600 1209600 300
-nsec3rsasha1-nsec3.interop. 300	IN	RRSIG	SOA 7 2 3600 20361003001932 20261005231932 61983 nsec3rsasha1-nsec3.interop. HPah4yfp+t/lutVUccCykQ38Ri8imHfjs4GUkfmCVIJtcC33RGTW6seC s6xWPd8MbbaJpmblrnYy7eqN2nZGqXbE3kLcoqwBPEE6FKSx8kt4F4eO dPy47DmzTiCvE2qliQG6+J/y+B6UwCwyLwVg1mEsXOao8+COerXw0kXS c7A=
+nsec3rsasha1-nsec3.interop. 300	IN	RRSIG	SOA 7 2 3600 20361003005101 20261005235101 13188 nsec3rsasha1-nsec3.interop. sQDJF19/4kqdjBCF+m4SeRDcY2MhIzg9r3nByZ00gU8eWg1cgK4Xg8/F 8uNwoHIhaRy7Xu8I09tk5Be9Fz7k+NVwCsggE7wxlcKIZ7qOffw1AUkp +difj/Rj3cbFQ5lyF5R67TZSYp9TlNYaURgCqVT9Cr/sZ0qM3nuL4o+y r44=
 M9PJF0AGGKNATV5VCHROPDCK4E0JJ07A.nsec3rsasha1-nsec3.interop. 300 IN NSEC3 1 0 5 AABBCCDD NNMEDFT548RNN194TKII3EQ56J9FKU2V A AAAA RRSIG
-M9PJF0AGGKNATV5VCHROPDCK4E0JJ07A.nsec3rsasha1-nsec3.interop. 300 IN RRSIG NSEC3 7 3 300 20361003001932 20261005231932 61983 nsec3rsasha1-nsec3.interop. b0AndS2TmRC0Msc+eH9738i1iE5cs7nLgYeCsrHe8vhakvtGGqJvkfII ZetvFLvTQzn4nBWU0f2jdM6oQtfXNT6FtWwClF7JTSWBpQK4Kpnc876e 0gkPlOr5SrCb5z0ujMFMUBt1NX7tKu+/VmfwObuPE40guWi1q09TjXXZ el4=
+M9PJF0AGGKNATV5VCHROPDCK4E0JJ07A.nsec3rsasha1-nsec3.interop. 300 IN RRSIG NSEC3 7 3 300 20361003005101 20261005235101 13188 nsec3rsasha1-nsec3.interop. kqUxhHyGUDZ8iLsoNwLoLxr6dUsaFSrZFoKjfbbXPbnCMZV2aJ+0CBEH 59Lk+3rpoYF6tLVuHHIa/Et4JtXFv6vu7yOJuxTcrhbREQ1TBnfjCUX+ EKnVHVyUMxa/u8H21B6+ZPhlFlN3+exg6fgx1XXlgrs0uILsPm7T39vf VFg=
 
 ;; Query time: 0 msec
 ;; SERVER: 127.0.0.1#5350(127.0.0.1) (UDP)
-;; WHEN: Tue Oct 06 00:19:45 UTC 2026
+;; WHEN: Tue Oct 06 00:51:15 UTC 2026
 ;; MSG SIZE  rcvd: 593
 

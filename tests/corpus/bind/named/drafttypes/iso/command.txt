@@ -1,0 +1,1 @@
+dig iso.drafttypes.example. TYPE70

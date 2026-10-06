@@ -3,18 +3,18 @@
 ; (1 server found)
 ;; global options: +cmd
 ;; Got answer:
-;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 25965
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 21526
 ;; flags: qr aa; QUERY: 1, ANSWER: 2, AUTHORITY: 2, ADDITIONAL: 3
 
 ;; OPT PSEUDOSECTION:
 ; EDNS: version: 0, flags:; udp: 1232
-; COOKIE: 6e2f57260d50ae63010000006ac43ea76a07c9ade5e9c36a (good)
+; COOKIE: aa621668b0df7fb2010000006ac4460a032192013479c334 (good)
 ;; QUESTION SECTION:
 ;afsdb.alltypes.example.		IN	AFSDB
 
 ;; ANSWER SECTION:
-afsdb.alltypes.example.	3600	IN	AFSDB	1 afs.alltypes.example.
 afsdb.alltypes.example.	3600	IN	AFSDB	2 dce.alltypes.example.
+afsdb.alltypes.example.	3600	IN	AFSDB	1 afs.alltypes.example.
 
 ;; AUTHORITY SECTION:
 alltypes.example.	3600	IN	NS	ns1.alltypes.example.
@@ -26,6 +26,6 @@ ns1.alltypes.example.	3600	IN	AAAA	2001:db8::53
 
 ;; Query time: 0 msec
 ;; SERVER: 127.0.0.1#5350(127.0.0.1) (TCP)
-;; WHEN: Tue Oct 06 00:19:51 UTC 2026
+;; WHEN: Tue Oct 06 00:51:22 UTC 2026
 ;; MSG SIZE  rcvd: 242
 

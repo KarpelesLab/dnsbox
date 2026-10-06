@@ -1,17 +1,17 @@
-;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 34508
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 19264
 ;; flags: qr aa rd; QUERY: 1, ANSWER: 2, AUTHORITY: 2, ADDITIONAL: 1
 ;; WARNING: recursion requested but not available
 
 ;; OPT PSEUDOSECTION:
 ; EDNS: version: 0, flags: do; udp: 1232
-; COOKIE: 7ea4ed9bad7a310f010000006ac43ea0640a9f674574e971
+; COOKIE: 08853d8911b3a5b8010000006ac44603d196f369de64b961
 ;; QUESTION SECTION:
 ;host.wild.rsasha1-nsec.interop.	IN	A
 
 ;; ANSWER SECTION:
 host.wild.rsasha1-nsec.interop.	3600 IN	A	192.0.2.42
-host.wild.rsasha1-nsec.interop.	3600 IN	RRSIG	A 5 3 3600 20361003001932 20261005231932 21015 rsasha1-nsec.interop. oqRSzSJNQ+HEx6qwyLNDgP4c7DFYbUXjs/9geRRPbQ3egAGcLS49G9K2 cyZpvd/hmx1i5uFiBTTgrEC8aYHEzJQZjV0PNk+IObXELflVX6uYW5uO UC09vkQcH6NA8xAY7QTKqL36lIbOjNCmB1yk4HpuDH8m8xNHGT15hku6 yrA=
+host.wild.rsasha1-nsec.interop.	3600 IN	RRSIG	A 5 3 3600 20361003005101 20261005235101 60951 rsasha1-nsec.interop. qcF/cza27D48bSDj1PuR8tHV7tE9OAZ0Tr9XS7EaFWgkhfoeWf2TpX7g dOUo+p9Bo1fauhcg6m6fLcRjkb4GCQSJm49brbfw8j1JH0QiFx2+4GIE HpeKXYfQ8Lenfm+K2D27J0mhZN23KUKmjadkLiz7d5rTTrTEzUrowsLV NVM=
 
 ;; AUTHORITY SECTION:
 *.wild.rsasha1-nsec.interop. 300 IN	NSEC	www.rsasha1-nsec.interop. A TXT RRSIG NSEC
-*.wild.rsasha1-nsec.interop. 300 IN	RRSIG	NSEC 5 3 300 20361003001932 20261005231932 21015 rsasha1-nsec.interop. Ll85f4/MDvUSMxDuJ6b349IB3SjHkTYww7hCkX6twMS4TwdYjQW1Ysjd fZBE0JSyNJ0W0vdjjnFeEw1zAYMUQIXlMc8rqRoiHrV44pC9KKF6xZtH ZNDa96bVuXFeQ2ns2ckto3BjaxaQKgWeNqxhexLh9BXZOizGgBnYpZe2 f3o=
+*.wild.rsasha1-nsec.interop. 300 IN	RRSIG	NSEC 5 3 300 20361003005101 20261005235101 60951 rsasha1-nsec.interop. CgueKwInqXm5w29noeIDsVZAgcBrn5i7ebwK8zE7nDMkb/SAxoGeRfKq C6t82avA8jmQSQDGzwTptgfRnCGPeaCJX+e4cudo4Baa3O6FAzoRyLnI mgVTmnbzpK+vUyVOgq2tfODIEagKqkvacohRgg6alEHwT9ZzMil3iBEH SxA=

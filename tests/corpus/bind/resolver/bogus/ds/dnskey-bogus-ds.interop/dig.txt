@@ -3,22 +3,22 @@
 ; (1 server found)
 ;; global options: +cmd
 ;; Got answer:
-;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 14820
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 54490
 ;; flags: qr rd ra cd; QUERY: 1, ANSWER: 3, AUTHORITY: 0, ADDITIONAL: 1
 
 ;; OPT PSEUDOSECTION:
 ; EDNS: version: 0, flags: do; udp: 1232
-; COOKIE: 0daae6ff556be257010000006ac43eb760df01ec5b3fbe2c (good)
+; COOKIE: 1e2cc410259568d5010000006ac4461ad94414422b63f7ac (good)
 ;; QUESTION SECTION:
 ;bogus-ds.interop.		IN	DNSKEY
 
 ;; ANSWER SECTION:
-bogus-ds.interop.	3600	IN	DNSKEY	256 3 15 Or5/swRYCQ/b7YgnceIfCYAY4pyGcyTNS1KjCSt/IYw=
-bogus-ds.interop.	3600	IN	DNSKEY	257 3 15 gL4U5dhSVOmjXExIvj6UC4paWS8jpmYDxULkpP5ZGYM=
-bogus-ds.interop.	3600	IN	RRSIG	DNSKEY 15 2 3600 20361003001932 20261005231932 14295 bogus-ds.interop. GROw2E8+7+sqdYnuQ0fe2PVLVmG/59TQwD5tSvTAxkbzFRwnymWcHKr8 5S0f3s0SKNEFXfpX44nOnqmuxoKlDQ==
+bogus-ds.interop.	3600	IN	DNSKEY	257 3 15 xm91IZRYM9p8wWoGGNXSen+M4EcmMaAeqiti+TmuJ2g=
+bogus-ds.interop.	3600	IN	DNSKEY	256 3 15 D2h9bT84HbUslifpYRYhpLS6u8elr/EsRlxNgI65E6o=
+bogus-ds.interop.	3600	IN	RRSIG	DNSKEY 15 2 3600 20361003005101 20261005235101 28235 bogus-ds.interop. MKmmX5g+rF+JNH/nNq98JYVCRQ9U1FmbUTolpINk0PmLjvorcs0hQV2B taP097URhiA7iWnFVEjrz1knHttyAQ==
 
 ;; Query time: 0 msec
 ;; SERVER: 127.0.0.1#5450(127.0.0.1) (UDP)
-;; WHEN: Tue Oct 06 00:20:07 UTC 2026
+;; WHEN: Tue Oct 06 00:51:38 UTC 2026
 ;; MSG SIZE  rcvd: 281
 

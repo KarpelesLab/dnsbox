@@ -3,24 +3,24 @@
 ; (1 server found)
 ;; global options: +cmd
 ;; Got answer:
-;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 212
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 61205
 ;; flags: qr aa rd; QUERY: 1, ANSWER: 0, AUTHORITY: 4, ADDITIONAL: 1
 ;; WARNING: recursion requested but not available
 
 ;; OPT PSEUDOSECTION:
 ; EDNS: version: 0, flags: do; udp: 1232
-; COOKIE: ad60c5bacfdd8a3f010000006ac43ea2f8ca32463ba582be (good)
+; COOKIE: 6ab28e07616a33ca010000006ac446045ff07136ec565796 (good)
 ;; QUESTION SECTION:
 ;www.rsasha256-optout.interop.	IN	MX
 
 ;; AUTHORITY SECTION:
 rsasha256-optout.interop. 300	IN	SOA	ns1.rsasha256-optout.interop. hostmaster.rsasha256-optout.interop. 2026100401 7200 3600 1209600 300
-rsasha256-optout.interop. 300	IN	RRSIG	SOA 8 2 3600 20361003001932 20261005231932 44284 rsasha256-optout.interop. q+kd8NtQ1a+X4oizWFUgNaUDzk8ZEe7TsdgzhWm5cFl5668hUaNgCmU8 IOoUQuhZeAcmpiK+lZxeyr5wgX5A8rA3Dljlvv1Hi/q4+gtFmB9ML3bW 0lJXUUCAg4RzB2DEnp4qRhRUMw7Jg6Y75q41SOP525TpbHDO8TvCs/vr Vao=
+rsasha256-optout.interop. 300	IN	RRSIG	SOA 8 2 3600 20361003005101 20261005235101 3133 rsasha256-optout.interop. kEOi0OLIXMwN1IR/b6F2zP3qEU1hKML3MCtYyrlMMyL8bLN7Vi9U/4BC Si2BCyy6N5zdybk/HmQPmQq3I5BlV7U0roWwyDRWzqxwHoRIWBqtVoTD W/BA2bAo7OAr2gWUcX+oJg1D9FvijHIS0nR6HK4cs9shH90uOJpMc1Hc PUM=
 BA1Q2MR4ECI62QU4E0NHO96D68HE89I4.rsasha256-optout.interop. 300 IN NSEC3	1 1 0 - BVGALH4D6C38AETPMEJPR3U33TKJ46LD A AAAA RRSIG
-BA1Q2MR4ECI62QU4E0NHO96D68HE89I4.rsasha256-optout.interop. 300 IN RRSIG	NSEC3 8 3 300 20361003001932 20261005231932 44284 rsasha256-optout.interop. lKkgDF8mQ2astlcuyWQ09yHreZO1yAfE8hnSG8F8jo/THySLy3X0j/jD qHVuIkYQOe/499v1CjjW/cABYlXm8VmwPdeqPGzDa1fCjzJFIF5fMRyd w/OwObcFNiG1FQNcnkvcd9I7+b6hrE3BnSVQ+HOGmP4yrnDSkFRFK23N y8o=
+BA1Q2MR4ECI62QU4E0NHO96D68HE89I4.rsasha256-optout.interop. 300 IN RRSIG	NSEC3 8 3 300 20361003005101 20261005235101 3133 rsasha256-optout.interop. OV+yM49PQD0WVoxzeU2xuQ6vu/uKqEsh+cDl2PlxZKVDbviu49cTMYwS +WxSz33pyioMAJoDjhjCfZ2ykNN69UmKqzd6kmwYYtazIompVETV+oNF brp32Lw1X1vhbXbsu5r6BqcDp6QT3gtmXGkfHo5v0FaXypT9KkWlPa5b 1+I=
 
 ;; Query time: 0 msec
 ;; SERVER: 127.0.0.1#5350(127.0.0.1) (UDP)
-;; WHEN: Tue Oct 06 00:19:46 UTC 2026
+;; WHEN: Tue Oct 06 00:51:16 UTC 2026
 ;; MSG SIZE  rcvd: 583
 

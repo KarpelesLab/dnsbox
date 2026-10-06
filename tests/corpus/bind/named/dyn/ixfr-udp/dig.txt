@@ -3,9 +3,9 @@
 ; (1 server found)
 ;; global options: +cmd
 dyn.interop.		3600	IN	SOA	ns1.dyn.interop. hostmaster.dyn.interop. 2026100608 7200 3600 1209600 300
-hmac-sha256.key.	0	ANY	TSIG	hmac-sha256. 1791245994 300 32 gNdmGjQcucn/oOCKQW+LDwhVU4wuzAZSWgN2L7mvWNE= 40989 NOERROR 0 
+hmac-sha256.key.	0	ANY	TSIG	hmac-sha256. 1791247885 300 32 aUVTg6cnBmHRnZJZrbQPQEhC5bkc22wBW+MuOCNSFjw= 15342 NOERROR 0 
 ;; Query time: 0 msec
 ;; SERVER: 127.0.0.1#5350(127.0.0.1) (UDP)
-;; WHEN: Tue Oct 06 00:19:54 UTC 2026
+;; WHEN: Tue Oct 06 00:51:25 UTC 2026
 ;; MSG SIZE  rcvd: 207
 

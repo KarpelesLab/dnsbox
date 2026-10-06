@@ -312,23 +312,29 @@ pull requests and on demand) installs Ubuntu 24.04's BIND 9.18.39
   writes the zones, `bulk.interop.`, `../bind9/alltypes.zone` and
   `../knot/newtypes.zone` in both text styles (`-s full`, `-s relative`).
   `named-checkzone` reads dnsbox's presentation of every type BIND
-  knows (`../bind9/alltypes.dnsbox`) and of the types typed since
-  (`../knot/newtypes.zone`), but for the lines it cannot read (listed in
-  `alltypes-omitted.txt`, `newtypes-omitted.txt`).
+  knows (`../bind9/alltypes.dnsbox`), of the types typed since
+  (`../knot/newtypes.zone`) and of the types only Internet-Drafts define
+  (`bind/drafttypes.zone`: IPN, CLA, UNECE, ISO, each also in the RFC
+  3597 generic form), but for the lines it cannot read (listed in
+  `alltypes-omitted.txt`, `newtypes-omitted.txt`,
+  `drafttypes-omitted.txt`). `dnssec-keygen -a DH -b 1024 -n HOST`
+  makes `named`'s Diffie-Hellman KEY for TKEY (`tkey/`).
 - **serve**: an authoritative `named` (127.0.0.1:5351) serves them, an
   unsigned zone below each child, `insecure.interop.`, a 503-record
-  `bulk.interop.`, `alltypes.example.` and `newtypes.example.` (dnsbox's
-  text), and `dyn.interop.` (dynamic: an update policy for six TSIG keys,
+  `bulk.interop.`, `alltypes.example.`, `newtypes.example.` and
+  `drafttypes.example.` (dnsbox's text), and `dyn.interop.` (dynamic: an update policy for six TSIG keys,
   HMAC-MD5 to HMAC-SHA512 with the secret `00 01 .. 1f`, and three SIG(0)
   KEYs, `dnssec-keygen -T KEY`), with NSID, CHAOS identity and version,
   RFC 9018 cookies (`cookie-secret 00 01 .. 0f`), response padding (128)
-  and TSIG-only transfers. A second `named` (127.0.0.1:5355) is a
+  and TSIG-only transfers; TKEY Diffie-Hellman exchanged keying with
+  that KEY (`tkey-dhkey`, `tkey-domain "tkey.interop."`). A second
+  `named` (127.0.0.1:5355) is a
   validating resolver: `interop.`'s DS as a static trust anchor, the zone
   forwarded to the first. `../knot/proxy.py` sits in front of both (5350,
   5450) and records every message with the client's output.
 - **capture**: `dig` asks the 12 questions of `bind9/` in every signed
   zone and an AXFR of each (also with `+multiline`), every RRset of
-  `alltypes.example.` and the new types, EDNS (NSID, cookies with and
+  `alltypes.example.`, the new types and the draft types, EDNS (NSID, cookies with and
   without a server cookie, Client Subnet v4/v6/0, Padding over UDP and
   TCP, EXPIRE, TCP keepalive, an unknown option and flag, version 1 with
   and without negotiation, no EDNS), TCP, truncation and the retry, ANY,
@@ -342,7 +348,9 @@ pull requests and on demand) installs Ubuntu 24.04's BIND 9.18.39
   and DNSKEY RRsets of every zone from `interop.` down.
 - **probe**: dnsbox's `bind_probe` example sends its own queries (EDNS
   options, padding, cookies it recomputes, TCP, TSIG with every HMAC,
-  BADSIG and BADKEY, a TSIG-signed TKEY query, AXFR streams, UPDATEs
+  BADSIG and BADKEY, a TSIG-signed TKEY deletion query, a Diffie-Hellman
+  TKEY exchange (RFC 2930 §4.1) whose HMAC-MD5 key then signs a query
+  and its own deletion, AXFR streams, UPDATEs
   added, deleted, refused or failing a prerequisite, the IXFR they make,
   an UPDATE signed with SIG(0) from BIND's private key) to both `named`
   and checks their answers.
@@ -355,25 +363,25 @@ pull requests and on demand) installs Ubuntu 24.04's BIND 9.18.39
   distribution's dnspython (below).
 
 The whole run is uploaded as the `interop-bind` artifact. `bind/keep.py`
-copied a subset of run 37393349277 (2026-10-06) here, so that `cargo test
+copied a subset of run 37396071664 (2026-10-06) here, so that `cargo test
 --test interop_bind` checks it offline (nothing in this directory but
-`run.sh` and `keep.py` is written by hand): eight of the signed zones (each
+`run.sh`, `keep.py` and `drafttypes.zone` is written by hand): eight of the signed zones (each
 algorithm, each chain at least twice), the parent and the bogus zones with
 their keys (throwaway; BIND's private key format v1.3), DS records,
 `named`'s answers and transfers, `named-compilezone`'s output of three of
 them, of `alltypes.zone`, `newtypes.zone` and the bulk zone, the EDNS,
 CHAOS, truncation and TSIG exchanges, the dynamic zone's updates (TSIG and
-SIG(0), with the SIG(0) keys) and two of its IXFRs, the `alltypes` and
-`newtypes` transfers and queries, the probe's exchanges (one of its bulk
-transfers), the resolver's cases for one zone per denial chain and for
+SIG(0), with the SIG(0) keys) and two of its IXFRs, the `alltypes`,
+`newtypes` and `drafttypes` transfers and queries, `named`'s DH key, the
+probe's exchanges (one of its bulk transfers), the resolver's cases for one zone per denial chain and for
 the bogus, insecure and parent zones (21 of 116), its queries for one
-zone, and two of the zones dnsbox re-signed with BIND's verdicts; 17
-single responses are also kept as `named-ci-*.hex`, with their `dig`
-rendering (made on the runner by `dig_reference.py`, in run 37393968644,
-the first with those files; `keep.py` copies them when the run has
-them). To refresh: `gh run download <run> -n interop-bind -D
-/tmp/interop-bind && python3 tests/corpus/bind/keep.py /tmp/interop-bind
-"run <run>, <date>"`, then take `dig/named-ci-*.dig` from the next run.
+zone, and two of the zones dnsbox re-signed with BIND's verdicts; 21
+single responses are also kept as `named-ci-*.hex` (TKEY and draft-type
+answers among them), with their `dig` rendering from the same run (the
+workflow writes them with `keep.py --toplevel` and has
+`dig_reference.py` render them). To refresh: `gh run download <run> -n
+interop-bind -D /tmp/interop-bind && python3 tests/corpus/bind/keep.py
+/tmp/interop-bind "run <run>, <date>"`.
 
 `tests/interop_bind.rs` checks, as of the run's time (`bind/now`):
 
@@ -410,8 +418,17 @@ them). To refresh: `gh run download <run> -n interop-bind -D
   made for, within one default `ValidationBudget`;
 - `named` read dnsbox's text of every type BIND 9.18 knows to BIND's own
   wire form (`named-alltypes-axfr.hex`), and of AMTRELAY, DSYNC and DOA
-  to dnsbox's; `named-checkzone`, `named-compilezone` and `dnssec-verify`
-  accept the zones dnsbox re-signed.
+  to dnsbox's; it serves the generic form of IPN, CLA, UNECE and ISO as
+  dnsbox's wire form, and dig's generic text of them reads back to it
+  (dnsbox displays dig's octets as its own typed text, `dig_display.rs`);
+  `named-checkzone`, `named-compilezone` and `dnssec-verify` accept the
+  zones dnsbox re-signed;
+- TKEY: dnsbox reads named's Diffie-Hellman answer and derives the key
+  named made, which verifies named's answers to the query and to the
+  deletion it signed; playing the server with named's private key and
+  nonce, dnsbox derives the same secret; dig's text of named's TKEY
+  answers (deletion and Diffie-Hellman) is dnsbox's display of them, and
+  reads back to their wire form.
 
 What BIND 9.18.39 does that dnsbox now tests for: `named` echoes Client
 Subnet with scope 0 as an authoritative server; it pads responses over
@@ -420,8 +437,15 @@ sends BADCOOKIE without `require-server-cookie`; it answers a TKEY
 deletion of a configured key NOERROR with a TKEY record carrying BADNAME,
 signed; since 9.18.28 (CVE-2024-1975) it no longer verifies SIG(0) and its
 update policy refuses SIG(0)-signed updates as unsigned (dnsbox verifies
-them); it does not know HHIT or BRID; its resolver gives no Extended DNS
-Error for bogus answers.
+them); it does not know HHIT or BRID, nor IPN, CLA, UNECE or ISO; its
+resolver gives no Extended DNS Error for bogus answers. Its
+Diffie-Hellman TKEY (`tkey-dhkey`, deprecated in 9.18, removed in 9.20)
+requires a signed query, offers only HMAC-MD5, names the key after the
+question name under its `tkey-domain` (`dnsbox-dh.` becomes
+`dnsbox-dh.tkey.interop.`), puts the resolver's KEY, its own KEY and the
+TKEY record (16 octets of nonce) in the answer section, and mixes the
+1024-bit DH value without leading zero octets; it lets a key delete
+itself, a TSIG under it counting as the identity that created it.
 
 ## Discrepancies found
 

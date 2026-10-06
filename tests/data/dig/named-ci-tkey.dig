@@ -1,0 +1,11 @@
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 5463
+;; flags: qr; QUERY: 1, ANSWER: 1, AUTHORITY: 0, ADDITIONAL: 1
+
+;; QUESTION SECTION:
+;hmac-sha256.key.		ANY	TKEY
+
+;; ANSWER SECTION:
+hmac-sha256.key.	0	ANY	TKEY	hmac-sha256. 0 0 5 BADNAME 0  0
+
+;; TSIG PSEUDOSECTION:
+hmac-sha256.key.	0	ANY	TSIG	hmac-sha256. 1791247898 300 32 M9DrrztXqOdrk40uSVA8iN9vL0vOIoqAbw/5/uUuju4= 5463 NOERROR 0 

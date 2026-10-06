@@ -3,12 +3,12 @@
 ; (1 server found)
 ;; global options: +cmd
 ;; Got answer:
-;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 11507
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 31400
 ;; flags: qr aa; QUERY: 1, ANSWER: 1, AUTHORITY: 2, ADDITIONAL: 3
 
 ;; OPT PSEUDOSECTION:
 ; EDNS: version: 0, flags:; udp: 1232
-; COOKIE: 1db523b498057d40010000006ac43ea80ce9a0cf2e53b359 (good)
+; COOKIE: 7c171eab5b4b58db010000006ac4460bf88c7ffbf51a3e00 (good)
 ;; QUESTION SECTION:
 ;openpgpkey.alltypes.example.	IN	OPENPGPKEY
 
@@ -25,6 +25,6 @@ ns1.alltypes.example.	3600	IN	AAAA	2001:db8::53
 
 ;; Query time: 0 msec
 ;; SERVER: 127.0.0.1#5350(127.0.0.1) (TCP)
-;; WHEN: Tue Oct 06 00:19:52 UTC 2026
+;; WHEN: Tue Oct 06 00:51:23 UTC 2026
 ;; MSG SIZE  rcvd: 235
 

@@ -3,24 +3,24 @@
 ; (1 server found)
 ;; global options: +cmd
 ;; Got answer:
-;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 44611
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 53040
 ;; flags: qr aa rd; QUERY: 1, ANSWER: 0, AUTHORITY: 4, ADDITIONAL: 1
 ;; WARNING: recursion requested but not available
 
 ;; OPT PSEUDOSECTION:
 ; EDNS: version: 0, flags: do; udp: 1232
-; COOKIE: d0a59eaf870c9db0010000006ac43ea0531183afcc77c54b (good)
+; COOKIE: 10089d2ced664a3e010000006ac44603a391a5d0cc5da828 (good)
 ;; QUESTION SECTION:
 ;host.wild.rsasha1-nsec.interop.	IN	MX
 
 ;; AUTHORITY SECTION:
 rsasha1-nsec.interop.	300	IN	SOA	ns1.rsasha1-nsec.interop. hostmaster.rsasha1-nsec.interop. 2026100401 7200 3600 1209600 300
-rsasha1-nsec.interop.	300	IN	RRSIG	SOA 5 2 3600 20361003001932 20261005231932 21015 rsasha1-nsec.interop. c249Wfum1pJE9gAYqMlChXN91zzCUzS+RMRfEUWjJrFHdHTGjLJQKOT4 lJuWUMhSrrcozwCK5s4b9S1WlQGfmxyohtU8hYb7lWUKRHOaVQ2WrcRo YSF9gsi6zqx7lcRILssEUR99C2CCK9dcQueHjyHrY/b0Fmxvfagw+QaV lik=
+rsasha1-nsec.interop.	300	IN	RRSIG	SOA 5 2 3600 20361003005101 20261005235101 60951 rsasha1-nsec.interop. b2dmXZO1VhAsEUS2Lq4JTwLYqdF6SQaA8+cKQLhwSxxhioph4soRk0A5 m3tOfsjgtAwqG3ngEOMn0DItP6i3jOEifmn1EJ7As+cduqCxWKfU4yz5 xTKBHEo97bHFXYdsJXrluwid5/W7OQxhRWA8OSJ/C3JjYn/QUvfC4hge og8=
 *.wild.rsasha1-nsec.interop. 300 IN	NSEC	www.rsasha1-nsec.interop. A TXT RRSIG NSEC
-*.wild.rsasha1-nsec.interop. 300 IN	RRSIG	NSEC 5 3 300 20361003001932 20261005231932 21015 rsasha1-nsec.interop. Ll85f4/MDvUSMxDuJ6b349IB3SjHkTYww7hCkX6twMS4TwdYjQW1Ysjd fZBE0JSyNJ0W0vdjjnFeEw1zAYMUQIXlMc8rqRoiHrV44pC9KKF6xZtH ZNDa96bVuXFeQ2ns2ckto3BjaxaQKgWeNqxhexLh9BXZOizGgBnYpZe2 f3o=
+*.wild.rsasha1-nsec.interop. 300 IN	RRSIG	NSEC 5 3 300 20361003005101 20261005235101 60951 rsasha1-nsec.interop. CgueKwInqXm5w29noeIDsVZAgcBrn5i7ebwK8zE7nDMkb/SAxoGeRfKq C6t82avA8jmQSQDGzwTptgfRnCGPeaCJX+e4cudo4Baa3O6FAzoRyLnI mgVTmnbzpK+vUyVOgq2tfODIEagKqkvacohRgg6alEHwT9ZzMil3iBEH SxA=
 
 ;; Query time: 0 msec
 ;; SERVER: 127.0.0.1#5350(127.0.0.1) (UDP)
-;; WHEN: Tue Oct 06 00:19:44 UTC 2026
+;; WHEN: Tue Oct 06 00:51:15 UTC 2026
 ;; MSG SIZE  rcvd: 566
 

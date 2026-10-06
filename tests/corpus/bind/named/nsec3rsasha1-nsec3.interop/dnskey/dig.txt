@@ -3,23 +3,23 @@
 ; (1 server found)
 ;; global options: +cmd
 ;; Got answer:
-;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 10825
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 54261
 ;; flags: qr aa rd; QUERY: 1, ANSWER: 3, AUTHORITY: 0, ADDITIONAL: 1
 ;; WARNING: recursion requested but not available
 
 ;; OPT PSEUDOSECTION:
 ; EDNS: version: 0, flags: do; udp: 1232
-; COOKIE: 4acfc513467ddae9010000006ac43ea1d8d1f77c934215ad (good)
+; COOKIE: 6f518e4953504a24010000006ac44603ea59e56f7b070ca6 (good)
 ;; QUESTION SECTION:
 ;nsec3rsasha1-nsec3.interop.	IN	DNSKEY
 
 ;; ANSWER SECTION:
-nsec3rsasha1-nsec3.interop. 3600 IN	DNSKEY	256 3 7 AwEAAaxGIrhu1Ye5dc/25ErJ6SXOe7kFhVfypQcxouFjKKPSCUZFry8g Pdes1Ijc3CNf5HDyWm7tT0NKi3GTPAEApF5VJH0VuCb028GEiPPNDGeQ 08Pd/krzaNpb2Hn1cXPtBldwrB8L0XqCpEepQkjkQNiu5Ivcp/AZK9RE VOhifGXP
-nsec3rsasha1-nsec3.interop. 3600 IN	DNSKEY	257 3 7 AwEAAcXNdDoHOKIuQPJFNNIuh7krLe7CjilQn/7dBsxdCO/fhyxVgHvB i1FiXQEWFIelbYszqicCEcg4YB47eG7Xh5o9W9WKpxrzrYZSWjr6nhfc Vj0s+onOt2xUOEWV31q1DWSFq4iv+Vl6F0MDUie9MsvDyUWy0HBBJzft IHtrfkBe6sFW6oDCYxI2i+35izsj8Y8dVbFmULI3aIH6WfS+L8wLpaTw s80pAcbO2/g2z5gQry4N0IsqiV0qbLhM44GTqbVf+AezdrKcG80Uckx/ Pia2MBed+O2OJsxkKlwPDN1EK4Ptag1XiB39zk6ThLpsA2qrxZg1oDgH 2bH283sjR28=
-nsec3rsasha1-nsec3.interop. 3600 IN	RRSIG	DNSKEY 7 2 3600 20361003001932 20261005231932 46435 nsec3rsasha1-nsec3.interop. RP7cxN0++SnoqRmG3+hgw/D7Z5r7g2OYpvUsVRyzZ3i8dJZL0Zk9x+Fd iZvXAIL5qaElvQAK8krCdm9fcIeq6KXRcHp1j60y78HaEplvB3AJfvMc 4dOqOjkd6k0mPHxlCyvmmgi0IkERvqKRszsmO6l/uHb2oBcJkErR2ulh 5Jvxug5+CQ7w7AWrox16cF/vZ8hNYH2choPut2atj4DzmuC7tWRqgrMQ joe2imRIu/NE1gyRNOeQchL0FECtWiAdTNEkUkTLGf6bjMYKz1/swW92 YeVSp9DwuXp93xf0G3xDJge5jjuF9YDy5LxguUzm7+tQgTIRBa+30MXI PmMuTg==
+nsec3rsasha1-nsec3.interop. 3600 IN	DNSKEY	256 3 7 AwEAAcfdMoVu7XQpSQQPBckvJSsGWlBIGNtqPehKXu++7Y2tfteJCQ2c ymfVkIIdRG5ii28J30PdtobFoLSyBtOckW2OtfO0EHl677RxyGtKvq6A duglHYWU8sf4OhzdW7Jv94ebyuLqCNApx4vMhLiQ8CY3JNlsN74FSlAt 8kvh/R1T
+nsec3rsasha1-nsec3.interop. 3600 IN	DNSKEY	257 3 7 AwEAAaGs1VnGKrEJQlFnp7X85QiJlT8G9z9TLq+hLAjJV/SHLGwXR2ap X2bvgISDaULqExa5kVNwq+farizYNCbNa/0BfABdbbsu0dSk6iQ54qhd r7wSdpumtui2er0pw575Mrrga8m8xvtmT7lR5Ns4L1bKWBR2S9FUi0Ox rTWeY1ZBUbvV/rXhd3NzuwKk23K1dj2IIk4QxbQRZbWUayg1zyPZm3go UxJ+GaXjGhdVXeXuMdhAjWW7iHUTDvda08lmSnxSbPg/2LKHlAyfiEXh +Vpk3Ze5u7mhKdDs7gpAhlC/OcCZDZXazXrYjZaiMdNHC6Sm3HUZHx5r +9GMjvaDhdc=
+nsec3rsasha1-nsec3.interop. 3600 IN	RRSIG	DNSKEY 7 2 3600 20361003005101 20261005235101 20394 nsec3rsasha1-nsec3.interop. VLmoUNL1w8chyTecs2wdWeLBVCXExf4vvkZDDa/6XA3a756NivoZJCu4 1p6j/mJZKd5bbfUuy08fT334aitPV1ddWZWskakPs//nld5KEGdJiATQ JXnKUohRidL7j4FmDXnD4eDnMXncOZAKB0O6bwczwQ01DoObFJSAGKOg JyHEi9H4x6q8ZAsFv1+0Fw4DomI9s7cR8fbIEAu7AAHkmTDdOiRUD/T6 YmqdOxAxNu0B6Y2c7rsemzH10swH5QLOPMC5wXFM3ZHcyzYE39WHsC5N Srk660eHAaHE93QgR/cG69Mc221Ru2TjhwVM0pi8DiOGNOGUk+0Hx+fx qayxhw==
 
 ;; Query time: 0 msec
 ;; SERVER: 127.0.0.1#5350(127.0.0.1) (UDP)
-;; WHEN: Tue Oct 06 00:19:45 UTC 2026
+;; WHEN: Tue Oct 06 00:51:15 UTC 2026
 ;; MSG SIZE  rcvd: 821
 

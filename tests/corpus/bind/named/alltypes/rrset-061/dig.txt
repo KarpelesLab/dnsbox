@@ -3,12 +3,12 @@
 ; (1 server found)
 ;; global options: +cmd
 ;; Got answer:
-;; ->>HEADER<<- opcode: QUERY, status: NXDOMAIN, id: 23495
+;; ->>HEADER<<- opcode: QUERY, status: NXDOMAIN, id: 6411
 ;; flags: qr aa; QUERY: 1, ANSWER: 0, AUTHORITY: 1, ADDITIONAL: 1
 
 ;; OPT PSEUDOSECTION:
 ; EDNS: version: 0, flags:; udp: 1232
-; COOKIE: c253c42f5d6cf004010000006ac43ea8a62d6d7a067bee52 (good)
+; COOKIE: bc9542b701663d54010000006ac4460b01ed320b971c2126 (good)
 ;; QUESTION SECTION:
 ;nsec3.alltypes.example.		IN	NSEC3
 
@@ -17,6 +17,6 @@ alltypes.example.	300	IN	SOA	ns1.alltypes.example. hostmaster.alltypes.example. 
 
 ;; Query time: 0 msec
 ;; SERVER: 127.0.0.1#5350(127.0.0.1) (TCP)
-;; WHEN: Tue Oct 06 00:19:52 UTC 2026
+;; WHEN: Tue Oct 06 00:51:23 UTC 2026
 ;; MSG SIZE  rcvd: 130
 

@@ -3,21 +3,21 @@
 ; (1 server found)
 ;; global options: +cmd
 ;; Got answer:
-;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 38379
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 5552
 ;; flags: qr aa; QUERY: 1, ANSWER: 2, AUTHORITY: 0, ADDITIONAL: 1
 
 ;; OPT PSEUDOSECTION:
 ; EDNS: version: 0, flags:; udp: 1232
-; COOKIE: 3e15a1969f961972010000006ac43ea7c817e23b005bd0e9 (good)
+; COOKIE: 86889758ea935458010000006ac4460ae94bb504c80db76a (good)
 ;; QUESTION SECTION:
 ;cdnskey.alltypes.example.	IN	CDNSKEY
 
 ;; ANSWER SECTION:
-cdnskey.alltypes.example. 3600	IN	CDNSKEY	0 3 0 AA==
 cdnskey.alltypes.example. 3600	IN	CDNSKEY	257 3 15 l02Woi0iS8Aa25FQkUd9RMzZHJpBoRQwAQEX1SxZJA4=
+cdnskey.alltypes.example. 3600	IN	CDNSKEY	0 3 0 AA==
 
 ;; Query time: 0 msec
 ;; SERVER: 127.0.0.1#5350(127.0.0.1) (TCP)
-;; WHEN: Tue Oct 06 00:19:51 UTC 2026
+;; WHEN: Tue Oct 06 00:51:22 UTC 2026
 ;; MSG SIZE  rcvd: 146
 

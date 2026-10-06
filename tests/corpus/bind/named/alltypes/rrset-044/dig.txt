@@ -3,20 +3,20 @@
 ; (1 server found)
 ;; global options: +cmd
 ;; Got answer:
-;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 49538
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 19462
 ;; flags: qr aa; QUERY: 1, ANSWER: 4, AUTHORITY: 2, ADDITIONAL: 3
 
 ;; OPT PSEUDOSECTION:
 ; EDNS: version: 0, flags:; udp: 1232
-; COOKIE: 354b221742419ed1010000006ac43ea861b3e1a3f9627d33 (good)
+; COOKIE: 8ae1f4c9b203ef30010000006ac4460b756e6fd04486d90b (good)
 ;; QUESTION SECTION:
 ;loc.alltypes.example.		IN	LOC
 
 ;; ANSWER SECTION:
-loc.alltypes.example.	3600	IN	LOC	42 21 54.000 N 71 6 18.000 W -24.00m 30m 10000m 10m
-loc.alltypes.example.	3600	IN	LOC	52 22 23.000 N 4 53 32.000 E -2.00m 0.00m 10000m 10m
 loc.alltypes.example.	3600	IN	LOC	0 0 0.000 N 0 0 0.000 E 0.00m 1m 10000m 10m
 loc.alltypes.example.	3600	IN	LOC	90 0 0.000 S 180 0 0.000 W 42849672.95m 90000000m 90000000m 90000000m
+loc.alltypes.example.	3600	IN	LOC	52 22 23.000 N 4 53 32.000 E -2.00m 0.00m 10000m 10m
+loc.alltypes.example.	3600	IN	LOC	42 21 54.000 N 71 6 18.000 W -24.00m 30m 10000m 10m
 
 ;; AUTHORITY SECTION:
 alltypes.example.	3600	IN	NS	ns2.example.net.
@@ -28,6 +28,6 @@ ns1.alltypes.example.	3600	IN	AAAA	2001:db8::53
 
 ;; Query time: 0 msec
 ;; SERVER: 127.0.0.1#5350(127.0.0.1) (TCP)
-;; WHEN: Tue Oct 06 00:19:52 UTC 2026
+;; WHEN: Tue Oct 06 00:51:23 UTC 2026
 ;; MSG SIZE  rcvd: 280
 

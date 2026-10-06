@@ -3,21 +3,21 @@
 ; (1 server found)
 ;; global options: +cmd
 ;; Got answer:
-;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 57797
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 25650
 ;; flags: qr rd ra cd; QUERY: 1, ANSWER: 2, AUTHORITY: 0, ADDITIONAL: 1
 
 ;; OPT PSEUDOSECTION:
 ; EDNS: version: 0, flags: do; udp: 1232
-; COOKIE: df81065fa540ddb9010000006ac43eb7833f4b764cf62b43 (good)
+; COOKIE: 1beacd2be204dd29010000006ac4461af9fdbcf4c39bafa2 (good)
 ;; QUESTION SECTION:
 ;www.bogus-ds.interop.		IN	A
 
 ;; ANSWER SECTION:
 www.bogus-ds.interop.	3600	IN	A	192.0.2.80
-www.bogus-ds.interop.	3600	IN	RRSIG	A 15 3 3600 20361003001932 20261005231932 2630 bogus-ds.interop. Wc8TPPu4isndcHupCbse2q56PiH7R/VDgZ8D/cix7ozAl/TU0FNBUvCV k/j2HDTYN875hsc5jtJDKv3db2NYBw==
+www.bogus-ds.interop.	3600	IN	RRSIG	A 15 3 3600 20361003005101 20261005235101 683 bogus-ds.interop. g9UMLBomiTN9iq8kd7ZVwKHnlwqNCh7icSDchyPlWx+FKxpl1cYRE5/A xL62NaICtxFV8O9cVEHDUO3NCEn7AA==
 
 ;; Query time: 0 msec
 ;; SERVER: 127.0.0.1#5450(127.0.0.1) (UDP)
-;; WHEN: Tue Oct 06 00:20:07 UTC 2026
+;; WHEN: Tue Oct 06 00:51:38 UTC 2026
 ;; MSG SIZE  rcvd: 205
 

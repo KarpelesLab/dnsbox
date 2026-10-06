@@ -3,24 +3,24 @@
 ; (1 server found)
 ;; global options: +cmd
 ;; Got answer:
-;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 42875
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 40591
 ;; flags: qr aa rd; QUERY: 1, ANSWER: 4, AUTHORITY: 0, ADDITIONAL: 1
 ;; WARNING: recursion requested but not available
 
 ;; OPT PSEUDOSECTION:
 ; EDNS: version: 0, flags: do; udp: 1232
-; COOKIE: bf4892d41fb4af4d010000006ac43ea59c0cc297d2637e3b (good)
+; COOKIE: ad9e87bde50b5fb3010000006ac4460793ebc094addba386 (good)
 ;; QUESTION SECTION:
 ;alias.ed25519-nsec.interop.	IN	A
 
 ;; ANSWER SECTION:
 alias.ed25519-nsec.interop. 3600 IN	CNAME	www.ed25519-nsec.interop.
-alias.ed25519-nsec.interop. 3600 IN	RRSIG	CNAME 15 3 3600 20361003001932 20261005231932 48895 ed25519-nsec.interop. +WdiDEsnx73jAFwA0Gbo+fjT1XTvQO/SFYiyLP+LuEWt4kNKplxX8GUT QQqMLLGibCVXHsfjtucR9el8ZXRSAw==
+alias.ed25519-nsec.interop. 3600 IN	RRSIG	CNAME 15 3 3600 20361003005101 20261005235101 1749 ed25519-nsec.interop. kdcqb6PzWkl3TJnLQ8+sdM35MeJil1y7OGUrD/4FqTGHG3ITM0+pNJQ7 rQ3Z3ENidYGgabGwALUKgJrnECLJBA==
 www.ed25519-nsec.interop. 3600	IN	A	192.0.2.80
-www.ed25519-nsec.interop. 3600	IN	RRSIG	A 15 3 3600 20361003001932 20261005231932 48895 ed25519-nsec.interop. 2BpQ5kZdnqLh/ZiBOVNfrYYlI3gnMyNqOUwQktUNabLUBKiIMycadEAL nFCT51nMy34sRoLOmL4/uUPNvWhaCQ==
+www.ed25519-nsec.interop. 3600	IN	RRSIG	A 15 3 3600 20361003005101 20261005235101 1749 ed25519-nsec.interop. OYDCjoyPSif64zDS3zNLMCdNcjC/QEKu1eAcjQtMEDg5nY4dRAjTVUlY nu4SNBU7M1zrw6OjfH4X4cZjhW0OAQ==
 
 ;; Query time: 0 msec
 ;; SERVER: 127.0.0.1#5350(127.0.0.1) (UDP)
-;; WHEN: Tue Oct 06 00:19:49 UTC 2026
+;; WHEN: Tue Oct 06 00:51:19 UTC 2026
 ;; MSG SIZE  rcvd: 349
 

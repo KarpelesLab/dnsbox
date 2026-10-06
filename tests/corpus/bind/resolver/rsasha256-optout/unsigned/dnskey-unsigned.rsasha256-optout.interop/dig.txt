@@ -3,12 +3,12 @@
 ; (1 server found)
 ;; global options: +cmd
 ;; Got answer:
-;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 59443
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 20657
 ;; flags: qr rd ra cd; QUERY: 1, ANSWER: 0, AUTHORITY: 1, ADDITIONAL: 1
 
 ;; OPT PSEUDOSECTION:
 ; EDNS: version: 0, flags: do; udp: 1232
-; COOKIE: 68c3c7e0055abb48010000006ac43eae740d352e1c6e683e (good)
+; COOKIE: 05a5b01469346d0c010000006ac44611973d89e554e5fece (good)
 ;; QUESTION SECTION:
 ;unsigned.rsasha256-optout.interop. IN	DNSKEY
 
@@ -17,6 +17,6 @@ unsigned.rsasha256-optout.interop. 300 IN SOA	ns.unsigned.rsasha256-optout.inter
 
 ;; Query time: 0 msec
 ;; SERVER: 127.0.0.1#5450(127.0.0.1) (UDP)
-;; WHEN: Tue Oct 06 00:19:58 UTC 2026
+;; WHEN: Tue Oct 06 00:51:29 UTC 2026
 ;; MSG SIZE  rcvd: 140
 

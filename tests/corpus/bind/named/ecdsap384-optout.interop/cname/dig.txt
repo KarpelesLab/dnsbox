@@ -3,24 +3,24 @@
 ; (1 server found)
 ;; global options: +cmd
 ;; Got answer:
-;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 43595
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 33600
 ;; flags: qr aa rd; QUERY: 1, ANSWER: 4, AUTHORITY: 0, ADDITIONAL: 1
 ;; WARNING: recursion requested but not available
 
 ;; OPT PSEUDOSECTION:
 ; EDNS: version: 0, flags: do; udp: 1232
-; COOKIE: 66ed0864292988ce010000006ac43ea48dbba7c24927089f (good)
+; COOKIE: a43eb1a2c66330f4010000006ac4460748e36d9ad0a82283 (good)
 ;; QUESTION SECTION:
 ;alias.ecdsap384-optout.interop.	IN	A
 
 ;; ANSWER SECTION:
 alias.ecdsap384-optout.interop.	3600 IN	CNAME	www.ecdsap384-optout.interop.
-alias.ecdsap384-optout.interop.	3600 IN	RRSIG	CNAME 14 3 3600 20361003001932 20261005231932 38014 ecdsap384-optout.interop. LSChrwEPf4kZjeMqNfuu2y1Nf70KmGFMfaWC5LQH7LJeHhVNnuuo6QBt rx3OUyHwdfWYvPVRzLgkDXLwgpeZqPQLN7QaU/PUxuH8LduafxhPgZEg plk/sE93QXg0O0Mq
+alias.ecdsap384-optout.interop.	3600 IN	RRSIG	CNAME 14 3 3600 20361003005101 20261005235101 57186 ecdsap384-optout.interop. GbkZ7XgUzBS1ezPVEg7rEtL+z5amS+ey3Cm6oT6nu1KLwwe9mRQOApGl 1Bl7P8fqHbqkvAsF/DWJmzQg1zga8mGIoyGDSRrc2dBLLOcw+0jTjqYa 4MxIKoHgOpvuw65R
 www.ecdsap384-optout.interop. 3600 IN	A	192.0.2.80
-www.ecdsap384-optout.interop. 3600 IN	RRSIG	A 14 3 3600 20361003001932 20261005231932 38014 ecdsap384-optout.interop. n9s7U6BiSrdMDzCpRqQ5cHybyrJCFyQhzuVh4cvaYE99XZDDW8sSelKB XZu+PqqvPFoCUfTHXmvbbg2McoewXpAaAFov/agWvcvQVTU8VWNna1uf AZztJj7uXQCB5VXI
+www.ecdsap384-optout.interop. 3600 IN	RRSIG	A 14 3 3600 20361003005101 20261005235101 57186 ecdsap384-optout.interop. NJYdfBwLKq+z5qseESPZq1xbPJ7Rmw0CXSwG9dtiOTyDKz2kyBe+FKOM CtzbI/RHVetrARSe2XhxGZ0Uus4JIlHBp9QBvF8amoomn5yNN57HqYgk +viPce/n0hAN2VRb
 
 ;; Query time: 0 msec
 ;; SERVER: 127.0.0.1#5350(127.0.0.1) (UDP)
-;; WHEN: Tue Oct 06 00:19:48 UTC 2026
+;; WHEN: Tue Oct 06 00:51:19 UTC 2026
 ;; MSG SIZE  rcvd: 425
 

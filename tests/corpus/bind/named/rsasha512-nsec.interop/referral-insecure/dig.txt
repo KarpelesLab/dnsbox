@@ -3,26 +3,26 @@
 ; (1 server found)
 ;; global options: +cmd
 ;; Got answer:
-;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 19657
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 64590
 ;; flags: qr rd; QUERY: 1, ANSWER: 0, AUTHORITY: 3, ADDITIONAL: 2
 ;; WARNING: recursion requested but not available
 
 ;; OPT PSEUDOSECTION:
 ; EDNS: version: 0, flags: do; udp: 1232
-; COOKIE: 3af98d7c3dc38a2a010000006ac43ea21b84f1c3af82b32a (good)
+; COOKIE: 9c7fb821437b14bb010000006ac44605ba51ffcb340c4382 (good)
 ;; QUESTION SECTION:
 ;host.insecure.rsasha512-nsec.interop. IN A
 
 ;; AUTHORITY SECTION:
 insecure.rsasha512-nsec.interop. 3600 IN NS	ns.insecure.rsasha512-nsec.interop.
 insecure.rsasha512-nsec.interop. 300 IN	NSEC	mail.rsasha512-nsec.interop. NS RRSIG NSEC
-insecure.rsasha512-nsec.interop. 300 IN	RRSIG	NSEC 10 3 300 20361003001932 20261005231932 5796 rsasha512-nsec.interop. sTgQMKiWf/7tKaaz5IENmP76btH05jev/EQ0qMoyXp2zqbdPTXaWeiaE FLn0JTSnp/SNdX5yFOAczmJ2tSoae5fNg3klK05mHl+2TpnxOKjcoLjp CxUfjHB2kIWypgVvnZd0kCwe9thsx7f8P7an/mquUwMWN73gXSlau5dS z8A=
+insecure.rsasha512-nsec.interop. 300 IN	RRSIG	NSEC 10 3 300 20361003005101 20261005235101 28655 rsasha512-nsec.interop. kQrZ1ndvyOjwlzC/yiviaU56aSHBE+BaM7EGVaPm4Myw+yGw/LVLG0j3 V006UEWKbmpxb0w+2UYjFRgtO1G8zP8meDRLVRoAwzqq11jK62rSE60w L9L4t8y1bm5fPPgXrtrvmXiT6VbU16aJHGxAZNt4R9aqgcj0phXs3bqD 5rY=
 
 ;; ADDITIONAL SECTION:
 ns.insecure.rsasha512-nsec.interop. 3600 IN A	192.0.2.98
 
 ;; Query time: 0 msec
 ;; SERVER: 127.0.0.1#5350(127.0.0.1) (UDP)
-;; WHEN: Tue Oct 06 00:19:46 UTC 2026
+;; WHEN: Tue Oct 06 00:51:17 UTC 2026
 ;; MSG SIZE  rcvd: 357
 

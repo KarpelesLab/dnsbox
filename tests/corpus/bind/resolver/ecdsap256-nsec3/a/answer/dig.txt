@@ -3,21 +3,21 @@
 ; (1 server found)
 ;; global options: +cmd
 ;; Got answer:
-;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 46442
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 49932
 ;; flags: qr rd ra ad; QUERY: 1, ANSWER: 2, AUTHORITY: 0, ADDITIONAL: 1
 
 ;; OPT PSEUDOSECTION:
 ; EDNS: version: 0, flags: do; udp: 1232
-; COOKIE: 83f186054d92ad88010000006ac43eb078f9a65384bf5e02 (good)
+; COOKIE: 3e7ae931fa33093d010000006ac44613296160bfdd445f5a (good)
 ;; QUESTION SECTION:
 ;www.ecdsap256-nsec3.interop.	IN	A
 
 ;; ANSWER SECTION:
 www.ecdsap256-nsec3.interop. 3600 IN	A	192.0.2.80
-www.ecdsap256-nsec3.interop. 3600 IN	RRSIG	A 13 3 3600 20361003001932 20261005231932 18981 ecdsap256-nsec3.interop. qj5Pz4rvvYzC3/u4GqSWT58GL+y9M9KeCLMGOms5GkgWUhs6YsUJFGYG wdvaFCGpVk5N5q3TeiizsxJa7sO9MA==
+www.ecdsap256-nsec3.interop. 3600 IN	RRSIG	A 13 3 3600 20361003005101 20261005235101 17004 ecdsap256-nsec3.interop. ZUjEjjVJL1Mhih23QGYjXkXbZvcs/Gu5CG81mOirTDOs1zlwJENeB+dO trr5+ZkNXorJuGbD0u5XhmdAhF/xZw==
 
-;; Query time: 2 msec
+;; Query time: 3 msec
 ;; SERVER: 127.0.0.1#5450(127.0.0.1) (UDP)
-;; WHEN: Tue Oct 06 00:20:00 UTC 2026
+;; WHEN: Tue Oct 06 00:51:31 UTC 2026
 ;; MSG SIZE  rcvd: 219
 

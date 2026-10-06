@@ -3,24 +3,24 @@
 ; (1 server found)
 ;; global options: +cmd
 ;; Got answer:
-;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 33280
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 5339
 ;; flags: qr aa rd; QUERY: 1, ANSWER: 4, AUTHORITY: 0, ADDITIONAL: 1
 ;; WARNING: recursion requested but not available
 
 ;; OPT PSEUDOSECTION:
 ; EDNS: version: 0, flags: do; udp: 1232
-; COOKIE: fa8aaa7dfadfc21a010000006ac43ea2b0bb6cb1721c85a3 (good)
+; COOKIE: 5504ff34bb26e96c010000006ac446042291d0c3e3f18bff (good)
 ;; QUESTION SECTION:
 ;alias.rsasha256-optout.interop.	IN	A
 
 ;; ANSWER SECTION:
 alias.rsasha256-optout.interop.	3600 IN	CNAME	www.rsasha256-optout.interop.
-alias.rsasha256-optout.interop.	3600 IN	RRSIG	CNAME 8 3 3600 20361003001932 20261005231932 44284 rsasha256-optout.interop. FckcURDXLk3FlghaCh5yAEtN3rbhtYsyQrwe5EOedOYsVxDzySnodQhl nc1wKfQRcq4QP5UMuwmN6ajDcY9lmpIbPOz8kxxhJei9ei9IZvmskEXx zOv+TGFkijQAJCjP00wHxr1kjpRW8+C8RzuP+xvoHnYUTbYReOgxV11o UPk=
+alias.rsasha256-optout.interop.	3600 IN	RRSIG	CNAME 8 3 3600 20361003005101 20261005235101 3133 rsasha256-optout.interop. baYxtVmjQJhrnnm4OMG56nAh6E8BgjjaShy6rwtMv7jP2//oIGNTW6Xa TCmyBgGmPb+OQ+Dlrz7TvdogmjYxwSGw6N2V5W4fq4/Y2W4iAmTk+1nn wRx9OzyimMFCaiUTVyzvaZG8yJ8pi9TUkCGx/Tlk9tk9ZoPwKnpQ8A0d 0Aw=
 www.rsasha256-optout.interop. 3600 IN	A	192.0.2.80
-www.rsasha256-optout.interop. 3600 IN	RRSIG	A 8 3 3600 20361003001932 20261005231932 44284 rsasha256-optout.interop. Oks707JP9/MHSachVz/RmGvYRxnuVLiC0qMrg+PJHcOx273ZgSqqcrvZ Qmq6ycMEvUlQ7GewlxaaeXuay9p6ehAnzsx7a6OL9Yn3WsWlU5xPQbjv 80uVVxIo0semEmpnv7jyVgrvSbC3DUK5B3Qi5LTjLms9YwrjWGbXFfLo OF0=
+www.rsasha256-optout.interop. 3600 IN	RRSIG	A 8 3 3600 20361003005101 20261005235101 3133 rsasha256-optout.interop. zbq5ttATEdrULonz6ZBuaAlXQ2XeqeTe9OBz2wk89qaokXbIT1DD2YXh WVJL7vyFss6P6zwPjp95erZMAK+9Wk8E/nJnHAkYb4+Hra9NZTxtR5jG 18+Hw6Kx8PDWYOze5w5UmtxHrBa/WTY+PtTv07f59HfDby++Aj7hJgYX Fpo=
 
 ;; Query time: 0 msec
 ;; SERVER: 127.0.0.1#5350(127.0.0.1) (UDP)
-;; WHEN: Tue Oct 06 00:19:46 UTC 2026
+;; WHEN: Tue Oct 06 00:51:16 UTC 2026
 ;; MSG SIZE  rcvd: 489
 
