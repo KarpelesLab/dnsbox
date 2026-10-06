@@ -103,7 +103,7 @@
 //! ### Typed record data
 //!
 //! [`Record::data`] decodes the RDATA into [`RData`], an enum with a typed
-//! view for about 85 record types ([`rdata`]); unknown types stay opaque
+//! view for about 90 record types ([`rdata`]); unknown types stay opaque
 //! and round-trip (RFC 3597). [`Record::data_as`] asks for one type.
 //! Names inside RDATA follow compression pointers into the message.
 //!

@@ -1194,6 +1194,12 @@ src/dnssec/
   zone-file reading is in `ZoneLimits`, on by default: new directives or
   features that let a short text cost much work or memory get a limit
   there, reported as `Error::LimitExceeded` with the position.
+- Record types defined only by Internet-Drafts (DOA, IPN and CLA, UNECE
+  and ISO) follow, strictly, the draft version their docs name (the one
+  IANA's registration cites, or the latest); a later version may change
+  the format. A draft without a precise wire format leaves its type
+  opaque; UINFO, UID, GID and UNSPEC, reserved without any format, stay
+  opaque too.
 - Signature records must end the message: `tsig::find` and `sig0::find`
   return `TrailingData` for octets after the TSIG / SIG(0) record, which
   nothing authenticates (RFC 8945 §5.1, RFC 2931 §3). Verification

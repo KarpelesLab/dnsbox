@@ -156,11 +156,12 @@ files, DNSSEC, TSIG), and every public item has its own example. The
   (with RFC 9018 server cookies), Padding with RFC 8467 policies, TCP
   keepalive, Extended DNS Errors, NSID, Chain, Key tag, Expire, Zone
   version, Report-Channel, DAU/DHU/N3U.
-- **Record types**: about 85 typed RDATA formats — the RFC 1035 set, SRV,
+- **Record types**: about 90 typed RDATA formats — the RFC 1035 set, SRV,
   NAPTR, CAA, SSHFP, TLSA, SMIMEA, OPENPGPKEY, DNAME, URI, CERT, DHCID, LOC,
   RP, AFSDB, ILNP, EUI48/64, CSYNC, ZONEMD, APL, IPSECKEY, HIP, KX, SVCB and
   HTTPS (all RFC 9460 SvcParams), AMTRELAY, DSYNC, TKEY, HHIT/BRID, DOA,
-  the DNSSEC types and the legacy types —
+  the draft-defined IPN/CLA and UNECE/ISO, the DNSSEC types and the legacy
+  types —
   each with presentation-format `Display`; unknown types round-trip.
 - **DNSSEC** (RFC 4033–4035, 5155, 6840): canonical form and RRset order,
   key tags, DS digests, NSEC3 hashing, RRSIG validation logic, the chain of

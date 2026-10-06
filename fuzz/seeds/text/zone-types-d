@@ -1,0 +1,23 @@
+$TTL 3600
+$ORIGIN example.
+; draft-johnson-dns-ipn-cla-07 §3.1: one 64-bit number, or two 32-bit
+; halves, most significant first
+node            IPN     977000
+                IPN     1.2
+; ... and the RFC 3597 form of the first
+                TYPE264 \# 8 00000000000ee868
+; §3.2: one adapter per string, quoted or not
+node            CLA     "TCP-V4-V6" "TCP-V6-V7"
+                CLA     TCP-v4-v7 TCP-v6-v7 LTP-v6-v7
+                TYPE263 \# 10 095443502d76362d7637
+; draft-woodcock-faltstrom-external-registry-rrtypes-01 §3.4
+asset           UNECE   16 - JPTYO "place of inspection"
+                UNECE   20 -18 CEL "cold-chain storage temperature"
+                UNECE   20 ? P1 "moisture content, assay pending"
+                UNECE   24 - 219
+; §4.4 (a precision's parentheses must be escaped or quoted: unescaped,
+; they group lines, RFC 1035 §5.1)
+                ISO     3166-2 - US-CA "state of incorporation"
+                ISO     4217 2400000\(50000\) EUR "insured value, hull and machinery"
+                ISO     4217 "780000(?)" CHF "salvage award, assessment ongoing"
+                TYPE70  \# 9 033633390002617278

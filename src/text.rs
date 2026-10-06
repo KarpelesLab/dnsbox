@@ -81,6 +81,13 @@ pub fn fmt_label<W: fmt::Write + ?Sized>(w: &mut W, label: &[u8]) -> fmt::Result
     fmt_escaped(w, label, label_special, false)
 }
 
+/// Writes octets as one unquoted token: like [`fmt_label`] but with `.`
+/// left alone, for fields that are neither names nor quoted strings (the
+/// UNECE and ISO record fields, ...).
+pub(crate) fn fmt_token<W: fmt::Write + ?Sized>(w: &mut W, token: &[u8]) -> fmt::Result {
+    fmt_escaped(w, token, |b| b != b'.' && label_special(b), false)
+}
+
 /// Writes a `<character-string>` in quoted presentation format: `"` and `\`
 /// are backslash-escaped; non-printable bytes become `\DDD` (RFC 1035 §5.1).
 ///
