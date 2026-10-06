@@ -19,13 +19,21 @@ The check is the reverse direction: rdata.dnsbox.txt is dnsbox's own
 presentation of every wire example, in the same layout (written by
 `DNSBOX_WRITE_DNSPYTHON=1 cargo test --test interop_dnspython`; rerun that
 after changing the examples). Each of dnsbox's texts must be accepted by
-dnspython and produce the same wire bytes, except for the types in
-TEXT_DIFFERS.
+dnspython and produce the same wire bytes; for the types in TEXT_DIFFERS
+(TKEY), dnsbox's text is first rewritten to dnspython's layout, after
+checking the parts the two layouts do not share.
+
+The check also runs on the interop CI runner (.github/workflows/interop.yml)
+with the distribution's dnspython, which may be older than the one that
+made rdata.txt: types that dnspython does not implement yet are skipped
+(and listed), which is an error with a dnspython at least as recent.
 """
 
+import base64
 import os
 import sys
 
+import dns.rcode
 import dns.rdata
 import dns.rdataclass
 import dns.rdatatype
@@ -33,14 +41,52 @@ import dns.version
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 
+
+def tkey_for_dnspython(text):
+    """dnsbox's (BIND's) TKEY text in dnspython's layout.
+
+    dnsbox writes `algorithm inception expiration mode error key-size [key]
+    other-size [other]`, the error as a mnemonic; dnspython reads
+    `algorithm inception expiration mode error key [other]`, the error as
+    a number. The sizes must match the data they precede. Returns None
+    when dnspython's layout cannot express the record (no key data).
+    """
+    t = text.split()
+    head, rest = t[:5], t[5:]
+    data = []
+    for _ in range(2):
+        size = int(rest.pop(0))
+        blob = rest.pop(0) if size else ""
+        assert len(base64.b64decode(blob)) == size, (text, size, blob)
+        data.append(blob)
+    assert not rest, text
+    key, other = data
+    if not key:
+        return None
+    head[4] = str(dns.rcode.from_text(head[4]))
+    return " ".join(head + [key] + ([other] if other else []))
+
+
 # Types whose text form differs between dnspython and BIND, where dnsbox
-# writes BIND's: dnspython cannot read dnsbox's display of these, so the
-# check below skips them (TKEY has no zone-file form; BIND writes the key
-# and other data sizes, dnspython does not). dnsbox reads both forms, so
+# writes BIND's (TKEY has no zone-file form; BIND writes the key and other
+# data sizes, dnspython does not, and dnspython does not read BIND's form):
+# what turns dnsbox's text into dnspython's. dnsbox reads both forms, so
 # the other direction, dnspython's text read by dnsbox, is checked for
 # these types too (tests/interop_dnspython.rs, which also pins dnsbox's
 # text for them).
-TEXT_DIFFERS = {"TKEY"}
+TEXT_DIFFERS = {"TKEY": tkey_for_dnspython}
+
+
+def version_tuple(v):
+    return tuple(int(x) for x in v.split(".")[:3] if x.isdigit())
+
+
+def generated_with():
+    """The dnspython version that wrote rdata.txt (its first line)."""
+    with open(os.path.join(HERE, "rdata.txt")) as f:
+        first = f.readline()
+    return first.rsplit("dnspython ", 1)[1].rstrip(":\n")
+
 
 B64_KEY = (
     "AwEAAagAIKlVZrpC6Ia7gEzahOR+9W29euxhJhVVLOyQbSEW0O8gcCjFFVQUTf6v58fLjwBd0YI0EzrAcQqBGCzh/"
@@ -253,17 +299,49 @@ def main():
     print(f"{len(EXAMPLES)} examples")
 
 
+def missing(rclass, rtype, text):
+    """What this dnspython lacks to read `text`: None if nothing, else the
+    type (no class for it, just RFC 3597 generic data) or the SvcParamKey
+    mnemonic (RFC 9460 keys registered since)."""
+    try:
+        rdtype = dns.rdatatype.from_text(rtype)
+    except dns.rdatatype.UnknownRdatatype:
+        return rtype
+    cls = dns.rdata.get_rdata_class(dns.rdataclass.from_text(rclass), rdtype)
+    if cls is dns.rdata.GenericRdata:
+        return rtype
+    if rtype in ("SVCB", "HTTPS"):
+        import dns.rdtypes.svcbbase as svcb
+
+        for param in text.split()[2:]:
+            key = param.split("=", 1)[0]
+            try:
+                svcb.ParamKey.make(key.replace("-", "_"))
+            except Exception:  # noqa: BLE001 - unknown to this version
+                return f"{rtype} key {key}"
+    return None
+
+
 def check(path):
     """Reads dnsbox's presentation of every example back with dnspython."""
     bad = 0
     n = 0
+    skipped = {}
+    converted = 0
     with open(path) as f:
         for line in f:
             if line.startswith("#") or not line.strip():
                 continue
             rtype, rclass, text, hexed = line.rstrip("\n").split("\t")
-            if rtype in TEXT_DIFFERS:
+            lack = None if text.startswith("\\#") else missing(rclass, rtype, text)
+            if lack:
+                skipped[lack] = skipped.get(lack, 0) + 1
                 continue
+            if rtype in TEXT_DIFFERS:
+                text = TEXT_DIFFERS[rtype](text)
+                if text is None:
+                    continue
+                converted += 1
             n += 1
             try:
                 rd = dns.rdata.from_text(
@@ -275,8 +353,17 @@ def check(path):
             if wire != hexed:
                 bad += 1
                 print(f"{rtype} {text!r}\n  dnspython: {wire}\n  expected:  {hexed}")
-    print(f"{n - bad} of {n} dnsbox texts read back identically by dnspython")
-    return bad == 0
+    print(f"{n - bad} of {n} dnsbox texts read back identically by dnspython "
+          f"{dns.version.version} ({converted} in dnspython's layout: {sorted(TEXT_DIFFERS)})")
+    if skipped:
+        made = generated_with()
+        print(f"skipped, not implemented by dnspython {dns.version.version} "
+              f"(rdata.txt: dnspython {made}): "
+              + ", ".join(f"{t} ({k})" for t, k in sorted(skipped.items())))
+        if version_tuple(dns.version.version) >= version_tuple(made):
+            print("error: this dnspython should implement them")
+            return False
+    return bad == 0 and n >= 100
 
 
 if __name__ == "__main__":

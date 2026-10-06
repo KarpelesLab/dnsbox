@@ -3,3 +3,5 @@
 /Cargo.lock
 # Per-agent worktrees created by Claude Code's parallel-agent tooling.
 /.claude/
+# Python bytecode of the corpus scripts.
+__pycache__/

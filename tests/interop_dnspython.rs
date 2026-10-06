@@ -69,12 +69,13 @@ fn examples() -> Vec<Example> {
 /// writes BIND's: dnspython writes TKEY (which has no zone-file form)
 /// without the key and other data sizes, and reads only that form. dnsbox
 /// reads both, so dnspython's text is checked like any other
-/// ([`dnspython_text_to_dnsbox_wire`]), but dnspython does not read
-/// dnsbox's display back (`gen_rdata.py --check` skips these types).
+/// ([`dnspython_text_to_dnsbox_wire`]); dnspython reads dnsbox's display
+/// only once `gen_rdata.py --check` has rewritten it to dnspython's layout.
 const TEXT_DIFFERS: &[Rtype] = &[Rtype::TKEY];
 
 /// dnsbox's display of the [`TEXT_DIFFERS`] examples: (dnspython text,
-/// dnsbox text).
+/// dnsbox text). dnspython does not read these as they are: `gen_rdata.py
+/// --check` checks the sizes and rewrites them to dnspython's layout first.
 const BIND_STYLE: &[(&str, &str)] = &[
     (
         "gss-tsig. 1791104299 1791107899 3 0 AAEC",
