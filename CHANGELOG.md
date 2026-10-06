@@ -7,6 +7,54 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.3](https://github.com/KarpelesLab/dnsbox/compare/v0.0.2...v0.0.3) - 2026-10-06
+
+### Other
+
+- Roadmap, changelog and security notes for the TKEY, draft-type and BIND round
+- Interop corpus: keep BIND run 37396071664 (DH TKEY, draft types)
+- BIND interop: Diffie-Hellman TKEY, TKEY text and the draft types
+- Interop CI: BIND 9 (signing, zone tools, named, dig, nsupdate)
+- dnspython cross-check: TKEY in dnspython's layout, older dnspython
+- read BIND 9.18's relay-less type-0 form
+- key agreement, deletion mode and dnspython's text form
+- Type IPN, CLA, UNECE and ISO record data from their drafts
+- :pad_to: refuse padding that cannot fit before writing it
+- OwnedRData serde: read back class-specific data of other classes
+- keep interleaved additional RRsets whole or set TC
+- Zone lexer: a quote inside a token does not run past the line
+- bound the templates like their expansion
+- keep an included file's state after a bad $INCLUDE path
+- :from_ds: disregard DS digest types we cannot compute
+- :edns: reject an OPT record outside the additional section
+- pad up to the limit minus the reserve
+- reject empty blocks and trailing zero octets
+- Interop corpus: no directory names ending in a dot
+- knotd refuses TKEY unsigned; Knot 3.5 reads DSYNC only
+- Roadmap, changelog and security notes for the known-gaps round
+- Interop CI: new record types, TKEY and the default limits
+- Interop with Knot DNS 3.5 and Unbound 1.19 in CI
+- Clean docs in every feature combination; doctest every method
+- Built-in work limits: ZoneLimits, ValidationBudget, bounded owned/serde/XFR
+- Type AMTRELAY, DSYNC, TKEY, DOA, HHIT and BRID record data
+- Check out text files with LF on every platform
+- Milestone 9: roadmap, changelog, stability and MSRV policy
+- sync Cargo.lock with dnsbox 0.0.2
+- CERT example writes the algorithm as a mnemonic
+- Enforce the documentation: clippy doc lints, stricter rustdoc in CI
+- guided tour in the crate documentation
+- stub resolver, zone file to wire, DNSSEC dig, TSIG AXFR
+- `# Errors` sections and runnable examples on every public item
+- Interop corpus: document every source in tests/corpus/README.md
+- Interop corpus: dnspython RDATA, TSIG, UPDATE, EDNS and ZONEMD
+- Interop corpus: BIND 9.18 and ldns zones, signers and named responses
+- Interop corpus: live captures of more types, EDE, ECS, compact denial
+- SIG/RRSIG text: accept a bare number as the type covered
+- algorithm mnemonics as BIND and dnspython write them
+- final threat model and audit report
+- targets for the trust decisions, overflow checks in CI
+- Security audit: fix signature, DNSSEC, ZONEMD and LOC findings
+
 ### Security
 
 Findings of the post-1.0-review code review, each fixed with a
