@@ -20,8 +20,9 @@ use core::fmt;
 /// [`Outcome`](crate::builder::Outcome) — are ordinary return values.
 ///
 /// The enum is `#[non_exhaustive]`: new variants are added as new parts of
-/// the protocol are implemented. Match on the variants you care about and
-/// keep a wildcard arm.
+/// the protocol are implemented, always at the end so that existing
+/// variants keep their discriminants. Match on the variants you care about
+/// and keep a wildcard arm.
 ///
 /// # Examples
 ///
@@ -123,17 +124,6 @@ pub enum Error {
     /// the file was refused (outside the include directory) or failed to
     /// load.
     BadInclude,
-    /// A configured work or size limit was reached before the input could
-    /// be fully processed: zone-file limits
-    /// ([`ZoneLimits`](crate::zone::ZoneLimits): records, `$GENERATE`
-    /// size, `$INCLUDE` nesting, count and size, line, token and input
-    /// length), DNSSEC validation budgets (`dnssec::ValidationBudget`,
-    /// the KeyTrap bounds of CVE-2023-50387) and zone-transfer limits
-    /// ([`XfrProcessor::with_max_records`](crate::xfr::XfrProcessor::with_max_records)).
-    /// The input is neither accepted nor proven wrong: treat it as
-    /// unusable (a validator answers SERVFAIL, as for bogus data), or
-    /// raise the limit for trusted input.
-    LimitExceeded,
 
     /// A builder section was written out of order: question → answer →
     /// authority → additional (RFC 1035 §4.1).
@@ -151,9 +141,6 @@ pub enum Error {
     DuplicateOpt,
     /// An OPT record's owner name is not the root (RFC 6891 §6.1.2).
     OptNotRoot,
-    /// An OPT record outside the additional section (RFC 6891 §6.1.1).
-    /// Servers answer FORMERR.
-    MisplacedOpt,
 
     /// A TSIG or SIG(0) record is not the last record of the additional
     /// section, or appears more than once (RFC 8945 §5.1, RFC 2931 §3).
@@ -197,6 +184,20 @@ pub enum Error {
     /// wrong mode, or a KEY the mode needs missing (§3, §4). Servers answer
     /// FORMERR.
     InvalidTkey,
+    /// A configured work or size limit was reached before the input could
+    /// be fully processed: zone-file limits
+    /// ([`ZoneLimits`](crate::zone::ZoneLimits): records, `$GENERATE`
+    /// size, `$INCLUDE` nesting, count and size, line, token and input
+    /// length), DNSSEC validation budgets (`dnssec::ValidationBudget`,
+    /// the KeyTrap bounds of CVE-2023-50387) and zone-transfer limits
+    /// ([`XfrProcessor::with_max_records`](crate::xfr::XfrProcessor::with_max_records)).
+    /// The input is neither accepted nor proven wrong: treat it as
+    /// unusable (a validator answers SERVFAIL, as for bogus data), or
+    /// raise the limit for trusted input.
+    LimitExceeded,
+    /// An OPT record outside the additional section (RFC 6891 §6.1.1).
+    /// Servers answer FORMERR.
+    MisplacedOpt,
 }
 
 /// Shorthand for `core::result::Result<T, dnsbox::Error>`.
