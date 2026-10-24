@@ -106,7 +106,7 @@ jobs:
 
       - name: Upload the captures
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: interop-knot-unbound
           path: ${{ runner.temp }}/interop
@@ -201,7 +201,7 @@ jobs:
 
       - name: Upload the captures
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: interop-bind
           path: ${{ runner.temp }}/interop-bind

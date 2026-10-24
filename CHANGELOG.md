@@ -209,6 +209,8 @@ caller duties.
 
 ### Changed
 
+- **Breaking**: MSRV raised from 1.89 to 1.95, as purecrypto 0.10
+  (the crypto backend, bumped from 0.9) requires it.
 - **Breaking**: AMTRELAY, DSYNC, TKEY, DOA, HHIT, BRID, IPN, CLA, UNECE
   and ISO parse to their new `RData` variants instead of
   `RData::Unknown`, and display in their presentation format instead of

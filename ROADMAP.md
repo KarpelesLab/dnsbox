@@ -33,7 +33,7 @@ order of work. Items are checked off as they land.
   plugged in, and all wire-format work (signed data, MAC input, canonical
   forms, key tags) works without it. Other optional integrations (serde,
   async I/O) live behind features too.
-- **MSRV 1.89**, edition 2024. MSRV bumps are minor-version changes
+- **MSRV 1.95**, edition 2024. MSRV bumps are minor-version changes
   (see "Stability and MSRV policy" in README.md).
 
 ## Milestone 0 — Foundation

@@ -251,7 +251,7 @@ dnsbox follows [Semantic Versioning](https://semver.org/).
   may land in patch releases.
 - **Features** are additive and keep their names; enabling a feature never
   removes API. The `alloc`-free, `std`-free core stays `no_std`.
-- **MSRV:** Rust 1.89 (edition 2024), tested in CI on every push, with all
+- **MSRV:** Rust 1.95 (edition 2024), tested in CI on every push, with all
   features (the optional `purecrypto` and `serde` dependencies included).
   Raising the MSRV is a minor-version change, never a patch release, and
   never to a Rust release less than six months old; the new MSRV is noted

@@ -9,7 +9,7 @@ The design principles in [ROADMAP.md](ROADMAP.md) are binding. In short:
 never panic or index out of bounds on hostile input, bounded work per
 message, `#![forbid(unsafe_code)]`, zero-copy views, no allocation in the
 core, builders write into caller buffers, open newtypes for protocol
-numbers, `no_std` first, no mandatory dependencies, MSRV 1.89.
+numbers, `no_std` first, no mandatory dependencies, MSRV 1.95.
 
 The crate is feature-complete for 1.0 (every ROADMAP milestone is done).
 What counts as a breaking change, and the MSRV policy, are in README.md
@@ -996,7 +996,7 @@ common traits, `Display`/`FromStr` pairs, iteration by reference).
   cargo test --all-features
   cargo test --no-default-features
   cargo test --no-default-features --features alloc
-  cargo +1.89 test --all-features
+  cargo +1.95 test --all-features
   cargo build --target thumbv7em-none-eabi --no-default-features
   RUSTDOCFLAGS="-D warnings" cargo doc --no-deps --all-features
   ```

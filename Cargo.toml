@@ -2,7 +2,7 @@
 name          = "dnsbox"
 version       = "0.0.2"
 edition       = "2024"
-rust-version  = "1.89"
+rust-version  = "1.95"
 description   = "High-performance, zero-copy DNS message parsing and building for requests and responses, with broad RFC extension coverage."
 license       = "MIT"
 repository    = "https://github.com/KarpelesLab/dnsbox"
@@ -58,16 +58,16 @@ missing_panics_doc = "warn"
 # friends. Optional: dnsbox never implements crypto itself, and the wire-format
 # logic works without it. Features that need it enable the purecrypto
 # sub-features they use (e.g. `purecrypto/hash`).
-purecrypto = { version = "0.9", default-features = false, optional = true }
+purecrypto = { version = "0.10", default-features = false, optional = true }
 # Optional serde support (feature `serde`); no_std, `alloc` enabled with ours.
 serde = { version = "1.0.200", default-features = false, features = ["derive"], optional = true }
 
 [dev-dependencies]
 # Signature verification of real SIG(0) captures in tests (Ed25519, ECDSA
 # P-256, RSA/SHA-256); never a dependency of the library itself.
-purecrypto = { version = "0.9", default-features = false, features = ["hash", "ec", "rsa", "alloc"] }
+purecrypto = { version = "0.10", default-features = false, features = ["hash", "ec", "rsa", "alloc"] }
 # Property tests (tests/proptest_roundtrip.rs). Without default features
-# only the generators and runner are built, which keeps MSRV 1.89.
+# only the generators and runner are built, which keeps it within the MSRV.
 proptest = { version = "1.5", default-features = false, features = ["std"] }
 # Allocation-free hot path check (tests/no_alloc.rs): a global allocator that
 # counts allocations made while a closure runs.
